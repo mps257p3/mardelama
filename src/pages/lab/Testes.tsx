@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Columns2, Plus, Search, TestTube, Grid3x3, Check } from 'lucide-react'
-import { useEsmaltes, useTestes } from '../../db/hooks'
+import { useEsmaltes, useReceitas, useTestes } from '../../db/hooks'
+import { testeDaFamilia } from './Superficies'
 import { normaliza, textoBusca } from '../../lib/filtros'
 import { Foto } from '../../ui/form'
 
-export default function Testes() {
+export default function Testes({ embutido, familia }: { embutido?: boolean; familia?: string } = {}) {
   const testes = useTestes()
   const esmaltes = useEsmaltes()
   const nav = useNavigate()
@@ -13,18 +14,24 @@ export default function Testes() {
   const [filtro, setFiltro] = useState<'todos' | 'planejados' | 'queimados'>('todos')
   const [sel, setSel] = useState<string[] | null>(null)
   const esm = useMemo(() => new Map((esmaltes ?? []).map((e) => [e.id, e])), [esmaltes])
-  const lista = (testes ?? []).filter((t) => (filtro === 'todos' || (filtro === 'planejados' ? t.planejado : !t.planejado)) &&
+  const receitas = useReceitas()
+  const famEsm = useMemo(() => new Map((esmaltes ?? []).map((e) => [e.id, e.familias])), [esmaltes])
+  const famRec = useMemo(() => new Map((receitas ?? []).map((r) => [r.id, r.familias ?? []])), [receitas])
+  const lista = (testes ?? []).filter((t) => (!familia || testeDaFamilia(t, familia, famEsm, famRec)) && (filtro === 'todos' || (filtro === 'planejados' ? t.planejado : !t.planejado)) &&
     (!q || textoBusca(t.codigo, t.resultado, t.observacoes, t.descricaoPlano, t.argila, t.cone, t.esmalteId && esm.get(t.esmalteId)?.nome).includes(normaliza(q))))
 
   return (
-    <div className="page">
-      <div className="head">
+    <div className={embutido ? undefined : 'page'}>
+      {embutido ? <div className="sub-acts">
+        <Link className="btn sm primary" to="/testes/novo"><Plus size={15} />Novo teste</Link>
+        <Link className="btn sm" to="/testes/planejar"><Grid3x3 size={15} />Planejar experimento</Link>
+      </div> : <div className="head">
         <div><p className="eyebrow">Laboratório</p><h1 style={{ marginTop: 8 }}>Testes</h1></div>
         <div className="acts">
           <Link className="btn" to="/testes/planejar"><Grid3x3 size={16} />Planejar experimento</Link>
           <Link className="btn primary" to="/testes/novo"><Plus size={16} />Novo teste</Link>
         </div>
-      </div>
+      </div>}
       <div className="toolbar">
         <div className="search"><Search size={16} /><input className="input" placeholder="Buscar por código, esmalte, resultado…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
         <div className="seg">

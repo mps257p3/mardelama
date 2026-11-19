@@ -1,14 +1,12 @@
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowRight, FlaskConical, ScrollText, TestTube, Layers, Calculator, Shapes, Flame, SearchCode, ShoppingBag, ShieldAlert } from 'lucide-react'
+import { ArrowRight, FlaskConical, Layers, Calculator, Shapes, Flame, SearchCode, ShoppingBag, ShieldAlert } from 'lucide-react'
 import { db } from '../db/schema'
 
 const vivos = async (t: string) => (await db.table(t).toArray()).filter((x: { excluido?: 0 | 1 }) => !x.excluido).length
 
 const ITENS = [
-  { to: '/esmaltes', nome: 'Esmaltes', desc: 'Catálogo visual de superfícies', icon: FlaskConical, t: 'esmaltes' },
-  { to: '/receitas', nome: 'Fórmulas', desc: 'Receitas, versões e cálculo de lote', icon: ScrollText, t: 'receitas' },
-  { to: '/testes', nome: 'Testes', desc: 'Placas, queimas e comparações', icon: TestTube, t: 'testes' },
+  { to: '/esmaltes', nome: 'Superfícies', desc: 'Esmaltes, fórmulas e testes', icon: FlaskConical, t: 'esmaltes' },
   { to: '/familias', nome: 'Famílias', desc: 'B01 a B10: bases e comportamentos', icon: Shapes, t: 'familias' },
   { to: '/materiais', nome: 'Materiais', desc: 'Matérias-primas, preços e estoque', icon: Layers, t: 'materiais' },
   { to: '/curvas', nome: 'Curvas de queima', desc: 'Rampas, patamares e gráfico', icon: Flame, t: 'curvas' },

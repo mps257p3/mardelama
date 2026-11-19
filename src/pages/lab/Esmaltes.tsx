@@ -10,7 +10,7 @@ import { useAjuste, definirAjuste } from '../../db/settings'
 type F = { cor: string[]; temp: string[]; acab: string[]; text: string[]; fam: string[]; status: string[]; atm: string[]; fav: boolean }
 const VAZIO: F = { cor: [], temp: [], acab: [], text: [], fam: [], status: [], atm: [], fav: false }
 
-export default function Esmaltes() {
+export default function Esmaltes({ embutido, familia }: { embutido?: boolean; familia?: string } = {}) {
   const esmaltes = useEsmaltes()
   const familias = useFamilias()
   const modo = useAjuste<'grade' | 'lista'>('esmaltes.modo', 'grade')
@@ -25,24 +25,25 @@ export default function Esmaltes() {
     if (qq && !textoBusca(e.nome, e.codigo, e.autoria, e.cor, e.tags, e.familias.map((id) => famNome.get(id) ?? '')).includes(qq)) return false
     const any = (sel: string[], v?: string) => !sel.length || (v != null && sel.includes(v))
     if (!any(f.cor, e.cor) || !any(f.acab, e.acabamento) || !any(f.text, e.textura) || !any(f.status, e.status) || !any(f.atm, e.atmosfera)) return false
+    if (familia && !e.familias.includes(familia)) return false
     if (f.fam.length && !f.fam.some((id) => e.familias.includes(id))) return false
     if (f.temp.length && !(e.temperatura != null && FAIXAS_TEMP.some((x) => f.temp.includes(x.v) && x.t(e.temperatura!)))) return false
     if (f.fav && !e.favorito) return false
     return true
-  }), [esmaltes, q, f, famNome])
+  }), [esmaltes, q, f, famNome, familia])
 
   const op = (xs: readonly string[]) => xs.map((x) => ({ v: x, l: x }))
   const set = <K extends keyof F>(k: K) => (v: F[K]) => setF({ ...f, [k]: v })
 
   return (
-    <div className="page">
-      <div className="head">
+    <div className={embutido ? undefined : 'page'}>
+      {embutido ? <div className="sub-acts"><Link className="btn primary sm" to="/esmaltes/novo"><Plus size={15} />Novo esmalte</Link></div> : <div className="head">
         <div><p className="eyebrow">Laboratório</p><h1 style={{ marginTop: 8 }}>Esmaltes</h1></div>
         <div className="acts">
-          <Link className="btn" to="/esmaltes/familias">Famílias</Link>
+          <Link className="btn" to="/familias">Famílias</Link>
           <Link className="btn primary" to="/esmaltes/novo"><Plus size={16} />Novo esmalte</Link>
         </div>
-      </div>
+      </div>}
 
       <div className="toolbar">
         <div className="search"><Search size={16} /><input className="input" placeholder="Buscar por nome, código, cor, tag…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
@@ -55,7 +56,7 @@ export default function Esmaltes() {
 
       {abrir && (
         <div className="card filtros">
-          <div className="linha"><span>Família</span><Multi value={f.fam} onChange={set('fam')} opcoes={familias.map((x) => ({ v: x.id, l: x.nome }))} /></div>
+          {!embutido && <div className="linha"><span>Família</span><Multi value={f.fam} onChange={set('fam')} opcoes={familias.map((x) => ({ v: x.id, l: x.nome }))} /></div>}
           <div className="linha"><span>Cor</span><Multi value={f.cor} onChange={set('cor')} opcoes={op(CORES)} /></div>
           <div className="linha"><span>Temperatura</span><Multi value={f.temp} onChange={set('temp')} opcoes={FAIXAS_TEMP.map((x) => ({ v: x.v, l: x.l }))} /></div>
           <div className="linha"><span>Acabamento</span><Multi value={f.acab} onChange={set('acab')} opcoes={op(ACABAMENTOS)} /></div>

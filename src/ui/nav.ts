@@ -1,8 +1,8 @@
-import { Home, FlaskConical, Images, BookOpen, Feather, Calculator, Layers, Settings, Search, ScrollText, TestTube, Beaker } from 'lucide-react'
+import { Home, FlaskConical, Images, BookOpen, Feather, Calculator, Layers, Settings, Search, Beaker } from 'lucide-react'
 
 /** As seis áreas principais. `cor` identifica a área discretamente (ícones, etiquetas, indicadores). */
 export const AREAS = [
-  { slug: 'esmaltes', to: '/esmaltes', nome: 'Esmaltes', desc: 'Receitas, testes e variações', icon: FlaskConical, cor: '#3D5965', fase: 2 },
+  { slug: 'esmaltes', to: '/esmaltes', nome: 'Superfícies', desc: 'Esmaltes, fórmulas e testes', icon: FlaskConical, cor: '#3D5965', fase: 2 },
   { slug: 'materiais', to: '/materiais', nome: 'Materiais', desc: 'Argilas, fritas, óxidos e insumos', icon: Layers, cor: '#B46E4B', fase: 2 },
   { slug: 'referencias', to: '/referencias', nome: 'Referências', desc: 'Imagens, artistas e ideias', icon: Images, cor: '#858D70', fase: 3 },
   { slug: 'biblioteca', to: '/biblioteca', nome: 'Biblioteca', desc: 'Técnicas, química e estudos', icon: BookOpen, cor: '#B49B70', fase: 4 },
@@ -18,8 +18,6 @@ export const LATERAL = [
   { to: '/busca', nome: 'Buscar', icon: Search },
   { to: '/laboratorio', nome: 'Laboratório', icon: Beaker },
   AREAS[0],
-  { to: '/receitas', nome: 'Receitas', icon: ScrollText },
-  { to: '/testes', nome: 'Testes', icon: TestTube },
   ...AREAS.slice(1),
 ]
 export const RODAPE = [{ to: '/ajustes', nome: 'Ajustes', icon: Settings }]

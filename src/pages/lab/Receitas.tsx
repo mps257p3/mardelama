@@ -19,14 +19,15 @@ export async function criarReceita(dados: Partial<Parameters<typeof novo>[0]> = 
   return r.id
 }
 
-export default function Receitas() {
+export default function Receitas({ embutido, familia }: { embutido?: boolean; familia?: string } = {}) {
   const receitas = useReceitas()
   const esmaltes = useEsmaltes()
   const nav = useNavigate()
   const [q, setQ] = useState('')
   const [so, setSo] = useState<'todas' | 'bases'>('todas')
   const familias = useFamilias()
-  const [fam, setFam] = useState('')
+  const [famLocal, setFam] = useState('')
+  const fam = embutido ? familia ?? '' : famLocal
   const codFam = useMemo(() => new Map(familias.map((f) => [f.id, f.codigo ?? f.nome])), [familias])
   const nomeEsm = useMemo(() => new Map((esmaltes ?? []).map((e) => [e.id, e.nome])), [esmaltes])
   const fotoEsm = useMemo(() => new Map((esmaltes ?? []).map((e) => [e.id, e.fotos[0]])), [esmaltes])
@@ -37,8 +38,17 @@ export default function Receitas() {
     .sort((a, b) => (a.codigo ?? '~').localeCompare(b.codigo ?? '~') || b.atualizadoEm - a.atualizadoEm)
 
   return (
-    <div className="page">
-      <div className="head">
+    <div className={embutido ? undefined : 'page'}>
+      {embutido ? <div className="sub-acts">
+          <Link className="btn sm" to="/receitas/comparar">Comparar</Link>
+          <button className="btn sm" disabled={!lista.length} onClick={() => {
+            const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`
+            const linhas = [['Receita', 'Versão', 'Esmalte', 'Classe', 'Ingrediente', 'Percentual'].join(';'),
+              ...lista.flatMap((r) => r.ingredientes.map((i) => [r.nome, r.versaoAtual, r.esmalteId ? nomeEsm.get(r.esmalteId) : '', CLASSES.find((c) => c.v === i.classe)?.l, i.nome, String(i.percentual).replace('.', ',')].map(esc).join(';')))]
+            baixar(new Blob(['\ufeff' + linhas.join('\n')], { type: 'text/csv;charset=utf-8' }), `receitas-${new Date().toISOString().slice(0, 10)}.csv`)
+          }}><Download size={16} />Exportar CSV</button>
+          <button className="btn sm primary" onClick={async () => nav(`/receitas/${await criarReceita()}`)}><Plus size={16} />Nova fórmula</button>
+        </div> : <div className="head">
         <div><p className="eyebrow">Laboratório</p><h1 style={{ marginTop: 8 }}>Fórmulas e receitas</h1></div>
         <div className="acts">
           <Link className="btn" to="/receitas/comparar">Comparar</Link>
@@ -50,7 +60,7 @@ export default function Receitas() {
           }}><Download size={16} />Exportar CSV</button>
           <button className="btn primary" onClick={async () => nav(`/receitas/${await criarReceita()}`)}><Plus size={16} />Nova receita</button>
         </div>
-      </div>
+      </div>}
       <div className="toolbar">
         <div className="search"><Search size={16} /><input className="input" placeholder="Buscar por nome ou ingrediente…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
         <div className="seg">
@@ -62,10 +72,10 @@ export default function Receitas() {
           <button className={modo === 'lista' ? 'on' : ''} onClick={() => definirAjuste('receitas.modo', 'lista')} aria-label="Lista"><List size={15} /></button>
         </div>
       </div>
-      <div className="chips" style={{ marginBottom: 8 }}>
+      {!embutido && <div className="chips" style={{ marginBottom: 8 }}>
         <button className={'chip' + (!fam ? ' on' : '')} onClick={() => setFam('')}>Todas as famílias</button>
         {familias.map((f) => <button key={f.id} className={'chip' + (fam === f.id ? ' on' : '')} onClick={() => setFam(fam === f.id ? '' : f.id)}>{f.codigo ? f.codigo + ' · ' : ''}{f.nome}</button>)}
-      </div>
+      </div>}
       {receitas && receitas.length === 0 ? (
         <div className="empty"><span className="serif">Nenhuma receita ainda.</span><span>Formule com receita base, corantes, opacificantes e aditivos, com versões e variações.</span></div>
       ) : modo === 'grade' ? (

@@ -77,7 +77,7 @@ export default function ReceitaEditor() {
 
   return (
     <div className="page">
-      <Link to="/receitas" className="back"><ArrowLeft size={15} />Receitas</Link>
+      <Link to="/receitas" className="back"><ArrowLeft size={15} />Superfícies</Link>
       <div className="receita-capa">
         <CapaFotos fotos={r.fotos ?? []} alt={r.nome} rotuloAdd="Adicionar foto do esmalte" onChange={(v) => mudar({ fotos: v })}
           vazio={<ScrollText size={36} strokeWidth={1} />} />

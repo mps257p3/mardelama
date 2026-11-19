@@ -7,6 +7,7 @@ import { useFamilias, useReceitas } from '../../db/hooks'
 import { ACABAMENTOS, APLICACOES, ATMOSFERAS, CONES, CORES, FLUIDEZ, STATUS, TEXTURAS, TRANSPARENCIAS, coneMaisProximo, tempDoCone } from '../../lib/opcoes'
 import { AreaTexto, Campo, Escolha, Estrelas, Fotos, Multi, Numero, Sugestao, Tags, Texto } from '../../ui/form'
 import { useToast } from '../../ui/toast'
+import { criarReceita } from './Receitas'
 
 const VAZIO: Omit<Esmalte, 'id' | 'criadoEm' | 'atualizadoEm'> = { nome: '', codigo: '', fotos: [], origem: 'propria', familias: [], tags: [] }
 
@@ -36,6 +37,8 @@ export default function EsmalteForm() {
       nav(`/esmaltes/${e.id}`, { replace: true })
     } else {
       const x = novo({ ...e, nome: e.nome.trim() })
+      // formulação própria já nasce com a fórmula ligada
+      if (!x.receitaId && x.origem === 'propria') x.receitaId = await criarReceita({ nome: x.nome, esmalteId: x.id, familias: x.familias })
       await db.esmaltes.add(x)
       if (x.receitaId) await db.receitas.update(x.receitaId, { esmalteId: x.id })
       nav(`/esmaltes/${x.id}`, { replace: true })
@@ -51,10 +54,10 @@ export default function EsmalteForm() {
       <h1 style={{ marginTop: 8, marginBottom: 28 }}>{e.nome || 'Sem nome'}</h1>
 
       <div className="form">
+        <Campo label="É um esmalte comercial ou uma fórmula sua?" wide><Escolha value={e.origem} onChange={set('origem')} opcoes={[{ v: 'propria', l: 'Minha fórmula' }, { v: 'comercial', l: 'Comercial' }]} /></Campo>
         <Campo label="Fotografias" wide><Fotos value={e.fotos} onChange={set('fotos')} /></Campo>
         <Campo label="Nome"><Texto value={e.nome} onChange={set('nome')} autoFocus={!e.id} /></Campo>
         <Campo label="Código de identificação"><Texto value={e.codigo} onChange={set('codigo')} /></Campo>
-        <Campo label="Origem" wide><Escolha value={e.origem} onChange={set('origem')} opcoes={[{ v: 'propria', l: 'Formulação própria' }, { v: 'comercial', l: 'Esmalte comercial' }]} /></Campo>
         <Campo label={e.origem === 'comercial' ? 'Fabricante' : 'Autoria'}><Texto value={e.autoria} onChange={set('autoria')} /></Campo>
         <Campo label="Fonte da receita"><Texto value={e.fonteReceita} onChange={set('fonteReceita')} placeholder="Livro, site, colega…" /></Campo>
         <Campo label="Famílias (pode escolher várias)" wide><Multi value={e.familias} onChange={set('familias')} opcoes={familias.map((f) => ({ v: f.id, l: f.nome }))} /></Campo>

@@ -5,15 +5,12 @@ import Home from './pages/Home'
 import Ajustes from './pages/Ajustes'
 import Laboratorio from './pages/Laboratorio'
 import EmBreve from './pages/EmBreve'
-import Esmaltes from './pages/lab/Esmaltes'
 import EsmalteForm from './pages/lab/EsmalteForm'
 import EsmalteDetalhe from './pages/lab/EsmalteDetalhe'
 import Familias from './pages/lab/Familias'
-import Receitas from './pages/lab/Receitas'
 import ReceitaNova from './pages/lab/ReceitaNova'
 import ReceitaEditor from './pages/lab/ReceitaEditor'
 import ReceitaComparar from './pages/lab/ReceitaComparar'
-import Testes from './pages/lab/Testes'
 import TesteForm from './pages/lab/TesteForm'
 import TesteDetalhe from './pages/lab/TesteDetalhe'
 import TesteComparar from './pages/lab/TesteComparar'
@@ -43,6 +40,7 @@ import CurvaDetalhe from './pages/lab/CurvaDetalhe'
 import Comerciais from './pages/lab/Comerciais'
 import ComercialDetalhe from './pages/lab/ComercialDetalhe'
 import Compras from './pages/lab/Compras'
+import Superficies from './pages/lab/Superficies'
 
 export default function App() {
   return (
@@ -52,7 +50,8 @@ export default function App() {
           <Route index element={<Home />} />
           <Route path="laboratorio" element={<Laboratorio />} />
           <Route path="ajustes" element={<Ajustes />} />
-          <Route path="esmaltes" element={<Esmaltes />} />
+          <Route path="esmaltes" element={<Superficies aba="esmaltes" />} />
+          <Route path="superficies" element={<Superficies aba="esmaltes" />} />
           <Route path="esmaltes/novo" element={<EsmalteForm key="novo" />} />
           <Route path="esmaltes/familias" element={<Familias />} />
           <Route path="familias" element={<Familias />} />
@@ -64,11 +63,11 @@ export default function App() {
           <Route path="compras" element={<Compras />} />
           <Route path="esmaltes/:id" element={<EsmalteDetalhe />} />
           <Route path="esmaltes/:id/editar" element={<EsmalteForm />} />
-          <Route path="receitas" element={<Receitas />} />
+          <Route path="receitas" element={<Superficies aba="receitas" />} />
           <Route path="receitas/nova" element={<ReceitaNova />} />
           <Route path="receitas/comparar" element={<ReceitaComparar />} />
           <Route path="receitas/:id" element={<ReceitaEditor />} />
-          <Route path="testes" element={<Testes />} />
+          <Route path="testes" element={<Superficies aba="testes" />} />
           <Route path="testes/novo" element={<TesteForm key="novo" />} />
           <Route path="testes/planejar" element={<Planejar />} />
           <Route path="testes/comparar" element={<TesteComparar />} />
