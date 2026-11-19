@@ -26,10 +26,11 @@ export default function TesteForm() {
       if (id) { setT(await db.testes.get(id)); return }
       const esmalteId = sp.get('esmalte') ?? undefined
       const e = esmalteId ? await db.esmaltes.get(esmalteId) : undefined
-      const r = e?.receitaId ? await db.receitas.get(e.receitaId) : undefined
+      const receitaParam = sp.get('receita')
+      const r = receitaParam ? await db.receitas.get(receitaParam) : e?.receitaId ? await db.receitas.get(e.receitaId) : undefined
       setT({
         codigo: await proximoCodigo('T', 'testes', 4), fotos: [], data: new Date().toISOString().slice(0, 10),
-        esmalteId, receitaId: r?.id, receitaVersao: r?.versaoAtual, temperatura: e?.temperatura, cone: e?.cone, aplicacao: e?.aplicacao, camadas: 2, defeitos: [], combinacao: [],
+        esmalteId: esmalteId ?? r?.esmalteId, receitaId: r?.id, receitaVersao: r?.versaoAtual, temperatura: e?.temperatura, cone: e?.cone, aplicacao: e?.aplicacao, camadas: 2, defeitos: [], combinacao: [],
       })
     })()
   }, [id, sp])

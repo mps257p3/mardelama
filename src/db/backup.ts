@@ -1,3 +1,4 @@
+import { pausaVinculo } from '../lib/contexto'
 import { db } from './schema'
 
 const TABELAS = ['familias', 'esmaltes', 'receitas', 'versoes', 'testes', 'materiais', 'referencias', 'grupos', 'paineis', 'conteudos', 'notas', 'relacoes', 'ajustes'] as const
@@ -18,6 +19,11 @@ export async function exportarTudo(): Promise<Blob> {
 
 /** Importa um backup, mesclando: registros com o mesmo id são substituídos pela versão mais recente. */
 export async function importarTudo(file: File) {
+  pausaVinculo.n++
+  try { return await importar(file) } finally { pausaVinculo.n-- }
+}
+
+async function importar(file: File) {
   const txt = await file.text()
   const j = JSON.parse(txt)
   if (j.app !== 'atelie-mp') throw new Error('Este arquivo não é um backup do Mar de Lama.')

@@ -1,3 +1,4 @@
+import { pausaVinculo } from '../lib/contexto'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { db, type Arquivo } from './schema'
 import { definirAjuste } from './settings'
@@ -55,7 +56,7 @@ export interface ResultadoSync { enviados: number; recebidos: number; quando: nu
 let emCurso: Promise<ResultadoSync> | undefined
 
 export function sincronizar(): Promise<ResultadoSync> {
-  emCurso ??= executar().finally(() => { emCurso = undefined })
+  if (!emCurso) { pausaVinculo.n++; emCurso = executar().finally(() => { emCurso = undefined; pausaVinculo.n-- }) }
   return emCurso
 }
 

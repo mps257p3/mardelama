@@ -25,7 +25,11 @@ export default function ReferenciaForm() {
       // dados vindos do compartilhamento de outros apps (/compartilhar)
       const texto = sp.get('text') ?? ''
       const url = sp.get('url') || texto.match(/https?:\/\/\S+/)?.[0] || undefined
-      setR({ titulo: sp.get('title') ?? '', tipo: url ? 'Link' : 'Fotografia', imagens: [], tags: [], grupos: [], url, descricao: texto.replace(url ?? '', '').trim() || undefined })
+      const foto = sp.get('foto')
+      const imagens = foto ? [foto] : []
+      const base: R = { titulo: sp.get('title') ?? '', tipo: url || sp.get('link') ? 'Link' : 'Fotografia', imagens, tags: [], grupos: [], url, descricao: texto.replace(url ?? '', '').trim() || undefined }
+      if (foto) { const a = await db.arquivos.get(foto); if (a) base.paleta = await extrairPaleta(a.blob, 5) }
+      setR(base)
     })()
   }, [id, sp])
 
@@ -54,10 +58,10 @@ export default function ReferenciaForm() {
       <h1 style={{ marginTop: 8, marginBottom: 28 }}>{r.titulo || 'Sem título'}</h1>
       <div className="form">
         <Campo label="Imagens" wide><Fotos value={r.imagens} onChange={(v) => { const primeira = !r.imagens.length && v.length; setR({ ...r, imagens: v }); if (primeira && !r.paleta?.length) paletaDaImagem(v) }} /></Campo>
-        <Campo label="Título"><Texto value={r.titulo} onChange={set('titulo')} autoFocus={!r.id} /></Campo>
+        <Campo label="Título"><Texto value={r.titulo} onChange={set('titulo')} autoFocus={!r.id && !sp.get('link')} /></Campo>
         <Campo label="Autor ou artista"><Texto value={r.autor} onChange={set('autor')} /></Campo>
         <Campo label="Tipo" wide><Escolha value={r.tipo} onChange={set('tipo')} opcoes={TIPOS_REF.map((v) => ({ v, l: v }))} /></Campo>
-        <Campo label="Link (site, vídeo, perfil)"><Texto value={r.url} onChange={set('url')} type="url" placeholder="https://" /></Campo>
+        <Campo label="Link (site, vídeo, perfil)"><Texto value={r.url} onChange={set('url')} type="url" placeholder="https://" autoFocus={!r.id && !!sp.get('link')} /></Campo>
         <Campo label="Fonte"><Texto value={r.fonte} onChange={set('fonte')} placeholder="Livro, museu, exposição…" /></Campo>
         <Campo label="Grupos (quantos quiser)" wide>
           <Multi value={r.grupos} onChange={set('grupos')} opcoes={grupos.map((g) => ({ v: g.id, l: g.nome }))} />

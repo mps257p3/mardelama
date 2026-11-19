@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Home, FlaskConical, Images, BookOpen, Plus } from 'lucide-react'
 import { LATERAL, RODAPE } from './nav'
 import { Monograma } from './Monograma'
 import { QuickAdd } from './QuickAdd'
+import { definirContexto, emFluxoDeCadastro } from '../lib/contexto'
 
 const AREA_DA_ROTA: [RegExp, string][] = [
   [/^\/(esmaltes|receitas|testes|testoteca|laboratorio|queimas|bancada)/, 'esmaltes'],
@@ -14,6 +15,7 @@ const AREA_DA_ROTA: [RegExp, string][] = [
 export function Layout() {
   const [add, setAdd] = useState(false)
   const { pathname } = useLocation()
+  useEffect(() => { if (!emFluxoDeCadastro(pathname)) definirContexto(undefined) }, [pathname])
   const area = AREA_DA_ROTA.find(([r]) => r.test(pathname))?.[1]
   return (
     <div className="app">

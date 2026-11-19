@@ -10,6 +10,7 @@ import '@fontsource/dm-sans/600.css'
 import './styles.css'
 import App from './App'
 import { seedIfEmpty } from './db/seed'
+import { ativarVinculoAutomatico } from './lib/contexto'
 import { iniciarSincronizacaoAutomatica } from './db/sync'
 import { registerSW } from 'virtual:pwa-register'
 
@@ -27,6 +28,7 @@ const atualizar = registerSW({
 })
 
 seedIfEmpty()
+ativarVinculoAutomatico()
 iniciarSincronizacaoAutomatica()
 
 createRoot(document.getElementById('root')!).render(

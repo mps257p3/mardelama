@@ -178,15 +178,14 @@ textarea.input { min-height: 110px; resize: vertical; }
   .sheet { left: 50%; right: auto; bottom: auto; top: 50%; transform: translate(-50%, -50%); width: 560px; border-radius: 22px; padding: 28px; animation: fade .25s var(--ease); }
   .sheet .grab { display: none; }
 }
-.quick { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 18px; }
-@media (min-width: 520px) { .quick { grid-template-columns: repeat(3, 1fr); } }
+.quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
 .quick button {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 18px; padding: 14px; text-align: left;
-  border-radius: var(--r); border: 1px solid var(--line); background: var(--surface); transition: border-color .2s;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 88px; padding: 12px 6px;
+  border-radius: 12px; border: 1px solid var(--line); background: var(--surface); transition: border-color .2s, transform .15s;
 }
 .quick button:hover { border-color: var(--line-strong); }
+.quick button:active { transform: scale(.97); }
 .quick button span { font-size: 14px; font-weight: 500; }
-.quick button small { display: block; font-size: 11.5px; color: var(--ink-3); font-weight: 400; margin-top: 2px; }
 
 .toast {
   position: fixed; z-index: 60; left: 50%; bottom: calc(var(--nav-h) + 20px + env(safe-area-inset-bottom)); transform: translateX(-50%);
