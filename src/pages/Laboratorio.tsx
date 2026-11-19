@@ -19,8 +19,7 @@ export default function Laboratorio() {
   const n = useLiveQuery(async () => Object.fromEntries(await Promise.all(ITENS.filter((i) => 't' in i).map(async (i) => [i.to, await vivos((i as { t: string }).t)]))), [], {} as Record<string, number>)
   return (
     <div className="page">
-      <p className="eyebrow">Laboratório</p>
-      <h1 style={{ marginTop: 8 }}>Experimentação</h1>
+      <h1>Laboratório</h1>
       <div className="areas" style={{ marginTop: 28 }}>
         {ITENS.map(({ to, nome, desc, icon: I }) => (
           <Link key={to} to={to} className="area">

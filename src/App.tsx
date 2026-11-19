@@ -19,6 +19,8 @@ import Referencias from './pages/ref/Referencias'
 import ReferenciaForm from './pages/ref/ReferenciaForm'
 import ReferenciaDetalhe from './pages/ref/ReferenciaDetalhe'
 import Grupos from './pages/ref/Grupos'
+import Colecoes from './pages/ref/Colecoes'
+import Descobrir from './pages/ref/Descobrir'
 import Paineis from './pages/ref/Paineis'
 import PainelEditor from './pages/ref/PainelEditor'
 import Compartilhar from './pages/ref/Compartilhar'
@@ -75,7 +77,9 @@ export default function App() {
           <Route path="testes/:id/editar" element={<TesteForm />} />
           <Route path="referencias" element={<Referencias />} />
           <Route path="referencias/nova" element={<ReferenciaForm key="nova" />} />
-          <Route path="referencias/grupos" element={<Grupos />} />
+          <Route path="referencias/grupos" element={<Colecoes />} />
+          <Route path="referencias/grupos/gerenciar" element={<Grupos />} />
+          <Route path="referencias/descobrir" element={<Descobrir />} />
           <Route path="referencias/:id" element={<ReferenciaDetalhe />} />
           <Route path="referencias/:id/editar" element={<ReferenciaForm />} />
           <Route path="paineis" element={<Paineis />} />

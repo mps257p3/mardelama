@@ -6,6 +6,7 @@ import { ACABAMENTOS, CORES, STATUS, TEXTURAS, ATMOSFERAS, fmt } from '../../lib
 import { FAIXAS_TEMP, normaliza, textoBusca } from '../../lib/filtros'
 import { Foto, Multi, Estrelas } from '../../ui/form'
 import { useAjuste, definirAjuste } from '../../db/settings'
+import { Menu } from '../../ui/Menu'
 
 type F = { cor: string[]; temp: string[]; acab: string[]; text: string[]; fam: string[]; status: string[]; atm: string[]; fav: boolean }
 const VAZIO: F = { cor: [], temp: [], acab: [], text: [], fam: [], status: [], atm: [], fav: false }
@@ -37,21 +38,13 @@ export default function Esmaltes({ embutido, familia }: { embutido?: boolean; fa
 
   return (
     <div className={embutido ? undefined : 'page'}>
-      {embutido ? <div className="sub-acts"><Link className="btn primary sm" to="/esmaltes/novo"><Plus size={15} />Novo esmalte</Link></div> : <div className="head">
-        <div><p className="eyebrow">Laboratório</p><h1 style={{ marginTop: 8 }}>Esmaltes</h1></div>
-        <div className="acts">
-          <Link className="btn" to="/familias">Famílias</Link>
-          <Link className="btn primary" to="/esmaltes/novo"><Plus size={16} />Novo esmalte</Link>
-        </div>
-      </div>}
-
       <div className="toolbar">
-        <div className="search"><Search size={16} /><input className="input" placeholder="Buscar por nome, código, cor, tag…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-        <button className={'btn sm' + (abrir || ativos ? ' primary' : '')} onClick={() => setAbrir(!abrir)}><SlidersHorizontal size={15} />Filtros{ativos ? ` (${ativos})` : ''}</button>
-        <div className="seg">
-          <button className={modo === 'grade' ? 'on' : ''} onClick={() => definirAjuste('esmaltes.modo', 'grade')} aria-label="Grade"><Grid2x2 size={15} /></button>
-          <button className={modo === 'lista' ? 'on' : ''} onClick={() => definirAjuste('esmaltes.modo', 'lista')} aria-label="Lista"><List size={15} /></button>
-        </div>
+        <div className="search"><Search size={16} /><input className="input" placeholder="Buscar esmaltes" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+        <button className={'iconbtn' + (abrir || ativos ? ' on' : '')} style={{ position: 'relative' }} aria-label="Filtros" onClick={() => setAbrir(!abrir)}><SlidersHorizontal size={18} />{ativos > 0 && <span className="badge">{ativos}</span>}</button>
+        <Menu itens={[
+          { l: 'Ver em grade', icon: <Grid2x2 size={16} />, on: modo === 'grade', onClick: () => definirAjuste('esmaltes.modo', 'grade') },
+          { l: 'Ver em lista', icon: <List size={16} />, on: modo === 'lista', onClick: () => definirAjuste('esmaltes.modo', 'lista') },
+        ]} />
       </div>
 
       {abrir && (
@@ -70,7 +63,7 @@ export default function Esmaltes({ embutido, familia }: { embutido?: boolean; fa
         </div>
       )}
 
-      <p className="faint" style={{ fontSize: 13, marginBottom: 16 }}>{lista.length} {lista.length === 1 ? 'esmalte' : 'esmaltes'}</p>
+      {!embutido && <p className="faint" style={{ fontSize: 13, marginBottom: 16 }}>{lista.length} {lista.length === 1 ? 'esmalte' : 'esmaltes'}</p>}
 
       {esmaltes && esmaltes.length === 0 ? (
         <div className="empty">

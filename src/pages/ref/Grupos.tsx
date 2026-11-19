@@ -24,8 +24,8 @@ export default function Grupos() {
 
   return (
     <div className="page" style={{ maxWidth: 720 }}>
-      <Link to="/referencias" className="back"><ArrowLeft size={15} />Referências</Link>
-      <h1>Grupos</h1>
+      <Link to="/referencias/grupos" className="back"><ArrowLeft size={15} />Grupos</Link>
+      <h1>Gerenciar grupos</h1>
       <p className="muted" style={{ marginTop: 10 }}>Grupos não são pastas: uma referência pode estar em quantos grupos você quiser, sem duplicar nada.</p>
       <form style={{ display: 'flex', gap: 8, margin: '24px 0' }} onSubmit={async (e) => { e.preventDefault(); if (novoG.trim()) { await db.grupos.add(novo({ nome: novoG.trim() })); setNovoG('') } }}>
         <input className="input" placeholder="Novo grupo" value={novoG} onChange={(e) => setNovoG(e.target.value)} />

@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Info, Plus } from 'lucide-react'
 import { useFamilias, useEsmaltes, useReceitas, useTestes } from '../../db/hooks'
 import Esmaltes from './Esmaltes'
-import Receitas from './Receitas'
+import Receitas, { criarReceita } from './Receitas'
 import Testes from './Testes'
 
 type Aba = 'esmaltes' | 'receitas' | 'testes'
@@ -10,6 +11,7 @@ type Aba = 'esmaltes' | 'receitas' | 'testes'
 /** Esmaltes, fórmulas e testes numa só área, filtrados pela mesma família. */
 export default function Superficies({ aba }: { aba: Aba }) {
   const [sp, setSp] = useSearchParams()
+  const nav = useNavigate()
   const fam = sp.get('fam') ?? ''
   const familias = useFamilias()
   const esmaltes = useEsmaltes()
@@ -26,16 +28,21 @@ export default function Superficies({ aba }: { aba: Aba }) {
   const ABAS: [Aba, string][] = [['esmaltes', 'Esmaltes'], ['receitas', 'Fórmulas'], ['testes', 'Testes']]
   return (
     <div className="page">
-      <div className="head" style={{ marginBottom: 12 }}>
-        <div><p className="eyebrow">Laboratório</p><h1 style={{ marginTop: 8 }}>Superfícies</h1></div>
+      <div className="topo-c">
+        <h1>Superfícies</h1>
+        <div className="icones">
+          <Link className="iconbtn" to={fam ? `/familias/${fam}` : '/familias'} aria-label="Sobre as famílias" title="Sobre as famílias"><Info size={19} /></Link>
+          {aba === 'receitas'
+            ? <button className="iconbtn mais" aria-label="Nova fórmula" onClick={async () => nav(`/receitas/${await criarReceita(fam ? { familias: [fam] } : {})}`)}><Plus size={19} /></button>
+            : <Link className="iconbtn mais" to={aba === 'testes' ? '/testes/novo' : '/esmaltes/novo'} aria-label={aba === 'testes' ? 'Novo teste' : 'Novo esmalte'}><Plus size={19} /></Link>}
+        </div>
       </div>
-      <div className="chips sup-familias">
-        <button className={'chip' + (!fam ? ' on' : '')} onClick={() => setSp({}, { replace: true })}>Todas as famílias</button>
+      <div className="chips">
+        <button className={'chip' + (!fam ? ' on' : '')} onClick={() => setSp({}, { replace: true })}>Todas</button>
         {familias.map((f) => <button key={f.id} className={'chip' + (fam === f.id ? ' on' : '')}
           onClick={() => setSp(fam === f.id ? {} : { fam: f.id }, { replace: true })}>{f.codigo ? f.codigo + ' · ' : ''}{f.nome}</button>)}
-        <Link to={fam ? `/familias/${fam}` : '/familias'} className="chip ghost-link">Sobre {fam ? 'esta família' : 'as famílias'} →</Link>
       </div>
-      <nav className="sup-abas">
+      <nav className="abas-t">
         {ABAS.map(([k, l]) => <Link key={k} to={`/${k}${q}`} replace className={aba === k ? 'on' : ''}>{l}<span>{n[k]}</span></Link>)}
       </nav>
       {aba === 'esmaltes' && <Esmaltes embutido familia={fam} />}

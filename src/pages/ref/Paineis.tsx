@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, LayoutDashboard, Plus } from 'lucide-react'
+import { LayoutDashboard, Plus } from 'lucide-react'
+import { TopoRef } from './Topo'
 import { db, novo } from '../../db/schema'
 import { usePaineis } from '../../db/hooks'
 import { Foto } from '../../ui/form'
@@ -15,15 +16,11 @@ export default function Paineis() {
   const nav = useNavigate()
   return (
     <div className="page">
-      <Link to="/referencias" className="back"><ArrowLeft size={15} />Referências</Link>
-      <div className="head">
-        <div><p className="eyebrow">Repertório</p><h1 style={{ marginTop: 8 }}>Painéis de inspiração</h1></div>
-        <button className="btn primary" onClick={async () => { const p = novo({ nome: 'Novo painel', itens: [] }); await db.paineis.add(p); nav(`/paineis/${p.id}`) }}><Plus size={16} />Novo painel</button>
-      </div>
+      <TopoRef aba="paineis" icones={<button className="iconbtn mais" aria-label="Novo painel" onClick={async () => { const p = novo({ nome: 'Novo painel', itens: [] }); await db.paineis.add(p); nav(`/paineis/${p.id}`) }}><Plus size={19} /></button>} />
       {paineis && paineis.length === 0 ? (
-        <div className="empty" style={{ marginTop: 28 }}><span className="serif">Nenhum painel ainda.</span><span>Reúna referências, imagens, textos e cores numa composição livre.</span></div>
+        <div className="empty" style={{ marginTop: 8 }}><span className="serif">Nenhum painel ainda.</span><span>Reúna referências, imagens, textos e cores numa composição livre.</span></div>
       ) : (
-        <div className="galeria" style={{ marginTop: 28 }}>
+        <div className="galeria" style={{ marginTop: 8 }}>
           {(paineis ?? []).map((p) => {
             const vis = p.itens.filter((i) => i.tipo === 'referencia' || i.tipo === 'imagem').slice(0, 4)
             return (

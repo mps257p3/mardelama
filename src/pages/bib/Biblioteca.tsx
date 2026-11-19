@@ -28,7 +28,7 @@ export default function Biblioteca() {
         <div className="search"><Search size={16} /><input className="input" placeholder="Buscar em títulos, textos, autores, tags…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
         <button className={'chip' + (fav ? ' on' : '')} onClick={() => setFav(!fav)}><Heart size={13} />Favoritos</button>
       </div>
-      <div className="chips" style={{ flexWrap: 'wrap', marginBottom: 24 }}>
+      <div className="chips" style={{ marginBottom: 16 }}>
         <button className={'chip' + (!cat ? ' on' : '')} onClick={() => setCat(undefined)}>Tudo</button>
         {CATEGORIAS_BIB.map((c) => <button key={c} className={'chip' + (cat === c ? ' on' : '')} onClick={() => setCat(cat === c ? undefined : c)}>{c}{porCat.get(c) ? <span style={{ opacity: .6 }}>{porCat.get(c)}</span> : null}</button>)}
       </div>

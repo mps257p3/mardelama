@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Download, GitBranch, Grid2x2, List, Plus, ScrollText, Search } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Columns2, Download, GitBranch, Grid2x2, Layers, List, ScrollText, Search } from 'lucide-react'
+import { Menu } from '../../ui/Menu'
 import { Foto } from '../../ui/form'
 import { useAjuste, definirAjuste } from '../../db/settings'
 import { baixar } from '../../db/backup'
@@ -22,7 +23,6 @@ export async function criarReceita(dados: Partial<Parameters<typeof novo>[0]> = 
 export default function Receitas({ embutido, familia }: { embutido?: boolean; familia?: string } = {}) {
   const receitas = useReceitas()
   const esmaltes = useEsmaltes()
-  const nav = useNavigate()
   const [q, setQ] = useState('')
   const [so, setSo] = useState<'todas' | 'bases'>('todas')
   const familias = useFamilias()
@@ -39,38 +39,22 @@ export default function Receitas({ embutido, familia }: { embutido?: boolean; fa
 
   return (
     <div className={embutido ? undefined : 'page'}>
-      {embutido ? <div className="sub-acts">
-          <Link className="btn sm" to="/receitas/comparar">Comparar</Link>
-          <button className="btn sm" disabled={!lista.length} onClick={() => {
-            const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`
-            const linhas = [['Receita', 'Versão', 'Esmalte', 'Classe', 'Ingrediente', 'Percentual'].join(';'),
-              ...lista.flatMap((r) => r.ingredientes.map((i) => [r.nome, r.versaoAtual, r.esmalteId ? nomeEsm.get(r.esmalteId) : '', CLASSES.find((c) => c.v === i.classe)?.l, i.nome, String(i.percentual).replace('.', ',')].map(esc).join(';')))]
-            baixar(new Blob(['\ufeff' + linhas.join('\n')], { type: 'text/csv;charset=utf-8' }), `receitas-${new Date().toISOString().slice(0, 10)}.csv`)
-          }}><Download size={16} />Exportar CSV</button>
-          <button className="btn sm primary" onClick={async () => nav(`/receitas/${await criarReceita()}`)}><Plus size={16} />Nova fórmula</button>
-        </div> : <div className="head">
-        <div><p className="eyebrow">Laboratório</p><h1 style={{ marginTop: 8 }}>Fórmulas e receitas</h1></div>
-        <div className="acts">
-          <Link className="btn" to="/receitas/comparar">Comparar</Link>
-          <button className="btn" disabled={!lista.length} onClick={() => {
-            const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`
-            const linhas = [['Receita', 'Versão', 'Esmalte', 'Classe', 'Ingrediente', 'Percentual'].join(';'),
-              ...lista.flatMap((r) => r.ingredientes.map((i) => [r.nome, r.versaoAtual, r.esmalteId ? nomeEsm.get(r.esmalteId) : '', CLASSES.find((c) => c.v === i.classe)?.l, i.nome, String(i.percentual).replace('.', ',')].map(esc).join(';')))]
-            baixar(new Blob(['\ufeff' + linhas.join('\n')], { type: 'text/csv;charset=utf-8' }), `receitas-${new Date().toISOString().slice(0, 10)}.csv`)
-          }}><Download size={16} />Exportar CSV</button>
-          <button className="btn primary" onClick={async () => nav(`/receitas/${await criarReceita()}`)}><Plus size={16} />Nova receita</button>
-        </div>
-      </div>}
       <div className="toolbar">
-        <div className="search"><Search size={16} /><input className="input" placeholder="Buscar por nome ou ingrediente…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-        <div className="seg">
-          <button className={so === 'todas' ? 'on' : ''} onClick={() => setSo('todas')}>Todas</button>
-          <button className={so === 'bases' ? 'on' : ''} onClick={() => setSo('bases')}>Bases reutilizáveis</button>
-        </div>
-        <div className="seg">
-          <button className={modo === 'grade' ? 'on' : ''} onClick={() => definirAjuste('receitas.modo', 'grade')} aria-label="Grade"><Grid2x2 size={15} /></button>
-          <button className={modo === 'lista' ? 'on' : ''} onClick={() => definirAjuste('receitas.modo', 'lista')} aria-label="Lista"><List size={15} /></button>
-        </div>
+        <div className="search"><Search size={16} /><input className="input" placeholder="Buscar fórmulas ou ingredientes" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+        <button className={'iconbtn' + (so === 'bases' ? ' on' : '')} title="Só bases reutilizáveis" aria-label="Só bases reutilizáveis" onClick={() => setSo(so === 'bases' ? 'todas' : 'bases')}><Layers size={18} /></button>
+        <Menu itens={[
+          { l: 'Só bases reutilizáveis', icon: <Layers size={16} />, on: so === 'bases', onClick: () => setSo(so === 'bases' ? 'todas' : 'bases') },
+          { l: 'Ver em grade', icon: <Grid2x2 size={16} />, on: modo === 'grade', onClick: () => definirAjuste('receitas.modo', 'grade') },
+          { l: 'Ver em lista', icon: <List size={16} />, on: modo === 'lista', onClick: () => definirAjuste('receitas.modo', 'lista') },
+          { l: '', sep: true },
+          { l: 'Comparar fórmulas', icon: <Columns2 size={16} />, to: '/receitas/comparar' },
+          { l: 'Exportar CSV', icon: <Download size={16} />, disabled: !lista.length, onClick: () => {
+            const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`
+            const linhas = [['Receita', 'Versão', 'Esmalte', 'Classe', 'Ingrediente', 'Percentual'].join(';'),
+              ...lista.flatMap((r) => r.ingredientes.map((i) => [r.nome, r.versaoAtual, r.esmalteId ? nomeEsm.get(r.esmalteId) : '', CLASSES.find((c) => c.v === i.classe)?.l, i.nome, String(i.percentual).replace('.', ',')].map(esc).join(';')))]
+            baixar(new Blob(['\ufeff' + linhas.join('\n')], { type: 'text/csv;charset=utf-8' }), `receitas-${new Date().toISOString().slice(0, 10)}.csv`)
+          } },
+        ]} />
       </div>
       {!embutido && <div className="chips" style={{ marginBottom: 8 }}>
         <button className={'chip' + (!fam ? ' on' : '')} onClick={() => setFam('')}>Todas as famílias</button>

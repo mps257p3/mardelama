@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Columns2, Plus, Search, TestTube, Grid3x3, Check } from 'lucide-react'
+import { Menu } from '../../ui/Menu'
+import { Columns2, Search, TestTube, Grid3x3, Check } from 'lucide-react'
 import { useEsmaltes, useReceitas, useTestes } from '../../db/hooks'
 import { testeDaFamilia } from './Superficies'
 import { normaliza, textoBusca } from '../../lib/filtros'
@@ -22,22 +23,14 @@ export default function Testes({ embutido, familia }: { embutido?: boolean; fami
 
   return (
     <div className={embutido ? undefined : 'page'}>
-      {embutido ? <div className="sub-acts">
-        <Link className="btn sm primary" to="/testes/novo"><Plus size={15} />Novo teste</Link>
-        <Link className="btn sm" to="/testes/planejar"><Grid3x3 size={15} />Planejar experimento</Link>
-      </div> : <div className="head">
-        <div><p className="eyebrow">Laboratório</p><h1 style={{ marginTop: 8 }}>Testes</h1></div>
-        <div className="acts">
-          <Link className="btn" to="/testes/planejar"><Grid3x3 size={16} />Planejar experimento</Link>
-          <Link className="btn primary" to="/testes/novo"><Plus size={16} />Novo teste</Link>
-        </div>
-      </div>}
       <div className="toolbar">
-        <div className="search"><Search size={16} /><input className="input" placeholder="Buscar por código, esmalte, resultado…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-        <div className="seg">
-          {(['todos', 'planejados', 'queimados'] as const).map((f) => <button key={f} className={filtro === f ? 'on' : ''} onClick={() => setFiltro(f)}>{f[0].toUpperCase() + f.slice(1)}</button>)}
-        </div>
-        <button className={'btn sm' + (sel ? ' primary' : '')} onClick={() => setSel(sel ? null : [])}><Columns2 size={15} />{sel ? 'Cancelar' : 'Comparar'}</button>
+        <div className="search"><Search size={16} /><input className="input" placeholder="Buscar testes" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+        <Menu itens={[
+          ...(['todos', 'planejados', 'queimados'] as const).map((f) => ({ l: f === 'todos' ? 'Todos os testes' : f === 'planejados' ? 'Só planejados' : 'Só queimados', on: filtro === f, onClick: () => setFiltro(f) })),
+          { l: '', sep: true },
+          { l: sel ? 'Cancelar comparação' : 'Comparar testes', icon: <Columns2 size={16} />, onClick: () => setSel(sel ? null : []) },
+          { l: 'Planejar experimento', icon: <Grid3x3 size={16} />, to: '/testes/planejar' },
+        ]} />
       </div>
       {sel && <div className="aviso" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
         <span>Toque nos testes para comparar ({sel.length} de até 6).</span>
