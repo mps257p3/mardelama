@@ -22,8 +22,9 @@ export const chavePasta = (nome: string) => nome.trim().toLowerCase().normalize(
 export const imagemDoPin = (h: string) => `https://i.pinimg.com/736x/${h.slice(0, 2)}/${h.slice(2, 4)}/${h.slice(4, 6)}/${h}.jpg`
 
 export async function lerExportacaoPinterest(arquivos: File[]): Promise<ExportacaoPinterest> {
-  const achar = (pasta: string) => arquivos.find((f) => (f.webkitRelativePath || f.name).replace(/\\/g, '/').includes(pasta + '/') || f.name === pasta + '.html')
-  const fPins = achar('pins') ?? arquivos.find((f) => /pins/i.test(f.name))
+  // a pasta tem outras com "pins" no nome (reported_pins…): procura o segmento exato
+  const achar = (pasta: string) => arquivos.find((f) => new RegExp(`(^|/)${pasta}/[^/]+\\.html$`).test((f.webkitRelativePath || f.name).replace(/\\/g, '/')))
+  const fPins = achar('pins')
   if (!fPins) throw new Error('Não encontrei pins/0001.html na pasta escolhida.')
   const t = texto(await fPins.text())
   const blocos = t.split(/\n\s*(?=https:\/\/(?:[a-z]+\.)?pinterest\.[a-z.]+\/pin\/)/).slice(1)
