@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Home, FlaskConical, Images, BookOpen, Plus } from 'lucide-react'
+import { Home, FlaskConical, Images, BookOpen, Plus, RefreshCw } from 'lucide-react'
 import { LATERAL, RODAPE } from './nav'
 import { Monograma } from './Monograma'
 import { QuickAdd } from './QuickAdd'
 import { definirContexto, emFluxoDeCadastro } from '../lib/contexto'
+import { progressoSync } from '../db/sync'
 
 const AREA_DA_ROTA: [RegExp, string][] = [
   [/^\/(esmaltes|receitas|testes|testoteca|laboratorio|queimas|bancada)/, 'esmaltes'],
@@ -37,6 +38,7 @@ export function Layout() {
 
       <main className="main" style={area ? { ['--area' as string]: `var(--c-${area})` } : undefined}>
         <Outlet />
+        <ProgressoSync />
         <footer className="versao">Versão de {new Date(__VERSAO__).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })}</footer>
       </main>
 
@@ -51,4 +53,12 @@ export function Layout() {
       {add && <QuickAdd onClose={() => setAdd(false)} />}
     </div>
   )
+}
+
+/** Aviso discreto enquanto a sincronização roda, visível em qualquer tela. */
+function ProgressoSync() {
+  const [t, setT] = useState<string | undefined>(progressoSync())
+  useEffect(() => { const f = (e: Event) => setT((e as CustomEvent<string | undefined>).detail); window.addEventListener('sync-progresso', f); return () => window.removeEventListener('sync-progresso', f) }, [])
+  if (!t) return null
+  return <div className="sync-pill" role="status"><RefreshCw size={13} className="gira" />{t}</div>
 }

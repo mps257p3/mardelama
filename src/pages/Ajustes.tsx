@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { Download, Upload, Cloud, RefreshCw, LogOut } from 'lucide-react'
 import { useEffect } from 'react'
-import { configPadrao, entrar, entrarComCodigo, entrarComGoogle, obterConfig, sair, salvarConfig, sincronizar, usuario, type ResultadoSync } from '../db/sync'
+import { configPadrao, progressoSync, entrar, entrarComCodigo, entrarComGoogle, obterConfig, sair, salvarConfig, sincronizar, usuario, type ResultadoSync } from '../db/sync'
 import { baixar, exportarTudo, importarTudo } from '../db/backup'
 import { definirAjuste, useAjuste } from '../db/settings'
 import { useToast } from '../ui/toast'
@@ -61,7 +61,7 @@ function Nuvem() {
   const [url, setUrl] = useState(''); const [chave, setChave] = useState(''); const [email, setEmail] = useState(''); const [codigo, setCodigo] = useState(''); const [enviado, setEnviado] = useState(false)
   const [user, setUser] = useState<string | null>(null); const [config, setConfig] = useState(!!configPadrao()); const [ocupado, setOcupado] = useState(false)
   const ultimo = useAjuste<ResultadoSync | undefined>('sync.ultimo', undefined)
-  const [progresso, setProgresso] = useState<string>()
+  const [progresso, setProgresso] = useState<string | undefined>(progressoSync())
   useEffect(() => { const f = (e: Event) => setProgresso((e as CustomEvent<string | undefined>).detail); window.addEventListener('sync-progresso', f); return () => window.removeEventListener('sync-progresso', f) }, [])
   const atualizar = async () => { const c = await obterConfig(); setConfig(!!c); if (c) { setUrl(c.url); setChave(c.chave) }; setUser((await usuario())?.email ?? null) }
   useEffect(() => {
