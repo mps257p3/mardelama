@@ -25,14 +25,18 @@ import Grupos from './pages/ref/Grupos'
 import Paineis from './pages/ref/Paineis'
 import PainelEditor from './pages/ref/PainelEditor'
 import Compartilhar from './pages/ref/Compartilhar'
+import Biblioteca from './pages/bib/Biblioteca'
+import ConteudoForm from './pages/bib/ConteudoForm'
+import ConteudoDetalhe from './pages/bib/ConteudoDetalhe'
+import Caderno from './pages/cad/Caderno'
+import NotaEditor from './pages/cad/NotaEditor'
+import NotaNova from './pages/cad/NotaNova'
+import Calculadoras from './pages/calc/Calculadoras'
 import Materiais from './pages/lab/Materiais'
 import MaterialForm from './pages/lab/MaterialForm'
 import MaterialDetalhe from './pages/lab/MaterialDetalhe'
 
 const FUTURO: { path: string; nome: string; fase: number; texto: string }[] = [
-  { path: '/biblioteca/*', nome: 'Biblioteca', fase: 4, texto: 'Pesquisa técnica e teórica: técnicas, química, queimas, defeitos, livros, artigos e PDFs.' },
-  { path: '/caderno/*', nome: 'Caderno', fase: 4, texto: 'Diário criativo com texto, imagens, desenhos, paletas, áudios e referências relacionadas.' },
-  { path: '/calculadoras/*', nome: 'Calculadoras', fase: 4, texto: 'Retração, densidade, custos, misturas, consumo do forno, cones e conversões.' },
   { path: '/busca', nome: 'Buscar', fase: 5, texto: 'Busca global por todo o ateliê.' },
 ]
 
@@ -66,6 +70,14 @@ export default function App() {
           <Route path="referencias/:id/editar" element={<ReferenciaForm />} />
           <Route path="paineis" element={<Paineis />} />
           <Route path="paineis/:id" element={<PainelEditor />} />
+          <Route path="biblioteca" element={<Biblioteca />} />
+          <Route path="biblioteca/novo" element={<ConteudoForm key="novo" />} />
+          <Route path="biblioteca/:id" element={<ConteudoDetalhe />} />
+          <Route path="biblioteca/:id/editar" element={<ConteudoForm />} />
+          <Route path="caderno" element={<Caderno />} />
+          <Route path="caderno/nova" element={<NotaNova />} />
+          <Route path="caderno/:id" element={<NotaEditor />} />
+          <Route path="calculadoras" element={<Calculadoras />} />
           <Route path="compartilhar" element={<Compartilhar />} />
           <Route path="materiais" element={<Materiais />} />
           <Route path="materiais/novo" element={<MaterialForm key="novo" />} />

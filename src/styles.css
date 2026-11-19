@@ -331,3 +331,38 @@ textarea.input { min-height: 110px; resize: vertical; }
 .item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 .item .txt { width: 100%; height: 100%; padding: 12px 14px; font-family: var(--serif); font-size: 26px; line-height: 1.2; color: var(--ink); overflow: hidden; white-space: pre-wrap; }
 .item .alca { position: absolute; right: 0; bottom: 0; width: 22px; height: 22px; cursor: nwse-resize; background: var(--azul); border-radius: 4px 0 0 0; }
+
+/* ---------- texto rico ---------- */
+.rico { border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface); overflow: hidden; }
+.rico-barra { display: flex; gap: 2px; padding: 6px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.rico-barra button { width: 34px; height: 34px; border: 0; background: none; border-radius: 8px; display: grid; place-items: center; color: var(--ink-2); }
+.rico-barra button:hover { background: var(--surface-2); }
+.rico-area { min-height: 220px; padding: 16px 18px; outline: none; }
+.rico-area:empty::before { content: attr(data-placeholder); color: var(--ink-3); }
+.prosa { font-size: 16px; line-height: 1.7; }
+.prosa h3 { font-size: 26px; margin: 1.1em 0 .3em; }
+.prosa p { margin: 0 0 .8em; }
+.prosa blockquote { margin: 1em 0; padding-left: 18px; border-left: 2px solid var(--terracota); font-family: var(--serif); font-size: 22px; font-style: italic; color: var(--marrom); }
+.prosa a { text-decoration: underline; color: var(--azul); }
+.prosa ul, .prosa ol { padding-left: 1.3em; }
+.prosa table { border-collapse: collapse; } .prosa td, .prosa th { padding: 6px 12px; border-bottom: 1px solid var(--line); text-align: left; }
+.leitura { max-width: 680px; }
+
+/* ---------- caderno ---------- */
+.diario { display: flex; flex-direction: column; }
+.entrada { display: grid; grid-template-columns: 64px 1fr; gap: 18px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+.entrada .dia { font-family: var(--serif); text-align: center; line-height: 1; }
+.entrada .dia b { display: block; font-size: 38px; font-weight: 500; }
+.entrada .dia span { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); font-family: var(--sans); }
+.entrada .t { font-family: var(--serif); font-size: 24px; line-height: 1.15; }
+.entrada .resumo { color: var(--ink-2); font-size: 14.5px; margin-top: 6px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.entrada .imgs { display: flex; gap: 6px; margin-top: 12px; }
+.entrada .imgs > div { width: 84px; height: 84px; border-radius: 10px; overflow: hidden; background: var(--surface-2); }
+
+/* ---------- calculadoras ---------- */
+.calcs { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 800px) { .calcs { grid-template-columns: 1fr 1fr; gap: 20px; } }
+.calc { padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.calc .linha { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.calc .res { font-family: var(--serif); font-size: 34px; line-height: 1.1; }
+.calc .res small { font-family: var(--sans); font-size: 13px; color: var(--ink-3); display: block; margin-top: 4px; }
