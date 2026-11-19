@@ -67,9 +67,17 @@ export interface ResultadoSync { enviados: number; recebidos: number; quando: nu
 let emCurso: Promise<ResultadoSync> | undefined
 
 export function sincronizar(): Promise<ResultadoSync> {
-  if (!emCurso) { pausaVinculo.n++; emCurso = executar().finally(() => { emCurso = undefined; pausaVinculo.n-- }) }
+  if (!emCurso) { pausaVinculo.n++; emCurso = executar().finally(() => { emCurso = undefined; pausaVinculo.n--; avisarProgresso(undefined) }) }
   return emCurso
 }
+
+/** Executa as tarefas com no máximo `n` ao mesmo tempo. */
+async function emParalelo<T>(itens: T[], n: number, f: (x: T) => Promise<void>) {
+  let i = 0
+  await Promise.all(Array.from({ length: Math.min(n, itens.length) }, async () => { while (i < itens.length) await f(itens[i++]) }))
+}
+/** Progresso da sincronização, mostrado em Ajustes. */
+export function avisarProgresso(texto?: string) { window.dispatchEvent(new CustomEvent('sync-progresso', { detail: texto })) }
 
 async function executar(): Promise<ResultadoSync> {
   const sb = await cliente_(); if (!sb) throw new Error('Nuvem não configurada.')
@@ -81,26 +89,31 @@ async function executar(): Promise<ResultadoSync> {
   {
     const mk = m.arquivos ?? { enviado: 0, recebido: 0 }
     const novos = (await db.arquivos.toArray()).filter((a) => (a.atualizadoEm ?? 0) > mk.enviado)
-    for (const a of novos) {
+    let feitos = 0
+    await emParalelo(novos, 4, async (a) => {
       const { blob, ...meta } = a
       if (!a.excluido) { const { error } = await sb.storage.from(BUCKET).upload(`${user.id}/${a.id}`, blob, { upsert: true, contentType: a.mime }); if (error) throw error }
       const { error } = await sb.from('arquivos').upsert(linha(meta)); if (error) throw error
-      enviados++
-    }
+      enviados++; avisarProgresso(`Enviando fotos e arquivos: ${++feitos} de ${novos.length}`)
+    })
     const { data, error } = await sb.from('arquivos').select('*').gt('atualizado_em', mk.recebido).order('atualizado_em')
     if (error) throw error
-    let maxR = mk.recebido
-    for (const r of data ?? []) {
-      maxR = Math.max(maxR, r.atualizado_em)
+    let maxR = mk.recebido, baixados = 0
+    const lista = data ?? []
+    for (const r of lista) maxR = Math.max(maxR, r.atualizado_em)
+    await emParalelo(lista, 6, async (r) => {
       const atual = await db.arquivos.get(r.id)
-      if (atual && (atual.atualizadoEm ?? 0) >= r.atualizado_em) continue
-      let blob = atual?.blob
-      if (!blob && !r.excluido) { const d = await sb.storage.from(BUCKET).download(`${user.id}/${r.id}`); if (d.error) continue; blob = d.data }
-      await db.arquivos.put({ ...(local(r) as Omit<Arquivo, 'blob'>), blob: blob ?? new Blob() } as Arquivo); recebidos++
-    }
+      if (!(atual && (atual.atualizadoEm ?? 0) >= r.atualizado_em)) {
+        let blob = atual?.blob
+        if (!blob && !r.excluido) { const d = await sb.storage.from(BUCKET).download(`${user.id}/${r.id}`); if (d.error) return; blob = d.data }
+        await db.arquivos.put({ ...(local(r) as Omit<Arquivo, 'blob'>), blob: blob ?? new Blob() } as Arquivo); recebidos++
+      }
+      avisarProgresso(`Recebendo fotos e arquivos: ${++baixados} de ${lista.length}`)
+    })
     m.arquivos = { enviado: inicio, recebido: maxR }
   }
 
+  avisarProgresso('Sincronizando os registros…')
   // 2. tabelas de conteúdo
   const pendentes: string[] = []
   for (const t of TABELAS) {

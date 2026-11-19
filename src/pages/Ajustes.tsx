@@ -83,9 +83,11 @@ function Nuvem() {
   const [url, setUrl] = useState(''); const [chave, setChave] = useState(''); const [email, setEmail] = useState('')
   const [user, setUser] = useState<string | null>(null); const [config, setConfig] = useState(!!configPadrao()); const [ocupado, setOcupado] = useState(false)
   const ultimo = useAjuste<ResultadoSync | undefined>('sync.ultimo', undefined)
+  const [progresso, setProgresso] = useState<string>()
+  useEffect(() => { const f = (e: Event) => setProgresso((e as CustomEvent<string | undefined>).detail); window.addEventListener('sync-progresso', f); return () => window.removeEventListener('sync-progresso', f) }, [])
   const atualizar = async () => { const c = await obterConfig(); setConfig(!!c); if (c) { setUrl(c.url); setChave(c.chave) }; setUser((await usuario())?.email ?? null) }
   useEffect(() => { atualizar() }, [])
-  const passo = async (f: () => Promise<unknown>, ok: string) => { setOcupado(true); try { await f(); toast(ok); await atualizar() } catch (e) { toast((e as Error).message) } finally { setOcupado(false) } }
+  const passo = async <R,>(f: () => Promise<R>, ok: string | ((r: R) => string)) => { setOcupado(true); try { const r = await f(); toast(typeof ok === 'function' ? ok(r) : ok); await atualizar() } catch (e) { toast((e as Error).message) } finally { setOcupado(false) } }
 
   return (
     <section style={{ marginTop: 32 }}>
@@ -97,9 +99,10 @@ function Nuvem() {
         </div>
         {user ? (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <button className="btn sm primary" disabled={ocupado} onClick={() => passo(async () => { const r = await sincronizar(); toast(`${r.enviados} enviados, ${r.recebidos} recebidos`) }, 'Sincronizado')}><RefreshCw size={14} />Sincronizar agora</button>
+            <button className="btn sm primary" disabled={ocupado} onClick={() => passo(sincronizar, (r) => `Sincronizado: ${r.enviados} enviados, ${r.recebidos} recebidos`)}><RefreshCw size={14} />Sincronizar agora</button>
             <button className="btn sm ghost" onClick={() => passo(sair, 'Você saiu da conta')}><LogOut size={14} />Sair</button>
-            {ultimo && <span className="faint" style={{ fontSize: 12.5 }}>Última: {new Date(ultimo.quando).toLocaleString('pt-BR')}</span>}
+            {progresso ? <span className="faint" style={{ fontSize: 12.5 }}>{progresso}</span>
+              : ultimo && <span className="faint" style={{ fontSize: 12.5 }}>Última: {new Date(ultimo.quando).toLocaleString('pt-BR')}</span>}
           </div>
         ) : config ? (
           <form style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }} onSubmit={(e) => { e.preventDefault(); passo(() => entrar(email), 'Enviamos um link de acesso para o seu e-mail') }}>
