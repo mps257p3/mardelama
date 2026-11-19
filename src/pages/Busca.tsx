@@ -47,7 +47,7 @@ export default function Busca() {
       </div>
       {res ? (res.length ? <><p className="faint" style={{ fontSize: 13 }}>{res.length} resultados</p><Linhas itens={res} /></> : <p className="muted" style={{ marginTop: 24 }}>Nada encontrado para "{q}".</p>) : (
         <>
-          <h2 style={{ marginTop: 40, display: 'flex', alignItems: 'center', gap: 10 }}><Heart size={22} strokeWidth={1.3} />Favoritos</h2>
+          <h2 style={{ marginTop: 32, display: 'flex', alignItems: 'center', gap: 10 }}><Heart size={22} strokeWidth={1.3} />Favoritos</h2>
           {favoritos.length ? <Linhas itens={favoritos} /> : <p className="faint" style={{ marginTop: 12 }}>Itens marcados como favoritos aparecem aqui, reunidos.</p>}
         </>
       )}

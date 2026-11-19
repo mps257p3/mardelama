@@ -1,15 +1,23 @@
 import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Home, FlaskConical, Images, BookOpen, Plus } from 'lucide-react'
 import { LATERAL, RODAPE } from './nav'
 import { Monograma } from './Monograma'
 import { QuickAdd } from './QuickAdd'
 
+const AREA_DA_ROTA: [RegExp, string][] = [
+  [/^\/(esmaltes|receitas|testes|testoteca|laboratorio|queimas|bancada)/, 'esmaltes'],
+  [/^\/materiais/, 'materiais'], [/^\/(referencias|paineis|compartilhar|cores)/, 'referencias'],
+  [/^\/biblioteca/, 'biblioteca'], [/^\/(caderno|projetos|entrada)/, 'caderno'], [/^\/calculadoras/, 'calculadoras'],
+]
+
 export function Layout() {
   const [add, setAdd] = useState(false)
+  const { pathname } = useLocation()
+  const area = AREA_DA_ROTA.find(([r]) => r.test(pathname))?.[1]
   return (
     <div className="app">
-      <aside className="side" aria-label="Navegação">
+      <aside className="side" aria-label="Navegação" style={area ? { ['--area' as string]: `var(--c-${area})` } : undefined}>
         <NavLink to="/" className="brand" style={{ background: 'none' }}>
           <Monograma altura={40} />
           <span>Mar de<br />Lama</span>
@@ -25,16 +33,16 @@ export function Layout() {
         ))}
       </aside>
 
-      <main className="main">
+      <main className="main" style={area ? { ['--area' as string]: `var(--c-${area})` } : undefined}>
         <Outlet />
         <footer className="versao">Versão de {new Date(__VERSAO__).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })}</footer>
       </main>
 
       <nav className="bottom" aria-label="Navegação principal">
         <NavLink to="/" end><Home size={22} strokeWidth={1.4} />Início</NavLink>
-        <NavLink to="/laboratorio"><FlaskConical size={22} strokeWidth={1.4} />Laboratório</NavLink>
+        <NavLink to="/laboratorio" className={({ isActive }) => (isActive || area === 'esmaltes' || area === 'materiais' || area === 'calculadoras') ? 'active' : ''}><FlaskConical size={22} strokeWidth={1.4} />Laboratório</NavLink>
         <button className="plus" aria-label="Novo" onClick={() => setAdd(true)}><Plus size={24} strokeWidth={1.6} /></button>
-        <NavLink to="/referencias"><Images size={22} strokeWidth={1.4} />Referências</NavLink>
+        <NavLink to="/referencias" className={({ isActive }) => (isActive || area === 'referencias') ? 'active' : ''}><Images size={22} strokeWidth={1.4} />Referências</NavLink>
         <NavLink to="/biblioteca"><BookOpen size={22} strokeWidth={1.4} />Biblioteca</NavLink>
       </nav>
 

@@ -49,7 +49,7 @@ export default function Ajustes() {
 
       <Nuvem />
 
-      <section style={{ marginTop: 40 }}>
+      <section style={{ marginTop: 32 }}>
         <h3>Backup</h3>
         <p className="muted" style={{ marginTop: 6 }}>Um único arquivo com todos os dados, fotos e documentos. Importar um backup mescla com o que já existe, mantendo a versão mais recente de cada item.</p>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
@@ -66,7 +66,7 @@ export default function Ajustes() {
 
       <AjustesInicio />
 
-      <section style={{ marginTop: 40 }}>
+      <section style={{ marginTop: 32 }}>
         <h3 style={{ display: 'flex', gap: 10, alignItems: 'center' }}><Sparkles size={20} strokeWidth={1.3} />Inteligência artificial</h3>
         <p className="muted" style={{ marginTop: 6 }}>{provedorAtual() ? `Conectada: ${provedorAtual()!.nome}.` : 'O app está preparado para estas funções, que aparecerão nas telas indicadas quando um serviço de IA for conectado. Nenhuma está ativa ainda.'}</p>
         <div className="lista" style={{ marginTop: 10 }}>
@@ -88,7 +88,7 @@ function Nuvem() {
   const passo = async (f: () => Promise<unknown>, ok: string) => { setOcupado(true); try { await f(); toast(ok); await atualizar() } catch (e) { toast((e as Error).message) } finally { setOcupado(false) } }
 
   return (
-    <section style={{ marginTop: 40 }}>
+    <section style={{ marginTop: 32 }}>
       <h3>Sincronização</h3>
       <div className="card" style={{ padding: 20, marginTop: 14, display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ display: 'flex', gap: 14 }}>

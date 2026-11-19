@@ -53,7 +53,7 @@ export default function NotaEditor() {
       <Link to="/caderno" className="back"><ArrowLeft size={15} />Caderno</Link>
       <p className="eyebrow">{d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · <span style={{ textTransform: 'none', letterSpacing: 0 }}>{salvo ? 'salvo' : 'salvando…'}</span></p>
       <input className="serif" value={n.titulo ?? ''} placeholder="Título (opcional)" onChange={(e) => set('titulo')(e.target.value)}
-        style={{ fontSize: 'clamp(34px,5vw,52px)', border: 0, background: 'none', width: '100%', padding: 0, margin: '8px 0 20px', outline: 'none', color: 'var(--ink)' }} />
+        style={{ fontSize: 'clamp(32px,4vw,44px)', border: 0, background: 'none', width: '100%', padding: 0, margin: "8px 0 16px", outline: 'none', color: 'var(--ink)' }} />
       <TextoRico value={n.corpo} onChange={set('corpo')} placeholder="O que você está pensando, pesquisando, descobrindo?" />
 
       <div className="form" style={{ marginTop: 28 }}>
@@ -87,8 +87,8 @@ export default function NotaEditor() {
         <Campo label="Tags"><Tags value={n.tags} onChange={set('tags')} /></Campo>
       </div>
 
-      <div style={{ marginTop: 36 }}><Relacoes tipo="nota" id={n.id} /></div>
-      <div style={{ marginTop: 36, display: 'flex', justifyContent: 'flex-end' }}>
+      <div style={{ marginTop: 32 }}><Relacoes tipo="nota" id={n.id} /></div>
+      <div style={{ marginTop: 32, display: 'flex', justifyContent: 'flex-end' }}>
         <button className="btn sm ghost" onClick={async () => { if (confirm('Excluir esta anotação?')) { await excluir('notas', n.id); nav('/caderno') } }}><Trash2 size={14} />Excluir anotação</button>
       </div>
       {desenho && <Desenho onClose={() => setDesenho(false)} onSalvar={async (f) => { const id = await salvarArquivo(f); sujo.current = true; setN((x) => x && { ...x, imagens: [...x.imagens, id] }); setDesenho(false) }} />}

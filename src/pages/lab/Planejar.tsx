@@ -159,7 +159,7 @@ export default function Planejar() {
       </div>
 
       {itens.length > 0 && <>
-        <h3 style={{ marginTop: 36 }}>{itens.length} placas</h3>
+        <h3 style={{ marginTop: 32 }}>{itens.length} placas</h3>
         {modo === 'triaxial' ? <Triangulo n={Math.max(1, Math.min(40, n ?? 1))} itens={itens} /> : (
           <div className="pills" style={{ marginTop: 14 }}>{itens.map((it, i) => <span key={i} className="chip">{it.descricao}</span>)}</div>
         )}

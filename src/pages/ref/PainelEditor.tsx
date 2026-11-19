@@ -74,7 +74,7 @@ export default function PainelEditor() {
     <div className="page" style={{ maxWidth: 1400 }}>
       <Link to="/paineis" className="back"><ArrowLeft size={15} />Painéis</Link>
       <input className="serif" value={p.nome} onChange={(e) => mudar(p.itens, { nome: e.target.value })}
-        style={{ fontSize: 'clamp(32px,5vw,48px)', border: 0, background: 'none', width: '100%', padding: 0, outline: 'none', color: 'var(--ink)' }} />
+        style={{ fontSize: 'clamp(32px,4vw,44px)', border: 0, background: 'none', width: '100%', padding: 0, outline: 'none', color: 'var(--ink)' }} />
       <div className="toolbar">
         <button className="btn sm" onClick={() => setSheet('ref')}><Images size={14} />Referência</button>
         <button className="btn sm" onClick={() => arq.current?.click()}><ImagePlus size={14} />Imagem</button>

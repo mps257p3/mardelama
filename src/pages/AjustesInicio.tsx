@@ -60,7 +60,7 @@ export function AjustesInicio() {
   }
 
   return (
-    <section id="tela-inicial" ref={ref} style={{ marginTop: 40, scrollMarginTop: 16 }}>
+    <section id="tela-inicial" ref={ref} style={{ marginTop: 32, scrollMarginTop: 16 }}>
       <h3>Tela inicial</h3>
 
       <p className="rotulo-ajuste">Fotografia de destaque</p>

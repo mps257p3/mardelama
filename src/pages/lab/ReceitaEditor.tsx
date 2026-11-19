@@ -78,7 +78,7 @@ export default function ReceitaEditor() {
         <div style={{ flex: 1, minWidth: 260 }}>
           <p className="eyebrow">Receita · versão {r.versaoAtual}</p>
           <input className="serif" value={r.nome} onChange={(e) => mudar({ nome: e.target.value })}
-            style={{ fontSize: 'clamp(34px,5vw,52px)', border: 0, background: 'none', width: '100%', padding: 0, marginTop: 6, outline: 'none', color: 'var(--ink)' }} />
+            style={{ fontSize: 'clamp(32px,4vw,44px)', border: 0, background: 'none', width: '100%', padding: 0, marginTop: 6, outline: 'none', color: 'var(--ink)' }} />
           {origem && <p className="faint" style={{ fontSize: 13 }}><GitBranch size={13} style={{ verticalAlign: -2 }} /> Variação de <Link to={`/receitas/${origem.id}`} style={{ textDecoration: 'underline' }}>{origem.nome}</Link></p>}
         </div>
         <div className="acts">
@@ -126,7 +126,7 @@ export default function ReceitaEditor() {
           </div>
           {Math.abs(sb - 100) > 0.05 && sb > 0 && <p className="aviso" style={{ marginTop: 14 }}>A receita base soma {fmt(sb, 2)}%. Os pesos já são calculados proporcionalmente; normalize para registrar em 100%.</p>}
 
-          <h3 style={{ marginTop: 36 }}>Líquidos</h3>
+          <h3 style={{ marginTop: 32 }}>Líquidos</h3>
           <div className="form" style={{ marginTop: 14 }}>
             <Campo label="Água (ml por 100 g de base seca)"><Numero value={r.aguaMlPor100g} onChange={(v) => mudar({ aguaMlPor100g: v })} /></Campo>
             <Campo label="Água para este lote"><div className="input" style={{ display: 'flex', alignItems: 'center' }}>{r.aguaMlPor100g ? fmt(r.aguaMlPor100g * pesoBase / 100, 0) + ' ml' : '–'}</div></Campo>
@@ -143,7 +143,7 @@ export default function ReceitaEditor() {
             <div style={{ gridColumn: '1 / -1' }}><button className="btn sm" onClick={() => mudar({ liquidos: [...(r.liquidos ?? []), { nome: '', quantidade: 0, unidade: 'ml/100g' }] })}><Plus size={14} />Aditivo líquido</button></div>
           </div>
 
-          <h3 style={{ marginTop: 36 }}>Observações</h3>
+          <h3 style={{ marginTop: 32 }}>Observações</h3>
           <div style={{ marginTop: 12 }}><AreaTexto value={r.observacoes} onChange={(v) => mudar({ observacoes: v })} rows={4} /></div>
         </div>
 
@@ -160,7 +160,7 @@ export default function ReceitaEditor() {
             <div className="chips" style={{ marginTop: 10 }}>{[100, 500, 1000, 3000, 5000].map((g) => <button key={g} className={'chip' + (lote.g === g ? ' on' : '')} onClick={() => setLote({ ...lote, g })}>{g >= 1000 ? g / 1000 + ' kg' : g + ' g'}</button>)}</div>
             <hr className="divider" style={{ margin: '18px 0' }} />
             <p className="eyebrow">Custo estimado</p>
-            <p className="serif" style={{ fontSize: 34, marginTop: 4 }}>{brl(c.total)}</p>
+            <p style={{ fontSize: 28, fontWeight: 500, marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>{brl(c.total)}</p>
             {c.faltando.length > 0 && <p className="faint" style={{ fontSize: 12.5 }}>Sem preço cadastrado: {c.faltando.filter(Boolean).join(', ') || 'ingredientes sem nome'}.</p>}
           </div>
 
