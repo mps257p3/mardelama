@@ -64,15 +64,20 @@ export function Estrelas({ value = 0, onChange, tamanho = 20 }: { value?: number
   </div>
 }
 
-export function Tags({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+export function Tags({ value, onChange, sugestoes }: { value: string[]; onChange: (v: string[]) => void; sugestoes?: readonly string[] }) {
   const [t, setT] = useState('')
-  const add = () => { const x = t.trim().toLowerCase(); if (x && !value.includes(x)) onChange([...value, x]); setT('') }
+  const [ver, setVer] = useState(false)
+  const add = (raw = t) => { const x = raw.trim(); if (x && !value.some((y) => y.toLowerCase() === x.toLowerCase())) onChange([...value, x]); setT('') }
+  const livres = (sugestoes ?? []).filter((x) => !value.some((y) => y.toLowerCase() === x.toLowerCase()))
   return <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
     {value.length > 0 && <div className="chips" style={{ flexWrap: 'wrap' }}>
       {value.map((x) => <button type="button" key={x} className="chip" onClick={() => onChange(value.filter((y) => y !== x))}>#{x} <X size={12} /></button>)}
     </div>}
     <input className="input" placeholder="Adicionar tag e Enter" value={t} onChange={(e) => setT(e.target.value)}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add() } }} onBlur={add} />
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add() } }} onBlur={() => add()} />
+    {livres.length > 0 && (ver
+      ? <div className="chips" style={{ flexWrap: 'wrap' }}>{livres.map((x) => <button type="button" key={x} className="chip" onClick={() => add(x)}>+ {x}</button>)}</div>
+      : <button type="button" className="btn sm ghost" style={{ alignSelf: 'flex-start' }} onClick={() => setVer(true)}>Biblioteca de texturas</button>)}
   </div>
 }
 

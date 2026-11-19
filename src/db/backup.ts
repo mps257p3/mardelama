@@ -1,7 +1,7 @@
 import { pausaVinculo } from '../lib/contexto'
 import { db } from './schema'
 
-const TABELAS = ['familias', 'esmaltes', 'receitas', 'versoes', 'testes', 'materiais', 'referencias', 'grupos', 'paineis', 'conteudos', 'notas', 'relacoes', 'ajustes'] as const
+const TABELAS = ['familias', 'esmaltes', 'receitas', 'versoes', 'testes', 'materiais', 'referencias', 'grupos', 'paineis', 'conteudos', 'notas', 'relacoes', 'ajustes', 'curvas', 'queimas', 'comerciais', 'lotes', 'fornecedores', 'compras'] as const
 
 const b64 = (blob: Blob) => new Promise<string>((ok, err) => {
   const r = new FileReader(); r.onload = () => ok(String(r.result)); r.onerror = err; r.readAsDataURL(blob)

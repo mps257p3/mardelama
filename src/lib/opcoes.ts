@@ -1,12 +1,12 @@
 export const ACABAMENTOS = ['Brilhante', 'Acetinado', 'Semifosco', 'Fosco', 'Seco', 'Metálico'] as const
 export const TEXTURAS = ['Lisa', 'Craquelada', 'Vulcânica', 'Retraída', 'Granulada', 'Cristalina', 'Escorrida'] as const
 export const TRANSPARENCIAS = ['Transparente', 'Translúcido', 'Semiopaco', 'Opaco'] as const
-export const ATMOSFERAS = ['Oxidante', 'Redutora', 'Neutra', 'Lenha', 'Raku', 'Sal/soda'] as const
+export const ATMOSFERAS = ['Oxidação', 'Redução', 'Neutra', 'Lenha', 'Raku', 'Sal/soda'] as const
 export const FLUIDEZ = ['Estável', 'Pouco fluido', 'Fluido', 'Muito fluido'] as const
-export const APLICACOES = ['Imersão', 'Pincel', 'Pistola', 'Banho', 'Esponja', 'Derramado'] as const
+export const APLICACOES = ['Pincel', 'Imersão', 'Derramamento', 'Pulverização', 'Sobreposição', 'Aplicação localizada', 'Aplicação espessa', 'Aplicação em camadas', 'Combinação com engobes', 'Esponja'] as const
 export const STATUS = ['Ideia', 'Em teste', 'Em ajuste', 'Aprovado', 'Descartado'] as const
 export const CORES = ['Branco', 'Preto', 'Azul', 'Verde', 'Turquesa', 'Amarelo', 'Laranja', 'Vermelho', 'Rosa', 'Roxo', 'Marrom', 'Bege', 'Cinza', 'Multicolor'] as const
-export const CATEGORIAS_MATERIAIS = ['Argilas', 'Fritas', 'Feldspatos', 'Sílica', 'Fundentes', 'Óxidos', 'Carbonatos', 'Pigmentos', 'Opacificantes', 'Engobes', 'Aditivos', 'Esmaltes comerciais', 'Outros'] as const
+export const CATEGORIAS_MATERIAIS = ['Argilas', 'Fritas', 'Feldspatos', 'Sílica', 'Fundentes', 'Óxidos', 'Carbonatos', 'Pigmentos', 'Opacificantes', 'Modificadores', 'Engobes', 'Aditivos', 'Conservantes', 'Massas cerâmicas', 'Esmaltes comerciais', 'Outros'] as const
 export const ARGILAS = ['Grês', 'Porcelana', 'Faiança', 'Terracota', 'Raku', 'Grês escuro'] as const
 export const DEFEITOS = ['Escorrimento', 'Retração indesejada', 'Bolhas', 'Furos (pinholes)', 'Crateras', 'Gretado', 'Descascamento', 'Subqueima', 'Sobrequeima', 'Cor inesperada', 'Matificação', 'Devitrificação'] as const
 

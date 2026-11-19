@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Heart, LayoutDashboard, Plus, Search, Tags as TagsIcon, ExternalLink } from 'lucide-react'
+import { Heart, LayoutDashboard, Plus, Search, Tags as TagsIcon, ExternalLink, FolderInput } from 'lucide-react'
+import { importarPasta } from '../../lib/importarPasta'
+import { useToast } from '../../ui/toast'
 import { useGrupos, useReferencias } from '../../db/hooks'
 import { normaliza, textoBusca } from '../../lib/filtros'
 import { TIPOS_REF } from '../../lib/refs'
@@ -17,6 +19,17 @@ export default function Referencias() {
   const [fav, setFav] = useState(false)
   const contagem = useMemo(() => { const m = new Map<string, number>(); (refs ?? []).forEach((r) => r.grupos.forEach((g) => m.set(g, (m.get(g) ?? 0) + 1))); return m }, [refs])
   const nomeG = useMemo(() => new Map(grupos.map((g) => [g.id, g.nome])), [grupos])
+  const toast = useToast()
+  const pasta = useRef<HTMLInputElement>(null)
+  const [imp, setImp] = useState<string>()
+  async function importar(fs: FileList | null) {
+    if (!fs?.length) return
+    setImp('Preparando…')
+    try {
+      const r = await importarPasta(Array.from(fs), (a, b) => setImp(`Importando ${a} de ${b}…`))
+      toast(`${r.novos} referências importadas` + (r.repetidos ? `, ${r.repetidos} já existiam` : '') + (r.falhas ? `, ${r.falhas} não puderam ser lidas` : ''))
+    } catch (e) { toast((e as Error).message) } finally { setImp(undefined) }
+  }
 
   const lista = useMemo(() => (refs ?? []).filter((r) => {
     if (sel.length && !(op === 'E' ? sel.every((g) => r.grupos.includes(g)) : sel.some((g) => r.grupos.includes(g)))) return false
@@ -31,6 +44,8 @@ export default function Referencias() {
       <div className="head">
         <div><p className="eyebrow">Repertório</p><h1 style={{ marginTop: 8 }}>Referências</h1></div>
         <div className="acts">
+          <button className="btn" disabled={!!imp} onClick={() => pasta.current?.click()} title="Cada subpasta vira um grupo; o que já foi importado é ignorado"><FolderInput size={16} />{imp ?? 'Importar pasta'}</button>
+          <input ref={pasta} type="file" multiple hidden {...{ webkitdirectory: '', directory: '' }} onChange={(e) => { importar(e.target.files); e.target.value = '' }} />
           <Link className="btn" to="/paineis"><LayoutDashboard size={16} />Painéis</Link>
           <Link className="btn" to="/referencias/grupos"><TagsIcon size={16} />Grupos</Link>
           <Link className="btn primary" to="/referencias/nova"><Plus size={16} />Nova referência</Link>

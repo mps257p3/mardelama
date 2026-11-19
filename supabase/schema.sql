@@ -11,7 +11,7 @@ create extension if not exists "pgcrypto";
 do $$
 declare t text;
 begin
-  foreach t in array array['familias','esmaltes','receitas','versoes','testes','materiais','referencias','grupos','paineis','conteudos','notas','arquivos','ajustes']
+  foreach t in array array['familias','esmaltes','receitas','versoes','testes','materiais','referencias','grupos','paineis','conteudos','notas','arquivos','ajustes','curvas','queimas','comerciais','lotes','fornecedores','compras','projetos','entrada','paletas']
   loop
     execute format($f$
       create table if not exists public.%1$I (

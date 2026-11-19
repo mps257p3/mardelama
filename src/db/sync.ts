@@ -11,7 +11,9 @@ import { definirAjuste } from './settings'
 
 export interface ConfigNuvem { url: string; chave: string }
 
-const TABELAS = ['familias', 'esmaltes', 'receitas', 'versoes', 'testes', 'materiais', 'referencias', 'grupos', 'paineis', 'conteudos', 'notas'] as const
+const TABELAS = ['familias', 'esmaltes', 'receitas', 'versoes', 'testes', 'materiais', 'referencias', 'grupos', 'paineis', 'conteudos', 'notas', 'curvas', 'queimas', 'comerciais', 'lotes', 'fornecedores', 'compras', 'projetos', 'entrada', 'paletas'] as const
+/** Tabela ainda não criada no Supabase (migração pendente): pula sem interromper o resto. */
+const faltaTabela = (e: { code?: string; message?: string }) => e.code === '42P01' || e.code === 'PGRST205' || /does not exist|Could not find the table/i.test(e.message ?? '')
 const BUCKET = 'arquivos'
 
 let cliente: SupabaseClient | undefined
@@ -52,7 +54,7 @@ const linha = (x: any) => {
 }
 const local = (r: any) => ({ ...r.dados, id: r.id, criadoEm: r.criado_em, atualizadoEm: r.atualizado_em, excluido: r.excluido ? 1 : 0 })
 
-export interface ResultadoSync { enviados: number; recebidos: number; quando: number }
+export interface ResultadoSync { enviados: number; recebidos: number; quando: number; pendentes?: string[] }
 let emCurso: Promise<ResultadoSync> | undefined
 
 export function sincronizar(): Promise<ResultadoSync> {
@@ -91,16 +93,20 @@ async function executar(): Promise<ResultadoSync> {
   }
 
   // 2. tabelas de conteúdo
+  const pendentes: string[] = []
   for (const t of TABELAS) {
+    if (!db.tables.some((x) => x.name === t)) continue
     const mk = m[t] ?? { enviado: 0, recebido: 0 }
     const chave = t === 'versoes' ? 'criadoEm' : 'atualizadoEm'
     const novos = (await db.table(t).toArray()).filter((x: any) => (x[chave] ?? 0) > mk.enviado)
     for (let i = 0; i < novos.length; i += 200) {
-      const { error } = await sb.from(t).upsert(novos.slice(i, i + 200).map(linha)); if (error) throw error
+      const { error } = await sb.from(t).upsert(novos.slice(i, i + 200).map(linha))
+      if (error) { if (faltaTabela(error)) { pendentes.push(t); break } throw error }
     }
+    if (pendentes.includes(t)) continue
     enviados += novos.length
     const { data, error } = await sb.from(t).select('*').gt('atualizado_em', mk.recebido).order('atualizado_em').limit(5000)
-    if (error) throw error
+    if (error) { if (faltaTabela(error)) { pendentes.push(t); continue } throw error }
     let maxR = mk.recebido
     for (const r of data ?? []) {
       maxR = Math.max(maxR, r.atualizado_em)
@@ -132,7 +138,7 @@ async function executar(): Promise<ResultadoSync> {
   }
 
   await definirAjuste('sync.marcas', m)
-  const res = { enviados, recebidos, quando: Date.now() }
+  const res: ResultadoSync = { enviados, recebidos, quando: Date.now(), pendentes }
   await definirAjuste('sync.ultimo', res)
   return res
 }

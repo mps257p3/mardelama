@@ -1,9 +1,9 @@
 import type { ClasseIngrediente, Ingrediente, Material } from '../db/schema'
 
 export const CLASSES: { v: ClasseIngrediente; l: string }[] = [
-  { v: 'base', l: 'Receita base' },
-  { v: 'corante', l: 'Corantes' },
-  { v: 'opacificante', l: 'Opacificantes' },
+  { v: 'base', l: 'Base mineral' },
+  { v: 'corante', l: 'Colorantes' },
+  { v: 'opacificante', l: 'Modificadores e opacificantes' },
   { v: 'aditivo', l: 'Aditivos' },
 ]
 

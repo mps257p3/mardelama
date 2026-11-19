@@ -3,11 +3,12 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, Copy, Download, GitBranch, History, Plus, Scale, Trash2, X, Columns2, Printer } from 'lucide-react'
 import { db, novo, uid, type ClasseIngrediente, type Ingrediente, type Receita } from '../../db/schema'
-import { excluir, useEsmaltes, useMapaMateriais, useMateriais, useReceitas } from '../../db/hooks'
+import { excluir, useEsmaltes, useFamilias, useMapaMateriais, useMateriais, useReceitas } from '../../db/hooks'
+import { STATUS_RECEITA, TEXTURAS_AUTORAIS } from '../../db/conhecimento'
 import { CLASSES, baseParaTotal, custo, normalizar, pesos, receitaComoTexto, somaBase, somaExtras } from '../../lib/receita'
 import { brl, fmt } from '../../lib/opcoes'
 import { baixar } from '../../db/backup'
-import { Campo, Numero, Texto, AreaTexto } from '../../ui/form'
+import { Campo, Numero, Texto, AreaTexto, Multi, Tags } from '../../ui/form'
 import { Sheet } from '../../ui/Sheet'
 import { Relacoes } from '../../ui/Relacoes'
 import { useToast } from '../../ui/toast'
@@ -24,6 +25,8 @@ export default function ReceitaEditor() {
   const mapa = useMapaMateriais()
   const esmaltes = useEsmaltes()
   const receitas = useReceitas()
+  const familias = useFamilias()
+  const curvas = useLiveQuery(async () => (await db.curvas.orderBy('codigo').toArray()).filter((x) => !x.excluido), [], [])
   const [r, setR] = useState<R>()
   const [sujo, setSujo] = useState(false)
   const [lote, setLote] = useState<{ modo: 'base' | 'total'; g: number }>({ modo: 'base', g: 1000 })
@@ -63,7 +66,7 @@ export default function ReceitaEditor() {
   }
   async function derivar(tipo: 'duplicar' | 'variacao') {
     const { id: _i, ...resto } = r!
-    const x = novo({ ...resto, nome: r!.nome + (tipo === 'variacao' ? ' · variação' : ' (cópia)'), versaoAtual: 1, origemId: tipo === 'variacao' ? r!.id : r!.origemId, esmalteId: tipo === 'variacao' ? r!.esmalteId : undefined, ehBase: 0 as const })
+    const x = novo({ ...resto, nome: r!.nome + (tipo === 'variacao' ? ' · variação' : ' (cópia)'), codigo: r!.codigo ? r!.codigo + (tipo === 'variacao' ? '-V' : '-C') : undefined, status: STATUS_RECEITA[0], versaoAtual: 1, origemId: tipo === 'variacao' ? r!.id : r!.origemId, esmalteId: tipo === 'variacao' ? r!.esmalteId : undefined, ehBase: 0 as const })
     await db.receitas.add(x)
     await db.versoes.add({ id: uid(), receitaId: x.id, versao: 1, criadoEm: Date.now(), nota: tipo === 'variacao' ? `Derivada de ${r!.nome} v${r!.versaoAtual}` : `Cópia de ${r!.nome}`, snapshot: { ...x } })
     toast(tipo === 'variacao' ? 'Variação criada' : 'Receita duplicada'); nav(`/receitas/${x.id}`)
@@ -76,9 +79,10 @@ export default function ReceitaEditor() {
       <Link to="/receitas" className="back"><ArrowLeft size={15} />Receitas</Link>
       <div className="head">
         <div style={{ flex: 1, minWidth: 260 }}>
-          <p className="eyebrow">Receita · versão {r.versaoAtual}</p>
+          <p className="eyebrow">{r.codigo ? r.codigo + ' · ' : 'Fórmula · '}versão {r.versaoAtual}</p>
           <input className="serif" value={r.nome} onChange={(e) => mudar({ nome: e.target.value })}
             style={{ fontSize: 'clamp(32px,4vw,44px)', border: 0, background: 'none', width: '100%', padding: 0, marginTop: 6, outline: 'none', color: 'var(--ink)' }} />
+          {r.status && <p style={{ marginTop: 4 }}><span className={'pill' + (/Experimental|Modelo/.test(r.status) ? ' alerta' : '')}>{r.status}</span></p>}
           {origem && <p className="faint" style={{ fontSize: 13 }}><GitBranch size={13} style={{ verticalAlign: -2 }} /> Variação de <Link to={`/receitas/${origem.id}`} style={{ textDecoration: 'underline' }}>{origem.nome}</Link></p>}
         </div>
         <div className="acts">
@@ -157,14 +161,34 @@ export default function ReceitaEditor() {
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12 }}>
               <Numero value={lote.g} onChange={(v) => setLote({ ...lote, g: v ?? 0 })} /><span>g</span>
             </div>
-            <div className="chips" style={{ marginTop: 10 }}>{[100, 500, 1000, 3000, 5000].map((g) => <button key={g} className={'chip' + (lote.g === g ? ' on' : '')} onClick={() => setLote({ ...lote, g })}>{g >= 1000 ? g / 1000 + ' kg' : g + ' g'}</button>)}</div>
+            <div className="chips" style={{ marginTop: 10 }}>{[25, 50, 100, 250, 500, 1000, 2000].map((g) => <button key={g} className={'chip' + (lote.g === g ? ' on' : '')} onClick={() => setLote({ ...lote, g })}>{g >= 1000 ? g / 1000 + ' kg' : g + ' g'}</button>)}</div>
             <hr className="divider" style={{ margin: '18px 0' }} />
-            <p className="eyebrow">Custo estimado</p>
-            <p style={{ fontSize: 28, fontWeight: 500, marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>{brl(c.total)}</p>
-            {c.faltando.length > 0 && <p className="faint" style={{ fontSize: 12.5 }}>Sem preço cadastrado: {c.faltando.filter(Boolean).join(', ') || 'ingredientes sem nome'}.</p>}
+            <Resumo r={r} pesoBase={pesoBase} comPeso={comPeso} mapa={mapa} custoTotal={c.total} faltando={c.faltando} />
           </div>
 
           <div className="card" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <h3>Ficha da fórmula</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <Campo label="Código"><Texto value={r.codigo} onChange={(v) => mudar({ codigo: v.toUpperCase() || undefined })} placeholder="ex.: RET-006" /></Campo>
+              <Campo label="Status">
+                <select className="input" value={r.status ?? ''} onChange={(e) => mudar({ status: e.target.value || undefined })}>
+                  <option value="">—</option>{STATUS_RECEITA.map((x) => <option key={x}>{x}</option>)}
+                </select>
+              </Campo>
+            </div>
+            <Campo label="Famílias (quantas quiser)"><Multi value={r.familias ?? []} onChange={(v) => mudar({ familias: v })} opcoes={familias.map((f) => ({ v: f.id, l: (f.codigo ? f.codigo + ' ' : '') + f.nome }))} /></Campo>
+            <Campo label="Curva de queima">
+              <select className="input" value={r.curvaId ?? ''} onChange={(e) => mudar({ curvaId: e.target.value || undefined })}>
+                <option value="">Nenhuma</option>{curvas.map((x) => <option key={x.id} value={x.id}>{x.codigo} · {x.nome}</option>)}
+              </select>
+            </Campo>
+            {r.curvaId && <Link to={`/curvas/${r.curvaId}`} className="faint" style={{ fontSize: 12.5, marginTop: -8 }}>Abrir curva</Link>}
+            <Campo label="Densidade medida da suspensão (g/ml)"><Numero value={r.densidade} onChange={(v) => mudar({ densidade: v })} placeholder="opcional" /></Campo>
+            <Campo label="Objetivo"><AreaTexto value={r.objetivo} onChange={(v) => mudar({ objetivo: v })} rows={3} /></Campo>
+            <Campo label="Referência estética"><Texto value={r.referencia} onChange={(v) => mudar({ referencia: v })} /></Campo>
+            <Campo label="Fonte"><Texto value={r.fonte} onChange={(v) => mudar({ fonte: v })} /></Campo>
+            <Campo label="Parâmetros de teste"><AreaTexto value={r.parametros} onChange={(v) => mudar({ parametros: v })} rows={3} /></Campo>
+            <Campo label="Texturas e tags"><Tags value={r.tags ?? []} onChange={(v) => mudar({ tags: v })} sugestoes={TEXTURAS_AUTORAIS} /></Campo>
             <Campo label="Esmalte vinculado">
               <select className="input" value={r.esmalteId ?? ''} onChange={(e) => mudar({ esmalteId: e.target.value || undefined })}>
                 <option value="">Nenhum</option>{(esmaltes ?? []).map((e) => <option key={e.id} value={e.id}>{e.codigo} · {e.nome}</option>)}
@@ -230,6 +254,42 @@ export default function ReceitaEditor() {
           {!(receitas ?? []).some((x) => x.ehBase && x.id !== r.id) && <p className="faint">Marque uma receita como "Base reutilizável" para usá-la aqui.</p>}
         </div>
       </Sheet>}
+    </div>
+  )
+}
+
+import type { Material } from '../../db/schema'
+function Resumo({ r, pesoBase, comPeso, mapa, custoTotal, faltando }: { r: R; pesoBase: number; comPeso: (Ingrediente & { peso: number })[]; mapa: Map<string, Material>; custoTotal: number; faltando: string[] }) {
+  const seco = pesoBase * (1 + somaExtras(r.ingredientes) / 100)
+  const agua = r.aguaMlPor100g ? (r.aguaMlPor100g * pesoBase) / 100 : 0
+  const liquido = seco + agua
+  const linha = (l: string, v: string, forte = false) => <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '4px 0', fontWeight: forte ? 600 : 400 }}><span className={forte ? '' : 'muted'}>{l}</span><span style={{ fontVariantNumeric: 'tabular-nums' }}>{v}</span></div>
+  const porIng = comPeso.map((i) => { const m = i.materialId ? mapa.get(i.materialId) : undefined; return { i, m, custo: m?.precoKg != null ? (i.peso / 1000) * m.precoKg : undefined } })
+  const estimado = porIng.some((x) => x.m?.precoEstimado)
+  const semEstoque = porIng.filter((x) => x.m && x.m.estoqueKg != null && x.m.estoqueKg * 1000 < x.i.peso)
+  return (
+    <div style={{ fontSize: 14 }}>
+      {linha('Peso total seco', fmt(seco, 1) + ' g', true)}
+      {linha('Água', agua ? fmt(agua, 0) + ' g' : '–')}
+      {linha('Mistura líquida estimada', agua ? fmt(liquido, 0) + ' g' : '–')}
+      {linha('Sólidos', agua ? fmt((seco / liquido) * 100, 1) + ' %' : '–')}
+      {linha('Volume', r.densidade && agua ? fmt(liquido / r.densidade, 0) + ' ml' : 'informe a densidade')}
+      <hr className="divider" style={{ margin: '12px 0' }} />
+      {linha('Custo total', brl(custoTotal), true)}
+      {linha('Custo por 100 g', seco ? brl((custoTotal / seco) * 100) : '–')}
+      {linha('Custo por kg', seco ? brl((custoTotal / seco) * 1000) : '–')}
+      {estimado && <p className="faint" style={{ fontSize: 12, marginTop: 4 }}>Inclui preços estimados (lista de compras), ainda não confirmados.</p>}
+      {faltando.length > 0 && <p className="faint" style={{ fontSize: 12, marginTop: 4 }}>Sem preço: {faltando.filter(Boolean).join(', ') || 'ingredientes sem nome'}.</p>}
+      <details style={{ marginTop: 8 }}>
+        <summary className="faint" style={{ fontSize: 13, cursor: 'pointer', minHeight: 32 }}>Custo e estoque por ingrediente</summary>
+        {porIng.map(({ i, m, custo }, k) => (
+          <div key={k} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 10, padding: '6px 0', borderBottom: '1px solid var(--line)', fontSize: 13 }}>
+            <span>{i.nome || '—'}</span><span className="muted">{fmt(i.peso, 1)} g</span><span style={{ fontVariantNumeric: 'tabular-nums' }}>{brl(custo)}</span>
+            {m && <span className="faint" style={{ gridColumn: '1 / -1', fontSize: 12 }}>Estoque: {m.estoqueKg != null ? fmt(m.estoqueKg * 1000, 0) + ' g' : 'não informado'}{m.estoqueKg != null && m.estoqueKg * 1000 < i.peso ? ' · insuficiente para este lote' : ''}</span>}
+          </div>
+        ))}
+      </details>
+      {semEstoque.length > 0 && <p className="aviso" style={{ marginTop: 10, fontSize: 13 }}>Estoque insuficiente: {semEstoque.map((x) => x.i.nome).join(', ')}.</p>}
     </div>
   )
 }

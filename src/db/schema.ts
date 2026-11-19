@@ -16,6 +16,7 @@ export interface Base {
 export type Tipo =
   | 'esmalte' | 'receita' | 'teste' | 'material' | 'referencia'
   | 'painel' | 'conteudo' | 'nota' | 'grupo' | 'familia'
+  | 'curva' | 'queima' | 'comercial' | 'lote' | 'fornecedor' | 'projeto' | 'entrada' | 'paleta' | 'compra'
 
 export interface Arquivo extends Base {
   nome: string
@@ -26,7 +27,26 @@ export interface Arquivo extends Base {
   donoId?: string
 }
 
-export interface Familia extends Base { nome: string; descricao?: string; ordem: number }
+/** Família de esmaltes — classificação interna do laboratório (não é classificação científica universal). */
+export interface Familia extends Base {
+  nome: string
+  descricao?: string
+  ordem: number
+  codigo?: string
+  nomeEn?: string
+  visuais?: string[]          // características visuais
+  quimicas?: string           // características químicas
+  materiais?: string[]        // ids de Material relacionados
+  tecnicas?: string
+  temperaturas?: string
+  dificuldade?: number        // 1..5
+  prioridade?: string
+  cuidados?: string
+  possibilidades?: string[]
+  subcategorias?: string[]
+  variaveis?: string[]
+  usoInicial?: string
+}
 
 export interface Esmalte extends Base {
   nome: string
@@ -63,6 +83,16 @@ export interface Ingrediente {
 
 export interface Receita extends Base {
   nome: string
+  codigo?: string
+  familias?: string[]        // ids de Familia (uma fórmula pode ter várias)
+  status?: string            // ex.: 'Experimental — ainda não testada'
+  objetivo?: string
+  referencia?: string        // referência estética (não é reprodução confirmada)
+  fonte?: string
+  parametros?: string        // parâmetros iniciais de teste
+  curvaId?: string
+  densidade?: number         // g/ml da suspensão, quando medida
+  tags?: string[]
   esmalteId?: string
   origemId?: string          // receita original da qual derivou
   ehBase?: 0 | 1             // base reutilizável
@@ -109,6 +139,20 @@ export interface Teste extends Base {
 export interface Material extends Base {
   nome: string
   categoria: string
+  nomesAlternativos?: string
+  nomeEn?: string
+  formula?: string           // apenas quando aplicável; matérias naturais variam
+  funcaoSecundaria?: string
+  fusao?: string             // influência na fusão
+  texturaInf?: string
+  corInf?: string
+  brilhoInf?: string
+  familias?: string[]
+  lote?: string
+  cuidados?: string
+  tonalidades?: { nome: string; hex: string }[]   // paleta ilustrativa (não é resultado garantido)
+  precoEstimado?: 0 | 1
+  verificado?: 0 | 1
   fotos: string[]
   fabricante?: string
   fornecedor?: string
@@ -135,6 +179,7 @@ export interface Referencia extends Base {
   tags: string[]
   grupos: string[]
   paleta?: string[]
+  origem?: string            // caminho do arquivo importado de uma pasta (evita importar duas vezes)
 }
 
 export interface Grupo extends Base { nome: string; descricao?: string; cor?: string }
@@ -183,6 +228,94 @@ export interface Relacao {
   excluido?: 0 | 1
 }
 
+export interface SegmentoCurva { taxa: number; alvo: number; patamar: number }   // °C/h (negativa = resfriamento), °C, min
+export interface Curva extends Base {
+  nome: string
+  codigo: string
+  tempInicial: number
+  segmentos: SegmentoCurva[]
+  cone?: string
+  atmosfera?: string
+  resfriamentoNatural?: 0 | 1
+  status?: string
+  fonte?: string
+  observacoes?: string
+}
+
+export interface Queima extends Base {
+  nome: string
+  codigo: string
+  data: string
+  tipo?: string
+  forno?: string
+  curvaId?: string
+  tempMax?: number
+  cone?: string
+  duracaoMin?: number
+  consumoKwh?: number
+  consumoMedido?: 0 | 1       // 1 = medido; 0 = estimado
+  real?: { min: number; temp: number }[]   // leituras reais (tempo desde o início, °C)
+  fotos: string[]
+  testes: string[]
+  pecas?: string
+  resultados?: string
+  observacoes?: string
+}
+
+export interface Comercial extends Base {
+  fabricante: string
+  nome: string
+  codigo?: string
+  serie?: string
+  familias: string[]
+  cone?: string
+  temperatura?: string
+  fotos: string[]
+  instrucoes?: string
+  declarados: string[]        // declarado pelo fabricante (rótulo)
+  documentacao?: string       // obtido em documentação técnica (preliminar)
+  hipoteses: string[]         // hipóteses de composição (não confirmadas)
+  confirmado?: string         // resultado confirmado por teste
+  curvaId?: string
+  fontes: string[]
+  observacoes?: string
+}
+
+export interface Lote extends Base {
+  receitaId: string
+  versao: number
+  codigo: string
+  data: string
+  pesoBase: number
+  itens: { nome: string; materialId?: string; classe: ClasseIngrediente; previsto: number; real?: number }[]
+  aguaPrevista?: number
+  aguaReal?: number
+  conservante?: string
+  dosagem?: string
+  abertura?: string
+  inspecao?: string
+  estado?: string
+  pesoRestante?: number
+  validade?: string
+  baixaEstoque?: 0 | 1
+  observacoes?: string
+}
+
+export interface Fornecedor extends Base { nome: string; url?: string; ultimaConsulta?: string; produtos?: { nome: string; url: string }[]; observacoes?: string }
+
+export interface Compra extends Base {
+  nome: string
+  categoria: string
+  materialId?: string
+  quantidade: string
+  qtdKg?: number
+  valorEstimado?: number
+  status: 'planejada' | 'comprada'
+  fornecedorId?: string
+  link?: string
+  dataConsulta?: string
+}
+
 export interface Ajuste { chave: string; valor: unknown }
 
 export class AtelieDB extends Dexie {
@@ -200,6 +333,12 @@ export class AtelieDB extends Dexie {
   notas!: EntityTable<Nota, 'id'>
   relacoes!: EntityTable<Relacao, 'id'>
   ajustes!: EntityTable<Ajuste, 'chave'>
+  curvas!: EntityTable<Curva, 'id'>
+  queimas!: EntityTable<Queima, 'id'>
+  comerciais!: EntityTable<Comercial, 'id'>
+  lotes!: EntityTable<Lote, 'id'>
+  fornecedores!: EntityTable<Fornecedor, 'id'>
+  compras!: EntityTable<Compra, 'id'>
 
   constructor() {
     super('atelie-mp')
@@ -218,6 +357,16 @@ export class AtelieDB extends Dexie {
       notas: 'id, tema, *tags, criadoEm, atualizadoEm',
       relacoes: 'id, [aTipo+aId], [bTipo+bId]',
       ajustes: 'chave',
+    })
+    this.version(2).stores({
+      familias: 'id, nome, ordem, codigo',
+      receitas: 'id, nome, codigo, esmalteId, origemId, ehBase, *familias, atualizadoEm',
+      curvas: 'id, codigo, nome, atualizadoEm',
+      queimas: 'id, codigo, data, curvaId, *testes, atualizadoEm, criadoEm',
+      comerciais: 'id, codigo, fabricante, *familias, atualizadoEm',
+      lotes: 'id, receitaId, data, atualizadoEm, criadoEm',
+      fornecedores: 'id, nome, atualizadoEm',
+      compras: 'id, categoria, status, materialId, atualizadoEm',
     })
   }
 }

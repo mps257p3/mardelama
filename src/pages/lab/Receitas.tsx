@@ -4,7 +4,7 @@ import { Download, GitBranch, Plus, ScrollText, Search } from 'lucide-react'
 import { baixar } from '../../db/backup'
 import { CLASSES } from '../../lib/receita'
 import { db, novo, uid } from '../../db/schema'
-import { useEsmaltes, useReceitas } from '../../db/hooks'
+import { useEsmaltes, useFamilias, useReceitas } from '../../db/hooks'
 import { normaliza, textoBusca } from '../../lib/filtros'
 import { somaBase } from '../../lib/receita'
 import { fmt } from '../../lib/opcoes'
@@ -23,15 +23,19 @@ export default function Receitas() {
   const nav = useNavigate()
   const [q, setQ] = useState('')
   const [so, setSo] = useState<'todas' | 'bases'>('todas')
+  const familias = useFamilias()
+  const [fam, setFam] = useState('')
+  const codFam = useMemo(() => new Map(familias.map((f) => [f.id, f.codigo ?? f.nome])), [familias])
   const nomeEsm = useMemo(() => new Map((esmaltes ?? []).map((e) => [e.id, e.nome])), [esmaltes])
   const nomeRec = useMemo(() => new Map((receitas ?? []).map((r) => [r.id, r.nome])), [receitas])
-  const lista = (receitas ?? []).filter((r) => (so === 'todas' || r.ehBase) &&
-    (!q || textoBusca(r.nome, r.ingredientes.map((i) => i.nome), r.observacoes).includes(normaliza(q))))
+  const lista = (receitas ?? []).filter((r) => (so === 'todas' || r.ehBase) && (!fam || (r.familias ?? []).includes(fam)) &&
+    (!q || textoBusca(r.nome, r.codigo, r.ingredientes.map((i) => i.nome), r.observacoes, r.tags).includes(normaliza(q))))
+    .sort((a, b) => (a.codigo ?? '~').localeCompare(b.codigo ?? '~') || b.atualizadoEm - a.atualizadoEm)
 
   return (
     <div className="page">
       <div className="head">
-        <div><p className="eyebrow">Laboratório</p><h1 style={{ marginTop: 8 }}>Receitas</h1></div>
+        <div><p className="eyebrow">Laboratório</p><h1 style={{ marginTop: 8 }}>Fórmulas e receitas</h1></div>
         <div className="acts">
           <Link className="btn" to="/receitas/comparar">Comparar</Link>
           <button className="btn" disabled={!lista.length} onClick={() => {
@@ -50,6 +54,10 @@ export default function Receitas() {
           <button className={so === 'bases' ? 'on' : ''} onClick={() => setSo('bases')}>Bases reutilizáveis</button>
         </div>
       </div>
+      <div className="chips" style={{ marginBottom: 8 }}>
+        <button className={'chip' + (!fam ? ' on' : '')} onClick={() => setFam('')}>Todas as famílias</button>
+        {familias.map((f) => <button key={f.id} className={'chip' + (fam === f.id ? ' on' : '')} onClick={() => setFam(fam === f.id ? '' : f.id)}>{f.codigo ? f.codigo + ' · ' : ''}{f.nome}</button>)}
+      </div>
       {receitas && receitas.length === 0 ? (
         <div className="empty"><span className="serif">Nenhuma receita ainda.</span><span>Formule com receita base, corantes, opacificantes e aditivos, com versões e variações.</span></div>
       ) : (
@@ -58,8 +66,8 @@ export default function Receitas() {
             <Link key={r.id} to={`/receitas/${r.id}`}>
               <div className="mini">{r.origemId ? <GitBranch size={20} strokeWidth={1.2} /> : <ScrollText size={20} strokeWidth={1.2} />}</div>
               <div>
-                <div className="t">{r.nome}</div>
-                <div className="s">{[r.ehBase ? 'Base reutilizável' : '', r.esmalteId && nomeEsm.get(r.esmalteId), r.origemId && 'variação de ' + (nomeRec.get(r.origemId) ?? '…'), r.ingredientes.length + ' ingredientes'].filter(Boolean).join(' · ')}</div>
+                <div className="t">{r.codigo && <span className="codigo" style={{ marginRight: 8, color: 'var(--area)' }}>{r.codigo}</span>}{r.nome}</div>
+                <div className="s">{[r.status, (r.familias ?? []).map((f) => codFam.get(f)).filter(Boolean).join(' ') , r.ehBase ? 'Base reutilizável' : '', r.esmalteId && nomeEsm.get(r.esmalteId), r.origemId && 'variação de ' + (nomeRec.get(r.origemId) ?? '…'), r.ingredientes.length + ' ingredientes'].filter(Boolean).join(' · ')}</div>
               </div>
               <div className="r">v{r.versaoAtual}<br /><span className="faint">base {fmt(somaBase(r.ingredientes), 1)}%</span></div>
             </Link>
