@@ -23,6 +23,7 @@ function aviso(texto: string) {
   d.textContent = texto; d.onclick = () => d.remove(); document.body.appendChild(d)
 }
 db.on('blocked', () => aviso('O app está aberto em outra janela com uma versão antiga. Feche todas as janelas do Mar de Lama (inclusive abas do navegador) e abra de novo.'))
+setTimeout(() => { if (!db.isOpen()) aviso('Os dados deste aparelho estão travados por outra janela do Mar de Lama aberta em segundo plano (por exemplo, uma aba antiga no Chrome). Feche todas as abas do mardelama no Chrome e o app; se não resolver, reinicie o celular.') }, 6000)
 db.open().catch((e: Error) => aviso('Não consegui abrir os dados deste aparelho: ' + (e?.message || e) + '. Feche o app por completo e abra de novo; se continuar, mande um print.'))
 
 // Atualização do app instalado: verifica nova versão ao abrir, ao voltar para o app e a cada 20 min,
