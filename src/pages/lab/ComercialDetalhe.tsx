@@ -1,0 +1,83 @@
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { ArrowLeft, Trash2 } from 'lucide-react'
+import { db, type Comercial } from '../../db/schema'
+import { useFamilias } from '../../db/hooks'
+import { TextoEditavel, ListaEditavel } from '../../ui/editavel'
+import { Fotos, Multi } from '../../ui/form'
+import { Relacoes } from '../../ui/Relacoes'
+
+export default function ComercialDetalhe() {
+  const { id } = useParams()
+  const nav = useNavigate()
+  const c = useLiveQuery(() => db.comerciais.get(id!), [id])
+  const curvas = useLiveQuery(async () => (await db.curvas.toArray()).filter((x) => !x.excluido).sort((a, b) => a.codigo.localeCompare(b.codigo)), [], [])
+  const familias = useFamilias()
+  if (c === undefined) return null
+  if (!c || c.excluido) return <div className="page"><p>Estudo não encontrado.</p></div>
+  const salvar = (d: Partial<Comercial>) => db.comerciais.update(c.id, { ...d, atualizadoEm: Date.now() })
+  const t = (k: 'fabricante' | 'nome' | 'codigo' | 'serie' | 'cone' | 'temperatura' | 'instrucoes' | 'documentacao' | 'confirmado' | 'observacoes') => (v: string) => salvar({ [k]: v || undefined })
+  const curva = curvas.find((x) => x.id === c.curvaId)
+
+  return (
+    <div className="page" style={{ maxWidth: 860 }}>
+      <Link to="/engenharia-reversa" className="back"><ArrowLeft size={15} />Engenharia reversa</Link>
+      <p className="eyebrow">{[c.fabricante, c.codigo, c.serie].filter(Boolean).join(' · ')}</p>
+      <h1 style={{ marginTop: 8 }}>{c.nome}</h1>
+      {c.temperatura && <p className="muted" style={{ marginTop: 6 }}>{c.temperatura}</p>}
+      <p className="aviso" style={{ marginTop: 16 }}>Estudo de referência. Hipóteses não são componentes confirmados, e nenhum resultado aqui indica segurança para contato com alimentos.</p>
+
+      <Bloco n="1" titulo="Declarado pelo fabricante" sub="Somente o que está no rótulo ou na embalagem.">
+        <ListaEditavel rotulo="item declarado" itens={c.declarados} onSalvar={(v) => salvar({ declarados: v })} vazio="Nada declarado registrado." />
+      </Bloco>
+      <Bloco n="2" titulo="Documentação técnica" sub="Ficha técnica ou de segurança. Marque como preliminar enquanto não conferir a versão do produto.">
+        <TextoEditavel rotulo="documentação" multilinha valor={c.documentacao} onSalvar={t('documentacao')} vazio="Sem documentação registrada." />
+      </Bloco>
+      <Bloco n="3" titulo="Hipóteses de composição" sub="Possíveis ingredientes a investigar. Não confirmados.">
+        <ListaEditavel rotulo="hipótese" itens={c.hipoteses} onSalvar={(v) => salvar({ hipoteses: v })} vazio="Nenhuma hipótese." />
+      </Bloco>
+      <Bloco n="4" titulo="Confirmado por teste" sub="Só o que você reproduziu e verificou nas suas queimas.">
+        <TextoEditavel rotulo="resultado confirmado" multilinha valor={c.confirmado} onSalvar={t('confirmado')} vazio="Nada confirmado ainda." />
+      </Bloco>
+
+      <div className="form" style={{ marginTop: 32 }}>
+        <h3>Ficha</h3>
+        <Campo rotulo="Fabricante"><TextoEditavel rotulo="fabricante" valor={c.fabricante} onSalvar={(v) => v && salvar({ fabricante: v })} /></Campo>
+        <Campo rotulo="Nome"><TextoEditavel rotulo="nome" valor={c.nome} onSalvar={(v) => v && salvar({ nome: v })} /></Campo>
+        <Campo rotulo="Código do produto"><TextoEditavel rotulo="código" valor={c.codigo} onSalvar={t('codigo')} /></Campo>
+        <Campo rotulo="Série"><TextoEditavel rotulo="série" valor={c.serie} onSalvar={t('serie')} /></Campo>
+        <Campo rotulo="Cone"><TextoEditavel rotulo="cone" valor={c.cone} onSalvar={t('cone')} /></Campo>
+        <Campo rotulo="Temperatura"><TextoEditavel rotulo="temperatura" multilinha valor={c.temperatura} onSalvar={t('temperatura')} /></Campo>
+        <Campo rotulo="Instruções e características"><TextoEditavel rotulo="instruções" multilinha valor={c.instrucoes} onSalvar={t('instrucoes')} /></Campo>
+        <Campo rotulo="Famílias"><Multi value={c.familias} onChange={(v) => salvar({ familias: v })} opcoes={familias.map((f) => ({ v: f.id, l: f.codigo ? `${f.codigo} ${f.nome}` : f.nome }))} /></Campo>
+        <Campo rotulo="Curva de queima">
+          <select className="input" value={c.curvaId ?? ''} onChange={(e) => salvar({ curvaId: e.target.value || undefined })}>
+            <option value="">Nenhuma</option>
+            {curvas.map((x) => <option key={x.id} value={x.id}>{x.codigo} · {x.nome}</option>)}
+          </select>
+          {curva && <Link to={`/curvas/${curva.id}`} style={{ textDecoration: 'underline', fontSize: 13.5 }}>Abrir {curva.codigo}</Link>}
+        </Campo>
+        <Campo rotulo="Fontes"><ListaEditavel rotulo="fonte (link)" link itens={c.fontes} onSalvar={(v) => salvar({ fontes: v })} vazio="Nenhuma fonte." /></Campo>
+        <Campo rotulo="Fotos"><Fotos value={c.fotos} onChange={(v) => salvar({ fotos: v })} /></Campo>
+        <Campo rotulo="Observações"><TextoEditavel rotulo="observações" multilinha valor={c.observacoes} onSalvar={t('observacoes')} /></Campo>
+      </div>
+
+      <div style={{ marginTop: 32 }}><Relacoes tipo="comercial" id={c.id} /></div>
+      <div style={{ marginTop: 32, display: 'flex', justifyContent: 'flex-end' }}>
+        <button className="btn sm ghost" onClick={async () => { if (confirm('Excluir este estudo?')) { await salvar({ excluido: 1 }); nav('/engenharia-reversa') } }}><Trash2 size={14} />Excluir estudo</button>
+      </div>
+    </div>
+  )
+}
+
+function Bloco({ n, titulo, sub, children }: { n: string; titulo: string; sub: string; children: React.ReactNode }) {
+  return (
+    <section className="card" style={{ padding: 18, marginTop: 16 }}>
+      <p className="eyebrow">{n} de 4</p>
+      <h3 style={{ marginTop: 4 }}>{titulo}</h3>
+      <p className="faint" style={{ fontSize: 13, margin: '4px 0 12px' }}>{sub}</p>
+      {children}
+    </section>
+  )
+}
+const Campo = ({ rotulo, children }: { rotulo: string; children: React.ReactNode }) => <div className="field"><label>{rotulo}</label>{children}</div>

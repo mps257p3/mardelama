@@ -4,7 +4,8 @@ import { ArrowLeft, FileUp, X } from 'lucide-react'
 import { db, novo, type Material } from '../../db/schema'
 import { salvarArquivo } from '../../db/files'
 import { CATEGORIAS_MATERIAIS } from '../../lib/opcoes'
-import { AreaTexto, Campo, Fotos, Numero, Texto } from '../../ui/form'
+import { AreaTexto, Campo, Fotos, Multi, Numero, Texto } from '../../ui/form'
+import { useFamilias } from '../../db/hooks'
 import { useToast } from '../../ui/toast'
 import { useLiveQuery } from 'dexie-react-hooks'
 
@@ -25,6 +26,7 @@ export default function MaterialForm() {
   const nav = useNavigate()
   const toast = useToast()
   const [m, setM] = useState<M>()
+  const familias = useFamilias()
   useEffect(() => { (async () => setM(id ? await db.materiais.get(id) : { nome: '', categoria: 'Outros', fotos: [] }))() }, [id])
   if (!m) return null
   const set = <K extends keyof Material>(k: K) => (v: Material[K]) => setM({ ...m, [k]: v })
@@ -44,14 +46,32 @@ export default function MaterialForm() {
         <Campo label="Fotografias" wide><Fotos value={m.fotos} onChange={set('fotos')} /></Campo>
         <Campo label="Nome"><Texto value={m.nome} onChange={set('nome')} autoFocus={!m.id} /></Campo>
         <Campo label="Categoria"><select className="input" value={m.categoria} onChange={(e) => set('categoria')(e.target.value)}>{CATEGORIAS_MATERIAIS.map((c) => <option key={c}>{c}</option>)}</select></Campo>
+        <Campo label="Nome em inglês"><Texto value={m.nomeEn} onChange={set('nomeEn')} /></Campo>
+        <Campo label="Outros nomes"><Texto value={m.nomesAlternativos} onChange={set('nomesAlternativos')} /></Campo>
+        <Campo label="Fórmula química"><Texto value={m.formula} onChange={set('formula')} placeholder="Só quando aplicável" /></Campo>
+        <Campo label="Famílias de esmalte"><Multi value={m.familias ?? []} onChange={set('familias')} opcoes={familias.map((f) => ({ v: f.id, l: f.codigo ?? f.nome }))} /></Campo>
+
+        <h3>Função no esmalte</h3>
+        <Campo label="Função principal"><Texto value={m.funcao} onChange={set('funcao')} placeholder="Fundente, opacificante…" /></Campo>
+        <Campo label="Funções secundárias"><Texto value={m.funcaoSecundaria} onChange={set('funcaoSecundaria')} /></Campo>
+        <Campo label="Influência na fusão"><Texto value={m.fusao} onChange={set('fusao')} /></Campo>
+        <Campo label="Influência na textura"><Texto value={m.texturaInf} onChange={set('texturaInf')} /></Campo>
+        <Campo label="Influência na cor"><Texto value={m.corInf} onChange={set('corInf')} /></Campo>
+        <Campo label="Influência no brilho"><Texto value={m.brilhoInf} onChange={set('brilhoInf')} /></Campo>
+        <Campo label="Características" wide><Texto value={m.caracteristicas} onChange={set('caracteristicas')} /></Campo>
+        <Campo label="Composição química" wide><AreaTexto value={m.composicao} onChange={set('composicao')} rows={3} /></Campo>
+        <Campo label="Cuidados de segurança" wide><AreaTexto value={m.cuidados} onChange={set('cuidados')} rows={2} /></Campo>
+
+        <h3>Compra e estoque</h3>
         <Campo label="Fabricante"><Texto value={m.fabricante} onChange={set('fabricante')} /></Campo>
         <Campo label="Fornecedor"><Texto value={m.fornecedor} onChange={set('fornecedor')} /></Campo>
-        <Campo label="Preço por kg (R$)"><Numero value={m.precoKg} onChange={set('precoKg')} /></Campo>
+        <Campo label="Lote"><Texto value={m.lote} onChange={set('lote')} /></Campo>
+        <Campo label="Preço por kg (R$)">
+          <Numero value={m.precoKg} onChange={(v) => setM({ ...m, precoKg: v, precoEstimado: v === m.precoKg ? m.precoEstimado : 0 })} />
+          {!!m.precoEstimado && <span className="faint" style={{ fontSize: 12 }}>Valor estimado. Ao digitar o preço real, deixa de ser estimado.</span>}
+        </Campo>
         <Campo label="Quantidade disponível (kg)"><Numero value={m.estoqueKg} onChange={set('estoqueKg')} /></Campo>
         <Campo label="Link de compra" wide><Texto value={m.linkCompra} onChange={set('linkCompra')} type="url" placeholder="https://" /></Campo>
-        <Campo label="Composição química" wide><AreaTexto value={m.composicao} onChange={set('composicao')} rows={3} /></Campo>
-        <Campo label="Função"><Texto value={m.funcao} onChange={set('funcao')} placeholder="Fundente, opacificante…" /></Campo>
-        <Campo label="Características"><Texto value={m.caracteristicas} onChange={set('caracteristicas')} /></Campo>
         <Campo label="Ficha técnica"><Documento value={m.fichaTecnica} onChange={set('fichaTecnica')} /></Campo>
         <Campo label="Ficha de segurança"><Documento value={m.fichaSeguranca} onChange={set('fichaSeguranca')} /></Campo>
         <Campo label="Observações" wide><AreaTexto value={m.observacoes} onChange={set('observacoes')} rows={4} /></Campo>

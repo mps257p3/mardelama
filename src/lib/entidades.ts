@@ -5,6 +5,7 @@ export interface Resumo { tipo: Tipo; id: string; titulo: string; sub: string; f
 export const ROTULO: Partial<Record<Tipo, string>> = {
   esmalte: 'Esmalte', receita: 'Receita', teste: 'Teste', material: 'Material',
   referencia: 'Referência', conteudo: 'Biblioteca', nota: 'Caderno', painel: 'Painel',
+  familia: 'Família', curva: 'Curva de queima', comercial: 'Engenharia reversa',
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -15,6 +16,9 @@ export const DEF: Partial<Record<Tipo, { tabela: string; r: (x: any) => Omit<Res
   material: { tabela: 'materiais', r: (x) => ({ titulo: x.nome, sub: x.categoria, foto: x.fotos?.[0], to: `/materiais/${x.id}` }) },
   referencia: { tabela: 'referencias', r: (x) => ({ titulo: x.titulo, sub: x.autor || x.tipo, foto: x.imagens?.[0], to: `/referencias/${x.id}` }) },
   conteudo: { tabela: 'conteudos', r: (x) => ({ titulo: x.titulo, sub: x.categoria, to: `/biblioteca/${x.id}` }) },
+  familia: { tabela: 'familias', r: (x) => ({ titulo: x.nome, sub: x.codigo ?? 'Família', to: `/familias/${x.id}` }) },
+  curva: { tabela: 'curvas', r: (x) => ({ titulo: x.nome, sub: x.codigo, to: `/curvas/${x.id}` }) },
+  comercial: { tabela: 'comerciais', r: (x) => ({ titulo: `${x.fabricante} ${x.nome}`, sub: x.codigo ?? 'Esmalte comercial', foto: x.fotos?.[0], to: `/engenharia-reversa/${x.id}` }) },
   nota: { tabela: 'notas', r: (x) => ({ titulo: x.titulo || 'Anotação', sub: new Date(x.criadoEm).toLocaleDateString('pt-BR'), foto: x.imagens?.[0], to: `/caderno/${x.id}` }) },
 }
 

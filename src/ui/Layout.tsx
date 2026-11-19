@@ -8,7 +8,7 @@ import { definirContexto, emFluxoDeCadastro } from '../lib/contexto'
 import { progressoSync } from '../db/sync'
 
 const AREA_DA_ROTA: [RegExp, string][] = [
-  [/^\/(esmaltes|receitas|testes|testoteca|laboratorio|queimas|bancada)/, 'esmaltes'],
+  [/^\/(esmaltes|receitas|testes|testoteca|laboratorio|queimas|bancada|familias|curvas|engenharia-reversa|compras)/, 'esmaltes'],
   [/^\/materiais/, 'materiais'], [/^\/(referencias|paineis|compartilhar|cores)/, 'referencias'],
   [/^\/biblioteca/, 'biblioteca'], [/^\/(caderno|projetos|entrada)/, 'caderno'], [/^\/calculadoras/, 'calculadoras'],
 ]

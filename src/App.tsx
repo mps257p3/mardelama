@@ -37,6 +37,12 @@ import Atividade from './pages/Atividade'
 import Materiais from './pages/lab/Materiais'
 import MaterialForm from './pages/lab/MaterialForm'
 import MaterialDetalhe from './pages/lab/MaterialDetalhe'
+import FamiliaDetalhe from './pages/lab/FamiliaDetalhe'
+import Curvas from './pages/lab/Curvas'
+import CurvaDetalhe from './pages/lab/CurvaDetalhe'
+import Comerciais from './pages/lab/Comerciais'
+import ComercialDetalhe from './pages/lab/ComercialDetalhe'
+import Compras from './pages/lab/Compras'
 
 export default function App() {
   return (
@@ -49,6 +55,13 @@ export default function App() {
           <Route path="esmaltes" element={<Esmaltes />} />
           <Route path="esmaltes/novo" element={<EsmalteForm key="novo" />} />
           <Route path="esmaltes/familias" element={<Familias />} />
+          <Route path="familias" element={<Familias />} />
+          <Route path="familias/:id" element={<FamiliaDetalhe />} />
+          <Route path="curvas" element={<Curvas />} />
+          <Route path="curvas/:id" element={<CurvaDetalhe />} />
+          <Route path="engenharia-reversa" element={<Comerciais />} />
+          <Route path="engenharia-reversa/:id" element={<ComercialDetalhe />} />
+          <Route path="compras" element={<Compras />} />
           <Route path="esmaltes/:id" element={<EsmalteDetalhe />} />
           <Route path="esmaltes/:id/editar" element={<EsmalteForm />} />
           <Route path="receitas" element={<Receitas />} />

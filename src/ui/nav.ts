@@ -1,4 +1,4 @@
-import { Home, FlaskConical, Images, BookOpen, Feather, Calculator, Layers, Settings, Search, ScrollText, TestTube } from 'lucide-react'
+import { Home, FlaskConical, Images, BookOpen, Feather, Calculator, Layers, Settings, Search, ScrollText, TestTube, Beaker } from 'lucide-react'
 
 /** As seis áreas principais. `cor` identifica a área discretamente (ícones, etiquetas, indicadores). */
 export const AREAS = [
@@ -16,6 +16,7 @@ export const COR_AREA: Record<AreaSlug, string> = Object.fromEntries(AREAS.map((
 export const LATERAL = [
   { to: '/', nome: 'Início', icon: Home },
   { to: '/busca', nome: 'Buscar', icon: Search },
+  { to: '/laboratorio', nome: 'Laboratório', icon: Beaker },
   AREAS[0],
   { to: '/receitas', nome: 'Receitas', icon: ScrollText },
   { to: '/testes', nome: 'Testes', icon: TestTube },

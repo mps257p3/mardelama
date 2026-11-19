@@ -12,14 +12,19 @@ export default function Familias() {
     for (const e of await db.esmaltes.toArray()) if (!e.excluido) e.familias.forEach((f) => m.set(f, (m.get(f) ?? 0) + 1))
     return m
   }, [], new Map())
+  const receitas = useLiveQuery(async () => {
+    const m = new Map<string, number>()
+    for (const r of await db.receitas.toArray()) if (!r.excluido) (r.familias ?? []).forEach((f) => m.set(f, (m.get(f) ?? 0) + 1))
+    return m
+  }, [], new Map())
   const [novaF, setNovaF] = useState('')
   const [edit, setEdit] = useState<{ id: string; nome: string }>()
 
   return (
     <div className="page" style={{ maxWidth: 720 }}>
-      <Link to="/esmaltes" className="back"><ArrowLeft size={15} />Esmaltes</Link>
+      <Link to="/laboratorio" className="back"><ArrowLeft size={15} />Laboratório</Link>
       <h1>Famílias de esmaltes</h1>
-      <p className="muted" style={{ marginTop: 10 }}>Um esmalte pode pertencer a várias famílias ao mesmo tempo.</p>
+      <p className="muted" style={{ marginTop: 10 }}>Bases organizadas por comportamento. Um esmalte ou fórmula pode pertencer a várias famílias.</p>
       <form style={{ display: 'flex', gap: 8, margin: '24px 0' }} onSubmit={async (ev) => {
         ev.preventDefault(); if (!novaF.trim()) return
         await db.familias.add(novo({ nome: novaF.trim(), ordem: familias.length })); setNovaF('')
@@ -28,7 +33,7 @@ export default function Familias() {
         <button className="btn primary"><Plus size={15} />Criar</button>
       </form>
       <div className="lista">
-        {familias.map((f) => (
+        {[...familias].sort((a, b) => (a.codigo ?? 'Z' + a.nome).localeCompare(b.codigo ?? 'Z' + b.nome)).map((f) => (
           <div key={f.id} className="row" style={{ gridTemplateColumns: '1fr auto' }}>
             {edit?.id === f.id ? (
               <form style={{ display: 'flex', gap: 6 }} onSubmit={async (ev) => { ev.preventDefault(); await db.familias.update(f.id, { nome: edit.nome, atualizadoEm: Date.now() }); setEdit(undefined) }}>
@@ -36,7 +41,7 @@ export default function Familias() {
                 <button className="iconbtn" aria-label="Salvar"><Check size={16} /></button>
                 <button type="button" className="iconbtn" aria-label="Cancelar" onClick={() => setEdit(undefined)}><X size={16} /></button>
               </form>
-            ) : <div><div className="t">{f.nome}</div><div className="s">{contagem.get(f.id) ?? 0} esmaltes</div></div>}
+            ) : <Link to={`/familias/${f.id}`} style={{ display: 'block', padding: 0, border: 0, minHeight: 0 }}><div className="t">{f.codigo ? <span className="faint" style={{ marginRight: 8 }}>{f.codigo}</span> : null}{f.nome}</div><div className="s">{[f.nomeEn, `${contagem.get(f.id) ?? 0} esmaltes`, `${receitas.get(f.id) ?? 0} fórmulas`].filter(Boolean).join(' · ')}</div></Link>}
             <div style={{ display: 'flex' }}>
               <button className="iconbtn" aria-label="Renomear" onClick={() => setEdit({ id: f.id, nome: f.nome })}><Pencil size={15} /></button>
               <button className="iconbtn" aria-label="Excluir" onClick={async () => {
