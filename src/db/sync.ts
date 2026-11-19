@@ -183,5 +183,6 @@ export function iniciarSincronizacaoAutomatica() {
   const tentar = async () => { if (navigator.onLine && (await usuario())) sincronizar().catch((e) => console.warn('Sincronização:', e.message)) }
   tentar()
   window.addEventListener('online', tentar)
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') tentar() })
   setInterval(tentar, 180_000)
 }
