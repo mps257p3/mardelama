@@ -304,3 +304,30 @@ textarea.input { min-height: 110px; resize: vertical; }
   .side, .bottom, .barra-salvar, .back, .acts, button { display: none !important; }
   .main { margin: 0 !important; } body::before { display: none; }
 }
+
+/* ---------- referências ---------- */
+.mural { columns: 2; column-gap: 12px; }
+@media (min-width: 700px) { .mural { columns: 3; column-gap: 18px; } }
+@media (min-width: 1100px) { .mural { columns: 4; } }
+.mural > * { break-inside: avoid; margin-bottom: 18px; display: block; }
+.ref .img { border-radius: var(--r); overflow: hidden; background: var(--surface-2); position: relative; }
+.ref .img img { width: 100%; height: auto; display: block; transition: transform .6s var(--ease); }
+.ref:hover .img img { transform: scale(1.02); }
+.ref .sem { aspect-ratio: 4/3; display: grid; place-items: center; color: var(--argila); padding: 20px; text-align: center; font-family: var(--serif); font-size: 20px; }
+.ref .t { font-family: var(--serif); font-size: 18px; line-height: 1.15; margin-top: 8px; }
+.ref .s { font-size: 12px; color: var(--ink-3); }
+.ref .fav { position: absolute; right: 8px; top: 8px; color: var(--marfim); filter: drop-shadow(0 1px 2px rgba(0,0,0,.3)); }
+.paleta { display: flex; border-radius: 8px; overflow: hidden; height: 28px; }
+.paleta span { flex: 1; }
+.op { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 999px; padding: 2px; }
+.op button { border: 0; background: none; height: 26px; padding: 0 12px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: .06em; color: var(--ink-3); }
+.op button.on { background: var(--azul); color: var(--marfim); }
+
+/* ---------- painel (moodboard) ---------- */
+.lousa-wrap { border-radius: var(--r-lg); border: 1px solid var(--line); background: var(--surface); overflow: hidden; touch-action: none; position: relative; }
+.lousa { position: relative; transform-origin: 0 0; }
+.item { position: absolute; border-radius: 6px; overflow: hidden; cursor: grab; user-select: none; }
+.item.sel { outline: 2px solid var(--azul); outline-offset: 2px; }
+.item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.item .txt { width: 100%; height: 100%; padding: 12px 14px; font-family: var(--serif); font-size: 26px; line-height: 1.2; color: var(--ink); overflow: hidden; white-space: pre-wrap; }
+.item .alca { position: absolute; right: 0; bottom: 0; width: 22px; height: 22px; cursor: nwse-resize; background: var(--azul); border-radius: 4px 0 0 0; }

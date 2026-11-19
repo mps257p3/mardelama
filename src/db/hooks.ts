@@ -14,9 +14,13 @@ export function useMapaMateriais() {
 }
 
 /** Exclusão suave: mantém o registro para sincronização e permite desfazer pelo backup. */
-export async function excluir(tabela: 'esmaltes' | 'receitas' | 'testes' | 'materiais' | 'familias', id: string) {
+export async function excluir(tabela: 'esmaltes' | 'receitas' | 'testes' | 'materiais' | 'familias' | 'referencias' | 'grupos' | 'paineis' | 'conteudos' | 'notas', id: string) {
   await db.table(tabela).update(id, { excluido: 1, atualizadoEm: Date.now() })
 }
 export async function alternarFavorito(tabela: 'esmaltes' | 'materiais' | 'referencias' | 'conteudos' | 'testes', id: string, atual?: 0 | 1) {
   await db.table(tabela).update(id, { favorito: atual ? 0 : 1, atualizadoEm: Date.now() })
 }
+
+export const useReferencias = () => useLiveQuery(async () => vivos(await db.referencias.orderBy('criadoEm').reverse().toArray()))
+export const useGrupos = () => useLiveQuery(async () => vivos(await db.grupos.orderBy('nome').toArray()), [], [])
+export const usePaineis = () => useLiveQuery(async () => vivos(await db.paineis.orderBy('atualizadoEm').reverse().toArray()))

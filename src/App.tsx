@@ -18,17 +18,22 @@ import TesteForm from './pages/lab/TesteForm'
 import TesteDetalhe from './pages/lab/TesteDetalhe'
 import TesteComparar from './pages/lab/TesteComparar'
 import Planejar from './pages/lab/Planejar'
+import Referencias from './pages/ref/Referencias'
+import ReferenciaForm from './pages/ref/ReferenciaForm'
+import ReferenciaDetalhe from './pages/ref/ReferenciaDetalhe'
+import Grupos from './pages/ref/Grupos'
+import Paineis from './pages/ref/Paineis'
+import PainelEditor from './pages/ref/PainelEditor'
+import Compartilhar from './pages/ref/Compartilhar'
 import Materiais from './pages/lab/Materiais'
 import MaterialForm from './pages/lab/MaterialForm'
 import MaterialDetalhe from './pages/lab/MaterialDetalhe'
 
 const FUTURO: { path: string; nome: string; fase: number; texto: string }[] = [
-  { path: '/referencias/*', nome: 'Referências', fase: 3, texto: 'Biblioteca visual com grupos cruzados, filtros E/OU e painéis de inspiração.' },
   { path: '/biblioteca/*', nome: 'Biblioteca', fase: 4, texto: 'Pesquisa técnica e teórica: técnicas, química, queimas, defeitos, livros, artigos e PDFs.' },
   { path: '/caderno/*', nome: 'Caderno', fase: 4, texto: 'Diário criativo com texto, imagens, desenhos, paletas, áudios e referências relacionadas.' },
   { path: '/calculadoras/*', nome: 'Calculadoras', fase: 4, texto: 'Retração, densidade, custos, misturas, consumo do forno, cones e conversões.' },
   { path: '/busca', nome: 'Buscar', fase: 5, texto: 'Busca global por todo o ateliê.' },
-  { path: '/compartilhar', nome: 'Compartilhar', fase: 3, texto: 'Receber links e imagens compartilhados de outros aplicativos.' },
 ]
 
 export default function App() {
@@ -54,6 +59,14 @@ export default function App() {
           <Route path="testes/comparar" element={<TesteComparar />} />
           <Route path="testes/:id" element={<TesteDetalhe />} />
           <Route path="testes/:id/editar" element={<TesteForm />} />
+          <Route path="referencias" element={<Referencias />} />
+          <Route path="referencias/nova" element={<ReferenciaForm key="nova" />} />
+          <Route path="referencias/grupos" element={<Grupos />} />
+          <Route path="referencias/:id" element={<ReferenciaDetalhe />} />
+          <Route path="referencias/:id/editar" element={<ReferenciaForm />} />
+          <Route path="paineis" element={<Paineis />} />
+          <Route path="paineis/:id" element={<PainelEditor />} />
+          <Route path="compartilhar" element={<Compartilhar />} />
           <Route path="materiais" element={<Materiais />} />
           <Route path="materiais/novo" element={<MaterialForm key="novo" />} />
           <Route path="materiais/:id" element={<MaterialDetalhe />} />
