@@ -50,6 +50,12 @@ export async function entrar(email: string) {
   const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + '/ajustes' } })
   if (error) throw error
 }
+/** Entra com o código numérico que vem no e-mail (funciona dentro do app instalado, sem abrir o navegador). */
+export async function entrarComCodigo(email: string, codigo: string) {
+  const sb = await cliente_(); if (!sb) throw new Error('Configure a conexão com o Supabase primeiro.')
+  const { error } = await sb.auth.verifyOtp({ email, token: codigo.replace(/\D/g, ''), type: 'email' })
+  if (error) throw new Error(/expired|invalid/i.test(error.message) ? 'Código inválido ou vencido. Peça um novo.' : error.message)
+}
 export async function sair() { const sb = await cliente_(); await sb?.auth.signOut() }
 export async function usuario() { const sb = await cliente_(); return (await sb?.auth.getSession())?.data.session?.user }
 

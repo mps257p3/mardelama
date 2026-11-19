@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Download, Upload, Cloud, RefreshCw, LogOut, Sparkles } from 'lucide-react'
 import { useEffect } from 'react'
-import { configPadrao, entrar, obterConfig, sair, salvarConfig, sincronizar, usuario, type ResultadoSync } from '../db/sync'
+import { configPadrao, entrar, entrarComCodigo, obterConfig, sair, salvarConfig, sincronizar, usuario, type ResultadoSync } from '../db/sync'
 import { FUNCOES, AVISO_ALIMENTOS, provedorAtual } from '../lib/ia'
 import { db } from '../db/schema'
 import { baixar, exportarTudo, importarTudo } from '../db/backup'
@@ -80,7 +80,7 @@ export default function Ajustes() {
 
 function Nuvem() {
   const toast = useToast()
-  const [url, setUrl] = useState(''); const [chave, setChave] = useState(''); const [email, setEmail] = useState('')
+  const [url, setUrl] = useState(''); const [chave, setChave] = useState(''); const [email, setEmail] = useState(''); const [codigo, setCodigo] = useState(''); const [enviado, setEnviado] = useState(false)
   const [user, setUser] = useState<string | null>(null); const [config, setConfig] = useState(!!configPadrao()); const [ocupado, setOcupado] = useState(false)
   const ultimo = useAjuste<ResultadoSync | undefined>('sync.ultimo', undefined)
   const [progresso, setProgresso] = useState<string>()
@@ -105,10 +105,19 @@ function Nuvem() {
               : ultimo && <span className="faint" style={{ fontSize: 12.5 }}>Última: {new Date(ultimo.quando).toLocaleString('pt-BR')}</span>}
           </div>
         ) : config ? (
-          <form style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }} onSubmit={(e) => { e.preventDefault(); passo(() => entrar(email), 'Enviamos um link de acesso para o seu e-mail') }}>
-            <input className="input" type="email" required placeholder="Seu e-mail" value={email} onChange={(e) => setEmail(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
-            <button className="btn primary" disabled={ocupado}>Receber link de acesso</button>
-          </form>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <form style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }} onSubmit={(e) => { e.preventDefault(); passo(async () => { await entrar(email); setEnviado(true) }, 'Enviamos o acesso para o seu e-mail') }}>
+              <input className="input" type="email" required placeholder="Seu e-mail" value={email} onChange={(e) => setEmail(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+              <button className="btn primary" disabled={ocupado}>{enviado ? 'Enviar de novo' : 'Receber acesso'}</button>
+            </form>
+            {enviado && <>
+              <p className="faint" style={{ fontSize: 13 }}>No app instalado, digite aqui o código que veio no e-mail (assim o login fica dentro do app). No navegador, pode só tocar no link.</p>
+              <form style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }} onSubmit={(e) => { e.preventDefault(); passo(() => entrarComCodigo(email, codigo), 'Conectado') }}>
+                <input className="input" inputMode="numeric" autoComplete="one-time-code" placeholder="Código do e-mail" value={codigo} onChange={(e) => setCodigo(e.target.value)} style={{ flex: 1, minWidth: 160, letterSpacing: 2 }} />
+                <button className="btn primary" disabled={ocupado || codigo.replace(/\D/g, '').length < 6}>Entrar</button>
+              </form>
+            </>}
+          </div>
         ) : null}
         <details>
           <summary className="faint" style={{ fontSize: 13, cursor: 'pointer' }}>Conexão com o Supabase</summary>
