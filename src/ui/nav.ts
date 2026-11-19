@@ -1,4 +1,4 @@
-import { Home, FlaskConical, Images, BookOpen, Feather, Calculator, Layers, Settings, Search } from 'lucide-react'
+import { Home, FlaskConical, Images, BookOpen, Feather, Calculator, Layers, Settings, Search, ScrollText, TestTube } from 'lucide-react'
 
 export const AREAS = [
   { to: '/esmaltes', nome: 'Esmaltes', desc: 'Receitas, testes e variações', icon: FlaskConical, fase: 2 },
@@ -12,6 +12,9 @@ export const AREAS = [
 export const LATERAL = [
   { to: '/', nome: 'Início', icon: Home },
   { to: '/busca', nome: 'Buscar', icon: Search },
-  ...AREAS,
+  AREAS[0],
+  { to: '/receitas', nome: 'Receitas', icon: ScrollText },
+  { to: '/testes', nome: 'Testes', icon: TestTube },
+  ...AREAS.slice(1),
 ]
 export const RODAPE = [{ to: '/ajustes', nome: 'Ajustes', icon: Settings }]

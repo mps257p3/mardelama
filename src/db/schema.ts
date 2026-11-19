@@ -102,6 +102,8 @@ export interface Teste extends Base {
   observacoes?: string
   avaliacao?: number
   planoId?: string
+  descricaoPlano?: string   // ex.: "70% A + 30% B"
+  planejado?: 0 | 1         // ainda não queimado
 }
 
 export interface Material extends Base {
