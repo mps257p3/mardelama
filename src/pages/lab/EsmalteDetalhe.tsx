@@ -11,6 +11,7 @@ import { CLASSES, normalizar } from '../../lib/receita'
 import { Estrelas, Foto } from '../../ui/form'
 import { Relacoes } from '../../ui/Relacoes'
 import { useToast } from '../../ui/toast'
+import { CapaFotos, GaleriaPecas } from '../../ui/GaleriaFotos'
 
 export default function EsmalteDetalhe() {
   const { id } = useParams()
@@ -20,7 +21,6 @@ export default function EsmalteDetalhe() {
   const familias = useFamilias()
   const receita = useLiveQuery(async () => (e?.receitaId ? db.receitas.get(e.receitaId) : undefined), [e?.receitaId])
   const testes = useLiveQuery(async () => (await db.testes.where('esmalteId').equals(id!).toArray()).filter((t) => !t.excluido).sort((a, b) => b.data.localeCompare(a.data)), [id])
-  const [foto, setFoto] = useState(0)
   const [aba, setAba] = useState<'ficha' | 'receita' | 'testes' | 'conexoes'>('ficha')
 
   if (e === undefined) return null
@@ -52,10 +52,9 @@ export default function EsmalteDetalhe() {
       <Link to="/esmaltes" className="back"><ArrowLeft size={15} />Esmaltes</Link>
       <div className="detalhe">
         <div>
-          <div className="capa">
-            {e.fotos[foto] ? <Foto id={e.fotos[foto]} alt={e.nome} /> : e.corHex ? <div className="swatch" style={{ background: e.corHex }} /> : <FlaskConical size={44} strokeWidth={1} />}
-          </div>
-          {e.fotos.length > 1 && <div className="thumbs">{e.fotos.map((f, i) => <button key={f} className={i === foto ? 'on' : ''} onClick={() => setFoto(i)}><Foto id={f} /></button>)}</div>}
+          <CapaFotos fotos={e.fotos} alt={e.nome} rotuloAdd="Adicionar foto do esmalte"
+            onChange={(v) => db.esmaltes.update(e.id, { fotos: v, atualizadoEm: Date.now() })}
+            vazio={e.corHex ? <div className="swatch" style={{ background: e.corHex }} /> : <FlaskConical size={44} strokeWidth={1} />} />
         </div>
         <div>
           <p className="eyebrow">{e.codigo}{fam.length ? ' · ' + fam.join(', ') : ''}</p>
@@ -119,6 +118,8 @@ export default function EsmalteDetalhe() {
           ]} />}
         </div>
       </div>
+      <GaleriaPecas titulo="Peças com este esmalte" fotos={e.pecas ?? []}
+        onChange={(v) => db.esmaltes.update(e.id, { pecas: v, atualizadoEm: Date.now() })} />
     </div>
   )
 }

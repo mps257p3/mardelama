@@ -427,3 +427,36 @@ input[type=range] { accent-color: var(--marrom); width: 100%; height: 32px; }
 @media (min-width: 900px) { .sync-pill { bottom: 20px; } }
 .gira { animation: gira 1.2s linear infinite; flex-shrink: 0; }
 @keyframes gira { to { transform: rotate(360deg); } }
+
+/* fotos em destaque: capa, peças e visor */
+.capa-grande { aspect-ratio: 4/5; }
+@media (min-width: 900px) { .capa-grande { aspect-ratio: 1; } }
+.capa-btn, .capa-vazia { all: unset; box-sizing: border-box; width: 100%; height: 100%; display: grid; place-items: center; cursor: pointer; }
+.capa-vazia { gap: 14px; align-content: center; justify-items: center; color: var(--argila); }
+.capa-vazia .swatch { width: 100%; height: 100%; }
+.capa-add { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); background: rgba(245,240,232,.92); border: 1px dashed var(--line-strong); padding: 8px 14px; border-radius: 999px; }
+.capa-vazia:has(.swatch) { position: relative; }
+.capa-vazia:has(.swatch) .capa-add { position: absolute; bottom: 14px; }
+.thumbs .thumb-add { border: 1px dashed var(--line-strong); background: none; display: grid; place-items: center; color: var(--ink-3); }
+.titulo-foto { margin-top: 18px; }
+.titulo-foto h1 { margin-top: 6px; }
+.pecas-sec { margin-top: 28px; }
+.pecas-grade { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+@media (min-width: 640px) { .pecas-grade { grid-template-columns: repeat(3, 1fr); } }
+.peca-foto { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--surface-2); border: 0; padding: 0; cursor: pointer; }
+.peca-add { border: 1px dashed var(--line-strong); background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--ink-3); font-size: 12px; padding: 8px; text-align: center; }
+.visor { position: fixed; inset: 0; z-index: 100; background: rgba(20,18,16,.96); display: flex; flex-direction: column; color: #F5F0E8; }
+.visor-topo { display: flex; justify-content: space-between; align-items: center; padding: max(10px, env(safe-area-inset-top)) 12px 10px; font-size: 13px; }
+.visor-img { flex: 1; min-height: 0; display: grid; place-items: center; padding: 0 8px; }
+.visor-img img { max-height: 100%; }
+.visor-legenda { text-align: center; font-family: 'Cormorant Garamond', serif; font-size: 20px; padding: 10px 16px max(16px, env(safe-area-inset-bottom)); margin: 0; }
+.visor-btn { width: 42px; height: 42px; border-radius: 999px; border: 0; background: rgba(245,240,232,.12); color: #F5F0E8; display: grid; place-items: center; cursor: pointer; }
+.visor-ant, .visor-prox { position: absolute; top: 50%; transform: translateY(-50%); }
+.visor-ant { left: 10px; } .visor-prox { right: 10px; }
+@media (hover: none) { .visor-ant, .visor-prox { display: none; } }
+/* receitas em grade */
+.galeria .peca .ph .icone { color: var(--argila); }
+.receita-capa { max-width: 440px; margin-bottom: 18px; }
+.receita-capa .capa-grande:has(.capa-vazia) { aspect-ratio: 5/2; }
+.galeria.galeria-grande .peca .ph { aspect-ratio: 4/5; border-radius: 12px; }
+.galeria.galeria-grande .peca .t { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 500; line-height: 1.15; margin-top: 2px; }

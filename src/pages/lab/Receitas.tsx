@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Download, GitBranch, Plus, ScrollText, Search } from 'lucide-react'
+import { Download, GitBranch, Grid2x2, List, Plus, ScrollText, Search } from 'lucide-react'
+import { Foto } from '../../ui/form'
+import { useAjuste, definirAjuste } from '../../db/settings'
 import { baixar } from '../../db/backup'
 import { CLASSES } from '../../lib/receita'
 import { db, novo, uid } from '../../db/schema'
@@ -27,6 +29,8 @@ export default function Receitas() {
   const [fam, setFam] = useState('')
   const codFam = useMemo(() => new Map(familias.map((f) => [f.id, f.codigo ?? f.nome])), [familias])
   const nomeEsm = useMemo(() => new Map((esmaltes ?? []).map((e) => [e.id, e.nome])), [esmaltes])
+  const fotoEsm = useMemo(() => new Map((esmaltes ?? []).map((e) => [e.id, e.fotos[0]])), [esmaltes])
+  const modo = useAjuste<'grade' | 'lista'>('receitas.modo', 'grade')
   const nomeRec = useMemo(() => new Map((receitas ?? []).map((r) => [r.id, r.nome])), [receitas])
   const lista = (receitas ?? []).filter((r) => (so === 'todas' || r.ehBase) && (!fam || (r.familias ?? []).includes(fam)) &&
     (!q || textoBusca(r.nome, r.codigo, r.ingredientes.map((i) => i.nome), r.observacoes, r.tags).includes(normaliza(q))))
@@ -53,6 +57,10 @@ export default function Receitas() {
           <button className={so === 'todas' ? 'on' : ''} onClick={() => setSo('todas')}>Todas</button>
           <button className={so === 'bases' ? 'on' : ''} onClick={() => setSo('bases')}>Bases reutilizáveis</button>
         </div>
+        <div className="seg">
+          <button className={modo === 'grade' ? 'on' : ''} onClick={() => definirAjuste('receitas.modo', 'grade')} aria-label="Grade"><Grid2x2 size={15} /></button>
+          <button className={modo === 'lista' ? 'on' : ''} onClick={() => definirAjuste('receitas.modo', 'lista')} aria-label="Lista"><List size={15} /></button>
+        </div>
       </div>
       <div className="chips" style={{ marginBottom: 8 }}>
         <button className={'chip' + (!fam ? ' on' : '')} onClick={() => setFam('')}>Todas as famílias</button>
@@ -60,11 +68,29 @@ export default function Receitas() {
       </div>
       {receitas && receitas.length === 0 ? (
         <div className="empty"><span className="serif">Nenhuma receita ainda.</span><span>Formule com receita base, corantes, opacificantes e aditivos, com versões e variações.</span></div>
+      ) : modo === 'grade' ? (
+        <div className="galeria galeria-grande">
+          {lista.map((r) => {
+            const f = r.fotos?.[0] ?? r.pecas?.[0] ?? (r.esmalteId ? fotoEsm.get(r.esmalteId) : undefined)
+            return (
+              <Link key={r.id} to={`/receitas/${r.id}`} className="peca">
+                <div className="ph">
+                  {f ? <Foto id={f} alt={r.nome} /> : r.origemId ? <GitBranch size={28} strokeWidth={1.1} /> : <ScrollText size={28} strokeWidth={1.1} />}
+                  {r.codigo && <span className="cod">{r.codigo}</span>}
+                </div>
+                <div>
+                  <div className="t">{r.nome}</div>
+                  <div className="s">{[r.status, r.ehBase ? 'Base reutilizável' : '', 'v' + r.versaoAtual].filter(Boolean).join(' · ')}</div>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
       ) : (
         <div className="lista">
           {lista.map((r) => (
             <Link key={r.id} to={`/receitas/${r.id}`}>
-              <div className="mini">{r.origemId ? <GitBranch size={20} strokeWidth={1.2} /> : <ScrollText size={20} strokeWidth={1.2} />}</div>
+              <div className="mini">{(r.fotos?.[0] ?? (r.esmalteId && fotoEsm.get(r.esmalteId))) ? <Foto id={r.fotos?.[0] ?? fotoEsm.get(r.esmalteId!)} /> : r.origemId ? <GitBranch size={20} strokeWidth={1.2} /> : <ScrollText size={20} strokeWidth={1.2} />}</div>
               <div>
                 <div className="t">{r.codigo && <span className="codigo" style={{ marginRight: 8, color: 'var(--area)' }}>{r.codigo}</span>}{r.nome}</div>
                 <div className="s">{[r.status, (r.familias ?? []).map((f) => codFam.get(f)).filter(Boolean).join(' ') , r.ehBase ? 'Base reutilizável' : '', r.esmalteId && nomeEsm.get(r.esmalteId), r.origemId && 'variação de ' + (nomeRec.get(r.origemId) ?? '…'), r.ingredientes.length + ' ingredientes'].filter(Boolean).join(' · ')}</div>

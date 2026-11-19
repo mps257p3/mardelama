@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Copy, Download, GitBranch, History, Plus, Scale, Trash2, X, Columns2, Printer } from 'lucide-react'
+import { ArrowLeft, ScrollText, Copy, Download, GitBranch, History, Plus, Scale, Trash2, X, Columns2, Printer } from 'lucide-react'
 import { db, novo, uid, type ClasseIngrediente, type Ingrediente, type Receita } from '../../db/schema'
 import { excluir, useEsmaltes, useFamilias, useMapaMateriais, useMateriais, useReceitas } from '../../db/hooks'
 import { STATUS_RECEITA, TEXTURAS_AUTORAIS } from '../../db/conhecimento'
@@ -12,6 +12,7 @@ import { Campo, Numero, Texto, AreaTexto, Multi, Tags } from '../../ui/form'
 import { Sheet } from '../../ui/Sheet'
 import { Relacoes } from '../../ui/Relacoes'
 import { useToast } from '../../ui/toast'
+import { CapaFotos, GaleriaPecas } from '../../ui/GaleriaFotos'
 
 type R = Omit<Receita, 'criadoEm' | 'atualizadoEm'>
 
@@ -66,7 +67,7 @@ export default function ReceitaEditor() {
   }
   async function derivar(tipo: 'duplicar' | 'variacao') {
     const { id: _i, ...resto } = r!
-    const x = novo({ ...resto, nome: r!.nome + (tipo === 'variacao' ? ' · variação' : ' (cópia)'), codigo: r!.codigo ? r!.codigo + (tipo === 'variacao' ? '-V' : '-C') : undefined, status: STATUS_RECEITA[0], versaoAtual: 1, origemId: tipo === 'variacao' ? r!.id : r!.origemId, esmalteId: tipo === 'variacao' ? r!.esmalteId : undefined, ehBase: 0 as const })
+    const x = novo({ ...resto, nome: r!.nome + (tipo === 'variacao' ? ' · variação' : ' (cópia)'), codigo: r!.codigo ? r!.codigo + (tipo === 'variacao' ? '-V' : '-C') : undefined, status: STATUS_RECEITA[0], versaoAtual: 1, origemId: tipo === 'variacao' ? r!.id : r!.origemId, esmalteId: tipo === 'variacao' ? r!.esmalteId : undefined, ehBase: 0 as const, fotos: [], pecas: [] })
     await db.receitas.add(x)
     await db.versoes.add({ id: uid(), receitaId: x.id, versao: 1, criadoEm: Date.now(), nota: tipo === 'variacao' ? `Derivada de ${r!.nome} v${r!.versaoAtual}` : `Cópia de ${r!.nome}`, snapshot: { ...x } })
     toast(tipo === 'variacao' ? 'Variação criada' : 'Receita duplicada'); nav(`/receitas/${x.id}`)
@@ -77,6 +78,10 @@ export default function ReceitaEditor() {
   return (
     <div className="page">
       <Link to="/receitas" className="back"><ArrowLeft size={15} />Receitas</Link>
+      <div className="receita-capa">
+        <CapaFotos fotos={r.fotos ?? []} alt={r.nome} rotuloAdd="Adicionar foto do esmalte" onChange={(v) => mudar({ fotos: v })}
+          vazio={<ScrollText size={36} strokeWidth={1} />} />
+      </div>
       <div className="head">
         <div style={{ flex: 1, minWidth: 260 }}>
           <p className="eyebrow">{r.codigo ? r.codigo + ' · ' : 'Fórmula · '}versão {r.versaoAtual}</p>
@@ -217,6 +222,7 @@ export default function ReceitaEditor() {
           <Relacoes tipo="receita" id={r.id} extras={r.ingredientes.filter((i) => i.materialId && mapa.get(i.materialId)).map((i) => ({ tipo: 'material' as const, id: i.materialId!, titulo: i.nome, sub: mapa.get(i.materialId!)!.categoria, to: `/materiais/${i.materialId}` }))} />
         </aside>
       </div>
+      <GaleriaPecas titulo="Peças com esta receita" fotos={r.pecas ?? []} onChange={(v) => mudar({ pecas: v })} />
 
       {painel === 'versao' && <Sheet label="Registrar versão" onClose={() => setPainel(undefined)}>
         <h3>Registrar versão {r.versaoAtual + 1}</h3>

@@ -51,7 +51,8 @@ export interface Familia extends Base {
 export interface Esmalte extends Base {
   nome: string
   codigo: string
-  fotos: string[]            // ids de Arquivo
+  fotos: string[]            // ids de Arquivo (o esmalte em si: plaquinhas, testes bonitos)
+  pecas?: string[]           // ids de Arquivo: peças feitas com o esmalte
   autoria?: string
   origem: 'comercial' | 'propria'
   familias: string[]         // ids de Familia (múltiplas categorias)
@@ -101,6 +102,8 @@ export interface Receita extends Base {
   aguaMlPor100g?: number
   liquidos?: { nome: string; quantidade: number; unidade: string }[]
   observacoes?: string
+  fotos?: string[]           // foto do esmalte resultante
+  pecas?: string[]           // fotos de peças feitas com a receita
 }
 
 export interface VersaoReceita {

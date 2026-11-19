@@ -78,7 +78,7 @@ export default function Esmaltes() {
           <Link className="btn primary sm" to="/esmaltes/novo"><Plus size={15} />Cadastrar esmalte</Link>
         </div>
       ) : modo === 'grade' ? (
-        <div className="galeria">
+        <div className="galeria galeria-grande">
           {lista.map((e) => (
             <Link key={e.id} to={`/esmaltes/${e.id}`} className="peca">
               <div className="ph">
