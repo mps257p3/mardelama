@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Download, Upload, Cloud, RefreshCw, LogOut, Sparkles } from 'lucide-react'
 import { useEffect } from 'react'
-import { entrar, obterConfig, sair, salvarConfig, sincronizar, usuario, type ResultadoSync } from '../db/sync'
+import { configPadrao, entrar, obterConfig, sair, salvarConfig, sincronizar, usuario, type ResultadoSync } from '../db/sync'
 import { FUNCOES, AVISO_ALIMENTOS, provedorAtual } from '../lib/ia'
 import { db } from '../db/schema'
 import { baixar, exportarTudo, importarTudo } from '../db/backup'
@@ -81,7 +81,7 @@ export default function Ajustes() {
 function Nuvem() {
   const toast = useToast()
   const [url, setUrl] = useState(''); const [chave, setChave] = useState(''); const [email, setEmail] = useState('')
-  const [user, setUser] = useState<string | null>(null); const [config, setConfig] = useState(false); const [ocupado, setOcupado] = useState(false)
+  const [user, setUser] = useState<string | null>(null); const [config, setConfig] = useState(!!configPadrao()); const [ocupado, setOcupado] = useState(false)
   const ultimo = useAjuste<ResultadoSync | undefined>('sync.ultimo', undefined)
   const atualizar = async () => { const c = await obterConfig(); setConfig(!!c); if (c) { setUrl(c.url); setChave(c.chave) }; setUser((await usuario())?.email ?? null) }
   useEffect(() => { atualizar() }, [])

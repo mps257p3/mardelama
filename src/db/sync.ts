@@ -19,12 +19,21 @@ const BUCKET = 'arquivos'
 let cliente: SupabaseClient | undefined
 let configAtual = ''
 
-export async function obterConfig(): Promise<ConfigNuvem | undefined> {
-  const salvo = (await db.ajustes.get('nuvem'))?.valor as ConfigNuvem | undefined
-  if (salvo?.url && salvo.chave) return salvo
+/** Conexão embutida no app publicado (não depende do banco local). */
+export function configPadrao(): ConfigNuvem | undefined {
   const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
   const chave = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
   return url && chave ? { url, chave } : undefined
+}
+
+export async function obterConfig(): Promise<ConfigNuvem | undefined> {
+  // se o banco local demorar a abrir, segue com a conexão padrão em vez de travar a tela
+  const salvo = await Promise.race([
+    db.ajustes.get('nuvem').then((a) => a?.valor as ConfigNuvem | undefined).catch(() => undefined),
+    new Promise<undefined>((r) => setTimeout(() => r(undefined), 2500)),
+  ])
+  if (salvo?.url && salvo.chave) return salvo
+  return configPadrao()
 }
 
 export async function cliente_() {
