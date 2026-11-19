@@ -56,6 +56,12 @@ export async function entrarComCodigo(email: string, codigo: string) {
   const { error } = await sb.auth.verifyOtp({ email, token: codigo.replace(/\D/g, ''), type: 'email' })
   if (error) throw new Error(/expired|invalid/i.test(error.message) ? 'Código inválido ou vencido. Peça um novo.' : error.message)
 }
+/** Entra com a conta Google (volta para Ajustes já conectado). */
+export async function entrarComGoogle() {
+  const sb = await cliente_(); if (!sb) throw new Error('Configure a conexão com o Supabase primeiro.')
+  const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + '/ajustes' } })
+  if (error) throw error
+}
 export async function sair() { const sb = await cliente_(); await sb?.auth.signOut() }
 export async function usuario() { const sb = await cliente_(); return (await sb?.auth.getSession())?.data.session?.user }
 
