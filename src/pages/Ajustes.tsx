@@ -64,7 +64,13 @@ function Nuvem() {
   const [progresso, setProgresso] = useState<string>()
   useEffect(() => { const f = (e: Event) => setProgresso((e as CustomEvent<string | undefined>).detail); window.addEventListener('sync-progresso', f); return () => window.removeEventListener('sync-progresso', f) }, [])
   const atualizar = async () => { const c = await obterConfig(); setConfig(!!c); if (c) { setUrl(c.url); setChave(c.chave) }; setUser((await usuario())?.email ?? null) }
-  useEffect(() => { atualizar() }, [])
+  useEffect(() => {
+    // o login pelo Google ou pelo link do e-mail pode terminar em outra janela: ao voltar para o app, confere de novo
+    atualizar()
+    const f = () => { if (document.visibilityState === 'visible') atualizar() }
+    document.addEventListener('visibilitychange', f); window.addEventListener('focus', f); window.addEventListener('storage', f)
+    return () => { document.removeEventListener('visibilitychange', f); window.removeEventListener('focus', f); window.removeEventListener('storage', f) }
+  }, [])
   const passo = async <R,>(f: () => Promise<R>, ok: string | ((r: R) => string)) => { setOcupado(true); try { const r = await f(); toast(typeof ok === 'function' ? ok(r) : ok); await atualizar() } catch (e) { toast((e as Error).message) } finally { setOcupado(false) } }
 
   return (

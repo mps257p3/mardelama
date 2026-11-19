@@ -27,6 +27,7 @@ export function configPadrao(): ConfigNuvem | undefined {
 }
 
 export async function obterConfig(): Promise<ConfigNuvem | undefined> {
+  const padrao = configPadrao(); if (padrao) return padrao
   // se o banco local demorar a abrir, segue com a conexão padrão em vez de travar a tela
   const salvo = await Promise.race([
     db.ajustes.get('nuvem').then((a) => a?.valor as ConfigNuvem | undefined).catch(() => undefined),
