@@ -1,4 +1,4 @@
-# Ateliê Marcelo Parducci
+# Mar de Lama — ateliê de Marcelo Parducci
 
 App pessoal (PWA) do ateliê de cerâmica: laboratório de esmaltes, referências, biblioteca, caderno e calculadoras.
 

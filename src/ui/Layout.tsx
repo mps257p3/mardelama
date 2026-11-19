@@ -12,7 +12,7 @@ export function Layout() {
       <aside className="side" aria-label="Navegação">
         <NavLink to="/" className="brand" style={{ background: 'none' }}>
           <Monograma altura={40} />
-          <span>Marcelo<br />Parducci</span>
+          <span>Mar de<br />Lama</span>
         </NavLink>
         {LATERAL.map(({ to, nome, icon: I }) => (
           <NavLink key={to} to={to} end={to === '/'}><I size={18} strokeWidth={1.4} />{nome}</NavLink>

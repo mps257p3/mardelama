@@ -101,7 +101,7 @@ export default function Home() {
             </div>
           </div>
           <div>
-            <p className="eyebrow">Ateliê Marcelo Parducci</p>
+            <p className="eyebrow">Ateliê Mar de Lama</p>
             <h1 style={{ marginTop: 10 }}>Meu ateliê</h1>
             <p className="lead">Esmaltes, referências, estudos e anotações, reunidos em uma só memória.</p>
           </div>
