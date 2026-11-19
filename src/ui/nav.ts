@@ -1,13 +1,17 @@
 import { Home, FlaskConical, Images, BookOpen, Feather, Calculator, Layers, Settings, Search, ScrollText, TestTube } from 'lucide-react'
 
+/** As seis áreas principais. `cor` identifica a área discretamente (ícones, etiquetas, indicadores). */
 export const AREAS = [
-  { to: '/esmaltes', nome: 'Esmaltes', desc: 'Receitas, testes e variações', icon: FlaskConical, fase: 2 },
-  { to: '/materiais', nome: 'Materiais', desc: 'Argilas, fritas, óxidos e insumos', icon: Layers, fase: 2 },
-  { to: '/referencias', nome: 'Referências', desc: 'Imagens, artistas e ideias', icon: Images, fase: 3 },
-  { to: '/biblioteca', nome: 'Biblioteca', desc: 'Técnicas, química e estudos', icon: BookOpen, fase: 4 },
-  { to: '/caderno', nome: 'Caderno', desc: 'Ideias, pesquisas e descobertas', icon: Feather, fase: 4 },
-  { to: '/calculadoras', nome: 'Calculadoras', desc: 'Ferramentas para o ateliê', icon: Calculator, fase: 4 },
+  { slug: 'esmaltes', to: '/esmaltes', nome: 'Esmaltes', desc: 'Receitas, testes e variações', icon: FlaskConical, cor: '#3D5965', fase: 2 },
+  { slug: 'materiais', to: '/materiais', nome: 'Materiais', desc: 'Argilas, fritas, óxidos e insumos', icon: Layers, cor: '#B46E4B', fase: 2 },
+  { slug: 'referencias', to: '/referencias', nome: 'Referências', desc: 'Imagens, artistas e ideias', icon: Images, cor: '#858D70', fase: 3 },
+  { slug: 'biblioteca', to: '/biblioteca', nome: 'Biblioteca', desc: 'Técnicas, química e estudos', icon: BookOpen, cor: '#B49B70', fase: 4 },
+  { slug: 'caderno', to: '/caderno', nome: 'Caderno', desc: 'Ideias, pesquisas e descobertas', icon: Feather, cor: '#987C79', fase: 4 },
+  { slug: 'calculadoras', to: '/calculadoras', nome: 'Calculadoras', desc: 'Ferramentas para o ateliê', icon: Calculator, cor: '#594334', fase: 4 },
 ] as const
+
+export type AreaSlug = (typeof AREAS)[number]['slug']
+export const COR_AREA: Record<AreaSlug, string> = Object.fromEntries(AREAS.map((a) => [a.slug, a.cor])) as Record<AreaSlug, string>
 
 export const LATERAL = [
   { to: '/', nome: 'Início', icon: Home },

@@ -33,6 +33,7 @@ import NotaEditor from './pages/cad/NotaEditor'
 import NotaNova from './pages/cad/NotaNova'
 import Calculadoras from './pages/calc/Calculadoras'
 import Busca from './pages/Busca'
+import Atividade from './pages/Atividade'
 import Materiais from './pages/lab/Materiais'
 import MaterialForm from './pages/lab/MaterialForm'
 import MaterialDetalhe from './pages/lab/MaterialDetalhe'
@@ -75,6 +76,7 @@ export default function App() {
           <Route path="caderno/nova" element={<NotaNova />} />
           <Route path="caderno/:id" element={<NotaEditor />} />
           <Route path="busca" element={<Busca />} />
+          <Route path="atividade" element={<Atividade />} />
           <Route path="calculadoras" element={<Calculadoras />} />
           <Route path="compartilhar" element={<Compartilhar />} />
           <Route path="materiais" element={<Materiais />} />

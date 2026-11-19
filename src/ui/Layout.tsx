@@ -25,7 +25,10 @@ export function Layout() {
         ))}
       </aside>
 
-      <main className="main"><Outlet /></main>
+      <main className="main">
+        <Outlet />
+        <footer className="versao">Versão de {new Date(__VERSAO__).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })}</footer>
+      </main>
 
       <nav className="bottom" aria-label="Navegação principal">
         <NavLink to="/" end><Home size={22} strokeWidth={1.4} />Início</NavLink>

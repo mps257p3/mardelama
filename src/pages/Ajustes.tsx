@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Download, Upload, RotateCcw, Cloud, RefreshCw, LogOut, Sparkles } from 'lucide-react'
+import { Download, Upload, Cloud, RefreshCw, LogOut, Sparkles } from 'lucide-react'
 import { useEffect } from 'react'
 import { entrar, obterConfig, sair, salvarConfig, sincronizar, usuario, type ResultadoSync } from '../db/sync'
 import { FUNCOES, AVISO_ALIMENTOS, provedorAtual } from '../lib/ia'
@@ -8,12 +8,12 @@ import { db } from '../db/schema'
 import { baixar, exportarTudo, importarTudo } from '../db/backup'
 import { definirAjuste, useAjuste } from '../db/settings'
 import { useToast } from '../ui/toast'
+import { AjustesInicio } from './AjustesInicio'
 
 export default function Ajustes() {
   const toast = useToast()
   const input = useRef<HTMLInputElement>(null)
   const [ocupado, setOcupado] = useState(false)
-  const destaque = useAjuste<string | undefined>('destaque', undefined)
   const contagem = useLiveQuery(async () => ({
     esmaltes: await db.esmaltes.count(), referencias: await db.referencias.count(),
     notas: await db.notas.count(), arquivos: await db.arquivos.count(),
@@ -64,15 +64,7 @@ export default function Ajustes() {
         </p>
       </section>
 
-      <section style={{ marginTop: 40 }}>
-        <h3>Tela inicial</h3>
-        <div style={{ marginTop: 14 }}>
-          <button className="btn" disabled={!destaque} onClick={async () => {
-            if (destaque) await db.arquivos.delete(destaque)
-            await db.ajustes.delete('destaque'); toast('Imagem de destaque restaurada')
-          }}><RotateCcw size={16} strokeWidth={1.5} />Restaurar imagem de destaque original</button>
-        </div>
-      </section>
+      <AjustesInicio />
 
       <section style={{ marginTop: 40 }}>
         <h3 style={{ display: 'flex', gap: 10, alignItems: 'center' }}><Sparkles size={20} strokeWidth={1.3} />Inteligência artificial</h3>

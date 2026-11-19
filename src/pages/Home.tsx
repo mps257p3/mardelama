@@ -1,141 +1,174 @@
-import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowRight, ImagePlus, Search, Settings, FlaskConical, Images, Feather, Layers, BookOpen, ScrollText } from 'lucide-react'
-import { db, type Tipo } from '../db/schema'
-import { salvarArquivo, useArquivoUrl } from '../db/files'
-import { definirAjuste, useAjuste } from '../db/settings'
+import { Search, Settings, ImagePlus } from 'lucide-react'
+import { db } from '../db/schema'
+import { useArquivoUrl } from '../db/files'
+import { useAjuste } from '../db/settings'
 import { AREAS } from '../ui/nav'
 import { Monograma } from '../ui/Monograma'
-import { useToast } from '../ui/toast'
+import { Foto } from '../ui/form'
+import { LinhaItem, LinhaVazia, Miniatura } from '../ui/itens'
+import { atividadeRecente } from '../lib/atividade'
+import { useDestaqueCfg, useSecoesInicio, type SecaoId } from '../lib/inicio'
 
-interface Recente { tipo: Tipo; id: string; titulo: string; sub: string; foto?: string; to: string; quando: number }
+const vivos = <T extends { excluido?: 0 | 1 }>(xs: T[]) => xs.filter((x) => !x.excluido)
 
-const ICONE: Partial<Record<Tipo, typeof Images>> = {
-  esmalte: FlaskConical, referencia: Images, nota: Feather, material: Layers, conteudo: BookOpen, teste: ScrollText,
+export function useFotoArea(slug: string) {
+  const id = useAjuste<string | undefined>(`area.foto.${slug}`, undefined)
+  const url = useArquivoUrl(id)
+  return url ?? `/areas/${slug}.jpg`
 }
 
-function useRecentes(): Recente[] | undefined {
-  return useLiveQuery(async () => {
-    const n = 10
-    const vivos = <T extends { excluido?: 0 | 1 }>(xs: T[]) => xs.filter((x) => !x.excluido)
-    const [es, rs, ns, ms, cs, ts] = await Promise.all([
-      db.esmaltes.orderBy('criadoEm').reverse().limit(n).toArray(),
-      db.referencias.orderBy('criadoEm').reverse().limit(n).toArray(),
-      db.notas.orderBy('criadoEm').reverse().limit(n).toArray(),
-      db.materiais.orderBy('atualizadoEm').reverse().limit(n).toArray(),
-      db.conteudos.orderBy('atualizadoEm').reverse().limit(n).toArray(),
-      db.testes.orderBy('criadoEm').reverse().limit(n).toArray(),
-    ])
-    const out: Recente[] = [
-      ...vivos(es).map((x) => ({ tipo: 'esmalte' as const, id: x.id, titulo: x.nome, sub: 'Esmalte · ' + x.codigo, foto: x.fotos[0], to: `/esmaltes/${x.id}`, quando: x.criadoEm })),
-      ...vivos(rs).map((x) => ({ tipo: 'referencia' as const, id: x.id, titulo: x.titulo, sub: 'Referência', foto: x.imagens[0], to: `/referencias/${x.id}`, quando: x.criadoEm })),
-      ...vivos(ns).map((x) => ({ tipo: 'nota' as const, id: x.id, titulo: x.titulo || 'Anotação', sub: 'Caderno', foto: x.imagens[0], to: `/caderno/${x.id}`, quando: x.criadoEm })),
-      ...vivos(ms).map((x) => ({ tipo: 'material' as const, id: x.id, titulo: x.nome, sub: 'Material · ' + x.categoria, foto: x.fotos[0], to: `/materiais/${x.id}`, quando: x.criadoEm })),
-      ...vivos(cs).map((x) => ({ tipo: 'conteudo' as const, id: x.id, titulo: x.titulo, sub: 'Biblioteca · ' + x.categoria, to: `/biblioteca/${x.id}`, quando: x.criadoEm })),
-      ...vivos(ts).map((x) => ({ tipo: 'teste' as const, id: x.id, titulo: x.codigo, sub: 'Teste', foto: x.fotos[0], to: `/testes/${x.id}`, quando: x.criadoEm })),
-    ]
-    return out.sort((a, b) => b.quando - a.quando).slice(0, 12)
-  })
-}
-
-function Tile({ r }: { r: Recente }) {
-  const url = useArquivoUrl(r.foto)
-  const I = ICONE[r.tipo] ?? Images
+function CardArea({ a }: { a: (typeof AREAS)[number] }) {
+  const src = useFotoArea(a.slug)
+  const I = a.icon
   return (
-    <Link to={r.to} className="tile">
-      <div className="ph">{url ? <img src={url} alt="" /> : <I size={28} strokeWidth={1.2} />}</div>
-      <div><div className="t">{r.titulo}</div><div className="s">{r.sub}</div></div>
+    <Link to={a.to} className="card-area">
+      <span className="foto"><img src={src} alt="" loading="lazy" /></span>
+      <span className="nome"><I size={15} strokeWidth={1.5} style={{ color: a.cor }} />{a.nome}</span>
     </Link>
   )
 }
 
-function Faixa({ titulo, itens, vazio, link }: { titulo: string; itens?: Recente[]; vazio: React.ReactNode; link?: { to: string; label: string } }) {
+export function Destaque({ editar = true }: { editar?: boolean }) {
+  const id = useAjuste<string | undefined>('destaque', undefined)
+  const url = useArquivoUrl(id)
+  const cfg = useDestaqueCfg()
   return (
-    <section style={{ marginTop: 48 }}>
-      <div className="section-head">
-        <h2>{titulo}</h2>
-        {link && itens && itens.length > 0 && <Link to={link.to}>{link.label}</Link>}
-      </div>
-      {itens === undefined ? null : itens.length === 0 ? vazio : (
-        <div className="rail">{itens.map((r) => <Tile key={r.tipo + r.id} r={r} />)}</div>
+    <figure className={'destaque' + (cfg.tituloSobre ? ' sobre' : '')}>
+      <img src={url ?? '/hero-default.jpg'} alt="Fotografia de destaque" style={{ objectPosition: `${cfg.x}% ${cfg.y}%` }} />
+      {cfg.tituloSobre && (
+        <figcaption style={{ color: cfg.tituloClaro ? 'var(--marfim)' : 'var(--carvao)' }}>
+          <h1>Mar de Lama</h1>
+          <p>Pesquisa, matéria e criação.</p>
+        </figcaption>
       )}
+      {cfg.credito && <span className="credito">{cfg.credito}</span>}
+      {editar && <Link to="/ajustes#tela-inicial" className="editar" aria-label="Personalizar fotografia de destaque"><ImagePlus size={16} strokeWidth={1.5} /></Link>}
+    </figure>
+  )
+}
+
+function Secao({ titulo, link, children }: { titulo: string; link?: { to: string; label: string }; children: React.ReactNode }) {
+  return (
+    <section className="secao">
+      <div className="secao-head">
+        <h2>{titulo}</h2>
+        {link && <Link to={link.to}>{link.label}</Link>}
+      </div>
+      {children}
     </section>
   )
 }
 
-export default function Home() {
-  const toast = useToast()
-  const destaqueId = useAjuste<string | undefined>('destaque', undefined)
-  const destaqueUrl = useArquivoUrl(destaqueId)
-  const input = useRef<HTMLInputElement>(null)
-  const recentes = useRecentes()
-
-  const testes = useLiveQuery(async () => {
-    const ts = (await db.testes.orderBy('data').reverse().limit(10).toArray()).filter((t) => !t.excluido)
-    return ts.map<Recente>((t) => ({ tipo: 'teste', id: t.id, titulo: t.codigo, sub: new Date(t.data + 'T12:00').toLocaleDateString('pt-BR'), foto: t.fotos[0], to: `/testes/${t.id}`, quando: t.criadoEm }))
-  })
-  const favoritas = useLiveQuery(async () => {
-    const rs = (await db.referencias.where('favorito').equals(1).toArray()).filter((r) => !r.excluido)
-    return rs.sort((a, b) => b.atualizadoEm - a.atualizadoEm).slice(0, 12)
-      .map<Recente>((r) => ({ tipo: 'referencia', id: r.id, titulo: r.titulo, sub: r.autor || r.tipo, foto: r.imagens[0], to: `/referencias/${r.id}`, quando: r.criadoEm }))
-  })
-
-  async function trocarDestaque(f?: File) {
-    if (!f) return
-    const id = await salvarArquivo(f, { tipo: 'nota', id: 'destaque' })
-    if (destaqueId) await db.arquivos.delete(destaqueId)
-    await definirAjuste('destaque', id)
-    toast('Imagem de destaque atualizada')
-  }
-
+interface Peca { id: string; to: string; titulo: string; sub?: string; foto?: string; cor?: string }
+function Trilho({ itens, tipo }: { itens: Peca[]; tipo: 'esmalte' | 'teste' | 'referencia' }) {
   return (
-    <div className="page">
-      <section className="hero">
-        <div className="hero-text">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <Monograma className="mono" altura={54} />
-            <div style={{ display: 'flex' }}>
-              <Link to="/busca" className="iconbtn" aria-label="Buscar"><Search size={19} strokeWidth={1.4} /></Link>
-              <Link to="/ajustes" className="iconbtn" aria-label="Ajustes"><Settings size={19} strokeWidth={1.4} /></Link>
-            </div>
-          </div>
-          <div>
-            <h1 style={{ marginTop: 10 }}>Mar de Lama</h1>
-            <p className="lead">Esmaltes, referências, estudos e anotações, reunidos em uma só memória.</p>
-          </div>
+    <div className="trilho">
+      {itens.map((p) => (
+        <Link key={p.id} to={p.to} className="peca-mini">
+          <span className="ph">{p.foto ? <Foto id={p.foto} /> : <Miniatura tipo={tipo} cor={p.cor} tam={112} />}</span>
+          <span className="t">{p.titulo}</span>
+          {p.sub && <span className="s">{p.sub}</span>}
+        </Link>
+      ))}
+    </div>
+  )
+}
+
+function SecAtividade() {
+  const itens = useLiveQuery(() => atividadeRecente(4), [])
+  if (!itens) return null
+  return (
+    <Secao titulo="Atividade recente" link={itens.length ? { to: '/atividade', label: 'Ver tudo' } : undefined}>
+      {itens.length ? <div className="linhas">{itens.map((r) => <LinhaItem key={r.tipo + r.id} to={r.to} tipo={r.tipo} titulo={r.titulo} sub={r.rotulo + (r.sub ? ' · ' + r.sub : '')} foto={r.foto} />)}</div>
+        : <LinhaVazia texto="Nada registrado ainda." acao="Primeira anotação" to="/caderno/nova" />}
+    </Secao>
+  )
+}
+
+function SecEsmaltes() {
+  const itens = useLiveQuery(async () => vivos(await db.esmaltes.orderBy('criadoEm').reverse().limit(16).toArray()).slice(0, 10)
+    .map<Peca>((e) => ({ id: e.id, to: `/esmaltes/${e.id}`, titulo: e.nome, sub: e.codigo, foto: e.fotos[0], cor: e.corHex })), [])
+  if (!itens?.length) return null
+  return (
+    <Secao titulo="Últimos esmaltes" link={itens.length ? { to: '/esmaltes', label: 'Ver todos' } : undefined}>
+      {itens.length ? <Trilho itens={itens} tipo="esmalte" /> : null}
+    </Secao>
+  )
+}
+
+function SecTestes() {
+  const itens = useLiveQuery(async () => vivos(await db.testes.orderBy('criadoEm').reverse().limit(16).toArray()).slice(0, 10)
+    .map<Peca>((t) => ({ id: t.id, to: `/testes/${t.id}`, titulo: t.codigo, sub: t.data ? new Date(t.data + 'T12:00').toLocaleDateString('pt-BR') : undefined, foto: t.fotos[0] })), [])
+  if (!itens?.length) return null
+  return (
+    <Secao titulo="Últimos testes" link={itens.length ? { to: '/testes', label: 'Ver todos' } : undefined}>
+      {itens.length ? <Trilho itens={itens} tipo="teste" /> : null}
+    </Secao>
+  )
+}
+
+function SecFavoritas() {
+  const itens = useLiveQuery(async () => vivos(await db.referencias.where('favorito').equals(1).toArray())
+    .sort((a, b) => b.atualizadoEm - a.atualizadoEm).slice(0, 10)
+    .map<Peca>((r) => ({ id: r.id, to: `/referencias/${r.id}`, titulo: r.titulo, sub: r.autor, foto: r.imagens[0] })), [])
+  if (!itens?.length) return null
+  return (
+    <Secao titulo="Referências favoritas" link={itens.length ? { to: '/referencias', label: 'Ver referências' } : undefined}>
+      {itens.length ? <Trilho itens={itens} tipo="referencia" /> : null}
+    </Secao>
+  )
+}
+
+function SecNotas() {
+  const itens = useLiveQuery(async () => {
+    const ns = vivos(await db.notas.orderBy('atualizadoEm').reverse().limit(20).toArray())
+      .filter((n) => n.titulo?.trim() || n.corpo.replace(/<[^>]+>|&nbsp;/g, '').trim() || n.imagens.length)
+    return ns.slice(0, 4)
+  }, [])
+  if (!itens?.length) return null
+  const resumo = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80)
+  return (
+    <Secao titulo="Anotações recentes" link={itens.length ? { to: '/caderno', label: 'Abrir caderno' } : undefined}>
+      {itens.length ? <div className="linhas">{itens.map((n) => (
+        <LinhaItem key={n.id} to={`/caderno/${n.id}`} tipo="nota" titulo={n.titulo?.trim() || resumo(n.corpo) || 'Anotação'}
+          sub={new Date(n.criadoEm).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }) + (n.tema ? ' · ' + n.tema : '')} foto={n.imagens[0]} />
+      ))}</div> : null}
+    </Secao>
+  )
+}
+
+const SECOES: Record<SecaoId, () => React.ReactElement | null> = {
+  atividade: SecAtividade, esmaltes: SecEsmaltes, testes: SecTestes, favoritas: SecFavoritas, notas: SecNotas,
+}
+
+export default function Home() {
+  const cfg = useDestaqueCfg()
+  const secoes = useSecoesInicio()
+  return (
+    <div className="page inicio">
+      <header className="topo">
+        <Monograma className="mono" altura={34} />
+        <div className="acoes">
+          <Link to="/busca" className="iconbtn" aria-label="Buscar"><Search size={20} strokeWidth={1.5} /></Link>
+          <Link to="/ajustes" className="iconbtn" aria-label="Ajustes"><Settings size={20} strokeWidth={1.5} /></Link>
         </div>
-        <figure className="hero-figure" style={{ margin: 0 }}>
-          <img src={destaqueUrl ?? '/hero-default.jpg'} alt="Fotografia de destaque do ateliê" />
-          <button className="btn sm hero-edit" onClick={() => input.current?.click()}>
-            <ImagePlus size={15} strokeWidth={1.5} />Trocar imagem
-          </button>
-          <input ref={input} type="file" accept="image/*" hidden onChange={(e) => { trocarDestaque(e.target.files?.[0]); e.target.value = '' }} />
-        </figure>
-      </section>
+      </header>
 
-      <section style={{ marginTop: 40 }}>
-        <p className="eyebrow">Áreas</p>
-        <div className="areas">
-          {AREAS.map(({ to, nome, desc, icon: I }) => (
-            <Link key={to} to={to} className="area">
-              <I className="art" size={34} strokeWidth={1.1} style={{ width: 34 }} />
-              <h3>{nome}</h3>
-              <p>{desc}</p>
-              <ArrowRight className="arrow" size={18} strokeWidth={1.4} />
-            </Link>
-          ))}
+      <Destaque />
+      {!cfg.tituloSobre && (
+        <div className="titulo-inicio">
+          <h1>Mar de Lama</h1>
+          <p>Pesquisa, matéria e criação.</p>
         </div>
-      </section>
+      )}
 
-      <Faixa titulo="Adicionados recentemente" itens={recentes}
-        vazio={<div className="empty"><span className="serif">O ateliê ainda está em silêncio.</span><span>Use o botão + para registrar a primeira anotação, referência ou esmalte.</span></div>} />
+      <nav className="areas-fotos" aria-label="Áreas">
+        {AREAS.map((a) => <CardArea key={a.slug} a={a} />)}
+      </nav>
 
-      <Faixa titulo="Últimos testes" itens={testes} link={{ to: '/testes', label: 'Ver todos' }}
-        vazio={<div className="empty"><span className="serif">Nenhuma placa de teste ainda.</span><span>Cada teste ganha um código próprio para inscrever na placa física.</span></div>} />
-
-      <Faixa titulo="Referências favoritas" itens={favoritas} link={{ to: '/referencias', label: 'Ver referências' }}
-        vazio={<div className="empty"><span className="serif">Sem favoritas por enquanto.</span><span>Marque referências como favoritas para vê-las aqui.</span></div>} />
+      {secoes.filter((s) => s.on).map((s) => { const C = SECOES[s.id]; return <C key={s.id} /> })}
     </div>
   )
 }

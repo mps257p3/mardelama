@@ -8,7 +8,7 @@ export const ROTULO: Partial<Record<Tipo, string>> = {
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const DEF: Partial<Record<Tipo, { tabela: string; r: (x: any) => Omit<Resumo, 'tipo' | 'id'> }>> = {
+export const DEF: Partial<Record<Tipo, { tabela: string; r: (x: any) => Omit<Resumo, 'tipo' | 'id'> }>> = {
   esmalte: { tabela: 'esmaltes', r: (x) => ({ titulo: x.nome, sub: x.codigo, foto: x.fotos?.[0], to: `/esmaltes/${x.id}` }) },
   receita: { tabela: 'receitas', r: (x) => ({ titulo: x.nome, sub: `versão ${x.versaoAtual}`, to: `/receitas/${x.id}` }) },
   teste: { tabela: 'testes', r: (x) => ({ titulo: x.codigo, sub: x.resultado || x.data, foto: x.fotos?.[0], to: `/testes/${x.id}` }) },
