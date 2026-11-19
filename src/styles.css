@@ -610,3 +610,21 @@ a.visor-btn { text-decoration: none; }
 .faixa { display: grid; grid-template-columns: 1fr 120px 44px; align-items: center; gap: 10px; font-size: 13.5px; padding: 6px 0; }
 .faixa input { width: 100%; accent-color: var(--carvao); }
 .faixa b { font-weight: 500; text-align: right; font-size: 13px; color: var(--ink-2); }
+
+/* IA do Repertório */
+.leitura-ia { display: flex; align-items: flex-start; gap: 5px; margin-top: 3px; font-size: 12.5px; line-height: 1.35; color: var(--ink-2); }
+.leitura-ia svg { flex: none; margin-top: 2px; color: var(--argila); }
+.sug-campo { padding: 12px 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; }
+.sug-campo input[type=checkbox] { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--ink); }
+.sug-campo .rot { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 3px; }
+.sug-nota { font-size: 12.5px; color: var(--ink-2); margin-top: 10px; }
+.rep-sec { margin-top: 26px; }
+.rep-sec h3 { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 500; color: var(--ink-2); margin-bottom: 8px; }
+.rep-sintese { font-size: 20px; line-height: 1.45; margin-top: 14px; }
+.rep-itens { display: flex; flex-wrap: wrap; gap: 6px; }
+.rep-itens .chip { display: inline-flex; align-items: center; gap: 4px; }
+.rep-itens .chip button { background: none; border: 0; padding: 0 0 0 2px; color: inherit; opacity: .5; cursor: pointer; display: inline-flex; }
+.rep-cores { display: flex; gap: 6px; flex-wrap: wrap; }
+.rep-cores span { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); position: relative; }
+.ia-off { border: 1px dashed var(--line); border-radius: 12px; padding: 16px; margin-top: 18px; font-size: 14px; color: var(--ink-2); }
+.ia-off b { color: var(--ink); font-weight: 500; }

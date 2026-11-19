@@ -11,10 +11,11 @@ import { Sheet } from '../../ui/Sheet'
 import { useToast } from '../../ui/toast'
 import { TopoRef } from './Topo'
 import { EscolherGrupos, EscolherPainel } from './acoesRefs'
+import { iaConfigurada, interpretarBusca, type Consulta } from '../../lib/iaRepertorio'
 
 const MODOS: [Modo, string][] = [['para-voce', 'Para você'], ['fora-da-curva', 'Fora da curva'], ['novos-artistas', 'Novos artistas'], ['cores-texturas', 'Cores e texturas'], ['formas-volumes', 'Formas e volumes']]
 const VALIDADE = 6 * 3600000   // o feed se renova sozinho a cada 6 horas
-type Contexto = { tipo: 'feed' } | { tipo: 'busca'; q: string } | { tipo: 'semelhantes'; item: ItemDescoberta }
+type Contexto = { tipo: 'feed' } | { tipo: 'busca'; q: string; leitura?: string; consultas?: Consulta[] } | { tipo: 'semelhantes'; item: ItemDescoberta }
 interface Cache { itens: ItemDescoberta[]; quando: number; modo: Modo; ctx: Contexto }
 const lerCache = (): Cache | undefined => { try { return JSON.parse(sessionStorage.getItem('descobrir.feed') ?? 'null') ?? undefined } catch { return undefined } }
 const gravarCache = (c: Cache) => { try { sessionStorage.setItem('descobrir.feed', JSON.stringify({ ...c, itens: c.itens.slice(-300) })) } catch { /* cheio */ } }
@@ -26,6 +27,7 @@ export default function Descobrir() {
   const [ctx, setCtx] = useState<Contexto>(cache.current?.ctx ?? { tipo: 'feed' })
   const [itens, setItens] = useState<ItemDescoberta[]>(cache.current?.itens ?? [])
   const [carregando, setCarregando] = useState(false)
+  const [interpretando, setInterpretando] = useState(false)
   const [estados, setEstados] = useState<EstadoFonte[]>([])
   const [q, setQ] = useState(ctx.tipo === 'busca' ? ctx.q : '')
   const [visor, setVisor] = useState<number>()
@@ -44,7 +46,8 @@ export default function Descobrir() {
       const perfil = await lerPerfil()
       const conhecidos = new Set([...(novo ? [] : itens.map((i) => i.id)), ...(c.tipo === 'feed' ? perfil.vistos.slice(-800) : [])])
       let pedidos
-      if (c.tipo === 'busca') { const t = traduz(c.q); pedidos = FONTES.map(() => ({ q: t, tipo: 'busca' as const })).concat(FONTES.map(() => ({ q: t, tipo: 'busca' as const }))) }
+      if (c.tipo === 'busca' && c.consultas?.length) pedidos = c.consultas.map((x) => ({ q: x.q, universo: x.universo, tipo: 'busca' as const }))
+      else if (c.tipo === 'busca') { const t = traduz(c.q); pedidos = FONTES.map(() => ({ q: t, tipo: 'busca' as const })).concat(FONTES.map(() => ({ q: t, tipo: 'busca' as const }))) }
       else if (c.tipo === 'semelhantes') { const it = c.item; const base = [it.autor, ...it.termos.slice(0, 3)].filter(Boolean) as string[]; pedidos = base.flatMap((b) => [{ q: b, universo: it.universo, tipo: 'semelhantes' as const }]).slice(0, 6) }
       else pedidos = await planejar(perfil, m, 8)
       let { itens: novos, estados: es } = await buscarLote(perfil, pedidos, conhecidos)
@@ -84,11 +87,20 @@ export default function Descobrir() {
     if (tipo === 'salvar') { if (salvos.has(item.id)) { toast('Já está no seu acervo'); return } await salvarNoAcervo(item); await registrar(item, 'salvar'); toast('Salvo no acervo'); return }
     if (tipo === 'semelhantes') { await registrar(item, 'semelhantes'); const c: Contexto = { tipo: 'semelhantes', item }; setCtx(c); setVisor(undefined); setItens([]); window.scrollTo(0, 0); carregar(true, c) }
   }
-  function buscar(e: React.FormEvent) {
+  async function buscar(e: React.FormEvent) {
     e.preventDefault(); const t = q.trim()
     if (!t) { voltarAoFeed(); return }
-    registrar(null, 'pesquisar', traduz(t).split(/\s+/).filter((w) => w.length > 3))
-    const c: Contexto = { tipo: 'busca', q: t }; setCtx(c); setItens([]); carregar(true, c)
+    let c: Contexto = { tipo: 'busca', q: t }
+    setCtx(c); setItens([])
+    // frases (3+ palavras) passam pela IA, se configurada; palavras soltas vão direto
+    if (t.split(/\s+/).length >= 3 && await iaConfigurada()) {
+      setInterpretando(true)
+      try { const l = await interpretarBusca(t); c = { ...c, leitura: l.leitura, consultas: l.consultas }; setCtx(c) }
+      catch (err) { toast('Busca sem IA: ' + (err as Error).message) }
+      finally { setInterpretando(false) }
+    }
+    registrar(null, 'pesquisar', c.tipo === 'busca' && c.consultas ? c.consultas.flatMap((x) => x.q.split(/\s+/)).filter((w) => w.length > 3) : traduz(t).split(/\s+/).filter((w) => w.length > 3))
+    carregar(true, c)
   }
   function voltarAoFeed() { const c: Contexto = { tipo: 'feed' }; setQ(''); setCtx(c); setItens([]); carregar(true, c) }
 
@@ -101,10 +113,11 @@ export default function Descobrir() {
           { l: 'Novas recomendações', icon: <RefreshCw size={16} />, onClick: () => { setItens([]); carregar(true) } },
           { l: 'Ajustar curadoria', icon: <SlidersHorizontal size={16} />, onClick: () => setPainel('ajustes') },
           { l: 'Fontes', icon: <Plug size={16} />, onClick: () => setPainel('fontes') },
+          { l: 'Meu repertório estético', icon: <Sparkles size={16} />, to: '/referencias/repertorio' },
         ]} />
       </>}>
         <form className="busca-c" onSubmit={buscar}><Search size={16} />
-          <input className="input" placeholder="Pesquisar nos acervos" value={q} onChange={(e) => setQ(e.target.value)} enterKeyHint="search" />
+          <input className="input" placeholder="Pesquisar ou descrever o que procura" value={q} onChange={(e) => setQ(e.target.value)} enterKeyHint="search" />
           {q && <button type="button" className="limpar-busca" aria-label="Limpar" onClick={voltarAoFeed}><X size={15} /></button>}
         </form>
       </TopoRef>
@@ -115,20 +128,20 @@ export default function Descobrir() {
         </div>
       ) : (
         <div className="contexto-desc">
-          <span>{ctx.tipo === 'busca' ? <>Resultados para <b>“{ctx.q}”</b></> : <>Semelhantes a <b>{ctx.item.titulo}</b></>}</span>
+          <span>{ctx.tipo === 'busca' ? <>Resultados para <b>“{ctx.q}”</b>{ctx.leitura && <small className="leitura-ia"><Sparkles size={12} /> {ctx.leitura}</small>}</> : <>Semelhantes a <b>{ctx.item.titulo}</b></>}</span>
           <button className="btn sm ghost" onClick={voltarAoFeed}>Voltar ao feed</button>
         </div>
       )}
 
       {falhas.length > 0 && !carregando && <p className="aviso-fonte">{falhas.map((f) => FONTE[f.id].nome).join(', ')} não {falhas.length > 1 ? 'responderam' : 'respondeu'} agora ({falhas[0].erro}). As outras seguem normalmente.</p>}
 
-      {itens.length === 0 && !carregando ? (
+      {itens.length === 0 && !carregando && !interpretando ? (
         <div className="empty"><Compass size={26} strokeWidth={1.1} style={{ color: 'var(--argila)' }} />
           <span className="serif">{estados.length && estados.every((e) => !e.ok) ? 'As fontes não responderam.' : 'Nada por aqui ainda.'}</span>
           <span>{estados.length && estados.every((e) => !e.ok) ? 'Confira a internet e toque em atualizar.' : 'Toque em atualizar para buscar novas referências.'}</span>
           <button className="btn sm" onClick={() => carregar(true)}><RefreshCw size={14} />Atualizar</button></div>
       ) : <MuralDescobrir itens={itens} curtidos={curtidos} salvos={salvos} onAbrir={setVisor} onAgir={agir} />}
-      {carregando && <div className="carregando-desc"><RefreshCw size={16} className="gira" />Buscando nos acervos…</div>}
+      {(carregando || interpretando) && <div className="carregando-desc">{interpretando ? <><Sparkles size={16} className="gira" />Entendendo o pedido…</> : <><RefreshCw size={16} className="gira" />Buscando nos acervos…</>}</div>}
       <div ref={fim} style={{ height: 1 }} />
 
       {visor != null && itens[visor] && <VisorDescobrir itens={itens} inicio={visor} curtidos={curtidos} salvos={salvos} onClose={() => setVisor(undefined)} onAgir={agir} />}

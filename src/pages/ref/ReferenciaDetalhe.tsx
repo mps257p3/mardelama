@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, ExternalLink, Heart, Images, Pencil, Trash2, LayoutDashboard } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Heart, Images, Pencil, Trash2, LayoutDashboard, Sparkles } from 'lucide-react'
+import { Catalogar } from './Catalogar'
 import { db, uid } from '../../db/schema'
 import { alternarFavorito, excluir, useGrupos, usePaineis } from '../../db/hooks'
 import { Foto } from '../../ui/form'
@@ -19,6 +20,7 @@ export default function ReferenciaDetalhe() {
   const paineis = usePaineis()
   const [foto, setFoto] = useState(0)
   const [aoPainel, setAoPainel] = useState(false)
+  const [catalogar, setCatalogar] = useState(false)
   if (r === undefined) return null
   if (!r || r.excluido) return <div className="page"><p>Referência não encontrada.</p></div>
   const gs = grupos.filter((g) => r.grupos.includes(g.id))
@@ -38,6 +40,7 @@ export default function ReferenciaDetalhe() {
           <div style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
             <Link className="btn sm primary" to={`/referencias/${r.id}/editar`}><Pencil size={14} />Editar</Link>
             <button className="btn sm" onClick={() => alternarFavorito('referencias', r.id, r.favorito)}><Heart size={14} fill={r.favorito ? 'currentColor' : 'none'} />{r.favorito ? 'Favorita' : 'Favoritar'}</button>
+            {(r.imagens.length > 0 || r.imagemExterna) && <button className="btn sm" onClick={() => setCatalogar(true)}><Sparkles size={14} />Sugerir catalogação</button>}
             <button className="btn sm" onClick={() => setAoPainel(true)}><LayoutDashboard size={14} />Levar a um painel</button>
             {r.url && <a className="btn sm" href={r.url} target="_blank" rel="noreferrer"><ExternalLink size={14} />Abrir link</a>}
             <button className="btn sm ghost" onClick={async () => { if (confirm('Excluir esta referência?')) { await excluir('referencias', r.id); nav('/referencias') } }}><Trash2 size={14} />Excluir</button>
@@ -51,6 +54,7 @@ export default function ReferenciaDetalhe() {
           <div style={{ marginTop: 32 }}><Relacoes tipo="referencia" id={r.id} /></div>
         </div>
       </div>
+      {catalogar && <Catalogar r={r} onClose={() => setCatalogar(false)} />}
       {aoPainel && <Sheet label="Levar a um painel" onClose={() => setAoPainel(false)}>
         <h3>Levar a um painel</h3>
         <div className="lista" style={{ marginTop: 14 }}>

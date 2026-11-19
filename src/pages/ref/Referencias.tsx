@@ -79,6 +79,7 @@ export default function Referencias() {
           ...opcoesCol.map((c) => ({ l: `${c} ${c === 1 ? 'coluna' : 'colunas'}`, icon: <Columns3 size={16} />, on: cols === c, onClick: () => definirAjuste(pequeno ? 'refs.col.m' : 'refs.col.d', c) })),
           { l: '', sep: true },
           { l: 'Gerenciar grupos', icon: <TagsIcon size={16} />, to: '/referencias/grupos/gerenciar' },
+          { l: 'Meu repertório estético', icon: <Sparkles size={16} />, to: '/referencias/repertorio' },
         ]} />
       </>}>
         <div className="busca-c"><Search size={16} /><input className="input" placeholder="Buscar no acervo" value={f.q} onChange={(e) => mudarFiltro({ q: e.target.value })} />
