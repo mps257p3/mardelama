@@ -45,7 +45,7 @@ export default function Ajustes() {
   return (
     <div className="page" style={{ maxWidth: 760 }}>
       <p className="eyebrow">Ajustes</p>
-      <h1 style={{ marginTop: 8 }}>Ateliê</h1>
+      <h1 style={{ marginTop: 8 }}>Mar de Lama</h1>
 
       <Nuvem />
 

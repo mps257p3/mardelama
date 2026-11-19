@@ -5,7 +5,7 @@ export default function EmBreve({ nome, fase, texto }: { nome: string; fase: num
   return (
     <div className="page">
       <div className="soon">
-        <p className="eyebrow">{fase ? `Em construção · fase ${fase}` : 'Ateliê'}</p>
+        <p className="eyebrow">{fase ? `Em construção · fase ${fase}` : 'Mar de Lama'}</p>
         <h1>{nome}</h1>
         <p className="muted">{texto}</p>
         <div><Link to="/" className="link-arrow">Voltar ao início</Link></div>

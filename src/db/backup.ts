@@ -20,7 +20,7 @@ export async function exportarTudo(): Promise<Blob> {
 export async function importarTudo(file: File) {
   const txt = await file.text()
   const j = JSON.parse(txt)
-  if (j.app !== 'atelie-mp') throw new Error('Este arquivo não é um backup do ateliê.')
+  if (j.app !== 'atelie-mp') throw new Error('Este arquivo não é um backup do Mar de Lama.')
   const d = j.dados as Record<string, any[]>
   let n = 0
   await db.transaction('rw', db.tables, async () => {
