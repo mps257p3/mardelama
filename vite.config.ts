@@ -9,7 +9,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['brand/*.png', 'hero-default.jpg'],
       manifest: {
-        name: 'Mar de Lama · Ateliê Marcelo Parducci',
+        name: 'Mar de Lama',
         short_name: 'Mar de Lama',
         lang: 'pt-BR',
         start_url: '/',

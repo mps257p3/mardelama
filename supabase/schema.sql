@@ -1,4 +1,4 @@
--- Ateliê Marcelo Parducci — esquema do banco na nuvem (Supabase / Postgres)
+-- Mar de Lama — esquema do banco na nuvem (Supabase / Postgres)
 -- Execute no Supabase: SQL Editor > New query > cole este arquivo > Run.
 --
 -- O app funciona primeiro no aparelho (IndexedDB) e sincroniza com estas tabelas.
