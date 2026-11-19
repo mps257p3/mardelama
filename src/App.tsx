@@ -32,13 +32,10 @@ import Caderno from './pages/cad/Caderno'
 import NotaEditor from './pages/cad/NotaEditor'
 import NotaNova from './pages/cad/NotaNova'
 import Calculadoras from './pages/calc/Calculadoras'
+import Busca from './pages/Busca'
 import Materiais from './pages/lab/Materiais'
 import MaterialForm from './pages/lab/MaterialForm'
 import MaterialDetalhe from './pages/lab/MaterialDetalhe'
-
-const FUTURO: { path: string; nome: string; fase: number; texto: string }[] = [
-  { path: '/busca', nome: 'Buscar', fase: 5, texto: 'Busca global por todo o ateliê.' },
-]
 
 export default function App() {
   return (
@@ -77,13 +74,13 @@ export default function App() {
           <Route path="caderno" element={<Caderno />} />
           <Route path="caderno/nova" element={<NotaNova />} />
           <Route path="caderno/:id" element={<NotaEditor />} />
+          <Route path="busca" element={<Busca />} />
           <Route path="calculadoras" element={<Calculadoras />} />
           <Route path="compartilhar" element={<Compartilhar />} />
           <Route path="materiais" element={<Materiais />} />
           <Route path="materiais/novo" element={<MaterialForm key="novo" />} />
           <Route path="materiais/:id" element={<MaterialDetalhe />} />
           <Route path="materiais/:id/editar" element={<MaterialForm />} />
-          {FUTURO.map((f) => <Route key={f.path} path={f.path} element={<EmBreve {...f} />} />)}
           <Route path="*" element={<EmBreve nome="Página não encontrada" fase={0} texto="Este endereço não existe no ateliê." />} />
         </Route>
       </Routes>

@@ -179,6 +179,8 @@ export interface Relacao {
   aTipo: Tipo; aId: string
   bTipo: Tipo; bId: string
   criadoEm: number
+  atualizadoEm?: number
+  excluido?: 0 | 1
 }
 
 export interface Ajuste { chave: string; valor: unknown }

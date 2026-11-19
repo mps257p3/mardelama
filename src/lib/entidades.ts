@@ -29,15 +29,16 @@ export async function resumo(tipo: Tipo, id: string): Promise<Resumo | undefined
 
 export async function buscarTodos(q: string, limite = 40): Promise<Resumo[]> {
   const n = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-  const qq = n(q.trim())
+  const termos = n(q.trim()).split(/\s+/).filter(Boolean)
   const out: Resumo[] = []
   for (const tipo of TIPOS_RELACIONAVEIS) {
     const d = DEF[tipo]!
     const xs = await db.table(d.tabela).toArray()
     for (const x of xs) {
       if (x.excluido) continue
-      const r = { tipo, id: x.id, ...d.r(x) }
-      if (!qq || n(JSON.stringify(x)).includes(qq)) out.push(r)
+      const { blob: _b, ...semBlob } = x
+      const texto = n(JSON.stringify(semBlob).replace(/<[^>]+>/g, ' '))
+      if (!termos.length || termos.every((t) => texto.includes(t))) out.push({ tipo, id: x.id, ...d.r(x) })
     }
   }
   return out.slice(0, limite)

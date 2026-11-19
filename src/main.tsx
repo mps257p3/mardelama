@@ -10,8 +10,10 @@ import '@fontsource/dm-sans/600.css'
 import './styles.css'
 import App from './App'
 import { seedIfEmpty } from './db/seed'
+import { iniciarSincronizacaoAutomatica } from './db/sync'
 
 seedIfEmpty()
+iniciarSincronizacaoAutomatica()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { GitBranch, Plus, ScrollText, Search } from 'lucide-react'
+import { Download, GitBranch, Plus, ScrollText, Search } from 'lucide-react'
+import { baixar } from '../../db/backup'
+import { CLASSES } from '../../lib/receita'
 import { db, novo, uid } from '../../db/schema'
 import { useEsmaltes, useReceitas } from '../../db/hooks'
 import { normaliza, textoBusca } from '../../lib/filtros'
@@ -32,6 +34,12 @@ export default function Receitas() {
         <div><p className="eyebrow">Laboratório</p><h1 style={{ marginTop: 8 }}>Receitas</h1></div>
         <div className="acts">
           <Link className="btn" to="/receitas/comparar">Comparar</Link>
+          <button className="btn" disabled={!lista.length} onClick={() => {
+            const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`
+            const linhas = [['Receita', 'Versão', 'Esmalte', 'Classe', 'Ingrediente', 'Percentual'].join(';'),
+              ...lista.flatMap((r) => r.ingredientes.map((i) => [r.nome, r.versaoAtual, r.esmalteId ? nomeEsm.get(r.esmalteId) : '', CLASSES.find((c) => c.v === i.classe)?.l, i.nome, String(i.percentual).replace('.', ',')].map(esc).join(';')))]
+            baixar(new Blob(['\ufeff' + linhas.join('\n')], { type: 'text/csv;charset=utf-8' }), `receitas-${new Date().toISOString().slice(0, 10)}.csv`)
+          }}><Download size={16} />Exportar CSV</button>
           <button className="btn primary" onClick={async () => nav(`/receitas/${await criarReceita()}`)}><Plus size={16} />Nova receita</button>
         </div>
       </div>

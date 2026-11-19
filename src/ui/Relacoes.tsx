@@ -15,7 +15,8 @@ export function Relacoes({ tipo, id, extras = [] }: { tipo: Tipo; id: string; ex
       db.relacoes.where('[aTipo+aId]').equals([tipo, id]).toArray(),
       db.relacoes.where('[bTipo+bId]').equals([tipo, id]).toArray(),
     ])
-    const alvos = [...a.map((r) => ({ rel: r.id, t: r.bTipo, i: r.bId })), ...b.map((r) => ({ rel: r.id, t: r.aTipo, i: r.aId }))]
+    const vivas = (xs: typeof a) => xs.filter((r) => !r.excluido)
+    const alvos = [...vivas(a).map((r) => ({ rel: r.id, t: r.bTipo, i: r.bId })), ...vivas(b).map((r) => ({ rel: r.id, t: r.aTipo, i: r.aId }))]
     const res = await Promise.all(alvos.map(async (x) => ({ rel: x.rel, r: await resumo(x.t, x.i) })))
     return res.filter((x) => x.r) as { rel: string; r: Resumo }[]
   }, [tipo, id])
@@ -30,14 +31,14 @@ export function Relacoes({ tipo, id, extras = [] }: { tipo: Tipo; id: string; ex
             <div className="row" key={r.tipo + r.id + rel}>
               <div className="mini">{r.foto ? <Foto id={r.foto} /> : <Link2 size={18} strokeWidth={1.3} />}</div>
               <Link to={r.to}><div className="t" style={{ fontSize: 18 }}>{r.titulo}</div><div className="s">{ROTULO[r.tipo]} · {r.sub}</div></Link>
-              {rel ? <button className="iconbtn" aria-label="Desconectar" onClick={() => db.relacoes.delete(rel)}><X size={15} /></button> : <span className="faint" style={{ fontSize: 11 }}>automática</span>}
+              {rel ? <button className="iconbtn" aria-label="Desconectar" onClick={() => db.relacoes.update(rel, { excluido: 1, atualizadoEm: Date.now() })}><X size={15} /></button> : <span className="faint" style={{ fontSize: 11 }}>automática</span>}
             </div>
           ))}
         </div>
       )}
       {add && <Conectar onClose={() => setAdd(false)} onPick={async (r) => {
         if (r.tipo === tipo && r.id === id) return
-        await db.relacoes.add({ id: uid(), aTipo: tipo, aId: id, bTipo: r.tipo, bId: r.id, criadoEm: Date.now() })
+        await db.relacoes.add({ id: uid(), aTipo: tipo, aId: id, bTipo: r.tipo, bId: r.id, criadoEm: Date.now(), atualizadoEm: Date.now(), excluido: 0 })
         setAdd(false)
       }} />}
     </section>

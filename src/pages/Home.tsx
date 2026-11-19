@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowRight, ImagePlus, FlaskConical, Images, Feather, Layers, BookOpen, ScrollText } from 'lucide-react'
+import { ArrowRight, ImagePlus, Search, Settings, FlaskConical, Images, Feather, Layers, BookOpen, ScrollText } from 'lucide-react'
 import { db, type Tipo } from '../db/schema'
 import { salvarArquivo, useArquivoUrl } from '../db/files'
 import { definirAjuste, useAjuste } from '../db/settings'
@@ -93,7 +93,13 @@ export default function Home() {
     <div className="page">
       <section className="hero">
         <div className="hero-text">
-          <Monograma className="mono" altura={54} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Monograma className="mono" altura={54} />
+            <div style={{ display: 'flex' }}>
+              <Link to="/busca" className="iconbtn" aria-label="Buscar"><Search size={19} strokeWidth={1.4} /></Link>
+              <Link to="/ajustes" className="iconbtn" aria-label="Ajustes"><Settings size={19} strokeWidth={1.4} /></Link>
+            </div>
+          </div>
           <div>
             <p className="eyebrow">Ateliê Marcelo Parducci</p>
             <h1 style={{ marginTop: 10 }}>Meu ateliê</h1>

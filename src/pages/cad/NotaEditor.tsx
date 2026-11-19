@@ -34,7 +34,7 @@ export default function NotaEditor() {
   const atual = useRef(n); atual.current = n
   useEffect(() => () => {
     const x = atual.current
-    if (x && notaVazia(x)) db.notas.delete(x.id)
+    if (x && notaVazia(x)) db.notas.update(x.id, { excluido: 1, atualizadoEm: Date.now() })
   }, [id])
   useEffect(() => {
     if (!n || !sujo.current) return

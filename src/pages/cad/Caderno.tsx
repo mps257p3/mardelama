@@ -15,7 +15,7 @@ export default function Caderno() {
   const modo = useAjuste<'tempo' | 'temas'>('caderno.modo', 'tempo')
   const [q, setQ] = useState('')
   const nav = useNavigate()
-  useEffect(() => { db.notas.toArray().then((ns) => ns.filter(notaVazia).forEach((x) => db.notas.delete(x.id))) }, [])
+  useEffect(() => { db.notas.toArray().then((ns) => ns.filter((x) => !x.excluido && notaVazia(x)).forEach((x) => db.notas.update(x.id, { excluido: 1, atualizadoEm: Date.now() }))) }, [])
   const lista = useMemo(() => (notas ?? []).filter((n) => !q || textoBusca(n.titulo, semHtml(n.corpo), n.tags, n.tema).includes(normaliza(q))), [notas, q])
   const grupos = useMemo(() => {
     const m = new Map<string, typeof lista>()
