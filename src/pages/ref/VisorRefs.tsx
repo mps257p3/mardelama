@@ -6,6 +6,7 @@ import type { Referencia } from '../../db/schema'
 import { alternarFavorito, useGrupos } from '../../db/hooks'
 import { ImgRef, temImagem } from './ImgRef'
 import { EscolherGrupos, EscolherPainel } from './acoesRefs'
+import { ehSalvoInstagram } from '../../lib/instagram'
 
 /** Tela cheia do Acervo: imagem protagonista, metadados sob demanda, deslizar para navegar. */
 export function VisorRefs({ lista, inicio, onClose }: { lista: Referencia[]; inicio: number; onClose: () => void }) {
@@ -42,6 +43,12 @@ export function VisorRefs({ lista, inicio, onClose }: { lista: Referencia[]; ini
       <div className="visor-img" onClick={() => setInfo(!info)}>
         {temImagem(r) ? <ImgRef key={r.id} r={r} style={{ objectFit: 'contain' }} />
           : r.paleta?.length ? <div className="paleta" style={{ width: '80%', height: 160 }}>{r.paleta.map((c) => <span key={c} style={{ background: c }} />)}</div>
+          : ehSalvoInstagram(r) ? <div className="visor-ig" onClick={(e) => e.stopPropagation()}>
+              {r.autor && <p className="ig-user">{r.autor}</p>}
+              <p className="serif ig-legenda">{(r.descricao ?? r.titulo).slice(0, 420)}{(r.descricao ?? '').length > 420 ? '…' : ''}</p>
+              {r.url && <a className="btn sm" href={r.url} target="_blank" rel="noreferrer"><ExternalLink size={14} />Abrir no Instagram</a>}
+              <p className="ig-nota">A exportação do Instagram não traz a imagem. Para vê-la aqui, abra a ficha › Editar e adicione um print.</p>
+            </div>
           : <p className="serif" style={{ fontSize: 26, textAlign: 'center' }}>{r.titulo}</p>}
       </div>
       <div className="visor-acoes">

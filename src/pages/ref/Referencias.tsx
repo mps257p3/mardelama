@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Columns3, FolderInput, FolderPlus, Heart, LayoutDashboard, Plus, Search, Shuffle, SlidersHorizontal, Sparkles, Tags as TagsIcon, Trash2, X } from 'lucide-react'
+import { AtSign, Columns3, FolderInput, FolderPlus, Heart, LayoutDashboard, Plus, Search, Shuffle, SlidersHorizontal, Sparkles, Tags as TagsIcon, Trash2, X } from 'lucide-react'
 import { importarPasta } from '../../lib/importarPasta'
 import { useToast } from '../../ui/toast'
 import { alternarFavorito, excluir, useGrupos, useReferencias } from '../../db/hooks'
 import { TIPOS_REF } from '../../lib/refs'
+import { ehSalvoInstagram } from '../../lib/instagram'
 import { ImgRef, temImagem } from './ImgRef'
 import { useAjuste, definirAjuste } from '../../db/settings'
 import { aplicarFiltro, filtrosAtivos, FILTRO_VAZIO, mudarFiltro, ORDENS, PERIODOS, useFiltroRefs, type FiltroRefs } from '../../lib/filtroRefs'
@@ -74,6 +75,7 @@ export default function Referencias() {
         <Menu itens={[
           { l: 'Nova referência', icon: <Plus size={16} />, to: '/referencias/nova' },
           { l: imp ?? 'Importar pasta', icon: <FolderInput size={16} />, disabled: !!imp, onClick: () => pasta.current?.click() },
+          { l: 'Importar do Instagram', icon: <AtSign size={16} />, to: '/referencias/instagram' },
           { l: '', sep: true },
           { l: f.inspira ? 'Sair do modo inspiração' : 'Modo inspiração', icon: <Sparkles size={16} />, on: f.inspira, onClick: () => mudarFiltro({ inspira: !f.inspira, semente: Date.now() % 100000 }) },
           ...opcoesCol.map((c) => ({ l: `${c} ${c === 1 ? 'coluna' : 'colunas'}`, icon: <Columns3 size={16} />, on: cols === c, onClick: () => definirAjuste(pequeno ? 'refs.col.m' : 'refs.col.d', c) })),
@@ -131,6 +133,17 @@ export default function Referencias() {
 }
 
 /** Uma imagem do mural: toque abre, toque longo seleciona. */
+/** Post salvo do Instagram (a exportação não traz a imagem): @, trecho da legenda e o tipo. */
+function CartaoInstagram({ r }: { r: Referencia }) {
+  const usuario = r.autor?.match(/@[\w.]+/)?.[0]
+  const texto = (r.descricao ?? r.titulo).replace(/#\S+/g, '').replace(/\s+/g, ' ').trim()
+  return <div className="tile-ig">
+    {usuario && <span className="ig-user">{usuario}</span>}
+    <p>{texto.length > 150 ? texto.slice(0, 148).replace(/\s+\S*$/, '') + '…' : texto || 'Post sem legenda'}</p>
+    <span className="ig-tipo">Instagram · {r.url?.includes('/reel/') ? 'reel' : 'post'}</span>
+  </div>
+}
+
 function Tile({ r, sel, onAbrir, onSelecionar }: { r: Referencia; sel: string[] | null; onAbrir: () => void; onSelecionar: () => void }) {
   const t = useRef<{ h: number; x: number; y: number; longo: boolean } | undefined>(undefined)
   const on = !!sel?.includes(r.id)
@@ -144,6 +157,7 @@ function Tile({ r, sel, onAbrir, onSelecionar }: { r: Referencia; sel: string[] 
       onClick={() => { const longo = t.current?.longo; t.current = undefined; if (longo) return; if (sel) onSelecionar(); else onAbrir() }}>
       {temImagem(r) ? <ImgRef r={r} style={{ height: 'auto', objectFit: 'initial', display: 'block' }} />
         : r.paleta?.length ? <div className="paleta" style={{ height: 90, borderRadius: 0 }}>{r.paleta.map((c) => <span key={c} style={{ background: c }} />)}</div>
+        : ehSalvoInstagram(r) ? <CartaoInstagram r={r} />
         : <div className="tile-txt">{r.titulo}</div>}
       {!!r.favorito && !sel && <Heart className="tile-fav" size={13} fill="currentColor" />}
       {sel && <span className="tile-check" />}
