@@ -11,6 +11,20 @@ import './styles.css'
 import App from './App'
 import { seedIfEmpty } from './db/seed'
 import { iniciarSincronizacaoAutomatica } from './db/sync'
+import { registerSW } from 'virtual:pwa-register'
+
+// Atualização do app instalado: verifica nova versão ao abrir, ao voltar para o app e a cada 20 min,
+// e recarrega sozinho quando houver (os dados ficam no aparelho e não são afetados).
+const atualizar = registerSW({
+  immediate: true,
+  onRegisteredSW(_url, reg) {
+    if (!reg) return
+    const checar = () => { if (navigator.onLine) reg.update().catch(() => {}) }
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checar() })
+    setInterval(checar, 20 * 60 * 1000)
+  },
+  onNeedRefresh() { atualizar(true) },
+})
 
 seedIfEmpty()
 iniciarSincronizacaoAutomatica()
