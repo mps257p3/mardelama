@@ -41,7 +41,8 @@ export function useArquivoUrl(id?: string) {
 export async function salvarArquivoDeUrl(url: string, nome: string) {
   const c = new AbortController(); const t = setTimeout(() => c.abort(), 20000)
   try {
-    const r = await fetch(url, { signal: c.signal, mode: 'cors' })
+    const { viaPonte } = await import('../lib/fontes')
+    const r = await fetch(viaPonte(url), { signal: c.signal })
     if (!r.ok) throw new Error('HTTP ' + r.status)
     const b = await r.blob()
     if (!b.type.startsWith('image/') || b.size < 1000) throw new Error('não é imagem')
