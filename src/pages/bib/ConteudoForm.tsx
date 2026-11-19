@@ -15,7 +15,7 @@ export default function ConteudoForm() {
   const nav = useNavigate()
   const toast = useToast()
   const [c, setC] = useState<C>()
-  useEffect(() => { (async () => setC(id ? await db.conteudos.get(id) : { titulo: '', categoria: CATEGORIAS_BIB[0], formato: 'texto', corpo: '', arquivos: [], tags: [] }))() }, [id])
+  useEffect(() => { (async () => setC(id ? await db.conteudos.get(id) : { titulo: '', categoria: 'Técnicas de modelagem', formato: 'texto', corpo: '', arquivos: [], tags: [] }))() }, [id])
   if (!c) return null
   const set = <K extends keyof Conteudo>(k: K) => (v: Conteudo[K]) => setC({ ...c, [k]: v })
   async function salvar() {
