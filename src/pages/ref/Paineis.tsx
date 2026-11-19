@@ -5,10 +5,11 @@ import { TopoRef } from './Topo'
 import { db, novo } from '../../db/schema'
 import { usePaineis } from '../../db/hooks'
 import { Foto } from '../../ui/form'
+import { ImgRef } from './ImgRef'
 
 function Capa({ refId, arquivoId }: { refId?: string; arquivoId?: string }) {
   const r = useLiveQuery(() => (refId ? db.referencias.get(refId) : undefined), [refId])
-  return <Foto id={arquivoId ?? r?.imagens[0]} />
+  return arquivoId ? <Foto id={arquivoId} /> : r ? <ImgRef r={r} /> : null
 }
 
 export default function Paineis() {

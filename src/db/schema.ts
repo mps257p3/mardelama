@@ -183,6 +183,8 @@ export interface Referencia extends Base {
   grupos: string[]
   paleta?: string[]
   origem?: string            // caminho do arquivo importado de uma pasta (evita importar duas vezes)
+  imagemExterna?: string     // imagem hospedada na fonte (quando não foi possível baixar)
+  licenca?: string
 }
 
 export interface Grupo extends Base { nome: string; descricao?: string; cor?: string }

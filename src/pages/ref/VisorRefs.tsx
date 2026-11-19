@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, ExternalLink, FileText, FolderPlus, Heart, Info, LayoutDashboard, X } from 'lucide-react'
 import type { Referencia } from '../../db/schema'
 import { alternarFavorito, useGrupos } from '../../db/hooks'
-import { Foto } from '../../ui/form'
+import { ImgRef, temImagem } from './ImgRef'
 import { EscolherGrupos, EscolherPainel } from './acoesRefs'
 
 /** Tela cheia do Acervo: imagem protagonista, metadados sob demanda, deslizar para navegar. */
@@ -40,7 +40,7 @@ export function VisorRefs({ lista, inicio, onClose }: { lista: Referencia[]; ini
         <button className="visor-btn" aria-label="Fechar" onClick={onClose}><X size={20} /></button>
       </div>
       <div className="visor-img" onClick={() => setInfo(!info)}>
-        {r.imagens[0] ? <Foto key={r.id} id={r.imagens[0]} alt={r.titulo} style={{ objectFit: 'contain' }} />
+        {temImagem(r) ? <ImgRef key={r.id} r={r} style={{ objectFit: 'contain' }} />
           : r.paleta?.length ? <div className="paleta" style={{ width: '80%', height: 160 }}>{r.paleta.map((c) => <span key={c} style={{ background: c }} />)}</div>
           : <p className="serif" style={{ fontSize: 26, textAlign: 'center' }}>{r.titulo}</p>}
       </div>
@@ -59,7 +59,7 @@ export function VisorRefs({ lista, inicio, onClose }: { lista: Referencia[]; ini
         {gs.length > 0 && <p className="meta">{gs.map((g) => g.nome).join(' · ')}</p>}
         {r.tags.length > 0 && <p className="meta">{r.tags.map((t) => '#' + t).join('  ')}</p>}
         {r.paleta?.length ? <div className="paleta" style={{ height: 22, marginTop: 10 }}>{r.paleta.map((c) => <span key={c} style={{ background: c }} />)}</div> : null}
-        {r.fonte && <p className="meta">Fonte: {r.fonte}</p>}
+        {r.fonte && <p className="meta">Fonte: {r.fonte}{r.licenca ? ' · ' + r.licenca : ''}</p>}
         <Link to={`/referencias/${r.id}`} className="visor-ficha"><FileText size={15} />Ficha completa e edição</Link>
       </div>}
       {n > 1 && <>

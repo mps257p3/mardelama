@@ -36,3 +36,16 @@ export function useArquivoUrl(id?: string) {
   }, [arq])
   return url
 }
+
+/** Baixa uma imagem de uma fonte aberta (CORS permitido) e guarda como arquivo local. */
+export async function salvarArquivoDeUrl(url: string, nome: string) {
+  const c = new AbortController(); const t = setTimeout(() => c.abort(), 20000)
+  try {
+    const r = await fetch(url, { signal: c.signal, mode: 'cors' })
+    if (!r.ok) throw new Error('HTTP ' + r.status)
+    const b = await r.blob()
+    if (!b.type.startsWith('image/') || b.size < 1000) throw new Error('não é imagem')
+    const ext = b.type.split('/')[1] ?? 'jpg'
+    return await salvarArquivo(new File([b], `${nome.slice(0, 60).replace(/[\\/:*?"<>|]+/g, ' ')}.${ext}`, { type: b.type }))
+  } finally { clearTimeout(t) }
+}

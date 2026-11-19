@@ -6,6 +6,7 @@ import { db, uid, type ItemPainel, type Painel } from '../../db/schema'
 import { excluir, useReferencias } from '../../db/hooks'
 import { salvarArquivo } from '../../db/files'
 import { Foto } from '../../ui/form'
+import { ImgRef, temImagem } from './ImgRef'
 import { Sheet } from '../../ui/Sheet'
 
 const LARG = 1600, ALT = 1100
@@ -13,7 +14,7 @@ const LARG = 1600, ALT = 1100
 function RefImg({ refId }: { refId?: string }) {
   const r = useLiveQuery(() => (refId ? db.referencias.get(refId) : undefined), [refId])
   if (!r) return null
-  return r.imagens[0] ? <Foto id={r.imagens[0]} /> : <div className="txt" style={{ background: 'var(--surface-2)' }}>{r.titulo}</div>
+  return temImagem(r) ? <ImgRef r={r} /> : <div className="txt" style={{ background: 'var(--surface-2)' }}>{r.titulo}</div>
 }
 
 export default function PainelEditor() {

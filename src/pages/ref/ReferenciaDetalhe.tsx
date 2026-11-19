@@ -5,6 +5,7 @@ import { ArrowLeft, ExternalLink, Heart, Images, Pencil, Trash2, LayoutDashboard
 import { db, uid } from '../../db/schema'
 import { alternarFavorito, excluir, useGrupos, usePaineis } from '../../db/hooks'
 import { Foto } from '../../ui/form'
+import { ImgRef } from './ImgRef'
 import { Relacoes } from '../../ui/Relacoes'
 import { Sheet } from '../../ui/Sheet'
 import { useToast } from '../../ui/toast'
@@ -27,7 +28,7 @@ export default function ReferenciaDetalhe() {
       <Link to="/referencias" className="back"><ArrowLeft size={15} />Referências</Link>
       <div className="detalhe">
         <div>
-          <div className="capa" style={{ aspectRatio: 'auto', minHeight: 240 }}>{r.imagens[foto] ? <Foto id={r.imagens[foto]} alt={r.titulo} style={{ height: 'auto', maxHeight: '78vh', objectFit: 'contain' }} /> : <Images size={44} strokeWidth={1} />}</div>
+          <div className="capa" style={{ aspectRatio: 'auto', minHeight: 240 }}>{r.imagens[foto] ? <Foto id={r.imagens[foto]} alt={r.titulo} style={{ height: 'auto', maxHeight: '78vh', objectFit: 'contain' }} /> : r.imagemExterna ? <ImgRef r={r} style={{ height: 'auto', maxHeight: '78vh', objectFit: 'contain' }} /> : <Images size={44} strokeWidth={1} />}</div>
           {r.imagens.length > 1 && <div className="thumbs">{r.imagens.map((f, i) => <button key={f} className={i === foto ? 'on' : ''} onClick={() => setFoto(i)}><Foto id={f} /></button>)}</div>}
         </div>
         <div>
@@ -45,7 +46,7 @@ export default function ReferenciaDetalhe() {
           {r.paleta?.length ? <div className="paleta" style={{ marginTop: 22, height: 40 }}>{r.paleta.map((c) => <span key={c} style={{ background: c }} title={c} />)}</div> : null}
           {r.descricao && <p style={{ marginTop: 22, whiteSpace: 'pre-wrap' }}>{r.descricao}</p>}
           {r.comentarios && <><p className="eyebrow" style={{ marginTop: 22 }}>Comentários pessoais</p><p className="muted" style={{ whiteSpace: 'pre-wrap', marginTop: 6 }}>{r.comentarios}</p></>}
-          {r.fonte && <p className="faint" style={{ marginTop: 16, fontSize: 13 }}>Fonte: {r.fonte}</p>}
+          {r.fonte && <p className="faint" style={{ marginTop: 16, fontSize: 13 }}>Fonte: {r.fonte}{r.licenca ? ' · ' + r.licenca : ''}</p>}
           {r.tags.length > 0 && <div className="pills" style={{ marginTop: 14 }}>{r.tags.map((t) => <span key={t} className="chip">#{t}</span>)}</div>}
           <div style={{ marginTop: 32 }}><Relacoes tipo="referencia" id={r.id} /></div>
         </div>

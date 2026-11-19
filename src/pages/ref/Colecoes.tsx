@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Settings2, Images } from 'lucide-react'
 import { useGrupos, useReferencias } from '../../db/hooks'
-import { Foto } from '../../ui/form'
+import { ImgRef, temImagem } from './ImgRef'
+import type { Referencia } from '../../db/schema'
 import { Menu } from '../../ui/Menu'
 import { TopoRef } from './Topo'
 
@@ -12,8 +13,8 @@ export default function Colecoes() {
   const refs = useReferencias()
   const [vazios, setVazios] = useState(false)
   const porGrupo = useMemo(() => {
-    const m = new Map<string, string[]>()
-    for (const r of refs ?? []) { if (!r.imagens[0]) continue; for (const g of r.grupos) { const a = m.get(g) ?? []; a.push(r.imagens[0]); m.set(g, a) } }
+    const m = new Map<string, Referencia[]>()
+    for (const r of refs ?? []) { if (!temImagem(r)) continue; for (const g of r.grupos) { const a = m.get(g) ?? []; a.push(r); m.set(g, a) } }
     return m
   }, [refs])
   const conta = useMemo(() => { const m = new Map<string, number>(); (refs ?? []).forEach((r) => r.grupos.forEach((g) => m.set(g, (m.get(g) ?? 0) + 1))); return m }, [refs])
@@ -32,7 +33,7 @@ export default function Colecoes() {
             return (
               <Link key={g.id} to={`/referencias?grupo=${g.id}`} className="colecao">
                 <div className={'capa-col n' + Math.min(capas.length, 3)}>
-                  {capas.length ? capas.slice(0, 3).map((c) => <div key={c}><Foto id={c} /></div>) : <div className="vazia"><Images size={26} strokeWidth={1.1} /></div>}
+                  {capas.length ? capas.slice(0, 3).map((c) => <div key={c.id}><ImgRef r={c} /></div>) : <div className="vazia"><Images size={26} strokeWidth={1.1} /></div>}
                 </div>
                 <div className="t">{g.nome}</div>
                 <div className="s">{conta.get(g.id) ?? 0} {conta.get(g.id) === 1 ? 'referência' : 'referências'}</div>

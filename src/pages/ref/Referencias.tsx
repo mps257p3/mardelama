@@ -5,7 +5,7 @@ import { importarPasta } from '../../lib/importarPasta'
 import { useToast } from '../../ui/toast'
 import { alternarFavorito, excluir, useGrupos, useReferencias } from '../../db/hooks'
 import { TIPOS_REF } from '../../lib/refs'
-import { Foto } from '../../ui/form'
+import { ImgRef, temImagem } from './ImgRef'
 import { useAjuste, definirAjuste } from '../../db/settings'
 import { aplicarFiltro, filtrosAtivos, FILTRO_VAZIO, mudarFiltro, ORDENS, PERIODOS, useFiltroRefs, type FiltroRefs } from '../../lib/filtroRefs'
 import { Menu } from '../../ui/Menu'
@@ -141,7 +141,7 @@ function Tile({ r, sel, onAbrir, onSelecionar }: { r: Referencia; sel: string[] 
       onPointerUp={() => { if (t.current) clearTimeout(t.current.h) }}
       onPointerCancel={() => { if (t.current) clearTimeout(t.current.h); t.current = undefined }}
       onClick={() => { const longo = t.current?.longo; t.current = undefined; if (longo) return; if (sel) onSelecionar(); else onAbrir() }}>
-      {r.imagens[0] ? <Foto id={r.imagens[0]} alt={r.titulo} style={{ height: 'auto', objectFit: 'initial', display: 'block' }} />
+      {temImagem(r) ? <ImgRef r={r} style={{ height: 'auto', objectFit: 'initial', display: 'block' }} />
         : r.paleta?.length ? <div className="paleta" style={{ height: 90, borderRadius: 0 }}>{r.paleta.map((c) => <span key={c} style={{ background: c }} />)}</div>
         : <div className="tile-txt">{r.titulo}</div>}
       {!!r.favorito && !sel && <Heart className="tile-fav" size={13} fill="currentColor" />}
