@@ -36,8 +36,7 @@ export function Destaque({ editar = true }: { editar?: boolean }) {
   const cfg = useDestaqueCfg()
   return (
     <figure className={'destaque' + (cfg.tituloSobre ? ' sobre' : '')}>
-      {url ? <img src={url} alt="Fotografia de destaque" style={{ objectPosition: `${cfg.x}% ${cfg.y}%` }} />
-        : <Link to="/ajustes#tela-inicial" className="destaque-vazio"><ImagePlus size={22} strokeWidth={1.3} /><span>Adicionar a fotografia de uma obra sua</span></Link>}
+      <img src={url ?? '/destaque-padrao.jpg'} alt={url ? "Fotografia de destaque" : "Raposa, obra de Marcelo Parducci"} style={{ objectPosition: url ? `${cfg.x}% ${cfg.y}%` : '50% 45%' }} />
       {cfg.tituloSobre && (
         <figcaption style={{ color: cfg.tituloClaro ? 'var(--marfim)' : 'var(--carvao)' }}>
           <h1>Mar de Lama</h1>
@@ -45,7 +44,7 @@ export function Destaque({ editar = true }: { editar?: boolean }) {
         </figcaption>
       )}
       {cfg.credito && <span className="credito">{cfg.credito}</span>}
-      {editar && url && <Link to="/ajustes#tela-inicial" className="editar" aria-label="Personalizar fotografia de destaque"><ImagePlus size={16} strokeWidth={1.5} /></Link>}
+      {editar && <Link to="/ajustes#tela-inicial" className="editar" aria-label="Personalizar fotografia de destaque"><ImagePlus size={16} strokeWidth={1.5} /></Link>}
     </figure>
   )
 }
