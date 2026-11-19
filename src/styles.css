@@ -640,3 +640,5 @@ a.visor-btn { text-decoration: none; }
 .visor-ig .btn { background: #F5F0E8; color: #1E1C19; }
 .visor-ig .ig-nota { font-size: 12px; opacity: .55; margin: 0; }
 .visor-ref { background: #161412; }
+.pin-amostra { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-top: 12px; }
+.pin-amostra img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 4px; background: var(--areia); }

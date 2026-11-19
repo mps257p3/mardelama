@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { AtSign, Columns3, FolderInput, FolderPlus, Heart, LayoutDashboard, Plus, Search, Shuffle, SlidersHorizontal, Sparkles, Tags as TagsIcon, Trash2, X } from 'lucide-react'
+import { AtSign, Columns3, Pin, FolderInput, FolderPlus, Heart, LayoutDashboard, Plus, Search, Shuffle, SlidersHorizontal, Sparkles, Tags as TagsIcon, Trash2, X } from 'lucide-react'
 import { importarPasta } from '../../lib/importarPasta'
 import { useToast } from '../../ui/toast'
 import { alternarFavorito, excluir, useGrupos, useReferencias } from '../../db/hooks'
@@ -76,6 +76,7 @@ export default function Referencias() {
           { l: 'Nova referência', icon: <Plus size={16} />, to: '/referencias/nova' },
           { l: imp ?? 'Importar pasta', icon: <FolderInput size={16} />, disabled: !!imp, onClick: () => pasta.current?.click() },
           { l: 'Importar do Instagram', icon: <AtSign size={16} />, to: '/referencias/instagram' },
+          { l: 'Importar do Pinterest', icon: <Pin size={16} />, to: '/referencias/pinterest' },
           { l: '', sep: true },
           { l: f.inspira ? 'Sair do modo inspiração' : 'Modo inspiração', icon: <Sparkles size={16} />, on: f.inspira, onClick: () => mudarFiltro({ inspira: !f.inspira, semente: Date.now() % 100000 }) },
           ...opcoesCol.map((c) => ({ l: `${c} ${c === 1 ? 'coluna' : 'colunas'}`, icon: <Columns3 size={16} />, on: cols === c, onClick: () => definirAjuste(pequeno ? 'refs.col.m' : 'refs.col.d', c) })),

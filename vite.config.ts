@@ -36,7 +36,7 @@ export default defineConfig({
           options: { cacheName: 'fontes', expiration: { maxEntries: 20, maxAgeSeconds: 31536000 } },
         }, {
           // imagens do Descobrir (acervos abertos): rolar de novo não baixa outra vez
-          urlPattern: /^https:\/\/(www\.artic\.edu\/iiif|images\.metmuseum\.org|upload\.wikimedia\.org)\/.*/,
+          urlPattern: /^https:\/\/(www\.artic\.edu\/iiif|images\.metmuseum\.org|upload\.wikimedia\.org|i\.pinimg\.com)\/.*/,
           handler: 'CacheFirst',
           options: { cacheName: 'descobrir-img', expiration: { maxEntries: 400, maxAgeSeconds: 2592000 }, cacheableResponse: { statuses: [0, 200] } },
         }],
