@@ -80,7 +80,7 @@ export interface ResultadoSync { enviados: number; recebidos: number; quando: nu
 let emCurso: Promise<ResultadoSync> | undefined
 
 export function sincronizar(): Promise<ResultadoSync> {
-  if (!emCurso) { pausaVinculo.n++; emCurso = executar().finally(() => { emCurso = undefined; pausaVinculo.n--; avisarProgresso(undefined) }) }
+  if (!emCurso) { pausaVinculo.n++; emCurso = executar().then(async (r) => { await definirAjuste('sync.erro', null); return r }, async (e) => { await definirAjuste('sync.erro', { quando: Date.now(), msg: String((e as Error)?.message ?? e) }); throw e }).finally(() => { emCurso = undefined; pausaVinculo.n--; avisarProgresso(undefined) }) }
   return emCurso
 }
 

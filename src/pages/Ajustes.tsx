@@ -61,6 +61,7 @@ function Nuvem() {
   const [url, setUrl] = useState(''); const [chave, setChave] = useState(''); const [email, setEmail] = useState(''); const [codigo, setCodigo] = useState(''); const [enviado, setEnviado] = useState(false)
   const [user, setUser] = useState<string | null>(null); const [config, setConfig] = useState(!!configPadrao()); const [ocupado, setOcupado] = useState(false)
   const ultimo = useAjuste<ResultadoSync | undefined>('sync.ultimo', undefined)
+  const erroSync = useAjuste<{ quando: number; msg: string } | null>('sync.erro', null)
   const [progresso, setProgresso] = useState<string | undefined>(progressoSync())
   useEffect(() => { const f = (e: Event) => setProgresso((e as CustomEvent<string | undefined>).detail); window.addEventListener('sync-progresso', f); return () => window.removeEventListener('sync-progresso', f) }, [])
   const atualizar = async () => { const c = await obterConfig(); setConfig(!!c); if (c) { setUrl(c.url); setChave(c.chave) }; setUser((await usuario())?.email ?? null) }
@@ -86,7 +87,8 @@ function Nuvem() {
             <button className="btn sm primary" disabled={ocupado} onClick={() => passo(sincronizar, (r) => `Sincronizado: ${r.enviados} enviados, ${r.recebidos} recebidos`)}><RefreshCw size={14} />Sincronizar agora</button>
             <button className="btn sm ghost" onClick={() => passo(sair, 'Você saiu da conta')}><LogOut size={14} />Sair</button>
             {progresso ? <span className="faint" style={{ fontSize: 12.5 }}>{progresso}</span>
-              : ultimo && <span className="faint" style={{ fontSize: 12.5 }}>Última: {new Date(ultimo.quando).toLocaleString('pt-BR')}</span>}
+              : ultimo && <span className="faint" style={{ fontSize: 12.5 }}>Última: {new Date(ultimo.quando).toLocaleString('pt-BR')} · {ultimo.enviados} enviados, {ultimo.recebidos} recebidos</span>}
+            {erroSync && !progresso && <p className="aviso" style={{ width: '100%', fontSize: 13 }}>Erro na última tentativa ({new Date(erroSync.quando).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}): {erroSync.msg}</p>}
           </div>
         ) : config ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
