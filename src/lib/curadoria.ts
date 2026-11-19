@@ -125,25 +125,48 @@ export async function planejar(perfil: Perfil, modo: Modo, n = 8): Promise<Pedid
   return pedidos
 }
 
-export interface EstadoFonte { id: FonteId; ok: boolean; erro?: string; quando: number }
+export interface EstadoFonte { id: FonteId; ok: boolean; erro?: string; quando: number; pausada?: boolean }
 
-/** Executa as consultas nas fontes ligadas, remove repetidos, vistos e recusados. */
+/** Fonte que recusou de vez (403/404/410/429) fica de fora por algumas horas, sem travar o feed. */
+const PAUSA_MS = 6 * 3600 * 1000
+const chavePausa = (id: FonteId) => 'descobrir.pausa.' + id
+export function pausaDaFonte(id: FonteId): { ate: number; erro: string } | undefined {
+  try { const x = JSON.parse(localStorage.getItem(chavePausa(id)) || 'null'); return x && x.ate > Date.now() ? x : undefined } catch { return undefined }
+}
+export function retomarFonte(id: FonteId) { try { localStorage.removeItem(chavePausa(id)) } catch { /* sem armazenamento */ } }
+const pausar = (id: FonteId, erro: string) => { try { localStorage.setItem(chavePausa(id), JSON.stringify({ ate: Date.now() + PAUSA_MS, erro })) } catch { /* sem armazenamento */ } }
+const recusaDura = (msg: string) => /HTTP (403|404|410|429)/.test(msg)
+
+/** Executa as consultas nas fontes ligadas, remove repetidos, vistos e recusados. Se uma fonte falha, a consulta tenta a próxima. */
 export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: Set<string>, porConsulta = 6) {
-  const ligadas = FONTES.filter((f) => perfil.fontes[f.id])
-  if (!ligadas.length) return { itens: [] as ItemDescoberta[], estados: [] as EstadoFonte[] }
   const estados = new Map<FonteId, EstadoFonte>()
+  const ligadas = FONTES.filter((f) => {
+    if (!perfil.fontes[f.id]) return false
+    const pz = pausaDaFonte(f.id)
+    if (pz) estados.set(f.id, { id: f.id, ok: false, erro: pz.erro, quando: Date.now(), pausada: true })
+    return !pz
+  })
+  if (!ligadas.length) return { itens: [] as ItemDescoberta[], estados: [...estados.values()] }
   const rec = new Set(perfil.recusados)
+  const falhou = new Set<FonteId>()
   const res = await Promise.all(pedidos.map(async (p, i) => {
-    const f = ligadas[(i + Math.floor(Math.random() * ligadas.length)) % ligadas.length]
+    const inicio = i + Math.floor(Math.random() * ligadas.length)
     const pagina = p.tipo === 'busca' || p.tipo === 'semelhantes' ? 1 + Math.floor(i / ligadas.length) : 1 + Math.floor(Math.random() * 3)
-    try {
-      const xs = await f.buscar(p.q, porConsulta, pagina)
-      estados.set(f.id, { id: f.id, ok: true, quando: Date.now() })
-      return xs.map((x) => ({ ...x, universo: p.universo, consulta: p.q }))
-    } catch (e) {
-      if (!estados.get(f.id)?.ok) estados.set(f.id, { id: f.id, ok: false, erro: (e as Error).name === 'AbortError' ? 'Demorou demais para responder' : (e as Error).message, quando: Date.now() })
-      return []
+    for (let k = 0; k < ligadas.length; k++) {
+      const f = ligadas[(inicio + k) % ligadas.length]
+      if (falhou.has(f.id)) continue
+      try {
+        const xs = await f.buscar(p.q, porConsulta, pagina)
+        estados.set(f.id, { id: f.id, ok: true, quando: Date.now() })
+        return xs.map((x) => ({ ...x, universo: p.universo, consulta: p.q }))
+      } catch (e) {
+        const erro = (e as Error).name === 'AbortError' ? 'Demorou demais para responder' : (e as Error).message
+        falhou.add(f.id)
+        if (recusaDura(erro)) pausar(f.id, erro)
+        if (!estados.get(f.id)?.ok) estados.set(f.id, { id: f.id, ok: false, erro, quando: Date.now(), pausada: recusaDura(erro) })
+      }
     }
+    return []
   }))
   const vistos = new Set<string>()
   const itens: ItemDescoberta[] = []

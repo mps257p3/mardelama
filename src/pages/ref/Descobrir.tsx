@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Bookmark, BookmarkCheck, Compass, ExternalLink, EyeOff, FolderPlus, Heart, LayoutDashboard, RefreshCw, Search, SlidersHorizontal, Sparkles, Plug, X, ScanSearch } from 'lucide-react'
 import { db } from '../../db/schema'
 import { FONTES, FONTES_PENDENTES, FONTE, type ItemDescoberta } from '../../lib/fontes'
-import { buscarLote, descurtir, lerPerfil, PERFIL_VAZIO, PESOS_PADRAO, planejar, registrar, salvarNoAcervo, salvarPerfil, traduz, UNIVERSOS, type EstadoFonte, type Interacao, type Modo, type Perfil } from '../../lib/curadoria'
+import { buscarLote, descurtir, lerPerfil, PERFIL_VAZIO, PESOS_PADRAO, planejar, registrar, retomarFonte, salvarNoAcervo, salvarPerfil, traduz, UNIVERSOS, type EstadoFonte, type Interacao, type Modo, type Perfil } from '../../lib/curadoria'
 import { useAjuste, definirAjuste } from '../../db/settings'
 import { Menu } from '../../ui/Menu'
 import { Sheet } from '../../ui/Sheet'
@@ -92,7 +92,7 @@ export default function Descobrir() {
   }
   function voltarAoFeed() { const c: Contexto = { tipo: 'feed' }; setQ(''); setCtx(c); setItens([]); carregar(true, c) }
 
-  const falhas = estados.filter((e) => !e.ok)
+  const falhas = estados.filter((e) => !e.ok && !e.pausada)
   return (
     <div className="page acervo">
       <TopoRef aba="descobrir" icones={<>
@@ -245,8 +245,8 @@ function PainelFontes({ estados, onClose }: { estados: EstadoFonte[]; onClose: (
     <div className="lista">
       {FONTES.map((f) => { const e = estados.find((x) => x.id === f.id); return (
         <div key={f.id} className="row" style={{ gridTemplateColumns: '1fr auto' }}>
-          <div><div className="t">{f.nome}</div><div className="s">{!p.fontes[f.id] ? 'Desligada' : !e ? 'Ainda não consultada nesta sessão' : e.ok ? 'Respondendo normalmente' : `Sem resposta: ${e.erro}`}</div></div>
-          <button className={'chip' + (p.fontes[f.id] ? ' on' : '')} onClick={async () => { const np = { ...p, fontes: { ...p.fontes, [f.id]: !p.fontes[f.id] } }; setP(np); await salvarPerfil(np) }}>{p.fontes[f.id] ? 'Ligada' : 'Desligada'}</button>
+          <div><div className="t">{f.nome}</div><div className="s">{!p.fontes[f.id] ? 'Desligada' : !e ? 'Ainda não consultada nesta sessão' : e.ok ? 'Respondendo normalmente' : e.pausada ? `Recusou os pedidos (${e.erro}). Pausada por algumas horas; as outras fontes cobrem o feed.` : `Sem resposta: ${e.erro}`}</div></div>
+          <button className={'chip' + (p.fontes[f.id] ? ' on' : '')} onClick={async () => { retomarFonte(f.id); const np = { ...p, fontes: { ...p.fontes, [f.id]: !p.fontes[f.id] } }; setP(np); await salvarPerfil(np) }}>{p.fontes[f.id] ? 'Ligada' : 'Desligada'}</button>
         </div>) })}
       {FONTES_PENDENTES.map((f) => <div key={f.nome} className="row" style={{ gridTemplateColumns: '1fr' }}><div><div className="t">{f.nome}</div><div className="s">{f.estado}</div></div></div>)}
     </div>
