@@ -9,7 +9,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: false,
-      includeAssets: ['brand/*.png', 'hero-default.jpg'],
+      includeAssets: ['brand/*.png'],
       manifest: {
         name: 'Mar de Lama',
         short_name: 'Mar de Lama',
