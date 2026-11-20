@@ -17,6 +17,7 @@ export interface ItemDescoberta {
   termos: string[]          // classificação, técnica, cultura, temas (minúsculas)
   universo?: string         // universo criativo de onde veio a consulta
   consulta?: string
+  motivo?: string           // por que a obra apareceu (mostrado no visor)
 }
 
 export type FonteId = 'aic' | 'met' | 'wm' | 'cma' | 'vam' | 'smk' | 'rijks' | 'eu' | 'mia'

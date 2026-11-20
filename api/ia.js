@@ -49,6 +49,24 @@ const ESQUEMAS = {
       },
     },
   },
+  gosto: {
+    type: 'object', additionalProperties: false, required: ['resumo', 'consultas', 'evitar'],
+    properties: {
+      resumo: { type: 'string', description: 'Duas ou três frases em segunda pessoa sobre o gosto visual da pessoa, concretas (formas, superfícies, temas, épocas).' },
+      consultas: {
+        type: 'array', description: 'De 10 a 16 consultas para acervos de museus: metade perto do gosto, metade um passo além (vizinhos que ela provavelmente vai gostar e ainda não viu).',
+        items: {
+          type: 'object', additionalProperties: false, required: ['q', 'universo', 'porque'],
+          properties: {
+            q: { type: 'string', description: 'Consulta curta em inglês (2 a 4 palavras), como se digita na busca de um acervo de museu.' },
+            universo: { type: 'string', description: 'Um dos universos criativos informados.' },
+            porque: { type: 'string', description: 'Motivo em português, curto (até 8 palavras), ligado ao gosto. Ex.: "texturas craqueladas que você curte".' },
+          },
+        },
+      },
+      evitar: lista('Até 8 termos curtos em inglês, minúsculas, que aparecem nas recusas e devem ser evitados.'),
+    },
+  },
   explicar: {
     type: 'object', additionalProperties: false, required: ['oque', 'tecnica', 'origem', 'olhar', 'ideias'],
     properties: {
@@ -105,6 +123,15 @@ Sugira a catalogação desta referência. A pessoa revisa antes de salvar.` },
       ],
     }
   }
+  if (acao === 'gosto') {
+    return {
+      esforco: 'low', max: 4000,
+      conteudo: [{ type: 'text', text: `Universos disponíveis: ${(d.universos ?? []).join(', ')}.
+Dados do feed de descoberta de um ceramista (obras de museus):
+${JSON.stringify({ curtidas: d.curtidas, salvas: d.salvas, recusadas: d.recusadas, termosFortes: d.termos, referenciasDoAcervo: d.referencias }).slice(0, 20000)}
+Leia o gosto visual dele e proponha novas consultas para o feed. Não repita consultas já óbvias pelos termos fortes; busque o que liga as obras curtidas (forma, superfície, gesto, época, cultura).` }],
+    }
+  }
   if (acao === 'explicar') {
     const img = d.imagem ?? {}
     const fonteImg = img.base64 ? { type: 'base64', media_type: img.tipo || 'image/jpeg', data: img.base64 } : { type: 'url', url: img.url }
@@ -129,7 +156,7 @@ Descreva o repertório estético dela a partir desses dados.` }],
   }
 }
 
-const LIMITES = { olhar: 4, ideias: 4, consultas: 6, tags: 10, grupos: 4, paleta: 8, aplicacoes: 4, temas: 8, linguagens: 8, formas: 8, texturas: 8, artistas: 10, tendencias: 6, proximos: 6 }
+const LIMITES = { evitar: 8, olhar: 4, ideias: 4, consultas: 16, tags: 10, grupos: 4, paleta: 8, aplicacoes: 4, temas: 8, linguagens: 8, formas: 8, texturas: 8, artistas: 10, tendencias: 6, proximos: 6 }
 const HEX = /^#[0-9a-f]{6}$/i
 function aparar(o) {
   for (const [k, n] of Object.entries(LIMITES)) if (Array.isArray(o[k])) o[k] = o[k].slice(0, n)
