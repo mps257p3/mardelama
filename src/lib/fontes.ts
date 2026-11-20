@@ -20,11 +20,11 @@ export interface ItemDescoberta {
   motivo?: string           // por que a obra apareceu (mostrado no visor)
 }
 
-export type FonteId = 'aic' | 'met' | 'wm' | 'cma' | 'vam' | 'smk' | 'rijks' | 'eu' | 'mia' | 'si' | 'ov'
+export type FonteId = 'aic' | 'met' | 'wm' | 'cma' | 'vam' | 'smk' | 'rijks' | 'eu' | 'mia' | 'si' | 'ov' | 'loc'
 export interface Fonte { id: FonteId; nome: string; site: string; buscar: (q: string, n: number, pagina: number) => Promise<ItemDescoberta[]> }
 
 /** Hosts que recusam pedidos do navegador: passam pela ponte do próprio app (/api/fonte). */
-const PELA_PONTE = /^https:\/\/(api\.artic\.edu|www\.artic\.edu|collectionapi\.metmuseum\.org|images\.metmuseum\.org|openaccess-cdn\.clevelandart\.org|api\.europeana\.eu\/record|api\.si\.edu\/openaccess|ids\.si\.edu|[0-9]\.api\.artsmia\.org|[a-z0-9.-]+\.cdninstagram\.com|[a-z0-9.-]+\.fbcdn\.net)\//
+const PELA_PONTE = /^https:\/\/(api\.artic\.edu|www\.artic\.edu|collectionapi\.metmuseum\.org|images\.metmuseum\.org|openaccess-cdn\.clevelandart\.org|api\.europeana\.eu\/record|api\.si\.edu\/openaccess|ids\.si\.edu|www\.loc\.gov|tile\.loc\.gov|[0-9]\.api\.artsmia\.org|[a-z0-9.-]+\.cdninstagram\.com|[a-z0-9.-]+\.fbcdn\.net)\//
 export const viaPonte = (url: string) => (PELA_PONTE.test(url) ? '/api/fonte?u=' + encodeURIComponent(url) : url)
 const comTempo = async (url: string, init?: RequestInit, ms = 12000) => {
   const c = new AbortController(); const t = setTimeout(() => c.abort(), ms)
@@ -245,10 +245,34 @@ const ov: Fonte = {
   },
 }
 
-export const FONTES: Fonte[] = [aic, met, wm, cma, vam, smk, rijks, eu, mia, si, ov]
-export const FONTE: Record<FonteId, Fonte> = { aic, met, wm, cma, vam, smk, rijks, eu, mia, si, ov }
+/** Library of Congress (Prints & Photographs) — gravuras, cartazes, ilustrações, caricaturas e estampas japonesas. API oficial, sem chave. */
+const loc: Fonte = {
+  id: 'loc', nome: 'Library of Congress', site: 'https://www.loc.gov/pictures/',
+  async buscar(q, n, pagina) {
+    const j = await comTempo(`https://www.loc.gov/photos/?q=${encodeURIComponent(q)}&fo=json&c=${n * 2}&sp=${pagina}&fa=online-format:image`)
+    const tam = (u: string) => Number(/#.*w=(\d+)/.exec(u)?.[1] ?? /_(\d+)px/.exec(u)?.[1] ?? 0)
+    return (j.results ?? []).map((r: Record<string, any>) => {
+      const imgs: string[] = (r.image_url ?? []).filter((u: string) => /^https:\/\//.test(u))
+      if (!imgs.length) return null
+      const porTam = [...imgs].sort((a, b) => tam(a) - tam(b)); const sem = (u: string) => u.split('#')[0]
+      const media = porTam.find((u) => tam(u) >= 300) ?? porTam[porTam.length - 1]
+      const autor = (r.contributor ?? [])[0]
+      return {
+        id: 'loc:' + String(r.id ?? r.url).replace(/^https?:\/\/www\.loc\.gov\//, '').replace(/\/$/, ''), fonte: 'loc' as const,
+        titulo: limpa(r.title).slice(0, 140) || 'Sem título', autor: autor ? String(autor).replace(/\b\w/g, (c) => c.toUpperCase()).slice(0, 80) : undefined,
+        data: r.date || undefined, imagem: sem(media), imagemGrande: sem(porTam[porTam.length - 1]),
+        link: r.url || r.id, licenca: (/no known restrictions/i.test(String(r.rights ?? '')) ? 'Sem restrições conhecidas' : 'Uso pessoal · confira os direitos') + ' (Library of Congress)',
+        termos: palavras(...(r.subject ?? []).slice(0, 6), ...(r.original_format ?? []).slice(0, 2)),
+      }
+    }).filter(Boolean).slice(0, n) as ItemDescoberta[]
+  },
+}
+
+export const FONTES: Fonte[] = [aic, met, wm, cma, vam, smk, rijks, eu, mia, si, ov, loc]
+export const FONTE: Record<FonteId, Fonte> = { aic, met, wm, cma, vam, smk, rijks, eu, mia, si, ov, loc }
 
 /** Fontes que dependem de configuração: mostradas com o estado real, nunca simuladas. */
 export const FONTES_PENDENTES = [
+  { nome: 'Behance, Dribbble, ArtStation, Carbonmade', estado: 'Sem API aberta para buscar trabalhos de outras pessoas. Salve o que gostar pelo Recortes ou pelo Pinterest.' },
   { nome: 'Pinterest', estado: 'Não conectado. A API oficial só dá acesso às suas pastas e pins salvos (etapa 4).' },
 ]
