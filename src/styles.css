@@ -642,3 +642,18 @@ a.visor-btn { text-decoration: none; }
 .visor-ref { background: #161412; }
 .pin-amostra { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-top: 12px; }
 .pin-amostra img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 4px; background: var(--areia); }
+.pin-conta { margin-top: 18px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 14px; }
+.pin-conta h3 { margin: 0 0 8px; }
+.pin-conta p { font-size: 13.5px; margin: 0 0 12px; }
+.pin-conta-linha { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 14px; }
+.pin-conta-linha img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+.pin-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 10px; }
+.pin-paineis { margin: 10px 0; }
+.pin-painel { display: grid; grid-template-columns: auto 48px 1fr; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.pin-painel input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--ink); }
+.pin-painel .capa-p { width: 48px; height: 48px; border-radius: 6px; overflow: hidden; background: var(--areia); }
+.pin-painel .capa-p img { width: 100%; height: 100%; object-fit: cover; }
+.pin-painel .info-p { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 14px; }
+.pin-painel .info-p .faint { font-size: 12.5px; }
+.pin-painel select { grid-column: 2 / -1; height: 34px; font-size: 13px; }
+.pin-painel:not(.on) .capa-p { opacity: .55; }

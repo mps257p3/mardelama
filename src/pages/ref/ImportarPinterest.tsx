@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, FolderInput } from 'lucide-react'
 import { importarPinterest, imagemDoPin, lerExportacaoPinterest, type ExportacaoPinterest } from '../../lib/pinterest'
 import { useToast } from '../../ui/toast'
+import { ContaPinterest } from './ContaPinterest'
 
 const FORA = ['logo', 'catarina']
 
@@ -38,8 +39,10 @@ export default function ImportarPinterest() {
     <div className="page" style={{ maxWidth: 720 }}>
       <Link to="/referencias" className="back"><ArrowLeft size={15} />Referências</Link>
       <p className="eyebrow">Repertório</p>
-      <h1 style={{ marginTop: 6 }}>Importar do Pinterest</h1>
-      <p className="faint" style={{ fontSize: 13.5, marginTop: 6 }}>Use a exportação oficial (Configurações › Privacidade e dados › Solicitar seus dados). Cada pin entra no Acervo com a imagem do Pinterest, a pasta como grupo e o link original quando existe. Importar de novo não duplica.</p>
+      <h1 style={{ marginTop: 6 }}>Pinterest</h1>
+      <ContaPinterest />
+      <h3 style={{ marginTop: 30 }}>Importar a exportação</h3>
+      <p className="faint" style={{ fontSize: 13.5, marginTop: 6 }}>Alternativa sem conexão: use a exportação oficial (Configurações › Privacidade e dados › Solicitar seus dados). Cada pin entra no Acervo com a imagem do Pinterest, a pasta como grupo e o link original quando existe. Importar de novo não duplica.</p>
       <input ref={pasta} type="file" hidden multiple {...{ webkitdirectory: '' }} onChange={(e) => ler(e.target.files)} />
       {!ex && <button className="btn primary" style={{ marginTop: 18 }} onClick={() => pasta.current?.click()}><FolderInput size={15} />Escolher a pasta exportada</button>}
       {ex && <>

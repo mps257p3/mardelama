@@ -37,6 +37,9 @@
   "functions": {
     "api/ia.js": {
       "maxDuration": 60
+    },
+    "api/pinterest.js": {
+      "maxDuration": 30
     }
   }
 }

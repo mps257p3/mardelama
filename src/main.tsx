@@ -12,6 +12,7 @@ import App from './App'
 import { seedIfEmpty } from './db/seed'
 import { ativarVinculoAutomatico } from './lib/contexto'
 import { iniciarSincronizacaoAutomatica } from './db/sync'
+import { iniciarPinterestAutomatico } from './lib/pinterestConta'
 import { registerSW } from 'virtual:pwa-register'
 import { db } from './db/schema'
 
@@ -42,6 +43,7 @@ const atualizar = registerSW({
 seedIfEmpty()
 ativarVinculoAutomatico()
 iniciarSincronizacaoAutomatica()
+iniciarPinterestAutomatico()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

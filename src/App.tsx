@@ -24,6 +24,8 @@ import Descobrir from './pages/ref/Descobrir'
 import Repertorio from './pages/ref/Repertorio'
 import ImportarInstagram from './pages/ref/ImportarInstagram'
 import ImportarPinterest from './pages/ref/ImportarPinterest'
+import RetornoPinterest from './pages/ref/RetornoPinterest'
+import Privacidade from './pages/Privacidade'
 import Paineis from './pages/ref/Paineis'
 import PainelEditor from './pages/ref/PainelEditor'
 import Compartilhar from './pages/ref/Compartilhar'
@@ -86,6 +88,8 @@ export default function App() {
           <Route path="referencias/repertorio" element={<Repertorio />} />
           <Route path="referencias/instagram" element={<ImportarInstagram />} />
           <Route path="referencias/pinterest" element={<ImportarPinterest />} />
+          <Route path="referencias/pinterest/retorno" element={<RetornoPinterest />} />
+          <Route path="privacidade" element={<Privacidade />} />
           <Route path="referencias/:id" element={<ReferenciaDetalhe />} />
           <Route path="referencias/:id/editar" element={<ReferenciaForm />} />
           <Route path="paineis" element={<Paineis />} />
