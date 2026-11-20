@@ -252,17 +252,18 @@ const loc: Fonte = {
   id: 'loc', nome: 'Library of Congress', site: 'https://www.loc.gov/pictures/',
   async buscar(q, n, pagina) {
     const j = await comTempo(`https://www.loc.gov/photos/?q=${encodeURIComponent(q)}&fo=json&c=${n * 2}&sp=${pagina}&fa=online-format:image`)
-    const tam = (u: string) => Number(/#.*w=(\d+)/.exec(u)?.[1] ?? /_(\d+)px/.exec(u)?.[1] ?? 0)
+    // as imagens da LoC só abrem pela ponte (o Cloudflare deles barra o navegador); a versão grande vem do IIIF
+    const ponte = (u: string) => '/api/fonte-node?u=' + encodeURIComponent(u)
+    const iiif = (u: string, lado: number) => u.replace(/^https:\/\/tile\.loc\.gov\/storage-services\/service\/(.+)\.(jpg|gif)(#.*)?$/, (_, c) => `https://tile.loc.gov/image-services/iiif/service:${c.replace(/\//g, ':')}/full/!${lado},${lado}/0/default.jpg`)
     return (j.results ?? []).map((r: Record<string, any>) => {
-      const imgs: string[] = (r.image_url ?? []).filter((u: string) => /^https:\/\//.test(u))
-      if (!imgs.length) return null
-      const porTam = [...imgs].sort((a, b) => tam(a) - tam(b)); const sem = (u: string) => u.split('#')[0]
-      const media = porTam.find((u) => tam(u) >= 300) ?? porTam[porTam.length - 1]
+      // a versão "r" (640 px) é a base mais confiável do IIIF; sem ela, só há miniatura e a obra fica de fora
+      const base = (r.image_url ?? []).find((u: string) => /^https:\/\/tile\.loc\.gov\/storage-services\/service\/.+r\.jpg(#|$)/.test(u))
+      if (!base) return null
       const autor = (r.contributor ?? [])[0]
       return {
         id: 'loc:' + String(r.id ?? r.url).replace(/^https?:\/\/www\.loc\.gov\//, '').replace(/\/$/, ''), fonte: 'loc' as const,
         titulo: limpa(r.title).slice(0, 140) || 'Sem título', autor: autor ? String(autor).replace(/\b\w/g, (c) => c.toUpperCase()).slice(0, 80) : undefined,
-        data: r.date || undefined, imagem: sem(media), imagemGrande: sem(porTam[porTam.length - 1]),
+        data: r.date ? String(r.date).slice(0, 4) : undefined, imagem: ponte(iiif(base, 500)), imagemGrande: ponte(iiif(base, 1400)),
         link: r.url || r.id, licenca: (/no known restrictions/i.test(String(r.rights ?? '')) ? 'Sem restrições conhecidas' : 'Uso pessoal · confira os direitos') + ' (Library of Congress)',
         termos: palavras(...(r.subject ?? []).slice(0, 6), ...(r.original_format ?? []).slice(0, 2)),
       }
