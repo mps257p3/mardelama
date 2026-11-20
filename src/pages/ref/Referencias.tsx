@@ -5,7 +5,7 @@ import { importarPasta } from '../../lib/importarPasta'
 import { useToast } from '../../ui/toast'
 import { alternarFavorito, excluir, useGrupos, useReferencias } from '../../db/hooks'
 import { TIPOS_REF } from '../../lib/refs'
-import { ehSalvoInstagram } from '../../lib/instagram'
+import { ehSalvoInstagram, pendenteInstagram } from '../../lib/instagram'
 import { ImgRef, temImagem } from './ImgRef'
 import { useAjuste, definirAjuste } from '../../db/settings'
 import { aplicarFiltro, filtrosAtivos, FILTRO_VAZIO, mudarFiltro, ORDENS, PERIODOS, useFiltroRefs, type FiltroRefs } from '../../lib/filtroRefs'
@@ -44,7 +44,9 @@ export default function Referencias() {
   // vindo de um grupo: abre o acervo filtrado por ele
   useEffect(() => { const g = sp.get('grupo'); if (g) { mudarFiltro({ ...FILTRO_VAZIO, grupos: [g], op: f.op }); setSp({}, { replace: true }) } }, [sp, setSp, f.op])
 
-  const lista = useMemo(() => aplicarFiltro(refs ?? [], f, nomeG), [refs, f, nomeG])
+  const soImagem = useAjuste<boolean>('refs.soImagem', false)
+  // com a busca ou um grupo escolhido, os cartões sem imagem aparecem mesmo com a opção ligada
+  const lista = useMemo(() => aplicarFiltro((refs ?? []).filter((r) => !soImagem || f.q || f.grupos.length || !pendenteInstagram(r)), f, nomeG), [refs, f, nomeG, soImagem])
   useEffect(() => setMostrar(LOTE), [f])
   useEffect(() => {
     const el = fim.current; if (!el) return
@@ -79,6 +81,7 @@ export default function Referencias() {
           { l: 'Importar do Pinterest', icon: <Pin size={16} />, to: '/referencias/pinterest' },
           { l: '', sep: true },
           { l: f.inspira ? 'Sair do modo inspiração' : 'Modo inspiração', icon: <Sparkles size={16} />, on: f.inspira, onClick: () => mudarFiltro({ inspira: !f.inspira, semente: Date.now() % 100000 }) },
+          { l: soImagem ? 'Mostrar posts sem imagem' : 'Esconder posts sem imagem', icon: <AtSign size={16} />, on: soImagem, onClick: () => definirAjuste('refs.soImagem', !soImagem) },
           ...opcoesCol.map((c) => ({ l: `${c} ${c === 1 ? 'coluna' : 'colunas'}`, icon: <Columns3 size={16} />, on: cols === c, onClick: () => definirAjuste(pequeno ? 'refs.col.m' : 'refs.col.d', c) })),
           { l: '', sep: true },
           { l: 'Gerenciar grupos', icon: <TagsIcon size={16} />, to: '/referencias/grupos/gerenciar' },

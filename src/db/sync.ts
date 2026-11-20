@@ -15,6 +15,10 @@ const TABELAS = ['familias', 'esmaltes', 'receitas', 'versoes', 'testes', 'mater
 /** Tabela ainda não criada no Supabase (migração pendente): pula sem interromper o resto. */
 const faltaTabela = (e: { code?: string; message?: string }) => e.code === '42P01' || e.code === 'PGRST205' || /does not exist|Could not find the table/i.test(e.message ?? '')
 const BUCKET = 'arquivos'
+const PAGINA = 1000
+const NOMES: Record<string, string> = { referencias: 'referências', grupos: 'grupos', esmaltes: 'esmaltes', receitas: 'receitas', testes: 'testes', conteudos: 'biblioteca' }
+/** Sobe quando a forma de receber muda e é preciso rever tudo o que veio antes (sem duplicar: compara por data). */
+const VERSAO_SYNC = 2
 
 let cliente: SupabaseClient | undefined
 let configAtual = ''
@@ -99,6 +103,10 @@ async function executar(): Promise<ResultadoSync> {
   const user = (await sb.auth.getSession()).data.session?.user
   if (!user) throw new Error('Entre na sua conta para sincronizar.')
   const m = await marcas(); let enviados = 0, recebidos = 0; const inicio = Date.now()
+  // versão 1 recebia no máximo 1000 por vez e podia pular itens com o mesmo horário: revê tudo uma vez
+  if (((await db.ajustes.get('sync.versao'))?.valor as number ?? 1) < VERSAO_SYNC) {
+    for (const k of Object.keys(m)) m[k] = { ...m[k], recebido: 0 }
+  }
 
   avisarProgresso('Sincronizando os registros…')
   // 2. tabelas de conteúdo
@@ -114,15 +122,24 @@ async function executar(): Promise<ResultadoSync> {
     }
     if (pendentes.includes(t)) continue
     enviados += novos.length
-    const { data, error } = await sb.from(t).select('*').gt('atualizado_em', mk.recebido).order('atualizado_em').limit(5000)
-    if (error) { if (faltaTabela(error)) { pendentes.push(t); continue } throw error }
-    let maxR = mk.recebido
-    for (const r of data ?? []) {
-      maxR = Math.max(maxR, r.atualizado_em)
-      const atual: any = await db.table(t).get(r.id)
-      if (atual && (atual[chave] ?? 0) >= r.atualizado_em) continue
-      await db.table(t).put(local(r)); recebidos++
+    // recebe em páginas de 1000 (limite do servidor), andando por (atualizado_em, id): itens importados em lote
+    // têm o mesmo horário, e paginar só pelo horário perderia os que caem na virada da página
+    let maxR = mk.recebido, ultimoId = '', parou = false
+    for (;;) {
+      const filtro = ultimoId ? `atualizado_em.gt.${maxR},and(atualizado_em.eq.${maxR},id.gt.${ultimoId})` : `atualizado_em.gt.${maxR}`
+      const { data, error } = await sb.from(t).select('*').or(filtro).order('atualizado_em').order('id').limit(PAGINA)
+      if (error) { if (faltaTabela(error)) { pendentes.push(t); parou = true; break } throw error }
+      const lista = data ?? []
+      if (!lista.length) break
+      const atuais: any[] = await db.table(t).bulkGet(lista.map((r) => r.id))
+      const trocar = lista.filter((r, i) => !(atuais[i] && (atuais[i][chave] ?? 0) >= r.atualizado_em)).map(local)
+      if (trocar.length) await db.table(t).bulkPut(trocar)
+      recebidos += trocar.length
+      const fim = lista[lista.length - 1]; maxR = fim.atualizado_em; ultimoId = fim.id
+      if (lista.length > 200) avisarProgresso(`Recebendo ${NOMES[t] ?? t}: ${recebidos} itens`)
+      if (lista.length < PAGINA) break
     }
+    if (parou) continue
     m[t] = { enviado: inicio, recebido: maxR }
   }
 
@@ -134,15 +151,15 @@ async function executar(): Promise<ResultadoSync> {
       const { error } = await sb.from('relacoes').upsert(novos.map((x) => ({ id: x.id, a_tipo: x.aTipo, a_id: x.aId, b_tipo: x.bTipo, b_id: x.bId, criado_em: x.criadoEm, atualizado_em: x.atualizadoEm ?? x.criadoEm, excluido: !!x.excluido })))
       if (error) throw error; enviados += novos.length
     }
-    const { data, error } = await sb.from('relacoes').select('*').gt('atualizado_em', mk.recebido)
+    const { data, error } = await sb.from('relacoes').select('*').gt('atualizado_em', mk.recebido).order('atualizado_em')
     if (error) throw error
     let maxR = mk.recebido
-    for (const r of data ?? []) {
-      maxR = Math.max(maxR, r.atualizado_em)
-      const atual = await db.relacoes.get(r.id)
-      if (atual && (atual.atualizadoEm ?? atual.criadoEm) >= r.atualizado_em) continue
-      await db.relacoes.put({ id: r.id, aTipo: r.a_tipo, aId: r.a_id, bTipo: r.b_tipo, bId: r.b_id, criadoEm: r.criado_em, atualizadoEm: r.atualizado_em, excluido: r.excluido ? 1 : 0 }); recebidos++
-    }
+    const lista = data ?? []
+    const atuais = await db.relacoes.bulkGet(lista.map((r) => r.id))
+    const trocar = lista.filter((r, i) => { maxR = Math.max(maxR, r.atualizado_em); const a = atuais[i]; return !(a && (a.atualizadoEm ?? a.criadoEm) >= r.atualizado_em) })
+      .map((r) => ({ id: r.id, aTipo: r.a_tipo, aId: r.a_id, bTipo: r.b_tipo, bId: r.b_id, criadoEm: r.criado_em, atualizadoEm: r.atualizado_em, excluido: (r.excluido ? 1 : 0) as 0 | 1 }))
+    if (trocar.length) await db.relacoes.bulkPut(trocar)
+    recebidos += trocar.length
     m.relacoes = { enviado: inicio, recebido: maxR }
   }
 
@@ -177,6 +194,7 @@ async function executar(): Promise<ResultadoSync> {
   }
 
   await definirAjuste('sync.marcas', m)
+  await definirAjuste('sync.versao', VERSAO_SYNC)
   const res: ResultadoSync = { enviados, recebidos, quando: Date.now(), pendentes }
   await definirAjuste('sync.ultimo', res)
   return res
