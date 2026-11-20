@@ -25,7 +25,9 @@ export interface Fonte { id: FonteId; nome: string; site: string; buscar: (q: st
 
 /** Hosts que recusam pedidos do navegador: passam pela ponte do próprio app (/api/fonte). */
 const PELA_PONTE = /^https:\/\/(api\.artic\.edu|www\.artic\.edu|collectionapi\.metmuseum\.org|images\.metmuseum\.org|openaccess-cdn\.clevelandart\.org|api\.europeana\.eu\/record|api\.si\.edu\/openaccess|ids\.si\.edu|www\.loc\.gov|tile\.loc\.gov|[0-9]\.api\.artsmia\.org|[a-z0-9.-]+\.cdninstagram\.com|[a-z0-9.-]+\.fbcdn\.net)\//
-export const viaPonte = (url: string) => (PELA_PONTE.test(url) ? '/api/fonte?u=' + encodeURIComponent(url) : url)
+/** Esses dois recusam a rede edge da Vercel: vão pela mesma ponte rodando em Node. */
+const PONTE_NODE = /^https:\/\/(api\.si\.edu|ids\.si\.edu|www\.loc\.gov|tile\.loc\.gov)\//
+export const viaPonte = (url: string) => (PELA_PONTE.test(url) ? (PONTE_NODE.test(url) ? '/api/fonte-node?u=' : '/api/fonte?u=') + encodeURIComponent(url) : url)
 const comTempo = async (url: string, init?: RequestInit, ms = 12000) => {
   const c = new AbortController(); const t = setTimeout(() => c.abort(), ms)
   try { const r = await fetch(viaPonte(url), { ...init, signal: c.signal }); if (!r.ok) throw new Error(`HTTP ${r.status}`); return await r.json() } finally { clearTimeout(t) }
