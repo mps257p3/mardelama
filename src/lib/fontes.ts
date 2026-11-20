@@ -19,11 +19,11 @@ export interface ItemDescoberta {
   consulta?: string
 }
 
-export type FonteId = 'aic' | 'met' | 'wm'
+export type FonteId = 'aic' | 'met' | 'wm' | 'cma' | 'vam' | 'smk'
 export interface Fonte { id: FonteId; nome: string; site: string; buscar: (q: string, n: number, pagina: number) => Promise<ItemDescoberta[]> }
 
 /** Hosts que recusam pedidos do navegador: passam pela ponte do próprio app (/api/fonte). */
-const PELA_PONTE = /^https:\/\/(api\.artic\.edu|www\.artic\.edu|collectionapi\.metmuseum\.org|images\.metmuseum\.org|[a-z0-9.-]+\.cdninstagram\.com|[a-z0-9.-]+\.fbcdn\.net)\//
+const PELA_PONTE = /^https:\/\/(api\.artic\.edu|www\.artic\.edu|collectionapi\.metmuseum\.org|images\.metmuseum\.org|openaccess-cdn\.clevelandart\.org|[a-z0-9.-]+\.cdninstagram\.com|[a-z0-9.-]+\.fbcdn\.net)\//
 export const viaPonte = (url: string) => (PELA_PONTE.test(url) ? '/api/fonte?u=' + encodeURIComponent(url) : url)
 const comTempo = async (url: string, init?: RequestInit, ms = 12000) => {
   const c = new AbortController(); const t = setTimeout(() => c.abort(), ms)
@@ -87,8 +87,60 @@ const wm: Fonte = {
   },
 }
 
-export const FONTES: Fonte[] = [aic, met, wm]
-export const FONTE: Record<FonteId, Fonte> = { aic, met, wm }
+/** Cleveland Museum of Art — Open Access, só obras CC0, com imagem. Forte em cerâmica asiática e europeia. */
+const cma: Fonte = {
+  id: 'cma', nome: 'Cleveland Museum of Art', site: 'https://www.clevelandart.org',
+  async buscar(q, n, pagina) {
+    const url = `https://openaccess-api.clevelandart.org/api/artworks/?q=${encodeURIComponent(q)}&has_image=1&cc0=1&limit=${n}&skip=${(pagina - 1) * n}` +
+      '&fields=id,title,creators,creation_date,images,url,type,technique,culture,department,share_license_status'
+    const j = await comTempo(url)
+    return (j.data ?? []).filter((d: Record<string, any>) => d.images?.web?.url).map((d: Record<string, any>) => ({
+      id: 'cma:' + d.id, fonte: 'cma' as const, titulo: limpa(d.title) || 'Sem título',
+      autor: limpa(d.creators?.[0]?.description).replace(/\s*\(.*$/, '') || undefined, data: d.creation_date || undefined,
+      imagem: d.images.web.url, imagemGrande: d.images.web.url, link: d.url || `https://www.clevelandart.org/art/${d.id}`,
+      licenca: 'Domínio público (CC0)',
+      termos: palavras(d.type, d.technique, ...(d.culture ?? []).slice(0, 2), d.department),
+    }))
+  },
+}
+
+/** Victoria and Albert Museum (Londres) — um dos maiores acervos de cerâmica do mundo. Imagens IIIF para uso pessoal e de estudo. */
+const vam: Fonte = {
+  id: 'vam', nome: 'Victoria and Albert Museum', site: 'https://collections.vam.ac.uk',
+  async buscar(q, n, pagina) {
+    const j = await comTempo(`https://api.vam.ac.uk/v2/objects/search?q=${encodeURIComponent(q)}&images_exist=1&page_size=${n}&page=${pagina}`)
+    return (j.records ?? []).filter((r: Record<string, any>) => r._images?._iiif_image_base_url).map((r: Record<string, any>) => {
+      const base = r._images._iiif_image_base_url
+      const autor = r._primaryMaker?.name && !/^unknown$/i.test(r._primaryMaker.name) ? r._primaryMaker.name : undefined
+      return {
+        id: 'vam:' + r.systemNumber, fonte: 'vam' as const, titulo: limpa(r._primaryTitle) || r.objectType || 'Sem título', autor, data: r._primaryDate || undefined,
+        imagem: `${base}full/!500,500/0/default.jpg`, imagemGrande: `${base}full/!1200,1200/0/default.jpg`,
+        link: `https://collections.vam.ac.uk/item/${r.systemNumber}/`, licenca: '© Victoria and Albert Museum, uso pessoal e de estudo',
+        termos: palavras(r.objectType, r._primaryPlace),
+      }
+    })
+  },
+}
+
+/** SMK, Galeria Nacional da Dinamarca — API aberta, só obras em domínio público. */
+const smk: Fonte = {
+  id: 'smk', nome: 'SMK (Dinamarca)', site: 'https://open.smk.dk',
+  async buscar(q, n, pagina) {
+    const url = `https://api.smk.dk/api/v1/art/search/?keys=${encodeURIComponent(q)}&offset=${(pagina - 1) * n}&rows=${n}` +
+      '&filters=' + encodeURIComponent('[has_image:true],[public_domain:true]') + '&lang=en'
+    const j = await comTempo(url)
+    return (j.items ?? []).filter((i: Record<string, any>) => i.image_thumbnail).map((i: Record<string, any>) => ({
+      id: 'smk:' + i.object_number, fonte: 'smk' as const, titulo: limpa(i.titles?.[0]?.title) || 'Sem título',
+      autor: i.artist?.[0] || undefined, data: i.production_date?.[0]?.period || undefined,
+      imagem: i.image_thumbnail, imagemGrande: i.image_iiif_id ? `${i.image_iiif_id}/full/!1200,1200/0/default.jpg` : i.image_thumbnail,
+      link: i.frontend_url || `https://open.smk.dk/artwork/image/${i.object_number}`, licenca: 'Domínio público (SMK Open)',
+      termos: palavras(...(i.object_names ?? []).map((o: { name: string }) => o.name), ...(i.techniques ?? []), ...(i.materials ?? [])),
+    }))
+  },
+}
+
+export const FONTES: Fonte[] = [aic, met, wm, cma, vam, smk]
+export const FONTE: Record<FonteId, Fonte> = { aic, met, wm, cma, vam, smk }
 
 /** Fontes que dependem de configuração: mostradas com o estado real, nunca simuladas. */
 export const FONTES_PENDENTES = [
