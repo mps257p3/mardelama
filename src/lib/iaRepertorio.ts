@@ -1,6 +1,7 @@
 import { db, type Referencia } from '../db/schema'
 import { lerPerfil, UNIVERSOS } from './curadoria'
-import { viaPonte } from './fontes'
+import type { ItemDescoberta } from './fontes'
+import { FONTE, viaPonte } from './fontes'
 
 /**
  * IA do Repertório. Tudo passa pela função /api/ia no servidor; a chave nunca chega ao aparelho.
@@ -110,4 +111,19 @@ export async function gerarRepertorio(): Promise<RepertorioSalvo> {
   const s = { r, quando: Date.now(), base: resumo.total }
   await salvarRepertorio(s)
   return s
+}
+
+export interface Explicacao { oque: string; tecnica: string; origem: string; olhar: string[]; ideias: string[] }
+
+/** Explica uma obra do Descobrir (técnica, origem, o que observar, ideias para o ateliê). Guardada no aparelho para não pagar duas vezes. */
+export async function explicarObra(x: ItemDescoberta): Promise<Explicacao> {
+  const k = 'ia.explica.' + x.id
+  const ja = await db.ajustes.get(k)
+  if (ja?.valor) return ja.valor as Explicacao
+  let imagem: { base64: string; tipo: string } | { url: string } = { url: x.imagemGrande }
+  try { const res = await fetch(viaPonte(x.imagem)); if (res.ok) { const b = await res.blob(); if (b.size > 1000) imagem = { base64: await paraBase64(b), tipo: 'image/jpeg' } } } catch { /* manda o link */ }
+  const perfil = await lerPerfil()
+  const r = await chamar<Explicacao>({ acao: 'explicar', imagem, titulo: x.titulo, autor: x.autor, data: x.data, fonte: FONTE[x.fonte]?.nome, termos: x.termos, gosto: topo(perfil.termos, 15) }, 60000)
+  await db.ajustes.put({ chave: k, valor: r })
+  return r
 }

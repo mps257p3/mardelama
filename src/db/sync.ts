@@ -14,6 +14,24 @@ export interface ConfigNuvem { url: string; chave: string }
 const TABELAS = ['familias', 'esmaltes', 'receitas', 'versoes', 'testes', 'materiais', 'referencias', 'grupos', 'paineis', 'conteudos', 'notas', 'curvas', 'queimas', 'comerciais', 'lotes', 'fornecedores', 'compras', 'projetos', 'entrada', 'paletas'] as const
 /** Tabela ainda não criada no Supabase (migração pendente): pula sem interromper o resto. */
 const faltaTabela = (e: { code?: string; message?: string }) => e.code === '42P01' || e.code === 'PGRST205' || /does not exist|Could not find the table/i.test(e.message ?? '')
+/** Ajustes que viajam entre aparelhos: o perfil de gosto do Descobrir. */
+const AJUSTES_SINC = ['descobrir.perfil']
+type Gosto = { atualizadoEm?: number; curtidos?: string[]; recusados?: string[]; vistos?: string[]; curtidasItens?: { id: string }[]; [k: string]: unknown }
+const uniao = (a: string[] = [], b: string[] = [], max = 1500) => [...new Set([...a, ...b])].slice(-max)
+/** A versão mais recente vale para pesos e termos; listas (curtidas, recusas, vistos) somam as dos dois aparelhos. */
+function mesclarGosto(local: Gosto | undefined, remoto: Gosto | undefined): Gosto | undefined {
+  if (!remoto) return local
+  if (!local) return remoto
+  const [base, outro] = (remoto.atualizadoEm ?? 0) > (local.atualizadoEm ?? 0) ? [remoto, local] : [local, remoto]
+  const itens = new Map([...(outro.curtidasItens ?? []), ...(base.curtidasItens ?? [])].map((x) => [x.id, x]))
+  const curtidos = uniao(outro.curtidos, base.curtidos)
+  return {
+    ...base,
+    curtidos, recusados: uniao(outro.recusados, base.recusados), vistos: uniao(outro.vistos, base.vistos),
+    curtidasItens: [...itens.values()].filter((x) => curtidos.includes(x.id)).slice(-500),
+    atualizadoEm: Math.max(local.atualizadoEm ?? 0, remoto.atualizadoEm ?? 0),
+  }
+}
 const BUCKET = 'arquivos'
 const PAGINA = 1000
 const NOMES: Record<string, string> = { referencias: 'referências', grupos: 'grupos', esmaltes: 'esmaltes', receitas: 'receitas', testes: 'testes', conteudos: 'biblioteca' }
@@ -161,6 +179,31 @@ async function executar(): Promise<ResultadoSync> {
     if (trocar.length) await db.relacoes.bulkPut(trocar)
     recebidos += trocar.length
     m.relacoes = { enviado: inicio, recebido: maxR }
+  }
+
+  // 3b. gosto do Descobrir (curtidas, recusas, termos aprendidos): mescla entre aparelhos
+  {
+    const mk = m.ajustes ?? { enviado: 0, recebido: 0 }
+    try {
+      const { data, error } = await sb.from('ajustes').select('*').in('id', AJUSTES_SINC).gt('atualizado_em', mk.recebido)
+      if (error) throw error
+      let maxR = mk.recebido
+      for (const r of data ?? []) {
+        maxR = Math.max(maxR, r.atualizado_em)
+        const atual = (await db.ajustes.get(r.id))?.valor
+        await db.ajustes.put({ chave: r.id, valor: mesclarGosto(atual as Gosto | undefined, r.dados?.valor as Gosto | undefined) })
+        recebidos++
+      }
+      for (const k of AJUSTES_SINC) {
+        const v = (await db.ajustes.get(k))?.valor as Gosto | undefined
+        if (v?.atualizadoEm && v.atualizadoEm > mk.enviado) {
+          const { error: e2 } = await sb.from('ajustes').upsert({ id: k, criado_em: v.atualizadoEm, atualizado_em: v.atualizadoEm, excluido: false, dados: { valor: v } })
+          if (e2) throw e2
+          enviados++
+        }
+      }
+      m.ajustes = { enviado: inicio, recebido: maxR }
+    } catch (e) { if (faltaTabela(e as { code?: string; message?: string })) pendentes.push('ajustes'); else throw e }
   }
 
   await definirAjuste('sync.marcas', m)
