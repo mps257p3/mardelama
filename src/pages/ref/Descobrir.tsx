@@ -11,7 +11,7 @@ import { Sheet } from '../../ui/Sheet'
 import { useToast } from '../../ui/toast'
 import { TopoRef } from './Topo'
 import { EscolherGrupos, EscolherPainel } from './acoesRefs'
-import { iaConfigurada, interpretarBusca, type Consulta } from '../../lib/iaRepertorio'
+import { atualizarGostoIA, iaConfigurada, interpretarBusca, type Consulta } from '../../lib/iaRepertorio'
 import { CompararObra, ExplicarObra, ObraDoDia, useObraDoDia } from './descobrirExtras'
 
 const MODOS: [Modo, string][] = [['para-voce', 'Para você'], ['fora-da-curva', 'Fora da curva'], ['novos-artistas', 'Novos artistas'], ['cores-texturas', 'Cores e texturas'], ['formas-volumes', 'Formas e volumes']]
@@ -44,6 +44,8 @@ export default function Descobrir() {
   const salvos = useLiveQuery(async () => new Map((await db.referencias.filter((r) => !!r.origem?.startsWith('descobrir:') && !r.excluido).toArray()).map((r) => [r.origem!.slice(10), r.id])), [], new Map<string, string>())
 
   useEffect(() => { lerPerfil().then((p) => setCurtidos(new Set(p.curtidos))) }, [])
+  // a leitura do gosto pela IA se renova sozinha quando há curtidas novas (no máximo a cada 12 horas)
+  useEffect(() => { atualizarGostoIA().catch(() => undefined) }, [])
 
   const carregar = useCallback(async (novo: boolean, c: Contexto = ctx, m: Modo = modo) => {
     if (c.tipo === 'curtidas') {
@@ -243,7 +245,7 @@ function VisorDescobrir({ itens, inicio, curtidos, salvos, onClose, onAgir }: { 
         <p className="t">{x.titulo}</p>
         <p className="s">{[x.autor, x.data].filter(Boolean).join(' · ')}</p>
         <p className="l">{x.licenca}{x.universo ? ' · ' + (UNIVERSOS[x.universo]?.nome ?? '') : ''}</p>
-        {x.consulta && <p className="l porque">Apareceu pela busca “{x.consulta}”</p>}
+        {(x.motivo || x.consulta) && <p className="l porque">{x.motivo ?? `Apareceu pela busca “${x.consulta}”`}</p>}
       </div>
       <div className="visor-acoes desc rotulos">
         <button className={'visor-acao' + (curtidos.has(x.id) ? ' on' : '')} onClick={() => onAgir(x, 'curtir')}><span className="visor-btn"><Heart size={18} fill={curtidos.has(x.id) ? 'currentColor' : 'none'} /></span>Curtir</button>
@@ -290,6 +292,7 @@ function AjustesCuradoria({ onClose }: { onClose: () => void }) {
         <label key={k} className="faixa"><span>{ROT_PESO[k]}</span><input type="range" min={k === 'recusar' ? -5 : 0} max={k === 'recusar' ? 0 : 5} step={0.5} value={p.pesos[k]} onChange={(e) => mudar({ ...p, pesos: { ...p.pesos, [k]: Number(e.target.value) } })} /><b>{p.pesos[k] > 0 ? '+' : ''}{p.pesos[k]}</b></label>))}
       <button className="btn sm ghost" onClick={() => mudar({ ...p, pesos: PESOS_PADRAO })}>Pesos padrão</button>
     </div>
+    <LeituraIA p={p} onNova={(g) => setP({ ...p, gostoIA: g })} />
     <div className="filtro-sec"><div className="filtro-tit"><span>O que o app aprendeu</span></div>
       {top.length ? <div className="chips wrap">{top.map(([t]) => <button key={t} className="chip" onClick={() => { const termos = { ...p.termos }; delete termos[t]; mudar({ ...p, termos }) }}>{t}<X size={12} /></button>)}</div> : <p className="faint" style={{ fontSize: 13 }}>Ainda nada. Curta, salve e recuse imagens no feed.</p>}
       {univ.length > 0 && <p className="faint" style={{ fontSize: 12.5, marginTop: 10 }}>Universos: {univ.slice(0, 6).map(([u]) => UNIVERSOS[u]?.nome ?? u).join(', ')}</p>}
@@ -300,6 +303,28 @@ function AjustesCuradoria({ onClose }: { onClose: () => void }) {
     </div>
     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}><button className="btn primary" onClick={onClose}>Pronto</button></div>
   </Sheet>
+}
+
+/** Leitura do gosto feita pela IA, com o que ela propôs buscar e o que evita. */
+function LeituraIA({ p, onNova }: { p: Perfil; onNova: (g: Perfil['gostoIA']) => void }) {
+  const [rodando, setRodando] = useState(false)
+  const toast = useToast()
+  const g = p.gostoIA
+  async function agora() {
+    setRodando(true)
+    try { const n = await atualizarGostoIA(true); if (n) { onNova(n); toast('Leitura do gosto atualizada') } else toast('A IA não está configurada') }
+    catch (e) { toast('A IA não respondeu: ' + (e as Error).message) }
+    finally { setRodando(false) }
+  }
+  return <div className="filtro-sec"><div className="filtro-tit"><span>Leitura do seu gosto (IA)</span></div>
+    {g ? <>
+      <p style={{ fontSize: 14, lineHeight: 1.5, margin: '0 0 8px' }}>{g.resumo}</p>
+      <p className="faint" style={{ fontSize: 12.5 }}>Buscas que a IA sugeriu: {g.consultas.slice(0, 8).map((c) => c.q).join(', ')}{g.consultas.length > 8 ? '…' : ''}</p>
+      {g.evitar.length > 0 && <p className="faint" style={{ fontSize: 12.5 }}>Evitando: {g.evitar.join(', ')}</p>}
+      <p className="faint" style={{ fontSize: 12, marginTop: 6 }}>Atualizada em {new Date(g.quando).toLocaleDateString('pt-BR')}. Renova sozinha quando há curtidas novas, no máximo a cada 12 horas.</p>
+    </> : <p className="faint" style={{ fontSize: 13 }}>Depois de algumas curtidas, a IA lê o seu gosto e sugere buscas novas para o feed.</p>}
+    <button className="btn sm ghost" style={{ marginTop: 6 }} disabled={rodando} onClick={agora}><Sparkles size={14} className={rodando ? 'gira' : ''} />{rodando ? 'Lendo o seu gosto…' : 'Atualizar leitura agora'}</button>
+  </div>
 }
 
 function PainelFontes({ estados, onClose }: { estados: EstadoFonte[]; onClose: () => void }) {

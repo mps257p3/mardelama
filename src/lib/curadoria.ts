@@ -23,7 +23,9 @@ export interface Perfil {
   historico: { quando: number; termos: string[] }[]  // para ver a evolução no tempo
   curtidasItens: ItemDescoberta[]  // as obras curtidas, para rever na aba Curtidas e inspirar o feed
   atualizadoEm?: number            // para sincronizar entre aparelhos
+  gostoIA?: GostoIA                // leitura do gosto feita pela IA (renovada só quando há curtidas novas)
 }
+export interface GostoIA { resumo: string; consultas: { q: string; universo: string; porque: string }[]; evitar: string[]; quando: number; base: number }
 
 export const PESOS_PADRAO: Record<Interacao, number> = { curtir: 1, salvar: 2, painel: 3, semelhantes: 1.5, pesquisar: 0.6, recusar: -2 }
 export const PERFIL_VAZIO: Perfil = {
@@ -102,49 +104,78 @@ export async function sementesDoAcervo() {
   return [...c].sort((a, b) => b[1] - a[1]).slice(0, 12)
 }
 
-export interface Pedido { q: string; universo?: string; tipo: 'proximo' | 'adjacente' | 'experimental' | 'busca' | 'semelhantes' }
+export interface Pedido { q: string; universo?: string; tipo: 'proximo' | 'adjacente' | 'experimental' | 'busca' | 'semelhantes'; motivo?: string }
 
-/** Monta as consultas de um lote conforme o modo e a mistura 60/25/15 (ajustável). */
+/** Termos com peso: o aprendido + um reforço para o que foi curtido/salvo recentemente (meia-vida de 14 dias). */
+export function pesosDoGosto(perfil: Perfil) {
+  const agora = Date.now(); const meiaVida = 14 * 86400000
+  const pesos: Record<string, number> = { ...perfil.termos }
+  for (const h of perfil.historico.slice(-200)) {
+    const f = Math.pow(0.5, (agora - h.quando) / meiaVida) * 2
+    for (const t of h.termos) pesos[t] = (pesos[t] ?? 0) + f
+  }
+  for (const [k, v] of Object.entries(perfil.temporario)) if (v.ate > agora) pesos[k] = (pesos[k] ?? 0) + v.p * 1.5
+  return pesos
+}
+
+const nomeU = (u?: string) => (u ? UNIVERSOS[u]?.nome ?? u : '')
+
+/** Monta as consultas de um lote conforme o modo e a mistura 60/25/15 (ajustável). Cada pedido leva o motivo, mostrado no visor. */
 export async function planejar(perfil: Perfil, modo: Modo, n = 8): Promise<Pedido[]> {
   let { proximo, adjacente, experimental } = perfil.mistura
   if (modo === 'fora-da-curva') { proximo = 0; adjacente = 30; experimental = 70 }
   const tot = proximo + adjacente + experimental || 1
   const nP = Math.round((n * proximo) / tot), nA = Math.round((n * adjacente) / tot), nE = Math.max(0, n - nP - nA)
-  const agora = Date.now()
-  const temp = Object.entries(perfil.temporario).filter(([, v]) => v.ate > agora).map(([k, v]) => [k, v.p * 1.5] as [string, number])
-  let termos = [...topo(perfil.termos, 14), ...temp]
+  let termos = topo(pesosDoGosto(perfil), 16)
   if (termos.length < 4) termos = [...termos, ...(await sementesDoAcervo())]
   const univFav = topo(perfil.universos, 3).map(([u]) => u)
   const favs = univFav.length ? univFav : ['ceramica', 'escultura', 'ilustracao']
   const pedidos: Pedido[] = []
   const extras = MODO_CONSULTAS[modo]
+  const ia = perfil.gostoIA?.consultas ?? []
   // o que você curtiu por último aparece logo no lote seguinte: obras do mesmo autor ou com os mesmos termos
-  let nEco = 0
+  let usados = 0
   if (modo === 'para-voce' && perfil.curtidasItens?.length) {
     const recentes = perfil.curtidasItens.slice(-12)
     for (let k = 0; k < Math.min(2, nP); k++) {
       const it = sorteio(recentes)
       const autor = it.autor && !/unknown|anonymous|desconhecido|anônimo|artist$/i.test(it.autor) ? it.autor : undefined
       const q = autor && Math.random() < .5 ? autor : it.termos.slice(0, 2).join(' ') || it.consulta
-      if (q) { pedidos.push({ q, universo: it.universo, tipo: 'proximo' }); nEco++ }
+      if (q) { pedidos.push({ q, universo: it.universo, tipo: 'proximo', motivo: `Porque você curtiu “${it.titulo.slice(0, 60)}”` }); usados++ }
     }
   }
-  for (let i = nEco; i < nP; i++) {
-    if (extras) { pedidos.push({ q: sorteio(extras), tipo: 'proximo' }); continue }
+  // ideias da IA a partir do seu gosto: até metade do que é "perto do que você gosta"
+  if (modo === 'para-voce' && ia.length) {
+    const k = Math.min(ia.length, Math.ceil((nP - usados) / 2))
+    for (const c of [...ia].sort(() => Math.random() - .5).slice(0, k)) { pedidos.push({ q: c.q, universo: c.universo, tipo: 'proximo', motivo: `Leitura do seu gosto: ${c.porque}` }); usados++ }
+  }
+  for (let i = usados; i < nP; i++) {
+    if (extras) { pedidos.push({ q: sorteio(extras), tipo: 'proximo', motivo: 'Do modo escolhido' }); continue }
     const t = sortearPonderado(termos); const u = sorteio(favs)
-    pedidos.push({ q: t ? (Math.random() < .5 ? t : `${t} ${sorteio(UNIVERSOS[u].consultas).split(' ')[0]}`) : sorteio(UNIVERSOS[u].consultas), universo: u, tipo: 'proximo' })
+    pedidos.push({ q: t ? (Math.random() < .5 ? t : `${t} ${sorteio(UNIVERSOS[u].consultas).split(' ')[0]}`) : sorteio(UNIVERSOS[u].consultas), universo: u, tipo: 'proximo',
+      motivo: t ? `Você costuma curtir “${t}”` : `Você gosta de ${nomeU(u)}` })
   }
   for (let i = 0; i < nA; i++) {
     const viz = [...new Set(favs.flatMap((u) => UNIVERSOS[u]?.vizinhos ?? []))].filter((u) => !favs.includes(u))
     const u = sorteio(viz.length ? viz : Object.keys(UNIVERSOS)); const t = sortearPonderado(termos)
     const base = extras ? sorteio(extras) : sorteio(UNIVERSOS[u].consultas)
-    pedidos.push({ q: t && Math.random() < .5 ? `${t} ${base.split(' ').slice(-1)[0]}` : base, universo: u, tipo: 'adjacente' })
+    pedidos.push({ q: t && Math.random() < .5 ? `${t} ${base.split(' ').slice(-1)[0]}` : base, universo: u, tipo: 'adjacente', motivo: `Vizinho do que você gosta: ${nomeU(u)}` })
   }
   for (let i = 0; i < nE; i++) {
     const u = sorteio(Object.keys(UNIVERSOS).filter((x) => !favs.includes(x)))
-    pedidos.push({ q: sorteio(UNIVERSOS[u].consultas), universo: u, tipo: 'experimental' })
+    pedidos.push({ q: sorteio(UNIVERSOS[u].consultas), universo: u, tipo: 'experimental', motivo: `Para sair da curva: ${nomeU(u)}` })
   }
   return pedidos
+}
+
+/** Nota de uma obra para o seu gosto: termos e artista curtidos somam; termos recusados e o que a IA mandou evitar subtraem. */
+export function notaDoGosto(x: ItemDescoberta, pesos: Record<string, number>, perfil: Perfil) {
+  let n = 0
+  for (const t of x.termos) n += Math.max(-6, Math.min(12, pesos[t] ?? 0))
+  if (x.autor) n += Math.min(10, (perfil.artistas[x.autor] ?? 0) * 1.5)
+  const txt = (x.titulo + ' ' + x.termos.join(' ')).toLowerCase()
+  for (const e of perfil.gostoIA?.evitar ?? []) if (e && txt.includes(e.toLowerCase())) n -= 4
+  return n
 }
 
 export interface EstadoFonte { id: FonteId; ok: boolean; erro?: string; quando: number; pausada?: boolean }
@@ -183,7 +214,7 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
         // acervo pequeno para essa consulta: a página sorteada veio vazia, volta para uma das primeiras
         if (!xs.length && pagina > 1) xs = await f.buscar(p.q, porConsulta, 1 + Math.floor(Math.random() * Math.min(2, pagina - 1)))
         estados.set(f.id, { id: f.id, ok: true, quando: Date.now() })
-        return xs.map((x) => ({ ...x, universo: p.universo, consulta: p.q }))
+        return xs.map((x) => ({ ...x, universo: p.universo, consulta: p.q, motivo: p.motivo }))
       } catch (e) {
         const erro = (e as Error).name === 'AbortError' ? 'Demorou demais para responder' : (e as Error).message
         falhou.add(f.id)
@@ -198,6 +229,15 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
   // intercala os resultados das consultas para o mural não ficar em blocos
   const max = Math.max(0, ...res.map((r) => r.length))
   for (let k = 0; k < max; k++) for (const r of res) { const x = r[k]; if (x && !vistos.has(x.id) && !rec.has(x.id) && !conhecidos.has(x.id)) { vistos.add(x.id); itens.push(x) } }
+  // no feed, reordena pelo gosto: o que mais combina sobe, o que bate com recusas cai ou sai.
+  // um sorteio na nota e as obras "para sair da curva" preservam espaço para o inesperado.
+  if (pedidos.some((p) => p.tipo === 'proximo' || p.tipo === 'adjacente')) {
+    const pesos = pesosDoGosto(perfil)
+    const comNota = itens.map((x) => ({ x, n: notaDoGosto(x, pesos, perfil) }))
+      .filter(({ x, n }) => n > -8 || x.motivo?.startsWith('Para sair'))
+      .map(({ x, n }) => ({ x, ordem: x.motivo?.startsWith('Para sair') ? 4 + Math.random() * 6 : Math.max(-5, Math.min(15, n)) + Math.random() * 6 }))
+    return { itens: comNota.sort((a, b) => b.ordem - a.ordem).map(({ x }) => x), estados: [...estados.values()] }
+  }
   return { itens, estados: [...estados.values()] }
 }
 

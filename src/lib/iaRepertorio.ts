@@ -1,5 +1,5 @@
 import { db, type Referencia } from '../db/schema'
-import { lerPerfil, UNIVERSOS } from './curadoria'
+import { lerPerfil, salvarPerfil, UNIVERSOS, type GostoIA } from './curadoria'
 import type { ItemDescoberta } from './fontes'
 import { FONTE, viaPonte } from './fontes'
 
@@ -49,6 +49,7 @@ export async function interpretarBusca(pedido: string): Promise<LeituraBusca> {
   try { const c = sessionStorage.getItem(k); if (c) return JSON.parse(c) } catch { /* sem armazenamento */ }
   const perfil = await lerPerfil()
   const r = await chamar<LeituraBusca>({ acao: 'buscar', pedido, universos: Object.keys(UNIVERSOS), gosto: topo(perfil.termos, 20) }, 45000)
+  r.consultas = r.consultas.slice(0, 6)
   try { sessionStorage.setItem(k, JSON.stringify(r)) } catch { /* cheio */ }
   return r
 }
@@ -126,4 +127,34 @@ export async function explicarObra(x: ItemDescoberta): Promise<Explicacao> {
   const r = await chamar<Explicacao>({ acao: 'explicar', imagem, titulo: x.titulo, autor: x.autor, data: x.data, fonte: FONTE[x.fonte]?.nome, termos: x.termos, gosto: topo(perfil.termos, 15) }, 60000)
   await db.ajustes.put({ chave: k, valor: r })
   return r
+}
+
+/**
+ * Leitura do gosto pela IA: lê curtidas, salvas, recusas e o acervo e devolve um resumo e novas consultas.
+ * Para economizar, só roda com pelo menos 3 curtidas/salvas novas desde a última leitura e no máximo a cada 12 horas
+ * (ou quando você pede em Ajustar curadoria).
+ */
+export async function atualizarGostoIA(forcar = false): Promise<GostoIA | undefined> {
+  const perfil = await lerPerfil()
+  const g = perfil.gostoIA
+  const base = perfil.historico.length
+  const novos = perfil.historico.filter((h) => h.quando > (g?.quando ?? 0)).length
+  if (!forcar && (novos < 3 || (g && Date.now() - g.quando < 12 * 3600000))) return g
+  if (!(await iaConfigurada())) return g
+  const curta = (x: { titulo: string; autor?: string; termos: string[]; data?: string }) => ({ t: x.titulo.slice(0, 80), a: x.autor, d: x.data, termos: x.termos.slice(0, 6) })
+  const salvasRefs = (await db.referencias.filter((r) => !r.excluido && !!r.origem?.startsWith('descobrir:')).toArray()).slice(-40)
+  const refs = (await db.referencias.filter((r) => !r.excluido && !r.origem?.startsWith('descobrir:')).toArray()).slice(-60)
+  const negativos = Object.entries(perfil.termos).filter(([, v]) => v < 0).sort((a, b) => a[1] - b[1]).slice(0, 15).map(([k]) => k)
+  const r = await chamar<Omit<GostoIA, 'quando' | 'base'>>({
+    acao: 'gosto', universos: Object.keys(UNIVERSOS),
+    curtidas: (perfil.curtidasItens ?? []).slice(-50).map(curta),
+    salvas: salvasRefs.map((x) => ({ t: x.titulo.slice(0, 80), a: x.autor, tags: x.tags.slice(0, 6) })),
+    recusadas: negativos,
+    termos: topo(perfil.termos, 25),
+    referencias: refs.map((x) => ({ t: x.titulo.slice(0, 60), tags: x.tags.slice(0, 5) })),
+  }, 60000)
+  const novo: GostoIA = { ...r, consultas: r.consultas.filter((c) => c.q && UNIVERSOS[c.universo]).slice(0, 16), quando: Date.now(), base }
+  const atual = await lerPerfil()
+  await salvarPerfil({ ...atual, gostoIA: novo })
+  return novo
 }
