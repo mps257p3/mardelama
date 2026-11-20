@@ -2,7 +2,7 @@
 // Só repassa GETs para os hosts da lista; nada de chaves aqui.
 export const config = { runtime: 'edge' }
 
-const PERMITIDOS = ['api.artic.edu', 'www.artic.edu', 'collectionapi.metmuseum.org', 'images.metmuseum.org', 'openaccess-cdn.clevelandart.org', 'api.europeana.eu', 'search.artsmia.org', 'upload.wikimedia.org']
+const PERMITIDOS = ['api.artic.edu', 'www.artic.edu', 'collectionapi.metmuseum.org', 'images.metmuseum.org', 'openaccess-cdn.clevelandart.org', 'api.europeana.eu', 'api.si.edu', 'ids.si.edu', 'search.artsmia.org', 'upload.wikimedia.org']
 
 export default async function handler(req) {
   const u = new URL(req.url).searchParams.get('u')
@@ -18,6 +18,8 @@ export default async function handler(req) {
     if (!chave) return new Response('Falta a chave da Europeana na Vercel', { status: 503, headers: { 'access-control-allow-origin': '*' } })
     alvo.searchParams.set('wskey', chave)
   }
+  // Smithsonian: chave gratuita do api.data.gov na variável SMITHSONIAN_KEY (sem ela, a chave pública de demonstração, bem limitada)
+  if (alvo.hostname === 'api.si.edu') alvo.searchParams.set('api_key', process.env.SMITHSONIAN_KEY || 'DEMO_KEY')
   let r
   try {
     r = await fetch(alvo, { headers: { 'User-Agent': 'MarDeLama/1.0 (atelie pessoal)', 'AIC-User-Agent': 'MarDeLama/1.0 (atelie pessoal)', Accept: req.headers.get('accept') || '*/*' } })

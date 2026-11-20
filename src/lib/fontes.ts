@@ -20,11 +20,11 @@ export interface ItemDescoberta {
   motivo?: string           // por que a obra apareceu (mostrado no visor)
 }
 
-export type FonteId = 'aic' | 'met' | 'wm' | 'cma' | 'vam' | 'smk' | 'rijks' | 'eu' | 'mia'
+export type FonteId = 'aic' | 'met' | 'wm' | 'cma' | 'vam' | 'smk' | 'rijks' | 'eu' | 'mia' | 'si' | 'ov'
 export interface Fonte { id: FonteId; nome: string; site: string; buscar: (q: string, n: number, pagina: number) => Promise<ItemDescoberta[]> }
 
 /** Hosts que recusam pedidos do navegador: passam pela ponte do próprio app (/api/fonte). */
-const PELA_PONTE = /^https:\/\/(api\.artic\.edu|www\.artic\.edu|collectionapi\.metmuseum\.org|images\.metmuseum\.org|openaccess-cdn\.clevelandart\.org|api\.europeana\.eu\/record|[0-9]\.api\.artsmia\.org|[a-z0-9.-]+\.cdninstagram\.com|[a-z0-9.-]+\.fbcdn\.net)\//
+const PELA_PONTE = /^https:\/\/(api\.artic\.edu|www\.artic\.edu|collectionapi\.metmuseum\.org|images\.metmuseum\.org|openaccess-cdn\.clevelandart\.org|api\.europeana\.eu\/record|api\.si\.edu\/openaccess|ids\.si\.edu|[0-9]\.api\.artsmia\.org|[a-z0-9.-]+\.cdninstagram\.com|[a-z0-9.-]+\.fbcdn\.net)\//
 export const viaPonte = (url: string) => (PELA_PONTE.test(url) ? '/api/fonte?u=' + encodeURIComponent(url) : url)
 const comTempo = async (url: string, init?: RequestInit, ms = 12000) => {
   const c = new AbortController(); const t = setTimeout(() => c.abort(), ms)
@@ -211,8 +211,42 @@ const mia: Fonte = {
   },
 }
 
-export const FONTES: Fonte[] = [aic, met, wm, cma, vam, smk, rijks, eu, mia]
-export const FONTE: Record<FonteId, Fonte> = { aic, met, wm, cma, vam, smk, rijks, eu, mia }
+/** Smithsonian Open Access (Cooper Hewitt, Freer|Sackler, SAAM…): só imagens CC0 da categoria arte e design. A chave fica na Vercel. */
+const si: Fonte = {
+  id: 'si', nome: 'Smithsonian', site: 'https://www.si.edu/openaccess',
+  async buscar(q, n, pagina) {
+    const j = await comTempo(`https://api.si.edu/openaccess/api/v1.0/category/art_design/search?q=${encodeURIComponent(q)}&rows=${n * 2}&start=${(pagina - 1) * n * 2}`)
+    return (j.response?.rows ?? []).map((r: Record<string, any>) => {
+      const d = r.content?.descriptiveNonRepeating ?? {}; const m = (d.online_media?.media ?? []).find((x: Record<string, any>) => x.type === 'Images' && x.usage?.access === 'CC0')
+      if (!m?.thumbnail) return null
+      const ind = r.content?.indexedStructured ?? {}
+      const nome = (r.content?.freetext?.name ?? []).find((x: { label: string }) => /artist|maker|manufacturer|designer|potter/i.test(x.label))?.content
+      return {
+        id: 'si:' + r.id, fonte: 'si' as const, titulo: limpa(r.title) || 'Sem título', autor: nome ? String(nome).replace(/,\s*(American|English|French|Japanese|Chinese|German|born|active).*$/i, '').slice(0, 80) : undefined,
+        data: ind.date?.[0], imagem: m.thumbnail + '&max=500', imagemGrande: m.thumbnail + '&max=1200',
+        link: d.record_link || d.guid || 'https://www.si.edu/openaccess', licenca: 'Domínio público (CC0) · ' + (d.data_source || r.unitCode || 'Smithsonian'),
+        termos: palavras(...(ind.object_type ?? []).slice(0, 4), ...(ind.place ?? []).slice(0, 2), ...(ind.topic ?? []).slice(0, 3)),
+      }
+    }).filter(Boolean).slice(0, n) as ItemDescoberta[]
+  },
+}
+
+/** Openverse — imagens com licença Creative Commons (muitas fotos de peças, ateliês e exposições contemporâneas). */
+const ov: Fonte = {
+  id: 'ov', nome: 'Openverse', site: 'https://openverse.org',
+  async buscar(q, n, pagina) {
+    const j = await comTempo(`https://api.openverse.org/v1/images/?q=${encodeURIComponent(q)}&page_size=${n}&page=${pagina}&mature=false`)
+    return (j.results ?? []).filter((r: Record<string, any>) => r.thumbnail && r.url).map((r: Record<string, any>) => ({
+      id: 'ov:' + r.id, fonte: 'ov' as const, titulo: limpa(r.title).slice(0, 140) || 'Sem título', autor: undefined,
+      imagem: r.thumbnail, imagemGrande: r.url, link: r.foreign_landing_url || r.url,
+      licenca: `CC ${String(r.license ?? '').toUpperCase()}${r.creator ? ' · imagem de ' + String(r.creator).slice(0, 60) : ''}`,
+      termos: palavras(...(r.tags ?? []).slice(0, 8).map((t: { name: string }) => t.name)),
+    }))
+  },
+}
+
+export const FONTES: Fonte[] = [aic, met, wm, cma, vam, smk, rijks, eu, mia, si, ov]
+export const FONTE: Record<FonteId, Fonte> = { aic, met, wm, cma, vam, smk, rijks, eu, mia, si, ov }
 
 /** Fontes que dependem de configuração: mostradas com o estado real, nunca simuladas. */
 export const FONTES_PENDENTES = [

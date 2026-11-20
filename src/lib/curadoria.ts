@@ -30,7 +30,7 @@ export interface GostoIA { resumo: string; consultas: { q: string; universo: str
 export const PESOS_PADRAO: Record<Interacao, number> = { curtir: 1, salvar: 2, painel: 3, semelhantes: 1.5, pesquisar: 0.6, recusar: -2 }
 export const PERFIL_VAZIO: Perfil = {
   termos: {}, universos: {}, artistas: {}, temporario: {}, pesos: PESOS_PADRAO,
-  mistura: { proximo: 60, adjacente: 25, experimental: 15 }, fontes: { aic: true, met: true, wm: true, cma: true, vam: true, smk: true, rijks: true, eu: true, mia: true },
+  mistura: { proximo: 60, adjacente: 25, experimental: 15 }, fontes: { aic: true, met: true, wm: true, cma: true, vam: true, smk: true, rijks: true, eu: true, mia: true, si: true, ov: true },
   vistos: [], recusados: [], curtidos: [], historico: [], curtidasItens: [],
 }
 const CHAVE = 'descobrir.perfil'
@@ -47,8 +47,8 @@ export const salvarPerfil = (p: Perfil) => db.ajustes.put({ chave: CHAVE, valor:
 export const UNIVERSOS: Record<string, { nome: string; consultas: string[]; vizinhos: string[] }> = {
   ceramica: { nome: 'Cerâmica', consultas: ['ceramic vessel', 'stoneware jar', 'glazed earthenware', 'porcelain figure', 'ceramic sculpture', 'tea bowl', 'terracotta figure', 'slipware'], vizinhos: ['escultura', 'objetos', 'design-produto'] },
   escultura: { nome: 'Escultura', consultas: ['sculpture animal', 'carved figure', 'bronze figure', 'wood sculpture', 'grotesque sculpture', 'small figurine'], vizinhos: ['ceramica', 'arte-popular', 'objetos'] },
-  ilustracao: { nome: 'Ilustração', consultas: ['book illustration', 'fantastic creature drawing', 'grotesque drawing', 'caricature', 'children book illustration'], vizinhos: ['gravura', 'literatura-visual', 'pintura'] },
-  pintura: { nome: 'Pintura', consultas: ['naive painting', 'surreal painting', 'folk painting animals', 'miniature painting', 'fresco fragment'], vizinhos: ['ilustracao', 'arte-popular', 'textil'] },
+  ilustracao: { nome: 'Ilustração', consultas: ['book illustration', 'fantastic creature drawing', 'grotesque drawing', 'caricature', 'children book illustration', 'Grandville', 'Gustave Dore', 'Arthur Rackham', 'Ernst Haeckel', 'Aubrey Beardsley', 'Ivan Bilibin', 'Kay Nielsen', 'Edward Lear', 'Kawanabe Kyosai', 'Hokusai manga', 'Maria Sibylla Merian', 'John Tenniel', 'Walter Crane'], vizinhos: ['gravura', 'literatura-visual', 'pintura'] },
+  pintura: { nome: 'Pintura', consultas: ['naive painting', 'surreal painting', 'folk painting animals', 'miniature painting', 'fresco fragment', 'Hieronymus Bosch', 'Pieter Bruegel', 'Odilon Redon', 'Henri Rousseau', 'Albert Eckhout', 'Frans Post', 'Jean-Baptiste Debret', 'Rugendas', 'Paul Klee', 'Hilma af Klint', 'Utagawa Kuniyoshi', 'Ito Jakuchu', 'Franz Marc', 'Giorgio Morandi'], vizinhos: ['ilustracao', 'arte-popular', 'textil'] },
   fotografia: { nome: 'Fotografia', consultas: ['photograph texture', 'photograph rock formation', 'photograph object still life', 'botanical photograph'], vizinhos: ['historia-natural', 'arquitetura'] },
   'design-produto': { nome: 'Design de produto', consultas: ['vase design', 'decorative object', 'lamp design', 'tableware'], vizinhos: ['ceramica', 'arquitetura'] },
   'design-grafico': { nome: 'Design gráfico', consultas: ['poster', 'ornament pattern', 'typography print', 'label design'], vizinhos: ['gravura', 'textil'] },
@@ -73,6 +73,9 @@ export const TEMAS: { id: string; nome: string; universo: string; consultas: str
   { id: 'esmaltes', nome: 'Esmaltes', universo: 'ceramica', consultas: ['crackle glaze', 'celadon', 'ash glaze', 'tenmoku', 'copper red glaze', 'lusterware', 'salt glaze stoneware', 'drip glaze'] },
   { id: 'animal', nome: 'Escultura animal', universo: 'escultura', consultas: ['animal sculpture', 'ceramic animal', 'animal figure terracotta', 'bird figure', 'animal head sculpture', 'zoomorphic vessel'] },
   { id: 'vasos', nome: 'Vasos', universo: 'ceramica', consultas: ['vase', 'storage jar', 'bottle vase', 'amphora', 'ceramic vessel', 'lidded jar'] },
+  { id: 'ilustradores', nome: 'Ilustradores', universo: 'ilustracao', consultas: ['Grandville', 'Gustave Dore', 'Arthur Rackham', 'Ernst Haeckel', 'Aubrey Beardsley', 'Ivan Bilibin', 'Kay Nielsen', 'Edward Lear', 'Kawanabe Kyosai', 'Maria Sibylla Merian', 'John Tenniel', 'Walter Crane', 'Hokusai manga', 'bestiary illustration'] },
+  { id: 'pintores', nome: 'Pintores', universo: 'pintura', consultas: ['Hieronymus Bosch', 'Pieter Bruegel', 'Odilon Redon', 'Henri Rousseau', 'Albert Eckhout', 'Frans Post', 'Jean-Baptiste Debret', 'Rugendas', 'Paul Klee', 'Utagawa Kuniyoshi', 'Ito Jakuchu', 'Franz Marc', 'Giorgio Morandi', 'Hilma af Klint'] },
+  { id: 'contemporanea', nome: 'Cerâmica contemporânea', universo: 'ceramica', consultas: ['contemporary ceramics', 'ceramic artist studio', 'ceramic sculpture exhibition', 'studio pottery', 'ceramic installation', 'raku firing', 'wood fired pottery'] },
   { id: 'precolombiana', nome: 'Pré-colombiana', universo: 'americas', consultas: ['pre-columbian ceramic', 'moche vessel', 'maya vessel', 'nazca pottery', 'colima figure', 'marajoara', 'olmec figure'] },
 ]
 
