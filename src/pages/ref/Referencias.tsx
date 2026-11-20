@@ -44,7 +44,7 @@ export default function Referencias() {
   // vindo de um grupo: abre o acervo filtrado por ele
   useEffect(() => { const g = sp.get('grupo'); if (g) { mudarFiltro({ ...FILTRO_VAZIO, grupos: [g], op: f.op }); setSp({}, { replace: true }) } }, [sp, setSp, f.op])
 
-  const soImagem = useAjuste<boolean>('refs.soImagem', false)
+  const soImagem = useAjuste<boolean>('refs.soImagem', true)
   // com a busca ou um grupo escolhido, os cartões sem imagem aparecem mesmo com a opção ligada
   const lista = useMemo(() => aplicarFiltro((refs ?? []).filter((r) => !soImagem || f.q || f.grupos.length || !pendenteInstagram(r)), f, nomeG), [refs, f, nomeG, soImagem])
   useEffect(() => setMostrar(LOTE), [f])
