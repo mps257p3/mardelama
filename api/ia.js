@@ -26,6 +26,16 @@ const ESQUEMAS = {
           },
         },
       },
+      outras_linguas: {
+        type: 'array', description: 'A mesma busca nos idiomas em que os acervos europeus catalogam: uma consulta curta para cada idioma (nl, da, fr, de, it, es, pt).',
+        items: {
+          type: 'object', additionalProperties: false, required: ['lingua', 'q'],
+          properties: {
+            lingua: { type: 'string', enum: ['nl', 'da', 'fr', 'de', 'it', 'es', 'pt'] },
+            q: { type: 'string', description: 'Consulta curta (1 a 3 palavras) nesse idioma, com o termo que um catalogador de museu usaria.' },
+          },
+        },
+      },
     },
   },
   catalogar: {
@@ -107,7 +117,8 @@ function pedidoDe(acao, d) {
       conteudo: [{ type: 'text', text: `Universos disponíveis: ${(d.universos ?? []).join(', ')}.
 Termos que a pessoa costuma curtir: ${(d.gosto ?? []).slice(0, 20).join(', ') || 'nenhum ainda'}.
 Pedido: "${String(d.pedido ?? '').slice(0, 400)}"
-Transforme o pedido em consultas para acervos abertos de museus (Art Institute of Chicago, The Met, Wikimedia Commons). Varie os ângulos: obra, material, forma, técnica, época, natureza.` }],
+O pedido pode vir em português ou em qualquer idioma. Transforme-o em consultas em inglês para acervos abertos de museus (Art Institute of Chicago, The Met, Cleveland, V&A, Smithsonian, Library of Congress, Wikimedia Commons). Varie os ângulos: obra, material, forma, técnica, época, natureza.
+Em outras_linguas, traduza o núcleo do pedido para holandês (Rijksmuseum), dinamarquês (SMK), francês, alemão, italiano, espanhol e português (Europeana e Wikimedia), com o termo técnico que o acervo usaria (ex.: esmalte cerâmico = glazuur, glasur, glaçure, Glasur, smalto, esmalte).` }],
     }
   }
   if (acao === 'catalogar') {

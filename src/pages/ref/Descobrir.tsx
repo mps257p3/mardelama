@@ -60,7 +60,7 @@ export default function Descobrir() {
       const perfil = await lerPerfil()
       const conhecidos = new Set([...(novo ? [] : itens.map((i) => i.id)), ...(c.tipo === 'feed' ? perfil.vistos.slice(-800) : [])])
       let pedidos
-      if (c.tipo === 'busca' && c.consultas?.length) pedidos = c.consultas.map((x) => ({ q: x.q, universo: x.universo, tipo: 'busca' as const }))
+      if (c.tipo === 'busca' && c.consultas?.length) pedidos = c.consultas.map((x) => ({ q: x.q, universo: x.universo, fonte: x.fonte, tipo: 'busca' as const }))
       else if (c.tipo === 'busca') { const t = traduz(c.q); pedidos = FONTES.map(() => ({ q: t, tipo: 'busca' as const })).concat(FONTES.map(() => ({ q: t, tipo: 'busca' as const }))) }
       else if (c.tipo === 'semelhantes') { const it = c.item; const base = [it.autor, ...it.termos.slice(0, 3)].filter(Boolean) as string[]; pedidos = base.flatMap((b) => [{ q: b, universo: it.universo, tipo: 'semelhantes' as const }]).slice(0, 6) }
       else pedidos = await planejar(perfil, m, 8)
@@ -114,14 +114,14 @@ export default function Descobrir() {
     if (!t) { voltarAoFeed(); return }
     let c: Contexto = { tipo: 'busca', q: t }
     setCtx(c); setItens([])
-    // frases (3+ palavras) passam pela IA, se configurada; palavras soltas vão direto
-    if (t.split(/\s+/).length >= 3 && await iaConfigurada()) {
+    // com a IA configurada, toda busca (em português ou outra língua) vira consultas em inglês e nos idiomas dos acervos
+    if (await iaConfigurada()) {
       setInterpretando(true)
       try { const l = await interpretarBusca(t); c = { ...c, leitura: l.leitura, consultas: l.consultas }; setCtx(c) }
       catch (err) { toast('Busca sem IA: ' + (err as Error).message) }
       finally { setInterpretando(false) }
     }
-    registrar(null, 'pesquisar', c.tipo === 'busca' && c.consultas ? c.consultas.flatMap((x) => x.q.split(/\s+/)).filter((w) => w.length > 3) : traduz(t).split(/\s+/).filter((w) => w.length > 3))
+    registrar(null, 'pesquisar', c.tipo === 'busca' && c.consultas ? c.consultas.filter((x) => !x.lingua).flatMap((x) => x.q.split(/\s+/)).filter((w) => w.length > 3) : traduz(t).split(/\s+/).filter((w) => w.length > 3))
     carregar(true, c)
   }
   function voltarAoFeed() { const c: Contexto = { tipo: 'feed' }; setQ(''); setCtx(c); setItens([]); carregar(true, c) }

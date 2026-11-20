@@ -107,7 +107,7 @@ export async function sementesDoAcervo() {
   return [...c].sort((a, b) => b[1] - a[1]).slice(0, 12)
 }
 
-export interface Pedido { q: string; universo?: string; tipo: 'proximo' | 'adjacente' | 'experimental' | 'busca' | 'semelhantes'; motivo?: string }
+export interface Pedido { q: string; universo?: string; fonte?: FonteId; tipo: 'proximo' | 'adjacente' | 'experimental' | 'busca' | 'semelhantes'; motivo?: string }
 
 /** Termos com peso: o aprendido + um reforço para o que foi curtido/salvo recentemente (meia-vida de 14 dias). */
 export function pesosDoGosto(perfil: Perfil) {
@@ -209,8 +209,9 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
     const inicio = i + Math.floor(Math.random() * ligadas.length)
     // no feed, cada atualização sorteia páginas mais fundas dos acervos (material novo); busca segue em ordem
     const pagina = p.tipo === 'busca' || p.tipo === 'semelhantes' ? 1 + rodada * 2 + Math.floor(i / ligadas.length) : 1 + Math.floor(Math.random() * 8)
-    for (let k = 0; k < ligadas.length; k++) {
-      const f = ligadas[(inicio + k) % ligadas.length]
+    // consulta num idioma específico vai só para o acervo daquele idioma
+    const ordem = p.fonte ? ligadas.filter((f) => f.id === p.fonte) : ligadas.map((_, k) => ligadas[(inicio + k) % ligadas.length])
+    for (const f of ordem) {
       if (falhou.has(f.id)) continue
       try {
         let xs = await f.buscar(p.q, porConsulta, pagina)
