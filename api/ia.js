@@ -49,6 +49,16 @@ const ESQUEMAS = {
       },
     },
   },
+  explicar: {
+    type: 'object', additionalProperties: false, required: ['oque', 'tecnica', 'origem', 'olhar', 'ideias'],
+    properties: {
+      oque: { type: 'string', description: 'Uma ou duas frases: o que é a peça.' },
+      tecnica: { type: 'string', description: 'Como provavelmente foi feita: material, construção (torno, placa, acordelado, molde, entalhe), superfície, esmalte ou engobe, queima. Diga "provavelmente" quando for leitura da imagem.' },
+      origem: { type: 'string', description: 'Contexto cultural e histórico, só a partir dos dados informados e do que é bem estabelecido sobre essa tradição. Sem inventar procedência.' },
+      olhar: lista('Até 4 detalhes para observar com atenção na peça (forma, proporção, textura, gesto, cor).'),
+      ideias: lista('Até 4 ideias concretas de estudo ou peça para o ateliê de um ceramista, partindo desta obra.'),
+    },
+  },
   perfil: {
     type: 'object', additionalProperties: false,
     required: ['sintese', 'paleta', 'temas', 'linguagens', 'formas', 'texturas', 'artistas', 'tendencias', 'evolucao', 'proximos'],
@@ -95,6 +105,19 @@ Sugira a catalogação desta referência. A pessoa revisa antes de salvar.` },
       ],
     }
   }
+  if (acao === 'explicar') {
+    const img = d.imagem ?? {}
+    const fonteImg = img.base64 ? { type: 'base64', media_type: img.tipo || 'image/jpeg', data: img.base64 } : { type: 'url', url: img.url }
+    return {
+      esforco: 'low', max: 3000,
+      conteudo: [
+        { type: 'image', source: fonteImg },
+        { type: 'text', text: `Dados do acervo de origem: ${JSON.stringify({ titulo: d.titulo, autor: d.autor, data: d.data, museu: d.fonte, termos: d.termos }).slice(0, 1500)}
+O que a pessoa costuma curtir: ${(d.gosto ?? []).slice(0, 15).join(', ') || 'ainda não se sabe'}.
+Explique esta obra para um ceramista: o que é, como foi feita, de onde vem, o que observar e como ela pode inspirar o trabalho dele no ateliê.` },
+      ],
+    }
+  }
   if (acao === 'perfil') {
     return {
       esforco: 'medium', max: 6000,
@@ -106,7 +129,7 @@ Descreva o repertório estético dela a partir desses dados.` }],
   }
 }
 
-const LIMITES = { consultas: 6, tags: 10, grupos: 4, paleta: 8, aplicacoes: 4, temas: 8, linguagens: 8, formas: 8, texturas: 8, artistas: 10, tendencias: 6, proximos: 6 }
+const LIMITES = { olhar: 4, ideias: 4, consultas: 6, tags: 10, grupos: 4, paleta: 8, aplicacoes: 4, temas: 8, linguagens: 8, formas: 8, texturas: 8, artistas: 10, tendencias: 6, proximos: 6 }
 const HEX = /^#[0-9a-f]{6}$/i
 function aparar(o) {
   for (const [k, n] of Object.entries(LIMITES)) if (Array.isArray(o[k])) o[k] = o[k].slice(0, n)
@@ -125,7 +148,7 @@ export async function POST(req) {
   const acao = d?.acao
   const p = ESQUEMAS[acao] && pedidoDe(acao, d)
   if (!p) return json({ erro: 'Ação desconhecida' }, 400)
-  if (acao === 'catalogar' && !d.imagem?.base64 && !/^https:\/\//.test(d.imagem?.url ?? '')) return json({ erro: 'Sem imagem' }, 400)
+  if ((acao === 'catalogar' || acao === 'explicar') && !d.imagem?.base64 && !/^https:\/\//.test(d.imagem?.url ?? '')) return json({ erro: 'Sem imagem' }, 400)
 
   const client = new Anthropic()
   try {

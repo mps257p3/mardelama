@@ -21,13 +21,15 @@ export interface Perfil {
   recusados: string[]
   curtidos: string[]
   historico: { quando: number; termos: string[] }[]  // para ver a evolução no tempo
+  curtidasItens: ItemDescoberta[]  // as obras curtidas, para rever na aba Curtidas e inspirar o feed
+  atualizadoEm?: number            // para sincronizar entre aparelhos
 }
 
 export const PESOS_PADRAO: Record<Interacao, number> = { curtir: 1, salvar: 2, painel: 3, semelhantes: 1.5, pesquisar: 0.6, recusar: -2 }
 export const PERFIL_VAZIO: Perfil = {
   termos: {}, universos: {}, artistas: {}, temporario: {}, pesos: PESOS_PADRAO,
   mistura: { proximo: 60, adjacente: 25, experimental: 15 }, fontes: { aic: true, met: true, wm: true, cma: true, vam: true, smk: true, rijks: true, eu: true, mia: true },
-  vistos: [], recusados: [], curtidos: [], historico: [],
+  vistos: [], recusados: [], curtidos: [], historico: [], curtidasItens: [],
 }
 const CHAVE = 'descobrir.perfil'
 
@@ -37,7 +39,7 @@ export async function lerPerfil(): Promise<Perfil> {
   p.pesos = { ...PESOS_PADRAO, ...p.pesos }; p.fontes = { ...PERFIL_VAZIO.fontes, ...p.fontes }
   return p
 }
-export const salvarPerfil = (p: Perfil) => db.ajustes.put({ chave: CHAVE, valor: p })
+export const salvarPerfil = (p: Perfil) => db.ajustes.put({ chave: CHAVE, valor: { ...p, atualizadoEm: Date.now() } })
 
 /** Universos criativos: a curadoria é transversal, não só cerâmica. Consultas em inglês (as fontes indexam em inglês). */
 export const UNIVERSOS: Record<string, { nome: string; consultas: string[]; vizinhos: string[] }> = {
@@ -63,6 +65,14 @@ const MODO_CONSULTAS: Partial<Record<Modo, string[]>> = {
   'cores-texturas': ['glaze surface', 'crackle glaze', 'celadon', 'lusterware', 'iridescent', 'patina bronze', 'lichen', 'mineral specimen', 'textile weave', 'enamel', 'lacquer', 'mosaic'],
   'formas-volumes': ['vessel form', 'biomorphic', 'seed pod', 'shell', 'skull', 'figural vessel', 'gourd', 'sculpture abstract form', 'architectural model', 'coral'],
 }
+
+/** Temas rápidos do Descobrir: atalhos de cerâmica com várias consultas cada. */
+export const TEMAS: { id: string; nome: string; universo: string; consultas: string[] }[] = [
+  { id: 'esmaltes', nome: 'Esmaltes', universo: 'ceramica', consultas: ['crackle glaze', 'celadon', 'ash glaze', 'tenmoku', 'copper red glaze', 'lusterware', 'salt glaze stoneware', 'drip glaze'] },
+  { id: 'animal', nome: 'Escultura animal', universo: 'escultura', consultas: ['animal sculpture', 'ceramic animal', 'animal figure terracotta', 'bird figure', 'animal head sculpture', 'zoomorphic vessel'] },
+  { id: 'vasos', nome: 'Vasos', universo: 'ceramica', consultas: ['vase', 'storage jar', 'bottle vase', 'amphora', 'ceramic vessel', 'lidded jar'] },
+  { id: 'precolombiana', nome: 'Pré-colombiana', universo: 'americas', consultas: ['pre-columbian ceramic', 'moche vessel', 'maya vessel', 'nazca pottery', 'colima figure', 'marajoara', 'olmec figure'] },
+]
 
 /** Algumas palavras em português do acervo traduzidas para buscar nas fontes. */
 const PT_EN: Record<string, string> = {
@@ -92,7 +102,7 @@ export async function sementesDoAcervo() {
   return [...c].sort((a, b) => b[1] - a[1]).slice(0, 12)
 }
 
-interface Pedido { q: string; universo?: string; tipo: 'proximo' | 'adjacente' | 'experimental' | 'busca' | 'semelhantes' }
+export interface Pedido { q: string; universo?: string; tipo: 'proximo' | 'adjacente' | 'experimental' | 'busca' | 'semelhantes' }
 
 /** Monta as consultas de um lote conforme o modo e a mistura 60/25/15 (ajustável). */
 export async function planejar(perfil: Perfil, modo: Modo, n = 8): Promise<Pedido[]> {
@@ -108,7 +118,18 @@ export async function planejar(perfil: Perfil, modo: Modo, n = 8): Promise<Pedid
   const favs = univFav.length ? univFav : ['ceramica', 'escultura', 'ilustracao']
   const pedidos: Pedido[] = []
   const extras = MODO_CONSULTAS[modo]
-  for (let i = 0; i < nP; i++) {
+  // o que você curtiu por último aparece logo no lote seguinte: obras do mesmo autor ou com os mesmos termos
+  let nEco = 0
+  if (modo === 'para-voce' && perfil.curtidasItens?.length) {
+    const recentes = perfil.curtidasItens.slice(-12)
+    for (let k = 0; k < Math.min(2, nP); k++) {
+      const it = sorteio(recentes)
+      const autor = it.autor && !/unknown|anonymous|desconhecido|anônimo|artist$/i.test(it.autor) ? it.autor : undefined
+      const q = autor && Math.random() < .5 ? autor : it.termos.slice(0, 2).join(' ') || it.consulta
+      if (q) { pedidos.push({ q, universo: it.universo, tipo: 'proximo' }); nEco++ }
+    }
+  }
+  for (let i = nEco; i < nP; i++) {
     if (extras) { pedidos.push({ q: sorteio(extras), tipo: 'proximo' }); continue }
     const t = sortearPonderado(termos); const u = sorteio(favs)
     pedidos.push({ q: t ? (Math.random() < .5 ? t : `${t} ${sorteio(UNIVERSOS[u].consultas).split(' ')[0]}`) : sorteio(UNIVERSOS[u].consultas), universo: u, tipo: 'proximo' })
@@ -139,7 +160,7 @@ const pausar = (id: FonteId, erro: string) => { try { localStorage.setItem(chave
 const recusaDura = (msg: string) => /HTTP (403|404|410|429)/.test(msg)
 
 /** Executa as consultas nas fontes ligadas, remove repetidos, vistos e recusados. Se uma fonte falha, a consulta tenta a próxima. */
-export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: Set<string>, porConsulta = 6) {
+export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: Set<string>, porConsulta = 6, rodada = 0) {
   const estados = new Map<FonteId, EstadoFonte>()
   const ligadas = FONTES.filter((f) => {
     if (!perfil.fontes[f.id]) return false
@@ -152,12 +173,15 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
   const falhou = new Set<FonteId>()
   const res = await Promise.all(pedidos.map(async (p, i) => {
     const inicio = i + Math.floor(Math.random() * ligadas.length)
-    const pagina = p.tipo === 'busca' || p.tipo === 'semelhantes' ? 1 + Math.floor(i / ligadas.length) : 1 + Math.floor(Math.random() * 3)
+    // no feed, cada atualização sorteia páginas mais fundas dos acervos (material novo); busca segue em ordem
+    const pagina = p.tipo === 'busca' || p.tipo === 'semelhantes' ? 1 + rodada * 2 + Math.floor(i / ligadas.length) : 1 + Math.floor(Math.random() * 8)
     for (let k = 0; k < ligadas.length; k++) {
       const f = ligadas[(inicio + k) % ligadas.length]
       if (falhou.has(f.id)) continue
       try {
-        const xs = await f.buscar(p.q, porConsulta, pagina)
+        let xs = await f.buscar(p.q, porConsulta, pagina)
+        // acervo pequeno para essa consulta: a página sorteada veio vazia, volta para uma das primeiras
+        if (!xs.length && pagina > 1) xs = await f.buscar(p.q, porConsulta, 1 + Math.floor(Math.random() * Math.min(2, pagina - 1)))
         estados.set(f.id, { id: f.id, ok: true, quando: Date.now() })
         return xs.map((x) => ({ ...x, universo: p.universo, consulta: p.q }))
       } catch (e) {
@@ -190,7 +214,10 @@ export async function registrar(item: ItemDescoberta | null, tipo: Interacao, te
   if (item?.universo) p.universos[item.universo] = Math.max(-10, Math.min(50, (p.universos[item.universo] ?? 0) + w))
   if (item?.autor && !temporario) p.artistas[item.autor] = (p.artistas[item.autor] ?? 0) + w
   if (item && tipo === 'recusar') p.recusados = [...p.recusados.slice(-1500), item.id]
-  if (item && tipo === 'curtir') p.curtidos = p.curtidos.includes(item.id) ? p.curtidos : [...p.curtidos.slice(-1500), item.id]
+  if (item && tipo === 'curtir') {
+    p.curtidos = p.curtidos.includes(item.id) ? p.curtidos : [...p.curtidos.slice(-1500), item.id]
+    p.curtidasItens = [...(p.curtidasItens ?? []).filter((x) => x.id !== item.id).slice(-499), item]
+  }
   if (!temporario && termos.length && w > 0) p.historico = [...p.historico.slice(-500), { quando: Date.now(), termos: termos.slice(0, 4) }]
   // limpa temporários vencidos
   for (const [k, v] of Object.entries(p.temporario)) if (v.ate < Date.now()) delete p.temporario[k]
@@ -201,6 +228,7 @@ export async function registrar(item: ItemDescoberta | null, tipo: Interacao, te
 export async function descurtir(item: ItemDescoberta) {
   const p = await lerPerfil()
   p.curtidos = p.curtidos.filter((x) => x !== item.id)
+  p.curtidasItens = (p.curtidasItens ?? []).filter((x) => x.id !== item.id)
   for (const t of item.termos.slice(0, 6)) p.termos[t] = (p.termos[t] ?? 0) - p.pesos.curtir
   await salvarPerfil(p)
 }
