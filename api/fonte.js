@@ -2,7 +2,7 @@
 // Só repassa GETs para os hosts da lista; nada de chaves aqui.
 export const config = { runtime: 'edge' }
 
-const PERMITIDOS = ['api.artic.edu', 'www.artic.edu', 'collectionapi.metmuseum.org', 'images.metmuseum.org', 'upload.wikimedia.org']
+const PERMITIDOS = ['api.artic.edu', 'www.artic.edu', 'collectionapi.metmuseum.org', 'images.metmuseum.org', 'openaccess-cdn.clevelandart.org', 'upload.wikimedia.org']
 
 export default async function handler(req) {
   const u = new URL(req.url).searchParams.get('u')
