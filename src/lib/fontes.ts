@@ -19,11 +19,11 @@ export interface ItemDescoberta {
   consulta?: string
 }
 
-export type FonteId = 'aic' | 'met' | 'wm' | 'cma' | 'vam' | 'smk'
+export type FonteId = 'aic' | 'met' | 'wm' | 'cma' | 'vam' | 'smk' | 'rijks' | 'eu'
 export interface Fonte { id: FonteId; nome: string; site: string; buscar: (q: string, n: number, pagina: number) => Promise<ItemDescoberta[]> }
 
 /** Hosts que recusam pedidos do navegador: passam pela ponte do próprio app (/api/fonte). */
-const PELA_PONTE = /^https:\/\/(api\.artic\.edu|www\.artic\.edu|collectionapi\.metmuseum\.org|images\.metmuseum\.org|openaccess-cdn\.clevelandart\.org|[a-z0-9.-]+\.cdninstagram\.com|[a-z0-9.-]+\.fbcdn\.net)\//
+const PELA_PONTE = /^https:\/\/(api\.artic\.edu|www\.artic\.edu|collectionapi\.metmuseum\.org|images\.metmuseum\.org|openaccess-cdn\.clevelandart\.org|api\.europeana\.eu\/record|[a-z0-9.-]+\.cdninstagram\.com|[a-z0-9.-]+\.fbcdn\.net)\//
 export const viaPonte = (url: string) => (PELA_PONTE.test(url) ? '/api/fonte?u=' + encodeURIComponent(url) : url)
 const comTempo = async (url: string, init?: RequestInit, ms = 12000) => {
   const c = new AbortController(); const t = setTimeout(() => c.abort(), ms)
@@ -139,11 +139,64 @@ const smk: Fonte = {
   },
 }
 
-export const FONTES: Fonte[] = [aic, met, wm, cma, vam, smk]
-export const FONTE: Record<FonteId, Fonte> = { aic, met, wm, cma, vam, smk }
+/** Rijksmuseum (Amsterdam) — API de dados aberta (Linked Art), sem chave. A busca devolve endereços; cada obra é uma chamada. */
+const RIJKS_VAZIAS = new Set(['the', 'and', 'with', 'of', 'for', 'figure', 'design', 'art', 'object'])
+const rijks: Fonte = {
+  id: 'rijks', nome: 'Rijksmuseum', site: 'https://www.rijksmuseum.nl',
+  async buscar(q, n, pagina) {
+    // a busca do Rijks é por campo e por palavra: tenta tipo, material, técnica e descrição com as palavras da consulta
+    const ws = q.toLowerCase().split(/\s+/).filter((w) => w.length > 2 && !RIJKS_VAZIAS.has(w))
+    if (!ws.length) return []
+    const ult = ws[ws.length - 1], pri = ws[0]
+    const pedidos = [`type=${ult}`, `material=${pri}`, `technique=${pri}`, `description=${ult}`]
+    const listas = await Promise.all(pedidos.map((p) => comTempo(`https://data.rijksmuseum.nl/search/collection?${p.replace(/=(.*)$/, (_, v) => '=' + encodeURIComponent(v))}&imageAvailable=true`).catch(() => null)))
+    const ids = [...new Set(listas.flatMap((l) => (l?.orderedItems ?? []).map((x: { id: string }) => x.id)))]
+    const fatia = ids.slice((pagina - 1) * n, pagina * n)
+    const objs = await Promise.all(fatia.map((id) => comTempo(id, { headers: { Accept: 'application/ld+json' } }, 9000).catch(() => null)))
+    return objs.filter(Boolean).map((o: Record<string, any>) => {
+      const txt = JSON.stringify(o)
+      const img = txt.match(/https:\/\/iiif\.micr\.io\/[A-Za-z0-9]+/)?.[0]
+      if (!img) return null
+      const nomes = (o.identified_by ?? []).filter((x: { type: string }) => x.type === 'Name').map((x: { content: string }) => x.content)
+      const pag = txt.match(/https:\/\/www\.rijksmuseum\.nl\/[a-z]{2}\/collectie\/object\/[^"]+/)?.[0]
+      const autor = txt.match(/"notation":\[\{"@language":"en","@value":"([^"]+)"/)?.[1]
+      const data = o.produced_by?.timespan?.identified_by?.[0]?.content
+      const id = String(o.id).split('/').pop()
+      return {
+        id: 'rijks:' + id, fonte: 'rijks' as const, titulo: limpa(nomes[0]) || 'Sem título', autor: autor && !/^anonymous$/i.test(autor) ? autor : undefined, data,
+        imagem: `${img}/full/!500,500/0/default.jpg`, imagemGrande: `${img}/full/!1200,1200/0/default.jpg`,
+        link: pag || String(o.id), licenca: 'Domínio público (Rijksmuseum)', termos: palavras(...ws),
+      }
+    }).filter(Boolean) as ItemDescoberta[]
+  },
+}
+
+/** Europeana — reúne milhares de museus europeus. A chave gratuita fica só na Vercel (EUROPEANA_KEY); a ponte a acrescenta. */
+const licencaEu = (u?: string) => !u ? 'Ver licença na fonte' : /publicdomain/.test(u) ? 'Domínio público' : /creativecommons\.org\/licenses\/([a-z-]+)/.test(u) ? 'CC ' + u.match(/licenses\/([a-z-]+)/)![1].toUpperCase() : 'Ver licença na fonte'
+const eu: Fonte = {
+  id: 'eu', nome: 'Europeana', site: 'https://www.europeana.eu',
+  async buscar(q, n, pagina) {
+    const url = `https://api.europeana.eu/record/v2/search.json?query=${encodeURIComponent(q)}&rows=${n}&start=${(pagina - 1) * n + 1}` +
+      '&media=true&thumbnail=true&qf=TYPE:IMAGE&reusability=open&profile=standard'
+    const j = await comTempo(url).catch((e: Error) => { throw /HTTP 503/.test(e.message) ? new Error('falta a chave gratuita EUROPEANA_KEY na Vercel') : e })
+    return (j.items ?? []).filter((i: Record<string, any>) => i.edmPreview?.[0]).map((i: Record<string, any>) => {
+      const prev = i.edmPreview[0] + '&size=w400'
+      const grande = i.edmIsShownBy?.[0]?.startsWith('https://') ? i.edmIsShownBy[0] : prev
+      const autor = (i.dcCreator ?? []).find((c: string) => !/^https?:|_person$|^\d/.test(c))
+      return {
+        id: 'eu:' + i.id, fonte: 'eu' as const, titulo: limpa(i.title?.[0]).slice(0, 140) || 'Sem título', autor, data: i.year?.[0],
+        imagem: prev, imagemGrande: grande, link: String(i.guid ?? '').replace(/\?utm_.*$/, '') || `https://www.europeana.eu/item${i.id}`,
+        licenca: licencaEu(i.rights?.[0]) + (i.dataProvider?.[0] ? ' · ' + i.dataProvider[0] : ''),
+        termos: palavras(...(i.dcSubjectLangAware?.en ?? []).slice(0, 4), ...(i.dcTypeLangAware?.en ?? []).slice(0, 2)),
+      }
+    })
+  },
+}
+
+export const FONTES: Fonte[] = [aic, met, wm, cma, vam, smk, rijks, eu]
+export const FONTE: Record<FonteId, Fonte> = { aic, met, wm, cma, vam, smk, rijks, eu }
 
 /** Fontes que dependem de configuração: mostradas com o estado real, nunca simuladas. */
 export const FONTES_PENDENTES = [
-  { nome: 'Europeana', estado: 'Precisa de uma chave gratuita da Europeana (entra na etapa 3, junto com o servidor).' },
   { nome: 'Pinterest', estado: 'Não conectado. A API oficial só dá acesso às suas pastas e pins salvos (etapa 4).' },
 ]
