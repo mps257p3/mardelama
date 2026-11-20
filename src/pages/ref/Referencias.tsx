@@ -78,7 +78,7 @@ export default function Referencias() {
           { l: 'Nova referência', icon: <Plus size={16} />, to: '/referencias/nova' },
           { l: imp ?? 'Importar pasta', icon: <FolderInput size={16} />, disabled: !!imp, onClick: () => pasta.current?.click() },
           { l: 'Importar do Instagram', icon: <AtSign size={16} />, to: '/referencias/instagram' },
-          { l: 'Importar do Pinterest', icon: <Pin size={16} />, to: '/referencias/pinterest' },
+          { l: 'Pinterest', icon: <Pin size={16} />, to: '/referencias/pinterest' },
           { l: '', sep: true },
           { l: f.inspira ? 'Sair do modo inspiração' : 'Modo inspiração', icon: <Sparkles size={16} />, on: f.inspira, onClick: () => mudarFiltro({ inspira: !f.inspira, semente: Date.now() % 100000 }) },
           { l: soImagem ? 'Mostrar posts sem imagem' : 'Esconder posts sem imagem', icon: <AtSign size={16} />, on: soImagem, onClick: () => definirAjuste('refs.soImagem', !soImagem) },
