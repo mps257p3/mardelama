@@ -26,7 +26,7 @@ export interface Perfil {
 export const PESOS_PADRAO: Record<Interacao, number> = { curtir: 1, salvar: 2, painel: 3, semelhantes: 1.5, pesquisar: 0.6, recusar: -2 }
 export const PERFIL_VAZIO: Perfil = {
   termos: {}, universos: {}, artistas: {}, temporario: {}, pesos: PESOS_PADRAO,
-  mistura: { proximo: 60, adjacente: 25, experimental: 15 }, fontes: { aic: true, met: true, wm: true, cma: true, vam: true, smk: true, rijks: true, eu: true },
+  mistura: { proximo: 60, adjacente: 25, experimental: 15 }, fontes: { aic: true, met: true, wm: true, cma: true, vam: true, smk: true, rijks: true, eu: true, mia: true },
   vistos: [], recusados: [], curtidos: [], historico: [],
 }
 const CHAVE = 'descobrir.perfil'
@@ -55,6 +55,7 @@ export const UNIVERSOS: Record<string, { nome: string; consultas: string[]; vizi
   contemporanea: { nome: 'Arte contemporânea', consultas: ['contemporary sculpture', 'installation object', 'assemblage', 'biomorphic sculpture'], vizinhos: ['escultura', 'design-produto'] },
   'literatura-visual': { nome: 'Literatura visual', consultas: ['illuminated manuscript', 'bestiary', 'marginalia', 'emblem book', 'book of hours'], vizinhos: ['ilustracao', 'gravura'] },
   'historia-natural': { nome: 'História natural', consultas: ['natural history illustration', 'shell', 'seed pod', 'mineral specimen', 'fossil', 'coral', 'insect specimen'], vizinhos: ['fotografia', 'ilustracao', 'ceramica'] },
+  americas: { nome: 'Américas', consultas: ['pre-columbian ceramic', 'moche vessel', 'marajoara', 'nazca pottery', 'maya vessel', 'aztec sculpture', 'pueblo pottery', 'mexican folk art', 'brazilian folk art', 'andean textile', 'tlatilco figure', 'colima dog', 'amazonian ceramic', 'santeria figure'], vizinhos: ['ceramica', 'arte-popular', 'objetos'] },
   objetos: { nome: 'Objetos e artefatos', consultas: ['amulet', 'ritual mask', 'vessel', 'reliquary', 'figural vessel', 'toy'], vizinhos: ['ceramica', 'arte-popular', 'escultura'] },
 }
 

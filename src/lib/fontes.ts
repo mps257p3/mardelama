@@ -19,11 +19,11 @@ export interface ItemDescoberta {
   consulta?: string
 }
 
-export type FonteId = 'aic' | 'met' | 'wm' | 'cma' | 'vam' | 'smk' | 'rijks' | 'eu'
+export type FonteId = 'aic' | 'met' | 'wm' | 'cma' | 'vam' | 'smk' | 'rijks' | 'eu' | 'mia'
 export interface Fonte { id: FonteId; nome: string; site: string; buscar: (q: string, n: number, pagina: number) => Promise<ItemDescoberta[]> }
 
 /** Hosts que recusam pedidos do navegador: passam pela ponte do próprio app (/api/fonte). */
-const PELA_PONTE = /^https:\/\/(api\.artic\.edu|www\.artic\.edu|collectionapi\.metmuseum\.org|images\.metmuseum\.org|openaccess-cdn\.clevelandart\.org|api\.europeana\.eu\/record|[a-z0-9.-]+\.cdninstagram\.com|[a-z0-9.-]+\.fbcdn\.net)\//
+const PELA_PONTE = /^https:\/\/(api\.artic\.edu|www\.artic\.edu|collectionapi\.metmuseum\.org|images\.metmuseum\.org|openaccess-cdn\.clevelandart\.org|api\.europeana\.eu\/record|[0-9]\.api\.artsmia\.org|[a-z0-9.-]+\.cdninstagram\.com|[a-z0-9.-]+\.fbcdn\.net)\//
 export const viaPonte = (url: string) => (PELA_PONTE.test(url) ? '/api/fonte?u=' + encodeURIComponent(url) : url)
 const comTempo = async (url: string, init?: RequestInit, ms = 12000) => {
   const c = new AbortController(); const t = setTimeout(() => c.abort(), ms)
@@ -193,8 +193,25 @@ const eu: Fonte = {
   },
 }
 
-export const FONTES: Fonte[] = [aic, met, wm, cma, vam, smk, rijks, eu]
-export const FONTE: Record<FonteId, Fonte> = { aic, met, wm, cma, vam, smk, rijks, eu }
+/** Minneapolis Institute of Art (Mia) — busca aberta, sem chave. Forte em Artes das Américas (pré-colombiana, andina, mesoamericana). */
+const mia: Fonte = {
+  id: 'mia', nome: 'Minneapolis Institute of Art', site: 'https://collections.artsmia.org',
+  async buscar(q, n, pagina) {
+    const j = await comTempo(`https://search.artsmia.org/${encodeURIComponent(q + ' image:valid public_access:1')}?size=${n * 2}&from=${(pagina - 1) * n * 2}`)
+    return (j.hits?.hits ?? []).map((h: { _source: Record<string, any> }) => h._source)
+      .filter((s: Record<string, any>) => s.image === 'valid' && s.rights_type === 'Public Domain' && s.Rights_Image_Display !== 'Thumbnail').slice(0, n)
+      .map((s: Record<string, any>) => ({
+        id: 'mia:' + s.id, fonte: 'mia' as const, titulo: limpa(s.title) || 'Sem título',
+        autor: s.artist && !/artist$/i.test(s.artist) ? s.artist : (s.culture || undefined), data: s.dated || undefined,
+        imagem: `https://${s.id % 7}.api.artsmia.org/400/${s.id}.jpg`, imagemGrande: `https://${s.id % 7}.api.artsmia.org/800/${s.id}.jpg`,
+        link: `https://collections.artsmia.org/art/${s.id}`, licenca: 'Domínio público (Mia)',
+        termos: palavras(s.classification, s.medium, s.culture, s.country, s.object_name, s.continent),
+      }))
+  },
+}
+
+export const FONTES: Fonte[] = [aic, met, wm, cma, vam, smk, rijks, eu, mia]
+export const FONTE: Record<FonteId, Fonte> = { aic, met, wm, cma, vam, smk, rijks, eu, mia }
 
 /** Fontes que dependem de configuração: mostradas com o estado real, nunca simuladas. */
 export const FONTES_PENDENTES = [
