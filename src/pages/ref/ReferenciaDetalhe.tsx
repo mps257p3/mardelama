@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, ExternalLink, Heart, Images, Pencil, Trash2, LayoutDashboard, Sparkles } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Heart, Images, Pencil, Trash2, LayoutDashboard, ScanSearch, Sparkles } from 'lucide-react'
 import { Catalogar } from './Catalogar'
 import { db, uid } from '../../db/schema'
 import { alternarFavorito, excluir, useGrupos, usePaineis } from '../../db/hooks'
@@ -42,6 +42,7 @@ export default function ReferenciaDetalhe() {
             <button className="btn sm" onClick={() => alternarFavorito('referencias', r.id, r.favorito)}><Heart size={14} fill={r.favorito ? 'currentColor' : 'none'} />{r.favorito ? 'Favorita' : 'Favoritar'}</button>
             {(r.imagens.length > 0 || r.imagemExterna) && <button className="btn sm" onClick={() => setCatalogar(true)}><Sparkles size={14} />Sugerir catalogação</button>}
             <button className="btn sm" onClick={() => setAoPainel(true)}><LayoutDashboard size={14} />Levar a um painel</button>
+            <Link className="btn sm" to={`/referencias/descobrir?ref=${r.id}`}><ScanSearch size={14} />Ver semelhantes</Link>
             {r.url && <a className="btn sm" href={r.url} target="_blank" rel="noreferrer"><ExternalLink size={14} />Abrir link</a>}
             <button className="btn sm ghost" onClick={async () => { if (confirm('Excluir esta referência?')) { await excluir('referencias', r.id); nav('/referencias') } }}><Trash2 size={14} />Excluir</button>
           </div>
