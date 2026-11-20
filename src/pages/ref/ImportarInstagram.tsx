@@ -1,7 +1,10 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, FolderInput, Upload } from 'lucide-react'
-import { importarInstagram, lerExportacao, type ExportacaoInstagram } from '../../lib/instagram'
+import { ArrowLeft, FolderInput, ImageDown, Upload } from 'lucide-react'
+import { db } from '../../db/schema'
+import { buscarFotos, estadoInstagram, type Andamento, type EstadoIG } from '../../lib/instagramFotos'
+import { importarInstagram, lerExportacao, pendenteInstagram, type ExportacaoInstagram } from '../../lib/instagram'
 import { useToast } from '../../ui/toast'
 
 /** Coleções que costumam não ser referência de estudo: começam desmarcadas (você decide). */
@@ -49,6 +52,7 @@ export default function ImportarInstagram() {
 
       <input ref={pasta} type="file" hidden multiple {...{ webkitdirectory: '' }} onChange={(e) => ler(e.target.files)} />
       <input ref={soltos} type="file" hidden multiple accept=".json,application/json" onChange={(e) => ler(e.target.files)} />
+      {!ex && <FotosInstagram />}
       {!ex && <div style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
         <button className="btn primary" onClick={() => pasta.current?.click()}><FolderInput size={15} />Escolher a pasta exportada</button>
         <button className="btn" onClick={() => soltos.current?.click()}><Upload size={15} />Escolher os arquivos .json</button>
@@ -75,4 +79,33 @@ export default function ImportarInstagram() {
       </>}
     </div>
   )
+}
+
+/** Preenche as fotos dos posts já importados, pela API oficial (precisa do META_TOKEN na Vercel). */
+function FotosInstagram() {
+  const [est, setEst] = useState<EstadoIG>()
+  const [and, setAnd] = useState<Andamento>()
+  const [rodando, setRodando] = useState(false)
+  const parar = useRef(false)
+  const pendentes = useLiveQuery(async () => (await db.referencias.toArray()).filter((r) => !r.excluido && pendenteInstagram(r)).length, [], 0)
+  useEffect(() => { estadoInstagram().then(setEst) }, [])
+  if (!pendentes && !and) return null
+  async function rodar() {
+    parar.current = false; setRodando(true)
+    try { await buscarFotos(setAnd, () => parar.current) } finally { setRodando(false) }
+  }
+  return <section className="rep-sec ig-fotos">
+    <h3>Fotos dos posts salvos</h3>
+    <p style={{ fontSize: 14 }}><b>{pendentes}</b> posts importados ainda sem foto.</p>
+    {est && !est.configurado && <p className="ia-off">Ligação com a Meta ainda não configurada: falta o <b>META_TOKEN</b> na Vercel. {est.erro && est.erro !== 'Falta o META_TOKEN na Vercel.' ? est.erro : ''}</p>}
+    {est?.configurado && <p className="faint" style={{ fontSize: 13 }}>Conectado como @{est.usuario} (Página {est.pagina}). Só perfis comerciais e de criador têm as fotos disponíveis.</p>}
+    {and && <p style={{ fontSize: 13.5, marginTop: 8 }}>
+      {and.fotos} fotos encontradas · {and.feitosPerfis} de {and.perfis} perfis{and.perfilAtual ? ` · agora: ${and.perfilAtual}` : ''}{and.semFoto ? ` · ${and.semFoto} sem foto disponível` : ''}
+      {and.parou && <><br /><span style={{ color: 'var(--terracota, #B46E4B)' }}>{and.parou}</span></>}
+    </p>}
+    {est?.configurado && <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+      {!rodando ? <button className="btn primary" onClick={rodar} disabled={!pendentes}><ImageDown size={15} />{and ? 'Continuar' : 'Buscar fotos'}</button>
+        : <button className="btn" onClick={() => { parar.current = true }}>Parar</button>}
+    </div>}
+  </section>
 }

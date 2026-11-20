@@ -23,7 +23,7 @@ export type FonteId = 'aic' | 'met' | 'wm'
 export interface Fonte { id: FonteId; nome: string; site: string; buscar: (q: string, n: number, pagina: number) => Promise<ItemDescoberta[]> }
 
 /** Hosts que recusam pedidos do navegador: passam pela ponte do próprio app (/api/fonte). */
-const PELA_PONTE = /^https:\/\/(api\.artic\.edu|www\.artic\.edu|collectionapi\.metmuseum\.org|images\.metmuseum\.org)\//
+const PELA_PONTE = /^https:\/\/(api\.artic\.edu|www\.artic\.edu|collectionapi\.metmuseum\.org|images\.metmuseum\.org|[a-z0-9.-]+\.cdninstagram\.com|[a-z0-9.-]+\.fbcdn\.net)\//
 export const viaPonte = (url: string) => (PELA_PONTE.test(url) ? '/api/fonte?u=' + encodeURIComponent(url) : url)
 const comTempo = async (url: string, init?: RequestInit, ms = 12000) => {
   const c = new AbortController(); const t = setTimeout(() => c.abort(), ms)

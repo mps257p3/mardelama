@@ -8,7 +8,9 @@ export default async function handler(req) {
   const u = new URL(req.url).searchParams.get('u')
   let alvo
   try { alvo = new URL(u || '') } catch { return new Response('URL inválida', { status: 400 }) }
-  if (alvo.protocol !== 'https:' || !PERMITIDOS.includes(alvo.hostname)) return new Response('Host não permitido', { status: 403 })
+  // imagens que a API oficial do Instagram devolveu (CDN da Meta, endereços variam por região)
+  const daMeta = /\.(cdninstagram\.com|fbcdn\.net)$/.test(alvo.hostname)
+  if (alvo.protocol !== 'https:' || !(PERMITIDOS.includes(alvo.hostname) || daMeta)) return new Response('Host não permitido', { status: 403 })
   let r
   try {
     r = await fetch(alvo, { headers: { 'User-Agent': 'MarDeLama/1.0 (atelie pessoal)', 'AIC-User-Agent': 'MarDeLama/1.0 (atelie pessoal)', Accept: req.headers.get('accept') || '*/*' } })
