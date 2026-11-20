@@ -50,7 +50,7 @@ async function usuarioDe(req) {
 }
 const cabecalhos = (u, extra = {}) => ({ apikey: SB_CHAVE, authorization: `Bearer ${u.jwt}`, 'content-type': 'application/json', ...extra })
 function erroTabela(r, corpo) {
-  if (r.status === 404 || /integracoes/.test(corpo) && /does not exist|Could not find/i.test(corpo)) throw new Falha('Falta criar a tabela de conexões no Supabase (rodar supabase/migracao-004.sql).', 503, 'MIGRACAO')
+  if (r.status === 404 || /integracoes/.test(corpo) && /does not exist|Could not find/i.test(corpo)) throw new Falha('Falta criar a tabela de conexões no Supabase (rodar supabase/migracao-pinterest.sql).', 503, 'MIGRACAO')
   throw new Falha('O banco recusou o pedido: ' + corpo.slice(0, 200), 502)
 }
 async function lerLinha(u) {

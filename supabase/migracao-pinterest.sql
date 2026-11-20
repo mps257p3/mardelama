@@ -1,4 +1,4 @@
--- Mar de Lama — migração 004: conexões com serviços externos (Pinterest).
+-- Mar de Lama — migração do Pinterest: conexões com serviços externos (Pinterest).
 -- Rode uma vez no Supabase: SQL Editor > New query > cole este arquivo > Run.
 -- Os tokens ficam cifrados pelo servidor (Vercel) na coluna `cifrado`; o app nunca vê o token em texto.
 -- Nenhum dado existente é alterado.
