@@ -1,6 +1,6 @@
 import { db, type Referencia } from '../db/schema'
 import { lerPerfil, salvarPerfil, UNIVERSOS, type GostoIA } from './curadoria'
-import type { ItemDescoberta } from './fontes'
+import type { FonteId, ItemDescoberta } from './fontes'
 import { FONTE, viaPonte } from './fontes'
 
 /**
@@ -8,7 +8,7 @@ import { FONTE, viaPonte } from './fontes'
  * Sem chave configurada, o app mostra esse estado e segue funcionando sem IA.
  */
 
-export interface Consulta { q: string; universo: string }
+export interface Consulta { q: string; universo: string; fonte?: FonteId; lingua?: string }
 export interface LeituraBusca { leitura: string; consultas: Consulta[] }
 export interface SugestaoCatalogo {
   titulo: string; descricao: string; tipo: string; tags: string[]; grupos: string[]; paleta: string[]; aplicacoes: string[]
@@ -43,15 +43,22 @@ async function chamar<T>(corpo: Record<string, unknown>, ms = 90000): Promise<T>
 
 const topo = (o: Record<string, number>, n: number) => Object.entries(o).filter(([, p]) => p > 0).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k]) => k)
 
-/** Busca em linguagem natural: vira consultas em inglês para os acervos. Guardado na sessão para não pagar duas vezes. */
+/** Em que acervo cada idioma rende: o Rijks cataloga em holandês, o SMK em dinamarquês, a Europeana e a Wikimedia em várias línguas. */
+const ACERVO_DA_LINGUA: Record<string, FonteId[]> = { nl: ['rijks', 'eu'], da: ['smk'], fr: ['eu'], de: ['eu'], it: ['eu'], es: ['eu', 'wm'], pt: ['eu', 'wm'] }
+
+/** Busca em qualquer idioma: vira consultas em inglês para todos os acervos e traduções para os acervos europeus.
+ *  Guardada no aparelho para não pagar a mesma busca duas vezes. */
 export async function interpretarBusca(pedido: string): Promise<LeituraBusca> {
-  const k = 'ia.busca.' + pedido.trim().toLowerCase()
-  try { const c = sessionStorage.getItem(k); if (c) return JSON.parse(c) } catch { /* sem armazenamento */ }
+  const k = 'ia.busca2.' + pedido.trim().toLowerCase()
+  const ja = await db.ajustes.get(k)
+  if (ja?.valor) return ja.valor as LeituraBusca
   const perfil = await lerPerfil()
-  const r = await chamar<LeituraBusca>({ acao: 'buscar', pedido, universos: Object.keys(UNIVERSOS), gosto: topo(perfil.termos, 20) }, 45000)
-  r.consultas = r.consultas.slice(0, 6)
-  try { sessionStorage.setItem(k, JSON.stringify(r)) } catch { /* cheio */ }
-  return r
+  const r = await chamar<LeituraBusca & { outras_linguas?: { lingua: string; q: string }[] }>({ acao: 'buscar', pedido, universos: Object.keys(UNIVERSOS), gosto: topo(perfil.termos, 20) }, 45000)
+  const universo = r.consultas[0]?.universo ?? ''
+  const locais = (r.outras_linguas ?? []).flatMap((o) => (ACERVO_DA_LINGUA[o.lingua] ?? []).map((fonte) => ({ q: o.q, universo, fonte, lingua: o.lingua })))
+  const out: LeituraBusca = { leitura: r.leitura, consultas: [...r.consultas.slice(0, 6), ...locais.slice(0, 10)] }
+  await db.ajustes.put({ chave: k, valor: out })
+  return out
 }
 
 /** Reduz a imagem a 1024 px em JPEG e devolve em base64 (cabe no limite do servidor e custa menos). */
