@@ -13,7 +13,7 @@ const lista = (desc) => ({ type: 'array', items: { type: 'string' }, description
 
 const ESQUEMAS = {
   buscar: {
-    type: 'object', additionalProperties: false, required: ['leitura', 'consultas'],
+    type: 'object', additionalProperties: false, required: ['leitura', 'consultas', 'outras_linguas'],
     properties: {
       leitura: { type: 'string', description: 'Uma frase curta em português dizendo como o pedido foi entendido.' },
       consultas: {
