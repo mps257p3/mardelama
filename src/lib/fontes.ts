@@ -251,7 +251,8 @@ const ov: Fonte = {
 const loc: Fonte = {
   id: 'loc', nome: 'Library of Congress', site: 'https://www.loc.gov/pictures/',
   async buscar(q, n, pagina) {
-    const j = await comTempo(`https://www.loc.gov/photos/?q=${encodeURIComponent(q)}&fo=json&c=${n * 2}&sp=${pagina}&fa=online-format:image`)
+    // a API da LoC costuma levar 5 a 15 s na primeira vez (depois a ponte guarda em cache); por isso o prazo maior
+    const j = await comTempo(`https://www.loc.gov/photos/?q=${encodeURIComponent(q)}&fo=json&at=results&c=${n * 2}&sp=${pagina}&fa=online-format:image`, undefined, 25000)
     // as imagens da LoC só abrem pela ponte (o Cloudflare deles barra o navegador); a versão grande vem do IIIF
     const ponte = (u: string) => '/api/fonte-node?u=' + encodeURIComponent(u)
     const iiif = (u: string, lado: number) => u.replace(/^https:\/\/tile\.loc\.gov\/storage-services\/service\/(.+)\.(jpg|gif)(#.*)?$/, (_, c) => `https://tile.loc.gov/image-services/iiif/service:${c.replace(/\//g, ':')}/full/!${lado},${lado}/0/default.jpg`)
