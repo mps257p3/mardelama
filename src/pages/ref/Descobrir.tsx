@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { BookOpen, Bookmark, BookmarkCheck, Columns2, Compass, ExternalLink, EyeOff, Heart, LayoutDashboard, RefreshCw, Search, SlidersHorizontal, Sparkles, Plug, X, ScanSearch } from 'lucide-react'
 import { db } from '../../db/schema'
@@ -16,7 +17,7 @@ import { CompararObra, ExplicarObra, ObraDoDia, useObraDoDia } from './descobrir
 
 const MODOS: [Modo, string][] = [['para-voce', 'Para você'], ['fora-da-curva', 'Fora da curva'], ['novos-artistas', 'Novos artistas'], ['cores-texturas', 'Cores e texturas'], ['formas-volumes', 'Formas e volumes']]
 const VALIDADE = 30 * 60000   // ao voltar ao Descobrir depois de meia hora, vem um lote novo
-type Contexto = { tipo: 'feed' } | { tipo: 'busca'; q: string; leitura?: string; consultas?: Consulta[]; tema?: string } | { tipo: 'semelhantes'; item: ItemDescoberta } | { tipo: 'curtidas' }
+type Contexto = { tipo: 'feed' } | { tipo: 'busca'; q: string; leitura?: string; consultas?: Consulta[]; tema?: string; deRef?: string } | { tipo: 'semelhantes'; item: ItemDescoberta } | { tipo: 'curtidas' }
 interface Cache { itens: ItemDescoberta[]; quando: number; modo: Modo; ctx: Contexto }
 // o lote fica só na memória: navegar pelo app e voltar mantém o feed; recarregar a página traz material novo
 let memoria: Cache | undefined
@@ -39,6 +40,7 @@ export default function Descobrir() {
   const [curtidos, setCurtidos] = useState<Set<string>>(new Set())
   const [grupoPara, setGrupoPara] = useState<string>()
   const rodada = useRef(0)
+  const [params, setParams] = useSearchParams()
   const fim = useRef<HTMLDivElement>(null)
   const ocupado = useRef(false)
   const salvos = useLiveQuery(async () => new Map((await db.referencias.filter((r) => !!r.origem?.startsWith('descobrir:') && !r.excluido).toArray()).map((r) => [r.origem!.slice(10), r.id])), [], new Map<string, string>())
@@ -81,6 +83,9 @@ export default function Descobrir() {
   // primeira abertura, troca de modo ou feed vencido: busca novo lote
   useEffect(() => {
     const c = cache.current
+    // veio de uma referência do acervo ("Ver semelhantes")
+    const ref = params.get('ref')
+    if (ref) { setParams({}, { replace: true }); cache.current = { itens: [], quando: 0, modo, ctx }; semelhantesDaRef(ref); return }
     if (!c || !c.itens.length || c.modo !== modo || (c.ctx.tipo === 'feed' && Date.now() - c.quando > VALIDADE)) carregar(true, ctx, modo)
     cache.current = { itens: [], quando: 0, modo, ctx }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -91,6 +96,25 @@ export default function Descobrir() {
     const io = new IntersectionObserver((es) => { if (es[0].isIntersecting && itens.length) carregar(false) }, { rootMargin: '900px' })
     io.observe(el); return () => io.disconnect()
   }, [carregar, itens.length])
+
+  /** Obras parecidas com uma referência do acervo: a IA lê título, autor, tags e descrição e monta as buscas. */
+  async function semelhantesDaRef(id: string) {
+    const r = await db.referencias.get(id); if (!r) return
+    let c: Contexto = { tipo: 'busca', q: r.titulo, deRef: r.titulo }
+    setCtx(c); setQ(''); setItens([]); setVisor(undefined); window.scrollTo(0, 0)
+    if (await iaConfigurada()) {
+      setInterpretando(true)
+      try {
+        const l = await interpretarBusca(`Obras parecidas com esta referência do meu acervo (forma, superfície, técnica, tema, autor). Título: ${r.titulo}.${r.autor ? ' Autor: ' + r.autor + '.' : ''} Tipo: ${r.tipo}. Tags: ${r.tags.join(', ') || 'nenhuma'}.${r.descricao ? ' Descrição: ' + r.descricao.slice(0, 400) : ''}`)
+        c = { ...c, leitura: l.leitura, consultas: l.consultas }
+      } catch { /* segue com as tags */ } finally { setInterpretando(false) }
+    }
+    if (!c.consultas?.length) {
+      const base = [r.autor, ...r.tags.slice(0, 5).map(traduz), traduz(r.titulo)].filter((x): x is string => !!x && x.length > 2)
+      c = { ...c, consultas: base.slice(0, 6).map((q) => ({ q, universo: 'objetos' })) }
+    }
+    setCtx(c); carregar(true, c)
+  }
 
   async function agir(item: ItemDescoberta, tipo: Interacao) {
     if (tipo === 'curtir') {
@@ -166,7 +190,7 @@ export default function Descobrir() {
       )}
       {ctx.tipo !== 'feed' && (
         <div className="contexto-desc">
-          <span>{ctx.tipo === 'curtidas' ? <>Suas curtidas{itens.length ? ` (${itens.length})` : ''}</> : ctx.tipo === 'busca' ? (ctx.tema ? <>Tema <b>{ctx.q}</b></> : <>Resultados para <b>“{ctx.q}”</b>{ctx.leitura && <small className="leitura-ia"><Sparkles size={12} /> {ctx.leitura}</small>}</>) : <>Mais como <b>{ctx.item.titulo}</b></>}</span>
+          <span>{ctx.tipo === 'curtidas' ? <>Suas curtidas{itens.length ? ` (${itens.length})` : ''}</> : ctx.tipo === 'busca' ? (ctx.deRef ? <>Semelhantes a <b>{ctx.deRef}</b>{ctx.leitura && <small className="leitura-ia"><Sparkles size={12} /> {ctx.leitura}</small>}</> : ctx.tema ? <>Tema <b>{ctx.q}</b></> : <>Resultados para <b>“{ctx.q}”</b>{ctx.leitura && <small className="leitura-ia"><Sparkles size={12} /> {ctx.leitura}</small>}</>) : <>Mais como <b>{ctx.item.titulo}</b></>}</span>
           <button className="btn sm ghost" onClick={voltarAoFeed}>Voltar ao feed</button>
         </div>
       )}
