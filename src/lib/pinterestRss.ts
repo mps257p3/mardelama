@@ -33,19 +33,25 @@ const nomeDe = (f: FeedRss) => {
 }
 
 /** Começa a acompanhar uma pasta ou perfil: usa o grupo indicado, um grupo com o mesmo nome, ou cria um. */
-export async function acompanhar(link: string, grupoId?: string) {
+export async function acompanhar(link: string, grupoId?: string, extra: { nome?: string; categoria?: string } = {}) {
   const f = await lerRss(link)
   const grupos = (await db.grupos.toArray()).filter((g) => !g.excluido)
-  if (grupos.some((g) => g.rss === f.pagina)) throw new Error('Essa pasta já está sendo acompanhada.')
-  const nome = nomeDe(f)
+  const descricao = [extra.categoria, `Pinterest · ${f.pasta ? `pasta de @${f.perfil}` : 'perfil'} (RSS)`].filter(Boolean).join(' · ')
+  const ja = grupos.find((g) => g.rss === f.pagina)
+  if (ja) {
+    // já acompanhada: só atualiza nome e categoria, se vieram, e traz o que houver de novo
+    if (extra.nome || extra.categoria) await db.grupos.update(ja.id, { ...(extra.nome ? { nome: extra.nome } : {}), descricao, atualizadoEm: Date.now() })
+    return { grupo: { ...ja, nome: extra.nome || ja.nome }, ...(await importarFeed(f, ja.id)), total: f.pins.length, jaAcompanhada: true }
+  }
+  const nome = extra.nome?.trim() || nomeDe(f)
   let g: Grupo | undefined = grupoId ? grupos.find((x) => x.id === grupoId) : grupos.find((x) => chavePasta(x.nome) === chavePasta(nome) && !x.rss)
   if (g) await db.grupos.update(g.id, { rss: f.pagina, atualizadoEm: Date.now() })
-  else { g = novo({ nome, descricao: `Pinterest · ${f.pasta ? `pasta de @${f.perfil}` : 'perfil'} (RSS)`, rss: f.pagina }); await db.grupos.add(g) }
+  else { g = novo({ nome, descricao, rss: f.pagina }); await db.grupos.add(g) }
   // o nome da pasta vira interesse leve do Descobrir
   const perfil = await lerPerfil(); const k = traduz(nome.replace(/^@/, ''))
   if (k.length > 2) { perfil.termos[k] = Math.max(perfil.termos[k] ?? 0, 1); await salvarPerfil(perfil) }
   const r = await importarFeed(f, g.id)
-  return { grupo: g, ...r, total: f.pins.length }
+  return { grupo: g, ...r, total: f.pins.length, jaAcompanhada: false }
 }
 
 /** Busca do Pinterest (não tem RSS): o termo vira interesse do Descobrir. Devolve o termo ou undefined. */
@@ -61,16 +67,29 @@ export async function buscaComoInteresse(link: string) {
   return q
 }
 
-/** Vários links de uma vez (um por linha ou separados por espaço). */
+/**
+ * Vários links de uma vez. Aceita um link por linha, "Nome | link" (o nome vira o nome do grupo)
+ * e linhas sem link como títulos de categoria (vão para a descrição dos grupos seguintes).
+ */
 export async function acompanharVarios(texto: string, aviso?: (t: string) => void) {
-  const links = [...new Set(texto.split(/\s+/).map((x) => x.trim()).filter((x) => /pinterest\.|pin\.it/i.test(x)))]
-  const res = { pastas: [] as string[], buscas: [] as string[], novos: 0, falhas: [] as { link: string; erro: string }[] }
-  for (const [i, link] of links.entries()) {
-    aviso?.(`Lendo ${i + 1} de ${links.length}…`)
-    const busca = await buscaComoInteresse(link)
+  const itens: { link: string; nome?: string; categoria?: string }[] = []
+  let categoria: string | undefined
+  for (const linha of texto.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)) {
+    const links = linha.match(/(?:https?:\/\/)?(?:[a-z]{2,3}\.)?(?:www\.)?(?:pinterest\.[a-z.]+|pin\.it)\/\S*/gi)
+    if (!links) { if (linha.length < 80) categoria = linha[0].toUpperCase() + linha.slice(1).toLowerCase(); continue }
+    const nome = links.length === 1 ? linha.split('|')[0].replace(links[0], '').replace(/[|:–-]\s*$/, '').trim() || undefined : undefined
+    for (const l of links) if (!itens.some((x) => x.link === l)) itens.push({ link: l, nome, categoria })
+  }
+  const res = { pastas: [] as string[], ja: 0, buscas: [] as string[], novos: 0, falhas: [] as { link: string; erro: string }[] }
+  for (const [i, it] of itens.entries()) {
+    aviso?.(`Lendo ${i + 1} de ${itens.length}…`)
+    const busca = await buscaComoInteresse(it.link)
     if (busca) { res.buscas.push(busca); continue }
-    try { const r = await acompanhar(link); res.pastas.push(r.grupo.nome); res.novos += r.novos }
-    catch (e) { res.falhas.push({ link: link.replace(/^https?:\/\/(www\.|br\.)?/, '').replace(/[?#].*$/, ''), erro: (e as Error).message }) }
+    try {
+      const r = await acompanhar(it.link, undefined, { nome: it.nome, categoria: it.categoria })
+      if (r.jaAcompanhada) res.ja++; else res.pastas.push(r.grupo.nome)
+      res.novos += r.novos
+    } catch (e) { res.falhas.push({ link: (it.nome ? it.nome + ' | ' : '') + it.link.replace(/[?#].*$/, ''), erro: (e as Error).message }) }
   }
   return res
 }
