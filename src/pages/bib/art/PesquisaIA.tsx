@@ -22,10 +22,10 @@ const juntar = <T,>(a: T[], b: T[], k: (x: T) => string) => { const vistos = new
 
 /** Pesquisa com IA e busca na web. Nada é gravado sem revisão: a pessoa marca o que quer aproveitar.
  *  Sem `artista`, cria um estudo novo a partir de um nome ou de um link. */
-export function PesquisaIA({ artista: existente, onClose }: { artista?: Artista; onClose: () => void }) {
+export function PesquisaIA({ artista: existente, nomeInicial, onClose }: { artista?: Artista; nomeInicial?: string; onClose: () => void }) {
   const toast = useToast()
   const nav = useNavigate()
-  const [pedido, setPedido] = useState('')
+  const [pedido, setPedido] = useState(nomeInicial ?? '')
   const novoEstudo = !existente
   const a: Artista = existente ?? { ...artistaVazio(), id: '', criadoEm: 0, atualizadoEm: 0, nome: '' } as Artista
   const [ok, setOk] = useState<boolean>()

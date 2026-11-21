@@ -919,3 +919,25 @@ a.visor-btn { text-decoration: none; }
 .pin-rss-lista li { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
 .pin-rss-lista li a { grid-column: 1; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pin-rss-lista li .iconbtn { grid-column: 2; grid-row: 1 / span 2; }
+/* trocar a foto de capa do estudo de artista */
+.art-capa .capa-trocar { position: absolute; left: 10px; top: 10px; background: rgba(30,28,25,.55); color: var(--marfim); border-color: transparent; backdrop-filter: blur(6px); }
+.capa-opcoes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+@media (min-width: 700px) { .capa-opcoes { grid-template-columns: repeat(4, 1fr); } }
+.capa-op { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; border: 2px solid transparent; padding: 0; background: var(--surface-2); cursor: pointer; }
+.capa-op.on { border-color: var(--ink); }
+.capa-op.nova { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12.5px; color: var(--ink-2); border: 1px dashed var(--line); text-decoration: none; }
+.capa-marca { position: absolute; right: 6px; top: 6px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--marfim); }
+/* sugestão de novo estudo a partir das curtidas */
+.art-sugestoes { display: grid; gap: 10px; margin: 4px 0 18px; }
+.art-sugestao { display: flex; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-2); }
+.art-sugestao .fotos { display: flex; flex: none; }
+.art-sugestao .fotos img { width: 54px; height: 70px; object-fit: cover; border-radius: 8px; border: 2px solid var(--surface-2); }
+.art-sugestao .fotos img + img { margin-left: -22px; }
+.art-sugestao .txt { min-width: 0; }
+.art-sugestao .txt p { margin: 0 0 6px; font-size: 14px; }
+.art-sugestao .eyebrow { display: flex; gap: 4px; align-items: center; }
+.art-sugestao .acoes { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* filtro de época: linha discreta, menor que a dos modos */
+.chips.epocas .chip { height: 28px; font-size: 12.5px; background: transparent; }
+.chips.epocas .chip.on { background: var(--marrom); border-color: var(--marrom); color: var(--marfim); }

@@ -21,7 +21,24 @@ export interface ItemDescoberta {
 }
 
 export type FonteId = 'aic' | 'met' | 'wm' | 'cma' | 'vam' | 'smk' | 'rijks' | 'eu' | 'mia' | 'si' | 'ov' | 'loc'
-export interface Fonte { id: FonteId; nome: string; site: string; buscar: (q: string, n: number, pagina: number) => Promise<ItemDescoberta[]> }
+/** Faixa de anos pedida pelo filtro de época. As fontes que aceitam filtram na origem; as outras são filtradas depois. */
+export interface Periodo { de?: number; ate?: number }
+export interface Fonte { id: FonteId; nome: string; site: string; buscar: (q: string, n: number, pagina: number, periodo?: Periodo) => Promise<ItemDescoberta[]> }
+
+/** Ano aproximado a partir do texto de data das fontes ("1890", "ca. 1750", "19th century", "século XIX", "1960s"). */
+export function anoDe(data?: string): number | undefined {
+  if (!data) return undefined
+  const s = String(data).toLowerCase()
+  const seculo = /(\d{1,2})(st|nd|rd|th)\s+century/.exec(s)
+  if (seculo) return (Number(seculo[1]) - 1) * 100 + 50
+  const rom = /s[ée]culo\s+([ivxl]+)/.exec(s)
+  if (rom) { const v: Record<string, number> = { i: 1, v: 5, x: 10, l: 50 }; let t = 0; const c = rom[1]; for (let k = 0; k < c.length; k++) { const a = v[c[k]], b = v[c[k + 1]] ?? 0; t += a < b ? -a : a } return (t - 1) * 100 + 50 }
+  const ac = /(\d{1,4})\s*(bce?|a\.\s?c\.)/.exec(s)
+  if (ac) return -Number(ac[1])
+  const ano = /(?:^|[^\d])(\d{4})(?!\d)/.exec(s)
+  if (ano) { const n = Number(ano[1]); if (n > 0 && n <= new Date().getFullYear() + 1) return n }
+  return undefined
+}
 
 /** Hosts que recusam pedidos do navegador: passam pela ponte do próprio app (/api/fonte). */
 const PELA_PONTE = /^https:\/\/(api\.artic\.edu|www\.artic\.edu|collectionapi\.metmuseum\.org|images\.metmuseum\.org|openaccess-cdn\.clevelandart\.org|api\.europeana\.eu\/record|api\.si\.edu\/openaccess|ids\.si\.edu|www\.loc\.gov|tile\.loc\.gov|[0-9]\.api\.artsmia\.org|[a-z0-9.-]+\.cdninstagram\.com|[a-z0-9.-]+\.fbcdn\.net)\//
@@ -39,9 +56,10 @@ const palavras = (...xs: (string | undefined | null)[]) =>
 /** Art Institute of Chicago — API pública, imagens IIIF (inclui obras com direitos, para uso pessoal). */
 const aic: Fonte = {
   id: 'aic', nome: 'Art Institute of Chicago', site: 'https://www.artic.edu',
-  async buscar(q, n, pagina) {
+  async buscar(q, n, pagina, periodo) {
     const campos = 'id,title,artist_title,date_display,image_id,classification_title,medium_display,place_of_origin,style_title,subject_titles,is_public_domain'
-    const url = `https://api.artic.edu/api/v1/artworks/search?q=${encodeURIComponent(q)}&limit=${n}&page=${pagina}&fields=${campos}`
+    const faixa = (periodo?.de != null ? `&query[range][date_end][gte]=${periodo.de}` : '') + (periodo?.ate != null ? `&query[range][date_start][lte]=${periodo.ate}` : '')
+    const url = `https://api.artic.edu/api/v1/artworks/search?q=${encodeURIComponent(q)}&limit=${n}&page=${pagina}&fields=${campos}${faixa}`
     const j = await comTempo(url)
     const iiif = j.config?.iiif_url ?? 'https://www.artic.edu/iiif/2'
     return (j.data ?? []).filter((d: { image_id?: string }) => d.image_id).map((d: Record<string, any>) => ({
@@ -110,8 +128,9 @@ const cma: Fonte = {
 /** Victoria and Albert Museum (Londres) — um dos maiores acervos de cerâmica do mundo. Imagens IIIF para uso pessoal e de estudo. */
 const vam: Fonte = {
   id: 'vam', nome: 'Victoria and Albert Museum', site: 'https://collections.vam.ac.uk',
-  async buscar(q, n, pagina) {
-    const j = await comTempo(`https://api.vam.ac.uk/v2/objects/search?q=${encodeURIComponent(q)}&images_exist=1&page_size=${n}&page=${pagina}`)
+  async buscar(q, n, pagina, periodo) {
+    const faixa = (periodo?.de != null ? `&year_made_from=${periodo.de}` : '') + (periodo?.ate != null ? `&year_made_to=${periodo.ate}` : '')
+    const j = await comTempo(`https://api.vam.ac.uk/v2/objects/search?q=${encodeURIComponent(q)}&images_exist=1&page_size=${n}&page=${pagina}${faixa}`)
     return (j.records ?? []).filter((r: Record<string, any>) => r._images?._iiif_image_base_url).map((r: Record<string, any>) => {
       const base = r._images._iiif_image_base_url
       const autor = r._primaryMaker?.name && !/^unknown$/i.test(r._primaryMaker.name) ? r._primaryMaker.name : undefined
@@ -178,9 +197,10 @@ const rijks: Fonte = {
 const licencaEu = (u?: string) => !u ? 'Uso pessoal · ver direitos na fonte' : /publicdomain/.test(u) ? 'Domínio público' : /creativecommons\.org\/licenses\/([a-z-]+)/.test(u) ? 'CC ' + u.match(/licenses\/([a-z-]+)/)![1].toUpperCase() : 'Uso pessoal · ver direitos na fonte'
 const eu: Fonte = {
   id: 'eu', nome: 'Europeana', site: 'https://www.europeana.eu',
-  async buscar(q, n, pagina) {
+  async buscar(q, n, pagina, periodo) {
     const url = `https://api.europeana.eu/record/v2/search.json?query=${encodeURIComponent(q)}&rows=${n}&start=${(pagina - 1) * n + 1}` +
-      '&media=true&thumbnail=true&qf=TYPE:IMAGE&profile=standard'
+      '&media=true&thumbnail=true&qf=TYPE:IMAGE&profile=standard' +
+      (periodo?.de != null || periodo?.ate != null ? '&qf=' + encodeURIComponent(`YEAR:[${periodo?.de ?? '*'} TO ${periodo?.ate ?? '*'}]`) : '')
     const j = await comTempo(url).catch((e: Error) => { throw /HTTP 503/.test(e.message) ? new Error('falta a chave gratuita EUROPEANA_KEY na Vercel') : e })
     return (j.items ?? []).filter((i: Record<string, any>) => i.edmPreview?.[0]).map((i: Record<string, any>) => {
       const prev = i.edmPreview[0] + '&size=w400'
