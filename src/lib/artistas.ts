@@ -16,7 +16,7 @@ export const ANALISE = [
   ['materiais', 'Materiais'], ['superficieVolume', 'Superfície e volume'], ['reconhecivel', 'O que torna a obra reconhecível'],
 ] as const
 
-/** Filtros recolhidos do Acervo de artistas. Cada filtro junta um ou mais campos do perfil. */
+/** Filtros recolhidos do Estudos de artistas. Cada filtro junta um ou mais campos do perfil. */
 export const FILTROS = [
   { k: 'pais', l: 'País', ks: ['pais'] },
   { k: 'linguagem', l: 'Linguagem artística', ks: ['esteticas'] },

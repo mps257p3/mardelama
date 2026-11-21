@@ -525,6 +525,62 @@ const ARTISTAS: [string, A][] = [
     tags: ['máscaras', 'engobe colorido', 'relevo'],
     relacionados: ['art-kuwata'],
   }],
+  ['art-nedovic', {
+    ...vazio,
+    nome: 'Sarah Nedovic', pais: ['Austrália'], atuacao: 'Melbourne (ateliê em Abbotsford, Victoria)',
+    especialidade: 'Luminárias e objetos esculturais de cerâmica',
+    linguagem: 'Luminárias esculturais construídas à mão, feitas de formas simples encaixadas e equilibradas, com a argila crua e granulosa à mostra e as marcas dos dedos e das ferramentas deixadas na superfície.',
+    bio: 'Designer de cerâmica e iluminação baseada em Melbourne, na Austrália. Também assinou como Sarah Nedovic Gaunt. Estudou Design Têxtil no RMIT e trabalhou como designer têxtil na indústria da moda por muitos anos. As fontes divergem sobre quantos: The Design Files e Hunter & Folk falam em 13 anos, e o Domain em 17. Local de nascimento não aparece nas fontes consultadas.\n\nComeçou com a argila como passatempo, na cozinha de casa, depois de um curso de escultura de figura humana. A RUSSH situa o início em 2018. Em 2021 a Broadsheet notou que, em menos de três anos, ela tinha passado de amadora a ter peças encomendadas pela Dior. Em 2022 o Dior Institut de Paris encomendou duas luminárias para o seu spa flutuante no Sena.\n\nAs primeiras luminárias se chamam "Lady" e levam o nome de mulheres. A "Lady \'75" homenageia a escultora Barbara Hepworth. Depois vieram uma coleção limitada de castiçais (2020), arandelas em camadas inspiradas no Manchester Unity Building (2022) e as séries Monument e Fibre Tier. Na Melbourne Design Week de 2024 expôs com a Duetto Studio, com a artista de vidro Ruth Allen e com a loja Marion ("Readymade"). Hoje o ateliê tem uma pequena equipe e produz em edições pequenas, sob encomenda.',
+    caracteristicas: ['Luminárias esculturais', 'Formas simples encaixadas', 'Argila crua e granulosa', 'Marcas de mão aparentes', 'Equilíbrio e harmonia'],
+    afinidade: 'Uma ponte entre a cerâmica e o design de interiores. Interessa pela argila deixada crua, com textura de pedra, e pela construção por placas, num caminho oposto ao da superfície esmaltada de Iwasaki.',
+    analise: {
+      formas: 'Discos, estrelas, arcos e cilindros empilhados ou encaixados, formando bases de luminária com ar de escultura modernista.',
+      paleta: 'Tons de argila natural, brancos e areias. Às vezes aparecem pontinhos azuis de fios de cobre misturados à argila, segundo o Domain.',
+      texturas: 'Superfície granulosa, com marcas de dedos e de ferramentas deixadas à mostra.',
+      composicao: 'Peças pensadas como equilíbrio de formas básicas. Ela diz que o design começa em elementos muito simples e depois é só conectá-los.',
+      materiais: 'Argila australiana com bastante chamote ("muito grão e caráter"). Os castiçais Maya usam um composto de pedra e argila.',
+      superficieVolume: 'O volume é o assunto. A superfície fica crua, sem esmalte aparente nas imagens, deixando a argila e a luz trabalharem juntas.',
+      reconhecivel: 'Bases de luminária brancas ou cor de argila, com formas geométricas suaves empilhadas e superfície áspera de pedra.',
+    },
+    processos: [
+      v('Desenho', 'Faz esboços num caderno, depois desenhos em escala real em papel pardo, que ficam presos na parede por algumas semanas antes de ir para a argila.', 'https://www.domain.com.au/living/the-melbourne-made-clay-lamps-lighting-up-everything-from-homes-to-dior-installations-1269681/'),
+      v('Construção manual', 'Constrói à mão o corpo das luminárias. O design continua mudando durante a construção.', 'https://hunterandfolk.com/journal/sarah-nedovic'),
+      v('Placas, rolos e extrusão', 'O site do ateliê cita construção com placas, acordelado (rolos) e extrusão. No Domain ela descreve as placas sendo abertas com rolo.', 'https://sarahnedovic.com/'),
+      v('Argila', 'Escolhe argilas com muito grão e caráter, porque quer a textura da superfície visível, e se interessa pela geologia e pela origem da argila.', 'https://thedesignfiles.net/2020/06/creativepeople-sarah-nedovic-artist'),
+      v('Secagem', 'Conta que a argila "tem memória": uma curva corrigida durante a secagem volta a aparecer no forno.', 'https://www.domain.com.au/living/the-melbourne-made-clay-lamps-lighting-up-everything-from-homes-to-dior-installations-1269681/'),
+      v('Acabamentos', 'Deixa à mostra as marcas dos dedos e das ferramentas e as imperfeições do material.', 'https://www.russh.com/sarah-nedovic-gaunt-ceramics-collection/'),
+      v('Queima', 'Em 2020 as peças eram queimadas fora do ateliê. Secagem, queima e instalação elétrica levam semanas.', 'https://thedesignfiles.net/2020/06/creativepeople-sarah-nedovic-artist'),
+      leitura('Superfície', 'Nas imagens, a maior parte das bases parece sem esmalte, com a argila queimada à vista. Algumas aparecem pintadas de branco.'),
+      hip('Queima', 'Temperatura, tipo de forno e marca da argila não são informados nas fontes.'),
+    ],
+    estudar: [
+      'Do desenho em escala real à peça: papel pardo na parede antes da argila.',
+      'Placas grossas montadas como escultura, com estrutura para a parte elétrica.',
+      'Argila com chamote deixada crua: textura de pedra sem esmalte.',
+      'A memória da argila: como evitar que curvas corrigidas voltem no forno.',
+      'Composição com formas básicas encaixadas (disco, arco, estrela).',
+      'Referências modernistas: Barbara Hepworth, Jean Arp, Isamu Noguchi.',
+    ],
+    publicacoes: [
+      f('Creative People: Sarah Nedovic — The Design Files', 'https://thedesignfiles.net/2020/06/creativepeople-sarah-nedovic-artist', 'Entrevistas', '2020'),
+      f('Sarah Nedovic — Hunter & Folk (fotos de Lauren Bamford)', 'https://hunterandfolk.com/journal/sarah-nedovic', 'Entrevistas'),
+      f('Coleção de castiçais — RUSSH', 'https://www.russh.com/sarah-nedovic-gaunt-ceramics-collection/', 'Reportagens', '2020'),
+      f('Castiçais esculturais — Broadsheet', 'https://www.broadsheet.com.au/national/home-and-lifestyle/article/these-striking-new-ceramic-candleholders-sculptor-sarah-nedovic-gaunt-make-lighting-candles-event', 'Reportagens', '2021'),
+      f('Arandelas em camadas — Broadsheet', 'https://www.broadsheet.com.au/national/home-and-lifestyle/article/sarah-nedovic-gaunt-introduces-sculptural-tiered-sconces-her-repertoire', 'Reportagens', '2022'),
+      f('Studio visit — Broadsheet / Domain', 'https://www.domain.com.au/living/the-melbourne-made-clay-lamps-lighting-up-everything-from-homes-to-dior-installations-1269681/', 'Entrevistas', '2024'),
+    ],
+    fontes: [
+      f('Site oficial', 'https://sarahnedovic.com/', 'Site oficial'),
+      f('Craft Victoria — diretório de artistas', 'https://craft.org.au/makers/maker-directory/sarah-nedovic', 'Catálogos'),
+      f('The Design Files (2020)', 'https://thedesignfiles.net/2020/06/creativepeople-sarah-nedovic-artist', 'Revistas'),
+      f('Domain / Broadsheet (2024)', 'https://www.domain.com.au/living/the-melbourne-made-clay-lamps-lighting-up-everything-from-homes-to-dior-installations-1269681/', 'Revistas'),
+    ],
+    site: 'https://sarahnedovic.com/', instagram: 'sarah_nedovic',
+    retrato: 'https://thedesignfiles.wpenginepowered.com/wp-content/uploads/2020/06/SarahNedovic-SV-tdf-17.jpg',
+    tecnicas: ['Construção manual', 'Placas', 'Acordelado', 'Extrusão'], materiais: ['Argila com chamote', 'Composto de pedra e argila'], esmaltes: ['Argila crua aparente', 'Marcas de mão'], queimas: [], esteticas: ['Escultórica', 'Modernista', 'Mineral'], tiposObra: ['Luminárias', 'Castiçais', 'Arandelas', 'Objetos'],
+    tags: ['luminárias', 'argila crua', 'placas'],
+    relacionados: ['art-ueda', 'art-hamana'],
+  }],
 ]
 
 type O = Omit<Obra, 'id' | 'criadoEm' | 'atualizadoEm' | 'excluido' | 'favorito' | 'tags'> & { tags?: string[] }
@@ -585,16 +641,25 @@ const OBRAS: [string, O][] = [
   ['obra-romanowska-6', { artistaId: 'art-romanowska', titulo: 'Máscara (título não informado)', serie: 'Colossal 2024', materiais: 'Grés e engobes coloridos', tecnica: 'Construção manual', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2024/06/karolina-9-1.jpg', fonte: 'https://www.thisiscolossal.com/2024/06/karolina-romanowska-masks/', credito: '© Karolina Romanowska, via Colossal' }],
   ['obra-romanowska-7', { artistaId: 'art-romanowska', titulo: 'Máscara (título não informado)', serie: 'Colossal 2024', materiais: 'Grés e engobes coloridos', tecnica: 'Construção manual', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2024/06/karolina-3-1-scaled.jpg', fonte: 'https://www.thisiscolossal.com/2024/06/karolina-romanowska-masks/', credito: '© Karolina Romanowska, via Colossal' }],
   ['obra-romanowska-8', { artistaId: 'art-romanowska', titulo: 'Máscara (título não informado)', serie: 'Colossal 2024', materiais: 'Grés e engobes coloridos', tecnica: 'Construção manual', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2024/06/karolina-2-1-scaled.jpg', fonte: 'https://www.thisiscolossal.com/2024/06/karolina-romanowska-masks/', credito: '© Karolina Romanowska, via Colossal' }],
+  ['obra-nedovic-lady54', { artistaId: 'art-nedovic', titulo: "Lady '54", serie: 'Lady (luminárias)', materiais: 'Argila', tecnica: 'Construção manual', imagem: 'https://images.squarespace-cdn.com/content/v1/6401748144c9bd5c9d73ceb1/1681495175600-0HOQ5FKRPP29X6CSHI7P/image-asset.jpeg', fonte: 'https://hunterandfolk.com/journal/sarah-nedovic', credito: 'Foto: Lauren Bamford, via Hunter & Folk' }],
+  ['obra-nedovic-lady99', { artistaId: 'art-nedovic', titulo: "Lady '99", serie: 'Lady (luminárias)', materiais: 'Argila', tecnica: 'Construção manual', imagem: 'https://images.squarespace-cdn.com/content/v1/6401748144c9bd5c9d73ceb1/1681495278197-LF442PY9BV6NTRIV0T7M/image-asset.jpeg', fonte: 'https://hunterandfolk.com/journal/sarah-nedovic', credito: 'Foto: Lauren Bamford, via Hunter & Folk' }],
+  ['obra-nedovic-lady18', { artistaId: 'art-nedovic', titulo: "Lady '18", serie: 'Lady (luminárias)', materiais: 'Argila', tecnica: 'Construção manual', imagem: 'https://images.squarespace-cdn.com/content/v1/6401748144c9bd5c9d73ceb1/1681495398360-0IR2WQQ0CT162SMJRFU2/image-asset.jpeg', fonte: 'https://hunterandfolk.com/journal/sarah-nedovic', credito: 'Foto: Lauren Bamford, via Hunter & Folk' }],
+  ['obra-nedovic-ladyatelie', { artistaId: 'art-nedovic', titulo: 'Base de luminária Lady em acabamento', serie: 'Lady (luminárias)', ano: '2020', materiais: 'Argila', tecnica: 'Construção manual', imagem: 'https://thedesignfiles.wpenginepowered.com/wp-content/uploads/2020/06/SarahNedovic-SV-tdf-10.jpg', fonte: 'https://thedesignfiles.net/2020/06/creativepeople-sarah-nedovic-artist', credito: '© The Design Files' }],
+  ['obra-nedovic-forma', { artistaId: 'art-nedovic', titulo: 'Escultura inspirada na forma feminina', ano: '2020', materiais: 'Argila', tecnica: 'Construção manual', imagem: 'https://thedesignfiles.wpenginepowered.com/wp-content/uploads/2020/06/SarahNedovic-SV-tdf-1.jpg', fonte: 'https://thedesignfiles.net/2020/06/creativepeople-sarah-nedovic-artist', credito: '© The Design Files' }],
+  ['obra-nedovic-branca', { artistaId: 'art-nedovic', titulo: 'Base de luminária em argila branca', ano: '2024', materiais: 'Argila branca', tecnica: 'Placas', imagem: 'https://res.domain.com.au/domain/image/upload/ar_4:5,c_fill,g_auto,w_1024/f_webp/v1710740799/H.Walker_SarahNedovic_112_y6ebgm.jpg', fonte: 'https://www.domain.com.au/living/the-melbourne-made-clay-lamps-lighting-up-everything-from-homes-to-dior-installations-1269681/', credito: 'Foto: Hilary Walker, via Domain' }],
+  ['obra-nedovic-castical', { artistaId: 'art-nedovic', titulo: 'Castiçais (coleção limitada)', serie: 'Castiçais 2020', ano: '2020', materiais: 'Argila; composto de pedra e argila', tecnica: 'Construção manual', imagem: 'https://www.russh.com/wp-content/uploads/2020/12/JTR73537.jpg', fonte: 'https://www.russh.com/sarah-nedovic-gaunt-ceramics-collection/', credito: 'Foto: Josh Robenstone, via RUSSH' }],
+  ['obra-nedovic-arandela', { artistaId: 'art-nedovic', titulo: 'Arandela em camadas', serie: 'Tier', ano: '2022', materiais: 'Argila australiana', tecnica: 'Construção manual', imagem: 'https://cdn.broadsheet.com.au/cache/3c/e7/3ce787c9be68a2b34f87a6bbe8a9d1d0.jpg', fonte: 'https://www.broadsheet.com.au/national/home-and-lifestyle/article/sarah-nedovic-gaunt-introduces-sculptural-tiered-sconces-her-repertoire', credito: 'Foto: Lillie Thompson, cortesia da artista, via Broadsheet' }],
 ]
 const CAPAS: Record<string, string> = {
   'art-kuwata': 'obra-kuwata-artbasel', 'art-segawa': 'obra-segawa-instalacao', 'art-hirai': 'obra-hirai-moonjar-2017', 'art-kusaka': 'obra-kusaka-line103',
   'art-hamana': 'obra-hamana-uzu', 'art-ueda': 'obra-ueda-2018', 'art-yamada': 'obra-yamada-enbu-2020', 'art-koie': 'obra-koie-oribe',
   'art-ichikawa': 'obra-ichikawa-vp6', 'art-aizawa': 'obra-aizawa-sarai', 'art-romanowska': 'obra-romanowska-5', 'art-kakurezaki': 'obra-kakurezaki-mukozuke',
+  'art-nedovic': 'obra-nedovic-lady54',
 }
 
 /** Semeia o catálogo uma vez por aparelho, com ids fixos (não duplica entre aparelhos nem apaga o que já foi editado). */
 export async function semearArtistas() {
-  if (await db.ajustes.get('seed-artistas-v3')) return
+  if (await db.ajustes.get('seed-artistas-v4')) return
   const existentesA = new Set((await db.artistas.toArray()).map((x) => x.id))
   const existentesO = new Set((await db.obras.toArray()).map((x) => x.id))
   const as: Artista[] = ARTISTAS.filter(([id]) => !existentesA.has(id)).map(([id, a], i) => ({
@@ -602,5 +667,5 @@ export async function semearArtistas() {
   }))
   const os: Obra[] = OBRAS.filter(([id]) => !existentesO.has(id)).map(([id, o], i) => ({ ...base(id, i), tags: [], ...o }))
   await db.transaction('rw', db.artistas, db.obras, async () => { await db.artistas.bulkAdd(as); await db.obras.bulkAdd(os) })
-  await db.ajustes.put({ chave: 'seed-artistas-v3', valor: true })
+  await db.ajustes.put({ chave: 'seed-artistas-v4', valor: true })
 }
