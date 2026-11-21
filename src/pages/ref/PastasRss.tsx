@@ -4,7 +4,7 @@ import { RefreshCw, X } from 'lucide-react'
 import { db } from '../../db/schema'
 import { useAjuste, definirAjuste } from '../../db/settings'
 import { useToast } from '../../ui/toast'
-import { acompanhar, atualizarRss, deixarDeAcompanhar, type ResultadoRss } from '../../lib/pinterestRss'
+import { acompanharVarios, atualizarRss, deixarDeAcompanhar, type ResultadoRss } from '../../lib/pinterestRss'
 
 const quando = (t?: number) => t ? new Date(t).toLocaleString('pt-BR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'nunca'
 const resumo = (r: ResultadoRss) => (r.novos || r.atualizados ? `${r.novos} pins novos${r.atualizados ? `, ${r.atualizados} atualizados` : ''}${r.analisados ? `, ${r.analisados} organizados pela IA` : ''}` : 'nada novo') + (r.falhas.length ? ` · ${r.falhas.length} com erro` : '')
@@ -17,14 +17,21 @@ export function PastasRss() {
   const ia = useAjuste<boolean>('pinterest.rss.ia', false)
   const [link, setLink] = useState('')
   const [ocupado, setOcupado] = useState<string>()
+  const [falhas, setFalhas] = useState<{ link: string; erro: string }[]>([])
 
   async function adicionar() {
     if (!link.trim()) return
-    setOcupado('Lendo a pasta…')
+    setOcupado('Lendo…')
     try {
-      const r = await acompanhar(link.trim())
-      setLink('')
-      toast(`Acompanhando “${r.grupo.nome}”: ${r.novos} pins novos${r.atualizados ? `, ${r.atualizados} já estavam no Acervo` : ''}`)
+      const r = await acompanharVarios(link, (t) => setOcupado(t))
+      const partes = [
+        r.pastas.length ? `${r.pastas.length === 1 ? `Acompanhando “${r.pastas[0]}”` : `${r.pastas.length} pastas acompanhadas`}: ${r.novos} pins novos` : '',
+        r.buscas.length ? `${r.buscas.length} ${r.buscas.length === 1 ? 'busca virou interesse' : 'buscas viraram interesses'} do Descobrir` : '',
+        r.falhas.length ? `${r.falhas.length} não deram certo` : '',
+      ].filter(Boolean)
+      toast(partes.join(' · ') || 'Nenhum link do Pinterest encontrado')
+      setFalhas(r.falhas)
+      setLink(r.falhas.map((f) => f.link).join('\n'))
     } catch (e) { toast((e as Error).message) } finally { setOcupado(undefined) }
   }
   async function atualizar() {
@@ -35,11 +42,12 @@ export function PastasRss() {
   return (
     <section className="pin-conta">
       <h3>Pastas públicas</h3>
-      <p className="faint">Cole o link de uma pasta pública do Pinterest (sua ou de qualquer pessoa) ou de um perfil. O app lê o RSS oficial dela e traz os pins novos para o Acervo, no grupo com o nome da pasta. Não precisa de login. Pastas secretas não têm RSS.</p>
+      <p className="faint">Cole o link de uma pasta pública do Pinterest (sua ou de qualquer pessoa) ou de um perfil. O app lê o RSS oficial dela e traz os pins novos para o Acervo, no grupo com o nome da pasta. Não precisa de login. Pode colar vários links de uma vez, um por linha. Links de busca do Pinterest viram interesses do Descobrir (buscas não têm RSS). Pastas secretas não têm RSS.</p>
       <div className="pin-rss-add">
-        <input className="input" inputMode="url" placeholder="https://br.pinterest.com/perfil/nome-da-pasta/" value={link} onChange={(e) => setLink(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && adicionar()} />
-        <button className="btn primary" disabled={!!ocupado || !link.trim()} onClick={adicionar}>Acompanhar</button>
+        <textarea className="input" rows={link.includes('\n') ? 4 : 1} inputMode="url" placeholder="https://br.pinterest.com/perfil/nome-da-pasta/" value={link} onChange={(e) => setLink(e.target.value)} />
+        <button className="btn primary" disabled={!!ocupado || !link.trim()} onClick={adicionar}>{ocupado ?? 'Acompanhar'}</button>
       </div>
+      {falhas.map((f) => <p key={f.link} className="faint" style={{ fontSize: 12.5 }}>{f.link}: {f.erro}</p>)}
       {pastas.length > 0 && <>
         <ul className="pin-rss-lista">
           {pastas.map((g) => (

@@ -48,6 +48,33 @@ export async function acompanhar(link: string, grupoId?: string) {
   return { grupo: g, ...r, total: f.pins.length }
 }
 
+/** Busca do Pinterest (não tem RSS): o termo vira interesse do Descobrir. Devolve o termo ou undefined. */
+export async function buscaComoInteresse(link: string) {
+  let u: URL
+  try { u = new URL(/^https?:\/\//i.test(link) ? link : 'https://' + link) } catch { return undefined }
+  if (!/pinterest\./i.test(u.hostname) || !/^\/search\//.test(u.pathname)) return undefined
+  const q = (u.searchParams.get('q') ?? '').trim().toLowerCase()
+  if (!q) return undefined
+  const perfil = await lerPerfil(); const k = traduz(q)
+  perfil.termos[k] = Math.max(perfil.termos[k] ?? 0, 2)
+  await salvarPerfil(perfil)
+  return q
+}
+
+/** Vários links de uma vez (um por linha ou separados por espaço). */
+export async function acompanharVarios(texto: string, aviso?: (t: string) => void) {
+  const links = [...new Set(texto.split(/\s+/).map((x) => x.trim()).filter((x) => /pinterest\.|pin\.it/i.test(x)))]
+  const res = { pastas: [] as string[], buscas: [] as string[], novos: 0, falhas: [] as { link: string; erro: string }[] }
+  for (const [i, link] of links.entries()) {
+    aviso?.(`Lendo ${i + 1} de ${links.length}…`)
+    const busca = await buscaComoInteresse(link)
+    if (busca) { res.buscas.push(busca); continue }
+    try { const r = await acompanhar(link); res.pastas.push(r.grupo.nome); res.novos += r.novos }
+    catch (e) { res.falhas.push({ link: link.replace(/^https?:\/\/(www\.|br\.)?/, '').replace(/[?#].*$/, ''), erro: (e as Error).message }) }
+  }
+  return res
+}
+
 export async function deixarDeAcompanhar(grupoId: string) {
   await db.grupos.update(grupoId, { rss: undefined, atualizadoEm: Date.now() })
 }

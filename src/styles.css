@@ -941,3 +941,5 @@ a.visor-btn { text-decoration: none; }
 /* filtro de época: linha discreta, menor que a dos modos */
 .chips.epocas .chip { height: 28px; font-size: 12.5px; background: transparent; }
 .chips.epocas .chip.on { background: var(--marrom); border-color: var(--marrom); color: var(--marfim); }
+.pin-rss-add { align-items: flex-start; }
+.pin-rss-add textarea.input { resize: vertical; min-height: 40px; font-size: 13.5px; line-height: 1.4; padding-top: 9px; }
