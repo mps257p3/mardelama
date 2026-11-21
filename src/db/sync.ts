@@ -11,7 +11,7 @@ import { definirAjuste } from './settings'
 
 export interface ConfigNuvem { url: string; chave: string }
 
-const TABELAS = ['familias', 'esmaltes', 'receitas', 'versoes', 'testes', 'materiais', 'referencias', 'grupos', 'paineis', 'conteudos', 'notas', 'curvas', 'queimas', 'comerciais', 'lotes', 'fornecedores', 'compras', 'projetos', 'entrada', 'paletas'] as const
+const TABELAS = ['familias', 'esmaltes', 'receitas', 'versoes', 'testes', 'materiais', 'referencias', 'grupos', 'paineis', 'conteudos', 'notas', 'curvas', 'queimas', 'comerciais', 'lotes', 'fornecedores', 'compras', 'projetos', 'entrada', 'paletas', 'artistas', 'obras', 'colecoes', 'exposicoes'] as const
 /** Tabela ainda não criada no Supabase (migração pendente): pula sem interromper o resto. */
 const faltaTabela = (e: { code?: string; message?: string }) => e.code === '42P01' || e.code === 'PGRST205' || /does not exist|Could not find the table/i.test(e.message ?? '')
 /** Ajustes que viajam entre aparelhos: o perfil de gosto do Descobrir. */

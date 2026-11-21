@@ -33,7 +33,15 @@ import Biblioteca from './pages/bib/Biblioteca'
 import ConteudoForm from './pages/bib/ConteudoForm'
 import ConteudoDetalhe from './pages/bib/ConteudoDetalhe'
 import SecaoBiblioteca from './pages/bib/SecaoBiblioteca'
-import { SECOES } from './lib/biblioteca'
+import { SECOES, SECOES_PROPRIAS } from './lib/biblioteca'
+import Artistas from './pages/bib/art/Artistas'
+import ArtistaDetalhe from './pages/bib/art/ArtistaDetalhe'
+import ArtistaForm from './pages/bib/art/ArtistaForm'
+import ObraDetalhe from './pages/bib/art/ObraDetalhe'
+import ObraForm from './pages/bib/art/ObraForm'
+import { ColecaoDetalhe, ColecoesLista } from './pages/bib/art/Colecoes'
+import Glossario from './pages/bib/Glossario'
+import Agenda from './pages/bib/Agenda'
 import Caderno from './pages/cad/Caderno'
 import NotaEditor from './pages/cad/NotaEditor'
 import NotaNova from './pages/cad/NotaNova'
@@ -98,7 +106,18 @@ export default function App() {
           <Route path="paineis/:id" element={<PainelEditor />} />
           <Route path="biblioteca" element={<Biblioteca />} />
           <Route path="biblioteca/novo" element={<ConteudoForm key="novo" />} />
-          {SECOES.map((x) => <Route key={x.slug} path={`biblioteca/${x.slug}`} element={<SecaoBiblioteca key={x.slug} slug={x.slug} />} />)}
+          <Route path="biblioteca/artistas" element={<Artistas />} />
+          <Route path="biblioteca/artistas/novo" element={<ArtistaForm key="novo" />} />
+          <Route path="biblioteca/artistas/:id" element={<ArtistaDetalhe />} />
+          <Route path="biblioteca/artistas/:id/editar" element={<ArtistaForm />} />
+          <Route path="biblioteca/obras/nova" element={<ObraForm key="nova" />} />
+          <Route path="biblioteca/obras/:id" element={<ObraDetalhe />} />
+          <Route path="biblioteca/obras/:id/editar" element={<ObraForm />} />
+          <Route path="biblioteca/colecoes" element={<ColecoesLista />} />
+          <Route path="biblioteca/colecoes/:id" element={<ColecaoDetalhe />} />
+          <Route path="biblioteca/glossario" element={<Glossario />} />
+          <Route path="biblioteca/agenda" element={<Agenda />} />
+          {SECOES.filter((x) => !SECOES_PROPRIAS.has(x.slug)).map((x) => <Route key={x.slug} path={`biblioteca/${x.slug}`} element={<SecaoBiblioteca key={x.slug} slug={x.slug} />} />)}
           <Route path="biblioteca/:id" element={<ConteudoDetalhe />} />
           <Route path="biblioteca/:id/editar" element={<ConteudoForm />} />
           <Route path="caderno" element={<Caderno />} />

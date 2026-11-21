@@ -28,7 +28,7 @@ export function iaConfigurada(): Promise<boolean> {
   return estado
 }
 
-async function chamar<T>(corpo: Record<string, unknown>, ms = 90000): Promise<T> {
+export async function chamar<T>(corpo: Record<string, unknown>, ms = 90000): Promise<T> {
   const c = new AbortController(); const t = setTimeout(() => c.abort(), ms)
   try {
     const r = await fetch('/api/ia', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(corpo), signal: c.signal })

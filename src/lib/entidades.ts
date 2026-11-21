@@ -6,6 +6,7 @@ export const ROTULO: Partial<Record<Tipo, string>> = {
   esmalte: 'Esmalte', receita: 'Receita', teste: 'Teste', material: 'Material',
   referencia: 'Referência', conteudo: 'Biblioteca', nota: 'Caderno', painel: 'Painel',
   familia: 'Família', curva: 'Curva de queima', comercial: 'Engenharia reversa',
+  artista: 'Artista', obra: 'Obra', colecao: 'Coleção', exposicao: 'Exposição',
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -19,6 +20,10 @@ export const DEF: Partial<Record<Tipo, { tabela: string; r: (x: any) => Omit<Res
   familia: { tabela: 'familias', r: (x) => ({ titulo: x.nome, sub: x.codigo ?? 'Família', to: `/familias/${x.id}` }) },
   curva: { tabela: 'curvas', r: (x) => ({ titulo: x.nome, sub: x.codigo, to: `/curvas/${x.id}` }) },
   comercial: { tabela: 'comerciais', r: (x) => ({ titulo: `${x.fabricante} ${x.nome}`, sub: x.codigo ?? 'Esmalte comercial', foto: x.fotos?.[0], to: `/engenharia-reversa/${x.id}` }) },
+  artista: { tabela: 'artistas', r: (x) => ({ titulo: x.nome, sub: [x.pais?.join(' / '), x.especialidade].filter(Boolean).join(' · '), foto: x.fotos?.[0], fotoUrl: x.retrato, to: `/biblioteca/artistas/${x.id}` }) },
+  obra: { tabela: 'obras', r: (x) => ({ titulo: x.titulo || x.serie || 'Obra sem título', sub: [x.serie, x.ano].filter(Boolean).join(' · ') || 'Obra', foto: x.arquivo, fotoUrl: x.imagem, to: `/biblioteca/obras/${x.id}` }) },
+  colecao: { tabela: 'colecoes', r: (x) => ({ titulo: x.nome, sub: `${x.itens?.length ?? 0} itens`, to: `/biblioteca/colecoes/${x.id}` }) },
+  exposicao: { tabela: 'exposicoes', r: (x) => ({ titulo: x.titulo, sub: [x.local, x.fim ? 'até ' + x.fim.split('-').reverse().join('/') : x.fimAprox].filter(Boolean).join(' · '), to: `/biblioteca/agenda#${x.id}` }) },
   nota: { tabela: 'notas', r: (x) => ({ titulo: x.titulo || 'Anotação', sub: new Date(x.criadoEm).toLocaleDateString('pt-BR'), foto: x.imagens?.[0], to: `/caderno/${x.id}` }) },
 }
 

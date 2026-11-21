@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ImagePlus, Link2, Plus, RotateCcw, Search } from 'lucide-react'
+import { GLOSSARIO } from '../../lib/glossario'
 import { db, type Tipo } from '../../db/schema'
 import { useAjuste, definirAjuste } from '../../db/settings'
 import { useArquivoUrl, salvarArquivo } from '../../db/files'
@@ -31,7 +32,7 @@ function CardSecao({ s, n, grande }: { s: SecaoBib; n: number; grande: boolean }
       <CapaImg s={s} />
       <span className="bib-veu" />
       <span className="bib-txt">
-        <span className="bib-n">{n ? `${n} ${n === 1 ? 'item' : 'itens'}` : ' '}</span>
+        <span className="bib-n">{n ? `${n} ${UNID[s.slug]?.[n === 1 ? 0 : 1] ?? (n === 1 ? 'item' : 'itens')}` : ' '}</span>
         <span className="bib-nome">{s.nome}</span>
         <span className="bib-desc">{s.desc}</span>
       </span>
@@ -40,6 +41,7 @@ function CardSecao({ s, n, grande }: { s: SecaoBib; n: number; grande: boolean }
 }
 
 /** Ritmo do feed: cards grandes (largura inteira no celular) alternando com pares. */
+const UNID: Record<string, [string, string]> = { artistas: ['artista', 'artistas'], glossario: ['termo', 'termos'], agenda: ['exposição', 'exposições'] }
 const GRANDES = new Set(['artistas', 'materiais', 'leituras'])
 
 export default function Biblioteca() {
@@ -48,12 +50,15 @@ export default function Biblioteca() {
   const [capas, setCapas] = useState(false)
   const conteudos = useLiveQuery(async () => (await db.conteudos.toArray()).filter((x) => !x.excluido), [], [])
   const nArtistas = useLiveQuery(async () => db.tables.some((t) => t.name === 'artistas') ? (await db.table('artistas').toArray()).filter((x) => !x.excluido).length : 0, [], 0)
+  const nExpos = useLiveQuery(async () => { const hoje = new Date().toISOString().slice(0, 10); return db.tables.some((t) => t.name === 'exposicoes') ? (await db.table('exposicoes').toArray()).filter((x) => !x.excluido && (!x.fim || x.fim >= hoje)).length : 0 }, [], 0)
   const porSecao = useMemo(() => {
     const m = new Map<string, number>()
     conteudos.forEach((c) => { const s = secaoDaCategoria(c.categoria).slug; m.set(s, (m.get(s) ?? 0) + 1) })
     m.set('artistas', (m.get('artistas') ?? 0) + nArtistas)
+    m.set('glossario', GLOSSARIO.length)
+    m.set('agenda', nExpos)
     return m
-  }, [conteudos, nArtistas])
+  }, [conteudos, nArtistas, nExpos])
 
   useEffect(() => {
     if (!q.trim()) { setRes(undefined); return }
