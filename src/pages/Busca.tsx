@@ -13,7 +13,7 @@ function Linhas({ itens }: { itens: Resumo[] }) {
       <p className="eyebrow">{ROTULO[t]} · {rs.length}</p>
       <div className="lista">{rs.map((r) => (
         <Link key={r.id} to={r.to}>
-          <div className="mini">{r.foto ? <Foto id={r.foto} /> : <Link2 size={18} strokeWidth={1.3} />}</div>
+          <div className="mini">{r.foto ? <Foto id={r.foto} /> : r.fotoUrl ? <img src={r.fotoUrl} alt="" referrerPolicy="no-referrer" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Link2 size={18} strokeWidth={1.3} />}</div>
           <div><div className="t">{r.titulo}</div><div className="s">{r.sub}</div></div><span />
         </Link>))}</div>
     </section>))}</>

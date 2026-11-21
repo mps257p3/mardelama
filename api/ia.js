@@ -216,6 +216,90 @@ function aparar(o) {
   return o
 }
 
+// Pesquisa de artista com busca na web. Só roda quando a pessoa aperta o botão (custa alguns centavos).
+// A resposta vem em JSON dentro do texto (a busca na web e o formato estruturado não são combinados aqui)
+// e é validada antes de voltar para o app, que mostra tudo para revisão antes de gravar.
+const SISTEMA_ARTISTA = `Você pesquisa ceramistas contemporâneos para o ateliê de um ceramista brasileiro.
+Escreva em português do Brasil, sóbrio e preciso.
+Use a busca na web. Prefira, nesta ordem: site oficial do artista, museus, galerias que o representam, entrevistas publicadas, livros e catálogos.
+Regras: nunca apresente hipótese como fato. Cada informação técnica recebe uma certeza:
+"verificado" (dito pelo artista ou por fonte confiável, com link), "interpretacao" (leitura baseada em fontes, com link) ou "hipotese" (dedução sua, sem fonte).
+Não invente receitas, temperaturas, datas, prêmios nem obras. Se não achar, deixe vazio.
+Imagens: só endereços diretos de imagem que você viu em páginas oficiais, museus ou galerias, sempre com a página de origem e o crédito.`
+
+const FORMATO_ARTISTA = `Responda no fim com um único bloco JSON, sem texto depois, neste formato:
+{"nomeOriginal":"","pais":[],"atuacao":"","nascimento":"","especialidade":"","linguagem":"","bio":"","caracteristicas":[],
+"tecnicas":[],"materiais":[],"esmaltes":[],"queimas":[],"esteticas":[],"tiposObra":[],"site":"","instagram":"",
+"processos":[{"tema":"Esmaltes","texto":"","certeza":"verificado","fonte":"https://..."}],
+"estudar":[],"publicacoes":[{"titulo":"","url":"","tipo":"","ano":""}],"fontes":[{"titulo":"","url":"","tipo":""}],
+"obras":[{"titulo":"","ano":"","dimensoes":"","materiais":"","imagem":"https://...","fonte":"https://...","credito":""}],
+"avisos":[]}
+Temas possíveis de processos: Modelagem, Torneamento, Construção manual, Argila, Engobes, Esmaltes, Aplicação de camadas, Queima, Atmosfera do forno, Acabamentos.
+Até 8 processos, 6 obras, 8 fontes. Em "avisos", diga o que ficou incerto ou conflitante entre fontes.`
+
+const so = (v, n = 400) => (typeof v === 'string' ? v.trim().slice(0, n) : '')
+const url = (v) => (typeof v === 'string' && /^https:\/\/[^\s]+$/.test(v.trim()) ? v.trim() : '')
+const textos = (v, n) => (Array.isArray(v) ? v.map((x) => so(x, 300)).filter(Boolean).slice(0, n) : [])
+const CERTEZAS = ['verificado', 'interpretacao', 'hipotese']
+
+function limparArtista(o) {
+  const r = {
+    nomeOriginal: so(o.nomeOriginal, 120), pais: textos(o.pais, 4), atuacao: so(o.atuacao, 200), nascimento: so(o.nascimento, 120),
+    especialidade: so(o.especialidade, 200), linguagem: so(o.linguagem, 600), bio: so(o.bio, 2500), caracteristicas: textos(o.caracteristicas, 8),
+    tecnicas: textos(o.tecnicas, 8), materiais: textos(o.materiais, 8), esmaltes: textos(o.esmaltes, 8), queimas: textos(o.queimas, 6),
+    esteticas: textos(o.esteticas, 8), tiposObra: textos(o.tiposObra, 8), site: url(o.site), instagram: so(o.instagram, 60).replace(/^@/, ''),
+    estudar: textos(o.estudar, 8), avisos: textos(o.avisos, 6),
+  }
+  r.processos = (Array.isArray(o.processos) ? o.processos : []).slice(0, 8).map((p) => ({
+    tema: so(p?.tema, 40) || 'Esmaltes', texto: so(p?.texto, 600), fonte: url(p?.fonte) || undefined,
+    certeza: CERTEZAS.includes(p?.certeza) ? p.certeza : 'hipotese',
+  })).filter((p) => p.texto).map((p) => (p.certeza !== 'hipotese' && !p.fonte ? { ...p, certeza: 'hipotese' } : p))
+  const fonte = (f) => ({ titulo: so(f?.titulo, 200) || url(f?.url), url: url(f?.url) || undefined, tipo: so(f?.tipo, 40) || undefined, ano: so(f?.ano, 10) || undefined })
+  r.publicacoes = (Array.isArray(o.publicacoes) ? o.publicacoes : []).slice(0, 8).map(fonte).filter((f) => f.titulo)
+  r.fontes = (Array.isArray(o.fontes) ? o.fontes : []).slice(0, 8).map(fonte).filter((f) => f.titulo)
+  r.obras = (Array.isArray(o.obras) ? o.obras : []).slice(0, 6).map((x) => ({
+    titulo: so(x?.titulo, 160), ano: so(x?.ano, 20), dimensoes: so(x?.dimensoes, 80), materiais: so(x?.materiais, 160),
+    imagem: url(x?.imagem), fonte: url(x?.fonte), credito: so(x?.credito, 120),
+  })).filter((x) => x.imagem && x.fonte)
+  return r
+}
+
+async function pesquisarArtista(d) {
+  const nome = so(d?.nome, 120)
+  if (!nome) return json({ erro: 'Falta o nome do artista' }, 400)
+  const client = new Anthropic()
+  const mensagens = [{ role: 'user', content: `Pesquise o ceramista ${nome}.${d.contexto ? ' O que já se sabe: ' + so(d.contexto, 1500) : ''}\n\n${FORMATO_ARTISTA}` }]
+  try {
+    let r
+    // a busca roda no servidor da Anthropic; se ela pausar no meio, continuamos a mesma conversa (até 3 vezes)
+    for (let i = 0; i < 3; i++) {
+      r = await client.beta.messages.create({
+        model: MODELO, max_tokens: 12000, betas: BETAS, fallbacks: 'default',
+        thinking: { type: 'adaptive' }, output_config: { effort: 'medium' },
+        system: SISTEMA_ARTISTA,
+        tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 6 }],
+        messages: mensagens,
+      })
+      if (r.stop_reason !== 'pause_turn') break
+      mensagens.push({ role: 'assistant', content: r.content })
+    }
+    if (r.stop_reason === 'refusal') return json({ erro: 'A IA não quis responder a este pedido.' }, 422)
+    const texto = r.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n')
+    const ini = texto.indexOf('{'), fim = texto.lastIndexOf('}')
+    if (ini < 0 || fim <= ini) return json({ erro: 'A pesquisa não trouxe um resultado legível. Tente de novo.' }, 502)
+    let o
+    try { o = JSON.parse(texto.slice(ini, fim + 1)) } catch { return json({ erro: 'A pesquisa veio incompleta. Tente de novo.' }, 502) }
+    return json({ resultado: limparArtista(o) })
+  } catch (e) {
+    if (e instanceof Anthropic.AuthenticationError) return json({ erro: 'A chave da Anthropic foi recusada. Confira a variável ANTHROPIC_API_KEY na Vercel.' }, 503)
+    if (e instanceof Anthropic.PermissionDeniedError) return json({ erro: 'A conta da Anthropic não tem permissão (crédito, limite de gasto ou busca na web desligada no Console).' }, 503)
+    if (e instanceof Anthropic.RateLimitError) return json({ erro: 'Muitos pedidos seguidos. Espere um pouco.' }, 429)
+    if (e instanceof Anthropic.BadRequestError) return json({ erro: 'Pedido recusado pela API: ' + e.message }, 400)
+    if (e instanceof Anthropic.APIError) return json({ erro: `A IA não respondeu (${e.status ?? 'rede'}).` }, 502)
+    return json({ erro: 'Erro inesperado: ' + (e instanceof Error ? e.message : String(e)) }, 500)
+  }
+}
+
 export async function GET() {
   return json({ configurada: !!process.env.ANTHROPIC_API_KEY })
 }
@@ -225,6 +309,7 @@ export async function POST(req) {
   let d
   try { d = await req.json() } catch { return json({ erro: 'Pedido inválido' }, 400) }
   const acao = d?.acao
+  if (acao === 'artista') return pesquisarArtista(d)
   const p = ESQUEMAS[acao] && pedidoDe(acao, d)
   if (!p) return json({ erro: 'Ação desconhecida' }, 400)
   if (acao === 'foto' && !d.imagem?.base64) return json({ erro: 'Sem imagem' }, 400)

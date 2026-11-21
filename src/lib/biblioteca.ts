@@ -27,7 +27,8 @@ export interface SecaoBib {
 export const SECOES: SecaoBib[] = [
   {
     slug: 'artistas', span: 4, nome: 'Artistas', desc: 'Artistas, obras e linguagens que ampliam as possibilidades da cerâmica.',
-    cats: ['Artistas'], capa: '/areas/esmaltes.jpg', atalhos: [],
+    cats: ['Artistas'], capa: 'https://iwasakiryuji.com/wp-content/uploads/2023/08/ig1601_00.jpg', reserva: '/areas/esmaltes.jpg', credito: 'Ryuji Iwasaki, site oficial',
+    atalhos: [{ to: '/biblioteca/colecoes', nome: 'Coleções pessoais', desc: 'Artistas e obras por tema' }],
   },
   {
     slug: 'esmaltes', span: 2, nome: 'Esmaltes', desc: 'Formulações, acabamentos, testes e pesquisas de superfície.',
@@ -70,7 +71,18 @@ export const SECOES: SecaoBib[] = [
     slug: 'leituras', span: 3, nome: 'Leituras', desc: 'Livros, artigos, vídeos e documentos guardados para estudo.',
     cats: ['Livros', 'Artigos', 'Vídeos', 'Documentos PDF'], capa: '/areas/biblioteca.jpg', atalhos: [],
   },
+  {
+    slug: 'glossario', span: 3, nome: 'Glossário', desc: 'Termos de esmaltes, fornos, formas e tradições, explicados em poucas linhas.',
+    cats: [], capa: '/areas/caderno.jpg', atalhos: [],
+  },
+  {
+    slug: 'agenda', span: 3, nome: 'Agenda', desc: 'Exposições de cerâmica em cartaz e por vir na cidade de São Paulo.',
+    cats: [], capa: '/areas/referencias.jpg', atalhos: [],
+  },
 ]
+
+/** Seções com página própria (não são listas de conteúdos). */
+export const SECOES_PROPRIAS = new Set(['artistas', 'glossario', 'agenda'])
 
 export const secaoPorSlug = (slug?: string) => SECOES.find((s) => s.slug === slug)
 /** Seção de um conteúdo; categorias que não estão em nenhuma seção caem em Leituras (nada se perde). */

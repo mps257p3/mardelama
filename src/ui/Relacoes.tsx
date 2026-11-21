@@ -29,7 +29,7 @@ export function Relacoes({ tipo, id, extras = [] }: { tipo: Tipo; id: string; ex
         <div className="lista">
           {todos.map(({ rel, r }) => (
             <div className="row" key={r.tipo + r.id + rel}>
-              <div className="mini">{r.foto ? <Foto id={r.foto} /> : <Link2 size={18} strokeWidth={1.3} />}</div>
+              <div className="mini">{r.foto ? <Foto id={r.foto} /> : r.fotoUrl ? <img src={r.fotoUrl} alt="" referrerPolicy="no-referrer" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Link2 size={18} strokeWidth={1.3} />}</div>
               <Link to={r.to}><div className="t" style={{ fontSize: 18 }}>{r.titulo}</div><div className="s">{ROTULO[r.tipo]} · {r.sub}</div></Link>
               {rel ? <button className="iconbtn" aria-label="Desconectar" onClick={() => db.relacoes.update(rel, { excluido: 1, atualizadoEm: Date.now() })}><X size={15} /></button> : <span className="faint" style={{ fontSize: 11 }}>automática</span>}
             </div>
@@ -56,7 +56,7 @@ function Conectar({ onClose, onPick }: { onClose: () => void; onPick: (r: Resumo
       <div className="lista">
         {rs.map((r) => (
           <button key={r.tipo + r.id} className="row" style={{ background: 'none', border: 0, borderBottom: '1px solid var(--line)', textAlign: 'left', width: '100%' }} onClick={() => onPick(r)}>
-            <div className="mini">{r.foto ? <Foto id={r.foto} /> : <Link2 size={18} strokeWidth={1.3} />}</div>
+            <div className="mini">{r.foto ? <Foto id={r.foto} /> : r.fotoUrl ? <img src={r.fotoUrl} alt="" referrerPolicy="no-referrer" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Link2 size={18} strokeWidth={1.3} />}</div>
             <div><div className="t" style={{ fontSize: 18 }}>{r.titulo}</div><div className="s">{ROTULO[r.tipo]} · {r.sub}</div></div>
             <Plus size={16} />
           </button>

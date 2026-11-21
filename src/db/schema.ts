@@ -17,6 +17,7 @@ export type Tipo =
   | 'esmalte' | 'receita' | 'teste' | 'material' | 'referencia'
   | 'painel' | 'conteudo' | 'nota' | 'grupo' | 'familia'
   | 'curva' | 'queima' | 'comercial' | 'lote' | 'fornecedor' | 'projeto' | 'entrada' | 'paleta' | 'compra'
+  | 'artista' | 'obra' | 'colecao' | 'exposicao'
 
 export interface Arquivo extends Base {
   nome: string
@@ -321,6 +322,92 @@ export interface Compra extends Base {
   dataConsulta?: string
 }
 
+/** Grau de certeza de uma informação: documentada em fonte, leitura visual ou hipótese técnica. */
+export type Certeza = 'verificado' | 'interpretacao' | 'hipotese'
+export interface Fonte { titulo: string; url?: string; tipo?: string; ano?: string }
+export interface Processo { tema: string; texto: string; certeza: Certeza; fonte?: string }
+export interface Analise { formas?: string; paleta?: string; texturas?: string; composicao?: string; materiais?: string; superficieVolume?: string; reconhecivel?: string }
+export interface SerieArtista { nome: string; original?: string; url?: string; desc?: string }
+
+/** Artista da Biblioteca. Campos desconhecidos ficam vazios ("Não documentado"); nada é inventado. */
+export interface Artista extends Base {
+  nome: string
+  nomeOriginal?: string
+  pais: string[]               // país(es) de origem / atuação, como "Japão", "Reino Unido"
+  atuacao?: string             // local de atuação confirmado
+  nascimento?: string          // ex.: "1981, Hiroshima" (só se documentado)
+  retrato?: string             // URL da fotografia do artista (fonte oficial)
+  capa?: string                // id da obra de destaque
+  especialidade?: string
+  linguagem?: string           // breve descrição da linguagem artística
+  bio?: string                 // biografia (texto simples, parágrafos separados por linha em branco)
+  caracteristicas: string[]
+  afinidade?: string           // em que se aproxima de Iwasaki (observação curatorial)
+  analise?: Analise
+  processos: Processo[]
+  estudar: string[]            // "O que estudar neste artista?"
+  series?: SerieArtista[]      // famílias de acabamento / séries com nome oficial
+  publicacoes: Fonte[]         // livros, catálogos, entrevistas, reportagens, vídeos, exposições
+  fontes: Fonte[]              // sites oficiais, galerias, páginas consultadas
+  instagram?: string
+  site?: string
+  relacionados: string[]       // ids de artistas
+  tags: string[]
+  tecnicas: string[]
+  materiais: string[]
+  esmaltes: string[]
+  queimas: string[]
+  esteticas: string[]
+  tiposObra: string[]
+  origem: 'curadoria' | 'usuario' | 'ia'
+  revisadoEm?: string          // data da última conferência das fontes
+  // ——— pesquisa pessoal (separada do que é documentado) ———
+  notas?: string               // HTML
+  hipoteses?: string           // hipóteses de processo do Marcelo
+  links?: string[]
+  fotos?: string[]             // ids de Arquivo
+}
+
+export interface Obra extends Base {
+  artistaId: string
+  titulo?: string
+  ano?: string
+  dimensoes?: string
+  materiais?: string
+  tecnica?: string
+  esmaltacao?: string
+  queima?: string
+  serie?: string
+  imagem?: string              // URL da imagem na fonte original
+  arquivo?: string             // id de Arquivo (foto guardada no aparelho)
+  fonte?: string               // página onde a imagem foi publicada
+  credito?: string
+  tags: string[]
+  notas?: string
+}
+
+export interface Colecao extends Base { nome: string; descricao?: string; itens: { tipo: Tipo; id: string }[] }
+
+/** Exposição na agenda (só cidade de São Paulo). Datas em AAAA-MM-DD; `fimAprox` quando a fonte não dá o dia exato. */
+export interface Exposicao extends Base {
+  titulo: string
+  local: string
+  endereco?: string
+  inicio?: string
+  fim?: string
+  fimAprox?: string
+  artistas?: string
+  curadoria?: string
+  descricao?: string
+  url?: string
+  fonte?: string
+  gratuita?: boolean
+  visitada?: boolean
+  notas?: string
+  origem: 'curadoria' | 'usuario'
+  conferidoEm?: string
+}
+
 export interface Ajuste { chave: string; valor: unknown }
 
 export class AtelieDB extends Dexie {
@@ -344,6 +431,10 @@ export class AtelieDB extends Dexie {
   lotes!: EntityTable<Lote, 'id'>
   fornecedores!: EntityTable<Fornecedor, 'id'>
   compras!: EntityTable<Compra, 'id'>
+  artistas!: EntityTable<Artista, 'id'>
+  obras!: EntityTable<Obra, 'id'>
+  colecoes!: EntityTable<Colecao, 'id'>
+  exposicoes!: EntityTable<Exposicao, 'id'>
 
   constructor() {
     super('atelie-mp')
@@ -372,6 +463,12 @@ export class AtelieDB extends Dexie {
       lotes: 'id, receitaId, data, atualizadoEm, criadoEm',
       fornecedores: 'id, nome, atualizadoEm',
       compras: 'id, categoria, status, materialId, atualizadoEm',
+    })
+    this.version(3).stores({
+      artistas: 'id, nome, favorito, atualizadoEm',
+      obras: 'id, artistaId, favorito, atualizadoEm',
+      colecoes: 'id, nome, atualizadoEm',
+      exposicoes: 'id, fim, favorito, atualizadoEm',
     })
   }
 }

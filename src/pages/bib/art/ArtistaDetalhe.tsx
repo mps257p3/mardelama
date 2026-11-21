@@ -1,0 +1,194 @@
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { ArrowLeft, ExternalLink, FolderPlus, Heart, ImagePlus, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react'
+import { db, type Artista, type Certeza, type Obra } from '../../../db/schema'
+import { alternarFavorito, excluir } from '../../../db/hooks'
+import { ANALISE, CERTEZA, TEMAS_PROCESSO, gostoDosArtistas, recomendar, vivos, type Sugestao } from '../../../lib/artistas'
+import { Menu } from '../../../ui/Menu'
+import { Relacoes } from '../../../ui/Relacoes'
+import { GaleriaPecas } from '../../../ui/GaleriaFotos'
+import { TextoRico } from '../../../ui/rich'
+import { ListaEditavel, TextoEditavel } from '../../../ui/editavel'
+import { Tags } from '../../../ui/form'
+import { ImgObra } from './ImgObra'
+import { VisorObras } from './VisorObras'
+import { obraDeCapa } from './Artistas'
+import { AdicionarAColecao } from './Colecoes'
+import { PesquisaIA } from './PesquisaIA'
+import { termosNoTexto } from '../../../lib/glossario'
+
+const ND = <span className="nd">Não documentado</span>
+
+function Bloco({ titulo, children, aberto = false, id }: { titulo: string; children: React.ReactNode; aberto?: boolean; id?: string }) {
+  return <details className="art-bloco" open={aberto} id={id}><summary><h2>{titulo}</h2></summary><div className="corpo">{children}</div></details>
+}
+
+function Selo({ c }: { c: Certeza }) { return <span className={'selo ' + c} title={CERTEZA[c].desc}>{CERTEZA[c].rotulo}</span> }
+
+const host = (u?: string) => { try { return u ? new URL(u).hostname.replace(/^www\./, '') : '' } catch { return '' } }
+
+export default function ArtistaDetalhe() {
+  const { id } = useParams()
+  const nav = useNavigate()
+  const a = useLiveQuery(() => db.artistas.get(id!), [id])
+  const obras = useLiveQuery(async () => vivos(await db.obras.where('artistaId').equals(id!).toArray()).sort((x, y) => x.criadoEm - y.criadoEm), [id], [] as Obra[])
+  const todos = useLiveQuery(async () => vivos(await db.artistas.toArray()), [], [])
+  const todasObras = useLiveQuery(async () => vivos(await db.obras.toArray()), [], [])
+  const [serie, setSerie] = useState<string>()
+  const [visor, setVisor] = useState<number>()
+  const [colecao, setColecao] = useState(false)
+  const [ia, setIa] = useState(false)
+  const [todasVer, setTodasVer] = useState(false)
+  const [sug, setSug] = useState<Sugestao[]>([])
+  useEffect(() => { if (!a) return; let vivo = true; gostoDosArtistas(todos).then((g) => vivo && setSug(recomendar(a, todos, g))); return () => { vivo = false } }, [a, todos])
+
+  const series = useMemo(() => [...new Set(obras.map((o) => o.serie).filter(Boolean) as string[])], [obras])
+  const galeria = useMemo(() => obras.filter((o) => !serie || o.serie === serie), [obras, serie])
+  const termos = useMemo(() => a ? termosNoTexto([a.bio, a.linguagem, ...a.processos.map((p) => p.texto), ...a.esmaltes, ...a.queimas, ...a.tecnicas].join(' ')) : [], [a])
+
+  if (a === undefined) return null
+  if (!a || a.excluido) return <div className="page"><p>Artista não encontrado.</p></div>
+  const capa = obraDeCapa(a, obras)
+  const salvar = (p: Partial<Artista>) => db.artistas.update(a.id, { ...p, atualizadoEm: Date.now() })
+  const proc = new Map<string, typeof a.processos>()
+  a.processos.forEach((p) => proc.set(p.tema, [...(proc.get(p.tema) ?? []), p]))
+  const temasExtras = [...proc.keys()].filter((t) => !(TEMAS_PROCESSO as readonly string[]).includes(t))
+  const pubs = new Map<string, typeof a.publicacoes>()
+  ;[...a.publicacoes, ...a.fontes].forEach((p) => { const k = p.tipo || 'Outros'; pubs.set(k, [...(pubs.get(k) ?? []), p]) })
+
+  return (
+    <div className="page bib art">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Link to="/biblioteca/artistas" className="back"><ArrowLeft size={15} />Artistas</Link>
+        <div style={{ display: 'flex', gap: 2 }}>
+          <button className="iconbtn" aria-label={a.favorito ? 'Remover dos favoritos' : 'Favoritar'} onClick={() => alternarFavorito('artistas', a.id, a.favorito)}><Heart size={19} fill={a.favorito ? 'currentColor' : 'none'} /></button>
+          <Menu itens={[
+            { l: 'Editar perfil', icon: <Pencil size={16} />, to: `/biblioteca/artistas/${a.id}/editar` },
+            { l: 'Adicionar obra', icon: <ImagePlus size={16} />, to: `/biblioteca/obras/nova?artista=${a.id}` },
+            { l: 'Adicionar à coleção', icon: <FolderPlus size={16} />, onClick: () => setColecao(true) },
+            { l: 'Pesquisar com IA', icon: <Sparkles size={16} />, onClick: () => setIa(true) },
+            { sep: true, l: '' },
+            { l: 'Excluir artista', icon: <Trash2 size={16} />, onClick: async () => { if (confirm(`Excluir ${a.nome} da Biblioteca?`)) { await excluir('artistas', a.id); nav('/biblioteca/artistas') } } },
+          ]} />
+        </div>
+      </div>
+
+      <figure className="art-capa" onClick={() => capa && setVisor(obras.indexOf(capa))}>
+        <ImgObra o={capa} alt={capa?.titulo ?? a.nome} />
+        {capa?.credito && <figcaption>{[capa.titulo, capa.credito].filter(Boolean).join(' · ')}</figcaption>}
+      </figure>
+      <header className="art-titulo">
+        <p className="eyebrow">{[a.pais.join(' / '), a.especialidade].filter(Boolean).join(' · ')}</p>
+        <h1>{a.nome}</h1>
+        {a.nomeOriginal && <p className="original">{a.nomeOriginal}</p>}
+        {a.caracteristicas.length > 0 && <div className="pills" style={{ marginTop: 12 }}>{a.caracteristicas.map((c) => <span key={c} className="pill">{c}</span>)}</div>}
+      </header>
+
+      <section className="art-galeria">
+        <div className="section-head"><h2>Obras</h2><Link to={`/biblioteca/obras/nova?artista=${a.id}`} className="faint" style={{ fontSize: 13, display: 'inline-flex', gap: 4, alignItems: 'center' }}><Plus size={14} />Adicionar</Link></div>
+        {series.length > 1 && <div className="chips" style={{ marginBottom: 12 }}>
+          <button className={'chip' + (!serie ? ' on' : '')} onClick={() => setSerie(undefined)}>Todas</button>
+          {series.map((s) => <button key={s} className={'chip' + (serie === s ? ' on' : '')} onClick={() => setSerie(serie === s ? undefined : s)}>{s}</button>)}
+        </div>}
+        {serie && a.series?.find((s) => s.nome === serie)?.url && <p className="faint" style={{ fontSize: 13, margin: '-4px 0 12px' }}>Série <b>{serie}</b> {a.series.find((s) => s.nome === serie)?.original} · <a href={a.series.find((s) => s.nome === serie)!.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>ver no site oficial</a></p>}
+        <div className="obras-mural">
+          {(todasVer || serie ? galeria : galeria.slice(0, 8)).map((o) => (
+            <button key={o.id} className="obra-card" onClick={() => setVisor(obras.indexOf(o))}>
+              <span className="ph"><ImgObra o={o} /></span>
+              <span className="t">{o.titulo || o.serie || 'Sem título'}{o.favorito ? <Heart size={11} fill="currentColor" /> : null}</span>
+              <span className="s">{[o.ano, host(o.fonte)].filter(Boolean).join(' · ')}</span>
+            </button>
+          ))}
+          {obras.length === 0 && <p className="faint">Nenhuma obra cadastrada ainda.</p>}
+        </div>
+        {!todasVer && !serie && galeria.length > 8 && <button className="btn" style={{ width: '100%', marginTop: 14 }} onClick={() => setTodasVer(true)}>Ver todas as {galeria.length} obras</button>}
+        {a.series && a.series.length > 0 && <p className="faint" style={{ fontSize: 12.5, marginTop: 10 }}>Séries no site oficial: {a.series.map((s, i) => <span key={s.nome}>{i ? ', ' : ''}{s.url ? <a href={s.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>{s.nome}</a> : s.nome}{s.original ? ` (${s.original})` : ''}</span>)}.</p>}
+      </section>
+
+      <div className="art-blocos">
+        <Bloco titulo="Apresentação" aberto>
+          <dl className="art-ficha">
+            <dt>Nome original</dt><dd>{a.nomeOriginal || ND}</dd>
+            <dt>País</dt><dd>{a.pais.join(' / ') || ND}</dd>
+            <dt>Nascimento</dt><dd>{a.nascimento || ND}</dd>
+            <dt>Atuação</dt><dd>{a.atuacao || ND}</dd>
+          </dl>
+          {a.retrato && <figure className="art-retrato"><img src={a.retrato} alt={`Retrato de ${a.nome}`} referrerPolicy="no-referrer" loading="lazy" onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none' }} /><figcaption>Foto: {host(a.retrato)}</figcaption></figure>}
+          {a.linguagem && <p className="art-lead">{a.linguagem}</p>}
+          {a.bio ? a.bio.split(/\n{2,}/).map((p, i) => <p key={i} className="art-p">{p}</p>) : <p>{ND}</p>}
+          {a.afinidade && <aside className="art-afinidade"><p className="eyebrow">Afinidade com Ryuji Iwasaki</p><p>{a.afinidade}</p></aside>}
+        </Bloco>
+
+        <Bloco titulo="Linguagem artística">
+          <p className="faint" style={{ fontSize: 13, marginTop: 0 }}>Leitura editorial a partir das obras e das fontes. É interpretação, não informação do artista.</p>
+          <dl className="art-analise">{ANALISE.map(([k, l]) => <div key={k}><dt>{l}</dt><dd>{a.analise?.[k] || ND}</dd></div>)}</dl>
+        </Bloco>
+
+        <Bloco titulo="Técnicas e processos">
+          <div className="legenda-selos">{(Object.keys(CERTEZA) as Certeza[]).map((c) => <span key={c}><Selo c={c} /> {CERTEZA[c].desc}</span>)}</div>
+          <div className="processos">
+            {[...TEMAS_PROCESSO, ...temasExtras].map((t) => {
+              const ps = proc.get(t)
+              return <div key={t} className={'proc' + (ps ? '' : ' vazio')}>
+                <h4>{t}</h4>
+                {ps ? ps.map((p, i) => <p key={i}><Selo c={p.certeza} /> {p.texto}{p.fonte && <> <a href={p.fonte} target="_blank" rel="noreferrer" className="fonte">{host(p.fonte)}</a></>}</p>) : ND}
+              </div>
+            })}
+          </div>
+          <p className="faint" style={{ fontSize: 12.5 }}>Receitas, temperaturas e composições só aparecem quando publicadas pelo artista ou por fonte confiável.</p>
+          {termos.length > 0 && <p style={{ fontSize: 13.5, marginTop: 8 }}>No glossário: {termos.map((t, i) => <span key={t.id}>{i ? ', ' : ''}<Link to={`/biblioteca/glossario#${t.id}`} style={{ textDecoration: 'underline' }}>{t.termo}</Link></span>)}</p>}
+        </Bloco>
+
+        {a.estudar.length > 0 && <Bloco titulo="O que estudar neste artista?" aberto>
+          <ol className="estudar">{a.estudar.map((x, i) => <li key={i}>{x}</li>)}</ol>
+          <p className="faint" style={{ fontSize: 12.5 }}>Pontos para desenvolver o seu trabalho, sem copiar o dele.</p>
+        </Bloco>}
+
+        <Bloco titulo="Publicações e fontes">
+          {pubs.size === 0 ? ND : [...pubs.entries()].map(([tipo, ps]) => (
+            <div key={tipo} style={{ marginBottom: 14 }}>
+              <p className="eyebrow" style={{ marginBottom: 6 }}>{tipo}</p>
+              <ul className="fontes">{ps.map((p, i) => <li key={i}>{p.url ? <a href={p.url} target="_blank" rel="noreferrer">{p.titulo}<ExternalLink size={12} /></a> : <span>{p.titulo}</span>}{p.ano ? <span className="faint"> · {p.ano}</span> : null}</li>)}</ul>
+            </div>
+          ))}
+          {(a.site || a.instagram) && <p style={{ fontSize: 14 }}>{a.site && <a href={a.site} target="_blank" rel="noreferrer" style={{ textDecoration: 'underline', marginRight: 14 }}>Site oficial</a>}{a.instagram && <a href={`https://www.instagram.com/${a.instagram}/`} target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>@{a.instagram}</a>}</p>}
+          {a.revisadoEm && <p className="faint" style={{ fontSize: 12 }}>Fontes conferidas em {a.revisadoEm}.</p>}
+        </Bloco>
+      </div>
+
+      {sug.length > 0 && <section className="secao">
+        <div className="secao-head"><h2>Você também pode gostar de</h2></div>
+        <div className="trilho sug">
+          {sug.map(({ a: b, motivos }) => (
+            <Link key={b.id} to={`/biblioteca/artistas/${b.id}`} className="peca-mini">
+              <span className="ph"><ImgObra o={obraDeCapa(b, todasObras)} /></span>
+              <span className="t">{b.nome}</span>
+              <span className="s">{motivos[0] ?? b.pais.join(' / ')}</span>
+            </Link>
+          ))}
+        </div>
+      </section>}
+
+      <section className="secao"><Relacoes tipo="artista" id={a.id} /></section>
+
+      <section className="minha-pesquisa">
+        <p className="eyebrow">Só seu · separado das informações documentadas</p>
+        <h2>Minha pesquisa</h2>
+        <h4>Observações</h4>
+        <TextoRico value={a.notas ?? ''} onChange={(v) => salvar({ notas: v })} placeholder="O que você percebe, o que quer testar…" />
+        <h4>Hipóteses de processo</h4>
+        <TextoEditavel valor={a.hipoteses} multilinha rotulo="hipóteses" vazio="Ex.: a borda clara pode vir de esmalte mais fino na aresta." onSalvar={(v) => salvar({ hipoteses: v })} />
+        <h4>Links salvos</h4>
+        <ListaEditavel itens={a.links ?? []} link rotulo="link" vazio="Nenhum link ainda." onSalvar={(v) => salvar({ links: v })} />
+        <h4>Etiquetas</h4>
+        <Tags value={a.tags} onChange={(v) => salvar({ tags: v })} />
+        <GaleriaPecas fotos={a.fotos ?? []} onChange={(v) => salvar({ fotos: v })} titulo="Minhas fotografias" />
+      </section>
+
+      {visor != null && <VisorObras obras={obras} inicio={visor} artista={a} onClose={() => setVisor(undefined)} />}
+      {colecao && <AdicionarAColecao item={{ tipo: 'artista', id: a.id }} onClose={() => setColecao(false)} />}
+      {ia && <PesquisaIA artista={a} onClose={() => setIa(false)} />}
+    </div>
+  )
+}
