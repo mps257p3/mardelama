@@ -4,6 +4,7 @@ import { ArrowLeft, FolderInput } from 'lucide-react'
 import { importarPinterest, imagemDoPin, lerExportacaoPinterest, type ExportacaoPinterest } from '../../lib/pinterest'
 import { useToast } from '../../ui/toast'
 import { ContaPinterest } from './ContaPinterest'
+import { PastasRss } from './PastasRss'
 
 const FORA = ['logo', 'catarina']
 
@@ -40,6 +41,7 @@ export default function ImportarPinterest() {
       <Link to="/referencias" className="back"><ArrowLeft size={15} />Referências</Link>
       <p className="eyebrow">Repertório</p>
       <h1 style={{ marginTop: 6 }}>Pinterest</h1>
+      <PastasRss />
       <ContaPinterest />
       <h3 style={{ marginTop: 30 }}>Importar a exportação</h3>
       <p className="faint" style={{ fontSize: 13.5, marginTop: 6 }}>Alternativa sem conexão: use a exportação oficial (Configurações › Privacidade e dados › Solicitar seus dados). Cada pin entra no Acervo com a imagem do Pinterest, a pasta como grupo e o link original quando existe. Importar de novo não duplica.</p>

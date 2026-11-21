@@ -188,7 +188,11 @@ export interface Referencia extends Base {
   licenca?: string
 }
 
-export interface Grupo extends Base { nome: string; descricao?: string; cor?: string }
+export interface Grupo extends Base {
+  nome: string; descricao?: string; cor?: string
+  /** Pasta ou perfil público do Pinterest acompanhado por RSS (link da página). */
+  rss?: string
+}
 
 export interface ItemPainel {
   id: string

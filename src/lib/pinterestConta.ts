@@ -174,21 +174,24 @@ async function executar(aviso?: (t: string) => void): Promise<ResultadoPinterest
 }
 
 /**
- * Leitura das imagens pela IA (só quando ligada em Referências › Pinterest). Para não gastar crédito demais,
- * lê até 8 pins novos por sincronização e grava só tags e paleta, que alimentam o repertório estético.
- * Título e descrição continuam os do Pinterest; a catalogação completa segue no botão "Sugerir catalogação".
+ * Leitura das imagens pela IA (só quando ligada). Para não gastar crédito demais, lê até 8 pins novos por vez
+ * e grava só tags, paleta e, se `organizar`, os grupos que a IA reconheceu entre os seus. Título e descrição
+ * continuam os do Pinterest; a catalogação completa segue no botão "Sugerir catalogação".
  */
-async function analisarComIa(ids: string[], aviso?: (t: string) => void) {
+export async function analisarComIa(ids: string[], aviso?: (t: string) => void, organizar = false) {
   if (!(await iaConfigurada())) return 0
+  const grupos = organizar ? (await db.grupos.toArray()).filter((g) => !g.excluido) : []
   let n = 0
   for (const id of ids.slice(0, 8)) {
     const r = await db.referencias.get(id); if (!r?.imagemExterna) continue
     aviso?.(`IA lendo as imagens novas (${n + 1})…`)
     try {
       const s = await sugerirCatalogo(r)
+      const extras = s.grupos.map((nome) => grupos.find((g) => chavePasta(g.nome) === chavePasta(nome))?.id).filter(Boolean) as string[]
       await db.referencias.update(id, {
         tags: [...new Set([...r.tags, ...s.tags.map((t) => t.toLowerCase().replace(/^#/, ''))])].slice(0, 14),
         paleta: [...new Set([...(r.paleta ?? []), ...s.paleta.filter((c) => /^#[0-9a-f]{6}$/i.test(c))])].slice(0, 6),
+        ...(extras.length ? { grupos: [...new Set([...r.grupos, ...extras])] } : {}),
         atualizadoEm: Date.now(),
       })
       n++
