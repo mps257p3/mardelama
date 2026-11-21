@@ -13,6 +13,7 @@ import { seedIfEmpty } from './db/seed'
 import { ativarVinculoAutomatico } from './lib/contexto'
 import { iniciarSincronizacaoAutomatica } from './db/sync'
 import { iniciarPinterestAutomatico } from './lib/pinterestConta'
+import { iniciarRssAutomatico } from './lib/pinterestRss'
 import { registerSW } from 'virtual:pwa-register'
 import { db } from './db/schema'
 
@@ -44,6 +45,7 @@ seedIfEmpty()
 ativarVinculoAutomatico()
 iniciarSincronizacaoAutomatica()
 iniciarPinterestAutomatico()
+iniciarRssAutomatico()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
