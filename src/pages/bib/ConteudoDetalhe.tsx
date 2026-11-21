@@ -6,6 +6,7 @@ import { alternarFavorito, excluir } from '../../db/hooks'
 import { Prosa } from '../../ui/rich'
 import { ArquivoLink } from '../../ui/arquivos'
 import { Relacoes } from '../../ui/Relacoes'
+import { secaoDaCategoria } from '../../lib/biblioteca'
 
 export default function ConteudoDetalhe() {
   const { id } = useParams()
@@ -15,7 +16,7 @@ export default function ConteudoDetalhe() {
   if (!c || c.excluido) return <div className="page"><p>Conteúdo não encontrado.</p></div>
   return (
     <div className="page">
-      <Link to="/biblioteca" className="back"><ArrowLeft size={15} />Biblioteca</Link>
+      <Link to={`/biblioteca/${secaoDaCategoria(c.categoria).slug}`} className="back"><ArrowLeft size={15} />{secaoDaCategoria(c.categoria).nome}</Link>
       <div className="detalhe" style={{ gridTemplateColumns: undefined }}>
         <article className="leitura">
           <p className="eyebrow">{c.categoria}</p>

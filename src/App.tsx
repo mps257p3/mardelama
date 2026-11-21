@@ -32,6 +32,8 @@ import Compartilhar from './pages/ref/Compartilhar'
 import Biblioteca from './pages/bib/Biblioteca'
 import ConteudoForm from './pages/bib/ConteudoForm'
 import ConteudoDetalhe from './pages/bib/ConteudoDetalhe'
+import SecaoBiblioteca from './pages/bib/SecaoBiblioteca'
+import { SECOES } from './lib/biblioteca'
 import Caderno from './pages/cad/Caderno'
 import NotaEditor from './pages/cad/NotaEditor'
 import NotaNova from './pages/cad/NotaNova'
@@ -96,6 +98,7 @@ export default function App() {
           <Route path="paineis/:id" element={<PainelEditor />} />
           <Route path="biblioteca" element={<Biblioteca />} />
           <Route path="biblioteca/novo" element={<ConteudoForm key="novo" />} />
+          {SECOES.map((x) => <Route key={x.slug} path={`biblioteca/${x.slug}`} element={<SecaoBiblioteca key={x.slug} slug={x.slug} />} />)}
           <Route path="biblioteca/:id" element={<ConteudoDetalhe />} />
           <Route path="biblioteca/:id/editar" element={<ConteudoForm />} />
           <Route path="caderno" element={<Caderno />} />
