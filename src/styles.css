@@ -700,3 +700,15 @@ a.visor-btn { text-decoration: none; }
 .gesto-dica { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 12.5px; padding: 6px 12px; border-radius: 999px; background: rgba(20,18,16,.6); color: #F5F0E8; pointer-events: none; animation: dica-some 5s ease forwards; }
 @keyframes dica-some { 0%, 75% { opacity: 1 } 100% { opacity: 0 } }
 @media (hover: hover) { .gesto-dica { display: none; } }
+
+/* busca por foto e temas das curtidas */
+.busca-c .busca-foto { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 32px; height: 32px; border-radius: 999px; color: var(--marrom); cursor: pointer; }
+.busca-c .busca-foto svg { position: static; transform: none; color: inherit; }
+.busca-c .input { padding-right: 72px; }
+.busca-c .limpar-busca { right: 38px; }
+.busca-c .busca-foto:hover { background: var(--line); }
+.busca-foto-mini { width: 34px; height: 34px; object-fit: cover; border-radius: 8px; vertical-align: middle; margin-right: 8px; }
+.temas-curt { margin: 0 0 12px; }
+.temas-curt .chip .faint { font-size: 11.5px; margin-left: 2px; }
+.tema-sel { margin-top: 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
+.tema-sel p { font-size: 14px; line-height: 1.45; margin: 0 0 10px; }

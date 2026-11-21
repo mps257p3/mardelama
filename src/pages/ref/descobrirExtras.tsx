@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Bookmark, BookmarkCheck, Heart, Sparkles, X } from 'lucide-react'
-import { db, type Esmalte, type Referencia } from '../../db/schema'
+import { Bookmark, BookmarkCheck, FolderPlus, Heart, RefreshCw, ScanSearch, Sparkles, X } from 'lucide-react'
+import { db, novo, type Esmalte, type Referencia } from '../../db/schema'
 import { useArquivoUrl } from '../../db/files'
 import { definirAjuste, useAjuste } from '../../db/settings'
 import { FONTE, type ItemDescoberta } from '../../lib/fontes'
-import { lerPerfil } from '../../lib/curadoria'
-import { explicarObra, iaConfigurada, type Explicacao } from '../../lib/iaRepertorio'
+import { lerPerfil, salvarNoAcervo } from '../../lib/curadoria'
+import { agruparCurtidas, explicarObra, iaConfigurada, type Explicacao, type TemaCurtidas, type TemasCurtidas } from '../../lib/iaRepertorio'
+import { useToast } from '../../ui/toast'
 import { Sheet } from '../../ui/Sheet'
 
 const hoje = () => new Date().toLocaleDateString('sv-SE')
@@ -113,4 +114,46 @@ export function CompararObra({ x, onClose }: { x: ItemDescoberta; onClose: () =>
         {p.tipo === 'ref' ? <ImgArq id={p.r.imagens[0]} externa={p.r.imagemExterna} alt={p.r.titulo} /> : <ImgArq id={p.e.fotos[0] ?? p.e.pecas?.[0]} alt={p.e.nome} />}
       </button>)}</div>}
   </Sheet>
+}
+
+/** Curtidas organizadas pela IA em temas: filtrar, buscar mais do tema ou virar grupo das Referências. */
+export function TemasDasCurtidas({ itens, sel, onSel, onMais }: { itens: ItemDescoberta[]; sel?: TemaCurtidas; onSel: (t?: TemaCurtidas) => void; onMais: (t: TemaCurtidas) => void }) {
+  const [r, setR] = useState<TemasCurtidas>()
+  const [lendo, setLendo] = useState(false)
+  const [criando, setCriando] = useState(false)
+  const toast = useToast()
+  useEffect(() => { db.ajustes.get('ia.temasCurtidas').then((a) => a?.valor && setR(a.valor as TemasCurtidas)) }, [])
+  async function organizar(forcar: boolean) {
+    if (!(await iaConfigurada())) { toast('A IA não está configurada.'); return }
+    setLendo(true)
+    try { setR(await agruparCurtidas(forcar)) } catch (e) { toast('Não deu para organizar: ' + (e as Error).message) } finally { setLendo(false) }
+  }
+  async function virarGrupo(t: TemaCurtidas) {
+    setCriando(true)
+    try {
+      const nome = t.nome[0].toUpperCase() + t.nome.slice(1)
+      let g = await db.grupos.filter((x) => !x.excluido && x.nome.toLowerCase() === nome.toLowerCase()).first()
+      if (!g) { g = novo({ nome, descricao: t.descricao }); await db.grupos.add(g) }
+      const doTema = itens.filter((x) => t.ids.includes(x.id))
+      for (const x of doTema) await salvarNoAcervo(x, [g.id])
+      toast(`${doTema.length} obras no grupo “${nome}”`)
+    } catch (e) { toast('Não deu para criar o grupo: ' + (e as Error).message) } finally { setCriando(false) }
+  }
+  if (itens.length < 6) return null
+  const novas = r ? itens.length - r.n : 0
+  if (!r) return <div className="temas-curt"><button className="btn sm" disabled={lendo} onClick={() => organizar(false)}><Sparkles size={14} className={lendo ? 'gira' : ''} />{lendo ? 'Lendo suas curtidas…' : 'Organizar por temas'}</button></div>
+  return <div className="temas-curt">
+    <div className="chips">
+      <button className={'chip' + (!sel ? ' on' : '')} onClick={() => onSel(undefined)}>Todas</button>
+      {r.temas.map((t) => <button key={t.nome} className={'chip' + (sel?.nome === t.nome ? ' on' : '')} onClick={() => onSel(sel?.nome === t.nome ? undefined : t)}>{t.nome} <span className="faint">{t.ids.length}</span></button>)}
+      <button className="chip" disabled={lendo} title="Reorganizar" aria-label="Reorganizar" onClick={() => organizar(true)}><RefreshCw size={13} className={lendo ? 'gira' : ''} />{novas > 0 ? ` ${novas} novas` : ''}</button>
+    </div>
+    {sel && <div className="tema-sel">
+      <p>{sel.descricao}</p>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button className="btn sm" onClick={() => onMais(sel)}><ScanSearch size={14} />Mais disso</button>
+        <button className="btn sm ghost" disabled={criando} onClick={() => virarGrupo(sel)}><FolderPlus size={14} />{criando ? 'Salvando…' : 'Virar grupo nas Referências'}</button>
+      </div>
+    </div>}
+  </div>
 }
