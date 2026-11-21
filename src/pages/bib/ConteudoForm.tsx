@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { db, novo, type Conteudo } from '../../db/schema'
 import { CATEGORIAS_BIB, FORMATOS } from '../../lib/biblioteca'
@@ -14,8 +14,9 @@ export default function ConteudoForm() {
   const { id } = useParams()
   const nav = useNavigate()
   const toast = useToast()
+  const [sp] = useSearchParams()
   const [c, setC] = useState<C>()
-  useEffect(() => { (async () => setC(id ? await db.conteudos.get(id) : { titulo: '', categoria: 'Técnicas de modelagem', formato: 'texto', corpo: '', arquivos: [], tags: [] }))() }, [id])
+  useEffect(() => { (async () => setC(id ? await db.conteudos.get(id) : { titulo: '', categoria: sp.get('categoria') || 'Técnicas de modelagem', formato: 'texto', corpo: '', arquivos: [], tags: [] }))() }, [id])
   if (!c) return null
   const set = <K extends keyof Conteudo>(k: K) => (v: Conteudo[K]) => setC({ ...c, [k]: v })
   async function salvar() {
@@ -31,7 +32,7 @@ export default function ConteudoForm() {
       <h1 style={{ marginTop: 8, marginBottom: 28 }}>{c.titulo || 'Sem título'}</h1>
       <div className="form">
         <Campo label="Título" wide><Texto value={c.titulo} onChange={set('titulo')} autoFocus={!c.id} /></Campo>
-        <Campo label="Categoria"><select className="input" value={c.categoria} onChange={(e) => set('categoria')(e.target.value)}>{CATEGORIAS_BIB.map((x) => <option key={x}>{x}</option>)}</select></Campo>
+        <Campo label="Categoria"><select className="input" value={c.categoria} onChange={(e) => set('categoria')(e.target.value)}>{[...new Set([...CATEGORIAS_BIB, c.categoria])].map((x) => <option key={x}>{x}</option>)}</select></Campo>
         <Campo label="Autor ou fonte"><Texto value={c.autor} onChange={set('autor')} /></Campo>
         <Campo label="Formato" wide><Escolha value={c.formato} onChange={set('formato')} opcoes={FORMATOS} /></Campo>
         <Campo label="Link externo" wide><Texto value={c.url} onChange={set('url')} type="url" placeholder="https://" /></Campo>

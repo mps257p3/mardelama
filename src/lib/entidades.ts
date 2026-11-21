@@ -1,6 +1,6 @@
 import { db, type Tipo } from '../db/schema'
 
-export interface Resumo { tipo: Tipo; id: string; titulo: string; sub: string; foto?: string; to: string }
+export interface Resumo { tipo: Tipo; id: string; titulo: string; sub: string; foto?: string; fotoUrl?: string; to: string }
 
 export const ROTULO: Partial<Record<Tipo, string>> = {
   esmalte: 'Esmalte', receita: 'Receita', teste: 'Teste', material: 'Material',
@@ -14,7 +14,7 @@ export const DEF: Partial<Record<Tipo, { tabela: string; r: (x: any) => Omit<Res
   receita: { tabela: 'receitas', r: (x) => ({ titulo: x.nome, sub: `versão ${x.versaoAtual}`, to: `/receitas/${x.id}` }) },
   teste: { tabela: 'testes', r: (x) => ({ titulo: x.codigo, sub: x.resultado || x.data, foto: x.fotos?.[0], to: `/testes/${x.id}` }) },
   material: { tabela: 'materiais', r: (x) => ({ titulo: x.nome, sub: x.categoria, foto: x.fotos?.[0], to: `/materiais/${x.id}` }) },
-  referencia: { tabela: 'referencias', r: (x) => ({ titulo: x.titulo, sub: x.autor || x.tipo, foto: x.imagens?.[0], to: `/referencias/${x.id}` }) },
+  referencia: { tabela: 'referencias', r: (x) => ({ titulo: x.titulo, sub: x.autor || x.tipo, foto: x.imagens?.[0], fotoUrl: x.imagemExterna, to: `/referencias/${x.id}` }) },
   conteudo: { tabela: 'conteudos', r: (x) => ({ titulo: x.titulo, sub: x.categoria, to: `/biblioteca/${x.id}` }) },
   familia: { tabela: 'familias', r: (x) => ({ titulo: x.nome, sub: x.codigo ?? 'Família', to: `/familias/${x.id}` }) },
   curva: { tabela: 'curvas', r: (x) => ({ titulo: x.nome, sub: x.codigo, to: `/curvas/${x.id}` }) },
