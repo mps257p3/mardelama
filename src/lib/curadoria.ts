@@ -1,5 +1,5 @@
 import { db, type Referencia } from '../db/schema'
-import { FONTE, FONTES, type FonteId, type ItemDescoberta } from './fontes'
+import { anoDe, FONTE, FONTES, type FonteId, type ItemDescoberta, type Periodo } from './fontes'
 
 /**
  * Curadoria do Descobrir: perfil de gosto persistente, pesos ajustáveis
@@ -69,15 +69,27 @@ const MODO_CONSULTAS: Partial<Record<Modo, string[]>> = {
 }
 
 /** Temas rápidos do Descobrir: atalhos de cerâmica com várias consultas cada. */
+/** Filtro de época do Descobrir. "Todas" ainda dá preferência ao que é recente. */
+export type Epoca = 'todas' | 'contemporanea' | 'moderna' | 'antiga'
+export const EPOCAS: Record<Epoca, { nome: string; periodo?: Periodo; consultas: string[] }> = {
+  todas: { nome: 'Todas as épocas', consultas: [] },
+  contemporanea: { nome: 'Contemporânea', periodo: { de: 1960 }, consultas: ['contemporary ceramics', 'contemporary sculpture', 'studio pottery', 'contemporary art installation', 'ceramic sculpture', 'contemporary glaze', 'contemporary craft', 'biomorphic sculpture', 'Takuro Kuwata', 'Ken Price', 'Betty Woodman', 'Ron Nagle', 'Magdalene Odundo', 'Jun Kaneko', 'Toshiko Takaezu', 'Akio Takamori', 'Grayson Perry', 'Edmund de Waal', 'Kristen Morgin', 'Shio Kusaka'] },
+  moderna: { nome: 'Moderna e vanguardas', periodo: { de: 1880, ate: 1979 }, consultas: ['Bauhaus', 'Art Deco', 'Art Nouveau', 'Surrealism', 'Dada', 'Futurism', 'Constructivism', 'Wiener Werkstatte', 'Arts and Crafts pottery', 'Mingei', 'Peter Voulkos', 'Lucie Rie', 'Hans Coper', 'Picasso ceramic', 'Joan Miro ceramic', 'Lucio Fontana ceramic', 'Rookwood', 'Shoji Hamada', 'Beatrice Wood', 'abstract expressionism'] },
+  antiga: { nome: 'Antiga', periodo: { ate: 1879 }, consultas: [] },
+}
+const dentro = (ano: number, p: Periodo) => (p.de == null || ano >= p.de) && (p.ate == null || ano <= p.ate)
+/** Pequeno bônus para o recente quando a época é "todas": o feed não fica dominado por acervo antigo. */
+const bonusRecente = (x: ItemDescoberta) => { const a = anoDe(x.data); return a == null ? (x.fonte === 'ov' ? 1.5 : 0) : a >= 1960 ? 3 : a >= 1880 ? 1.5 : 0 }
+
 export const TEMAS: { id: string; nome: string; universo: string; consultas: string[] }[] = [
+  { id: 'contemporaneos', nome: 'Artistas contemporâneos', universo: 'contemporanea', consultas: EPOCAS.contemporanea.consultas.slice(8) },
+  { id: 'vanguardas', nome: 'Vanguardas', universo: 'contemporanea', consultas: EPOCAS.moderna.consultas },
   { id: 'esmaltes', nome: 'Esmaltes', universo: 'ceramica', consultas: ['crackle glaze', 'celadon', 'ash glaze', 'tenmoku', 'copper red glaze', 'lusterware', 'salt glaze stoneware', 'drip glaze'] },
   { id: 'animal', nome: 'Escultura animal', universo: 'escultura', consultas: ['animal sculpture', 'ceramic animal', 'animal figure terracotta', 'bird figure', 'animal head sculpture', 'zoomorphic vessel'] },
   { id: 'vasos', nome: 'Vasos', universo: 'ceramica', consultas: ['vase', 'storage jar', 'bottle vase', 'amphora', 'ceramic vessel', 'lidded jar'] },
   { id: 'ilustradores', nome: 'Ilustradores', universo: 'ilustracao', consultas: ['Grandville', 'Gustave Dore', 'Arthur Rackham', 'Ernst Haeckel', 'Aubrey Beardsley', 'Ivan Bilibin', 'Kay Nielsen', 'Edward Lear', 'Kawanabe Kyosai', 'Maria Sibylla Merian', 'John Tenniel', 'Walter Crane', 'Hokusai manga', 'bestiary illustration'] },
   { id: 'pintores', nome: 'Pintores', universo: 'pintura', consultas: ['Hieronymus Bosch', 'Pieter Bruegel', 'Odilon Redon', 'Henri Rousseau', 'Albert Eckhout', 'Frans Post', 'Jean-Baptiste Debret', 'Rugendas', 'Paul Klee', 'Utagawa Kuniyoshi', 'Ito Jakuchu', 'Franz Marc', 'Giorgio Morandi', 'Hilma af Klint'] },
   { id: 'contemporanea', nome: 'Cerâmica contemporânea', universo: 'ceramica', consultas: ['contemporary ceramics', 'ceramic artist studio', 'ceramic sculpture exhibition', 'studio pottery', 'ceramic installation', 'raku firing', 'wood fired pottery'] },
-  { id: 'contemporaneos', nome: 'Ceramistas contemporâneos', universo: 'ceramica', consultas: ['Magdalene Odundo', 'Grayson Perry', 'Betty Woodman', 'Ken Price', 'Edmund de Waal', 'Takuro Kuwata', 'Toshiko Takaezu', 'Ron Nagle', 'Kathy Butterly', 'Akio Takamori', 'Jun Kaneko', 'Viola Frey', 'Robert Arneson', 'Simone Leigh', 'Shio Kusaka', 'Arlene Shechet', 'Kitaoji Rosanjin', 'Hans Coper', 'Lucie Rie'] },
-  { id: 'vanguardas', nome: 'Vanguardas', universo: 'escultura', consultas: ['Picasso ceramic', 'Lucio Fontana ceramic', 'Joan Miro ceramic', 'Bauhaus ceramics', 'Peter Voulkos', 'Otto Natzler', 'Jean Arp', 'Isamu Noguchi', 'Constantin Brancusi', 'Sophie Taeuber-Arp', 'Wiener Werkstatte ceramic', 'Eva Zeisel', 'Russian avant-garde porcelain', 'Sodeisha', 'Futurism', 'Surrealism sculpture', 'Dada'] },
   { id: 'precolombiana', nome: 'Pré-colombiana', universo: 'americas', consultas: ['pre-columbian ceramic', 'moche vessel', 'maya vessel', 'nazca pottery', 'colima figure', 'marajoara', 'olmec figure'] },
 ]
 
@@ -126,7 +138,7 @@ export function pesosDoGosto(perfil: Perfil) {
 const nomeU = (u?: string) => (u ? UNIVERSOS[u]?.nome ?? u : '')
 
 /** Monta as consultas de um lote conforme o modo e a mistura 60/25/15 (ajustável). Cada pedido leva o motivo, mostrado no visor. */
-export async function planejar(perfil: Perfil, modo: Modo, n = 8): Promise<Pedido[]> {
+export async function planejar(perfil: Perfil, modo: Modo, n = 8, epoca: Epoca = 'todas'): Promise<Pedido[]> {
   let { proximo, adjacente, experimental } = perfil.mistura
   if (modo === 'fora-da-curva') { proximo = 0; adjacente = 30; experimental = 70 }
   const tot = proximo + adjacente + experimental || 1
@@ -170,6 +182,12 @@ export async function planejar(perfil: Perfil, modo: Modo, n = 8): Promise<Pedid
     const u = sorteio(Object.keys(UNIVERSOS).filter((x) => !favs.includes(x)))
     pedidos.push({ q: sorteio(UNIVERSOS[u].consultas), universo: u, tipo: 'experimental', motivo: `Para sair da curva: ${nomeU(u)}` })
   }
+  // época escolhida (ou, em "todas", um pouco de contemporâneo): troca parte do lote por consultas daquela época
+  const ep = EPOCAS[epoca]
+  const daEpoca = epoca === 'todas' ? EPOCAS.contemporanea.consultas : ep.consultas
+  const trocar = epoca === 'todas' ? 2 : epoca === 'antiga' ? 0 : Math.ceil(n * .4)
+  const lista = [...daEpoca].sort(() => Math.random() - .5)
+  for (let k = 0; k < Math.min(trocar, lista.length, pedidos.length); k++) pedidos[pedidos.length - 1 - k] = { q: lista[k], universo: 'contemporanea', tipo: 'adjacente', motivo: epoca === 'todas' ? 'Para o feed não ficar só no passado' : `Época: ${ep.nome}` }
   return pedidos
 }
 
@@ -196,7 +214,8 @@ const pausar = (id: FonteId, erro: string) => { try { localStorage.setItem(chave
 const recusaDura = (msg: string) => /HTTP (403|404|410|429)/.test(msg)
 
 /** Executa as consultas nas fontes ligadas, remove repetidos, vistos e recusados. Se uma fonte falha, a consulta tenta a próxima. */
-export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: Set<string>, porConsulta = 6, rodada = 0) {
+export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: Set<string>, porConsulta = 6, rodada = 0, epoca: Epoca = 'todas') {
+  const periodo = EPOCAS[epoca].periodo
   const estados = new Map<FonteId, EstadoFonte>()
   const ligadas = FONTES.filter((f) => {
     if (!perfil.fontes[f.id]) return false
@@ -218,9 +237,11 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
     for (const f of ordem) {
       if (falhou.has(f.id)) continue
       try {
-        let xs = await f.buscar(p.q, porConsulta, pagina)
+        let xs = await f.buscar(p.q, periodo ? porConsulta * 2 : porConsulta, pagina, periodo)
+        // fora da época pedida sai; sem data só fica o Openverse (fotos atuais) no filtro contemporâneo
+        if (periodo) xs = xs.filter((x) => { const a = anoDe(x.data); return a == null ? epoca === 'contemporanea' && x.fonte === 'ov' : dentro(a, periodo) }).slice(0, porConsulta)
         // acervo pequeno para essa consulta: a página sorteada veio vazia, volta para uma das primeiras
-        if (!xs.length && pagina > 1) xs = await f.buscar(p.q, porConsulta, 1 + Math.floor(Math.random() * Math.min(2, pagina - 1)))
+        if (!xs.length && pagina > 1 && !periodo) xs = await f.buscar(p.q, porConsulta, 1 + Math.floor(Math.random() * Math.min(2, pagina - 1)))
         estados.set(f.id, { id: f.id, ok: true, quando: Date.now() })
         return xs.map((x) => ({ ...x, universo: p.universo, consulta: p.q, motivo: p.motivo }))
       } catch (e) {
@@ -241,7 +262,7 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
   // um sorteio na nota e as obras "para sair da curva" preservam espaço para o inesperado.
   if (pedidos.some((p) => p.tipo === 'proximo' || p.tipo === 'adjacente')) {
     const pesos = pesosDoGosto(perfil)
-    const comNota = itens.map((x) => ({ x, n: notaDoGosto(x, pesos, perfil) }))
+    const comNota = itens.map((x) => ({ x, n: notaDoGosto(x, pesos, perfil) + (epoca === 'todas' ? bonusRecente(x) : 0) }))
       .filter(({ x, n }) => n > -8 || x.motivo?.startsWith('Para sair'))
       .map(({ x, n }) => ({ x, ordem: x.motivo?.startsWith('Para sair') ? 4 + Math.random() * 6 : Math.max(-5, Math.min(15, n)) + Math.random() * 6 }))
     return { itens: comNota.sort((a, b) => b.ordem - a.ordem).map(({ x }) => x), estados: [...estados.values()] }

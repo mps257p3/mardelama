@@ -931,3 +931,7 @@ a.visor-btn { text-decoration: none; }
 .art-sugestao .txt p { margin: 0 0 6px; font-size: 14px; }
 .art-sugestao .eyebrow { display: flex; gap: 4px; align-items: center; }
 .art-sugestao .acoes { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* filtro de época: linha discreta, menor que a dos modos */
+.chips.epocas .chip { height: 28px; font-size: 12.5px; background: transparent; }
+.chips.epocas .chip.on { background: var(--marrom); border-color: var(--marrom); color: var(--marfim); }
