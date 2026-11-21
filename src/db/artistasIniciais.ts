@@ -594,7 +594,7 @@ const CAPAS: Record<string, string> = {
 
 /** Semeia o catálogo uma vez por aparelho, com ids fixos (não duplica entre aparelhos nem apaga o que já foi editado). */
 export async function semearArtistas() {
-  if (await db.ajustes.get('seed-artistas-v2')) return
+  if (await db.ajustes.get('seed-artistas-v3')) return
   const existentesA = new Set((await db.artistas.toArray()).map((x) => x.id))
   const existentesO = new Set((await db.obras.toArray()).map((x) => x.id))
   const as: Artista[] = ARTISTAS.filter(([id]) => !existentesA.has(id)).map(([id, a], i) => ({
@@ -602,5 +602,5 @@ export async function semearArtistas() {
   }))
   const os: Obra[] = OBRAS.filter(([id]) => !existentesO.has(id)).map(([id, o], i) => ({ ...base(id, i), tags: [], ...o }))
   await db.transaction('rw', db.artistas, db.obras, async () => { await db.artistas.bulkAdd(as); await db.obras.bulkAdd(os) })
-  await db.ajustes.put({ chave: 'seed-artistas-v2', valor: true })
+  await db.ajustes.put({ chave: 'seed-artistas-v3', valor: true })
 }
