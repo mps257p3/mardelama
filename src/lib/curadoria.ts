@@ -205,7 +205,9 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
   if (!ligadas.length) return { itens: [] as ItemDescoberta[], estados: [...estados.values()] }
   const rec = new Set(perfil.recusados)
   const falhou = new Set<FonteId>()
-  const res = await Promise.all(pedidos.map(async (p, i) => {
+  // o lote não espera fonte lenta: o que chegar em 15 s aparece; o resto termina em segundo plano e fica no cache da ponte
+  const prazo = new Promise<ItemDescoberta[]>((r) => setTimeout(() => r([]), 15000))
+  const res = await Promise.all(pedidos.map((p, i) => Promise.race([prazo, (async () => {
     const inicio = i + Math.floor(Math.random() * ligadas.length)
     // no feed, cada atualização sorteia páginas mais fundas dos acervos (material novo); busca segue em ordem
     const pagina = p.tipo === 'busca' || p.tipo === 'semelhantes' ? 1 + rodada * 2 + Math.floor(i / ligadas.length) : 1 + Math.floor(Math.random() * 8)
@@ -226,8 +228,8 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
         if (!estados.get(f.id)?.ok) estados.set(f.id, { id: f.id, ok: false, erro, quando: Date.now(), pausada: recusaDura(erro) })
       }
     }
-    return []
-  }))
+    return [] as ItemDescoberta[]
+  })()])))
   const vistos = new Set<string>()
   const itens: ItemDescoberta[] = []
   // intercala os resultados das consultas para o mural não ficar em blocos

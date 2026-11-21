@@ -40,6 +40,9 @@
     },
     "api/pinterest.js": {
       "maxDuration": 30
+    },
+    "api/fonte-node.js": {
+      "maxDuration": 30
     }
   }
 }
