@@ -759,9 +759,8 @@ a.visor-btn { text-decoration: none; }
 
 /* ——— Biblioteca · Artistas ——— */
 .art-feed { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 12px; }
-.art-feed > :nth-child(5n+1) { grid-column: span 2; }
-.art-feed > :nth-child(5n+1) .ph { aspect-ratio: 16/10; }
-@media (min-width: 700px) { .art-feed { grid-template-columns: repeat(3, 1fr); gap: 28px 18px; } .art-feed > :nth-child(5n+1) { grid-column: span 2; } .art-feed > :nth-child(5n+1) .ph { aspect-ratio: auto; height: 100%; } }
+@media (min-width: 700px) { .art-feed { grid-template-columns: repeat(3, 1fr); gap: 32px 20px; } }
+@media (min-width: 1100px) { .art-feed { grid-template-columns: repeat(4, 1fr); } }
 .art-card { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .art-card .ph { position: relative; display: block; aspect-ratio: 4/5; border-radius: 12px; overflow: hidden; background: var(--surface-2); }
 .art-card .ph img { position: absolute; inset: 0; transition: transform .8s var(--ease); }
@@ -885,3 +884,24 @@ a.visor-btn { text-decoration: none; }
 .expo-notas { margin-top: 10px; font-size: 14px; }
 .expo-acoes { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; }
 .expo-acoes .btn.on { background: var(--marrom); color: var(--marfim); border-color: var(--marrom); }
+.menu-botao { all: unset; cursor: pointer; display: inline-flex; }
+
+.art-card .ling, .art-linha .ling { font: 400 15px/1.3 var(--serif); color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-top: 2px; }
+.art-linha .ling { -webkit-line-clamp: 2; }
+.art-card .etq, .art-linha .etq { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.art-card .etq span, .art-linha .etq span { font-size: 10.5px; padding: 3px 8px; border-radius: 999px; background: color-mix(in srgb, var(--areia) 70%, var(--marfim)); color: var(--marrom); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 420px) { .art-card .nome { font-size: 19px; } .art-card .ling { font-size: 14px; } }
+.art-bloco > summary h2 .num, .art-bloco-fixo h2 .num, .minha-pesquisa h2 .num { font: 500 11px/1 var(--sans); letter-spacing: .12em; color: var(--terracota); margin-right: 12px; vertical-align: 6px; }
+.art-bloco-fixo { margin-top: 28px; }
+.estudar-acao { display: block; margin-top: 2px; }
+.estudar-acao { font: 400 12.5px/1.4 var(--sans); }
+.estudar-acao button { all: unset; cursor: pointer; color: var(--terracota); }
+.estudar-acao a { color: var(--azul); text-decoration: underline; }
+.expo-trilho { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 72%); gap: 10px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; padding-bottom: 2px; }
+.expo-trilho::-webkit-scrollbar { display: none; }
+@media (min-width: 900px) { .expo-trilho { grid-auto-flow: row; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); overflow: visible; } }
+.expo-mini { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px 16px; border-radius: 12px; background: color-mix(in srgb, var(--areia) 55%, var(--marfim)); border: 1px solid var(--line); min-height: 132px; }
+.expo-mini .q { font: 500 10.5px/1.2 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--terracota); }
+.expo-mini .t { font: 500 22px/1.1 var(--serif); margin-top: 2px; }
+.expo-mini .s { font-size: 13px; color: var(--ink-2); }
+.expo-mini .d { font-size: 12px; color: var(--ink-3); margin-top: auto; }

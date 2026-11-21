@@ -233,7 +233,8 @@ const FORMATO_ARTISTA = `Responda no fim com um único bloco JSON, sem texto dep
 "processos":[{"tema":"Esmaltes","texto":"","certeza":"verificado","fonte":"https://..."}],
 "estudar":[],"publicacoes":[{"titulo":"","url":"","tipo":"","ano":""}],"fontes":[{"titulo":"","url":"","tipo":""}],
 "obras":[{"titulo":"","ano":"","dimensoes":"","materiais":"","imagem":"https://...","fonte":"https://...","credito":""}],
-"avisos":[]}
+"nome":"","tags":[],"relacionados":[],"avisos":[]}
+Em "nome", o nome do artista como é conhecido internacionalmente. Em "tags", até 3 etiquetas curtas em português (ex.: superfície mineral, pulverização). Em "relacionados", só nomes da lista de artistas do acervo informada que tenham afinidade real (técnica, superfície, tradição).
 Temas possíveis de processos: Modelagem, Torneamento, Construção manual, Argila, Engobes, Esmaltes, Aplicação de camadas, Queima, Atmosfera do forno, Acabamentos.
 Até 8 processos, 6 obras, 8 fontes. Em "avisos", diga o que ficou incerto ou conflitante entre fontes.`
 
@@ -249,6 +250,7 @@ function limparArtista(o) {
     tecnicas: textos(o.tecnicas, 8), materiais: textos(o.materiais, 8), esmaltes: textos(o.esmaltes, 8), queimas: textos(o.queimas, 6),
     esteticas: textos(o.esteticas, 8), tiposObra: textos(o.tiposObra, 8), site: url(o.site), instagram: so(o.instagram, 60).replace(/^@/, ''),
     estudar: textos(o.estudar, 8), avisos: textos(o.avisos, 6),
+    nome: so(o.nome, 120), tags: textos(o.tags, 3), relacionados: textos(o.relacionados, 6),
   }
   r.processos = (Array.isArray(o.processos) ? o.processos : []).slice(0, 8).map((p) => ({
     tema: so(p?.tema, 40) || 'Esmaltes', texto: so(p?.texto, 600), fonte: url(p?.fonte) || undefined,
@@ -266,9 +268,12 @@ function limparArtista(o) {
 
 async function pesquisarArtista(d) {
   const nome = so(d?.nome, 120)
-  if (!nome) return json({ erro: 'Falta o nome do artista' }, 400)
+  const link = url(d?.url)
+  if (!nome && !link) return json({ erro: 'Informe o nome do artista ou um link' }, 400)
+  const catalogo = textos(d?.catalogo, 300).join(', ')
+  const alvo = nome ? `o ceramista ${nome}` : `o artista apresentado nesta página: ${link} (comece abrindo a página e confirme quem é)`
   const client = new Anthropic()
-  const mensagens = [{ role: 'user', content: `Pesquise o ceramista ${nome}.${d.contexto ? ' O que já se sabe: ' + so(d.contexto, 1500) : ''}\n\n${FORMATO_ARTISTA}` }]
+  const mensagens = [{ role: 'user', content: `Pesquise ${alvo}.${d.contexto ? ' O que já se sabe: ' + so(d.contexto, 1500) : ''}${catalogo ? '\nArtistas já no acervo: ' + catalogo + '.' : ''}\n\n${FORMATO_ARTISTA}` }]
   try {
     let r
     // a busca roda no servidor da Anthropic; se ela pausar no meio, continuamos a mesma conversa (até 3 vezes)
@@ -277,7 +282,7 @@ async function pesquisarArtista(d) {
         model: MODELO, max_tokens: 12000, betas: BETAS, fallbacks: 'default',
         thinking: { type: 'adaptive' }, output_config: { effort: 'medium' },
         system: SISTEMA_ARTISTA,
-        tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 6 }],
+        tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 6 }, { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 5 }],
         messages: mensagens,
       })
       if (r.stop_reason !== 'pause_turn') break

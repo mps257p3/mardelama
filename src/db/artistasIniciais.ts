@@ -442,8 +442,50 @@ const ARTISTAS: [string, A][] = [
     tags: ['bizen', 'forma', 'geometria'],
     relacionados: ['art-ichikawa', 'art-ueda'],
   }],
+  ['art-aizawa', {
+    ...vazio,
+    nome: 'Rie Aizawa', nomeOriginal: 'アイザワリエ (Aizawa Rie)', pais: ['Japão'], nascimento: '1994, Numazu (Shizuoka)', atuacao: 'Kasama, província de Ibaraki',
+    especialidade: 'Escultura cerâmica contemporânea',
+    linguagem: 'Investiga a transformação da matéria com superfícies porosas, barbotinas pigmentadas borrifadas e queimas sucessivas.',
+    bio: 'Nasceu em 1994 em Numazu, na província de Shizuoka. Formou-se no curso de cerâmica do Departamento de Artesanato da Osaka University of Arts em 2017 e concluiu o curso de pesquisa da Kasama College of Ceramic Art (Ibaraki) em 2018. Vive e trabalha em Kasama.\n\nPrêmios citados pelas fontes: prêmio de revelação na 51ª Exposição da Associação de Mulheres Ceramistas (2017); prêmio do Ministro da Educação na 25ª Exposição de Cerâmica do Japão (2018, segundo a SILVER SHELL); prêmio Kyoei Denkirō na 8ª Exposição Tōbi (2019); segundo lugar no 1º Prêmio de Cerâmica de Kasama (2021); prêmio da Ceramic Art Society of Japan (2021, segundo a Erskine, Hall & Coe); 9ª Bienal Kikuchi (2021 ou 2022, ver abaixo); medalha de bronze na 13ª International Ceramics Exhibition Mino (2024).\n\nExposição individual na SILVER SHELL (25/11 a 10/12/2024). Coletivas: Takashimaya "Bi no Yokan 2023" (Tóquio, Kyoto, Nagoya e Osaka), "Japanese Ceramics" (2023) e "Small Works, Great Artists" (2026) na Erskine, Hall & Coe, em Londres. Obras no Ibaraki Ceramic Art Museum e no Victoria and Albert Museum.\n\nDivergências entre fontes: a Erskine, Hall & Coe fala em prêmio de coleção na 9ª Bienal Kikuchi em 2022; a SILVER SHELL registra seleção na mesma bienal em 2021. O prêmio do Ministro da Educação (2018) só aparece na SILVER SHELL.',
+    caracteristicas: ['Superfícies porosas e granulares', 'Barbotina borrifada', 'Queimas sucessivas', 'Cores suaves em gradação'],
+    afinidade: 'Como Iwasaki, faz da cor e da superfície o assunto principal. Onde ele trabalha transições lisas de esmalte, ela constrói texturas secas e granulares por acumulação e por muitas queimas.',
+    analise: {
+      formas: 'Formas orgânicas e irregulares, construídas à mão, entre o pote e a escultura.',
+      paleta: 'Brancos com azuis, verdes e rosas suaves que mudam em gradação de uma área para outra.',
+      texturas: 'Porosas e granulares, como sedimento, coral ou mineral; a própria artista busca texturas "que parecem que vão desmanchar ao toque" e se mantêm firmes depois da queima.',
+      composicao: 'Acumulação: a superfície cresce em camadas a cada ciclo de borrifar e queimar.',
+      materiais: 'Massa misturada com porcelana, barbotina de porcelana tingida com pigmentos, esmaltes base e esmaltes de vidro comerciais.',
+      superficieVolume: 'A superfície engrossa o volume e apaga o contorno nítido da forma.',
+      reconhecivel: 'Peças cobertas de grânulos coloridos e secos, com aparência de paisagem erodida ou de matéria em transformação.',
+    },
+    processos: [
+      v('Construção manual', 'As obras começam com estruturas de argila construídas à mão.', 'https://www.ceramicreview.com/emerging-maker/emerging-maker-rie-aizawa/'),
+      v('Argila', 'Na faculdade usava uma argila muito refratária (fireclay). A diferença de retração entre ela e a porcelana virou problema, e hoje usa massas misturadas com porcelana e outros materiais para equilibrar resistência ao calor e retração.', 'https://www.ceramicreview.com/emerging-maker/emerging-maker-rie-aizawa/'),
+      v('Engobes', 'Borrifa barbotina de porcelana colorida, tingida de azul, verde, rosa e outros pigmentos, sobre a forma construída à mão.', 'https://ehc.art/artists/aizawa-rie'),
+      v('Aplicação de camadas', 'Aplica as camadas com pistola ligada a um compressor. Borrifa primeiro a parte de baixo e queima cerca de três vezes antes de reposicionar a peça, construindo a textura aos poucos em toda a forma.', 'https://www.ceramicreview.com/emerging-maker/emerging-maker-rie-aizawa/'),
+      v('Esmaltes', 'Usa esmaltes base, esmaltes de vidro comerciais e barbotina pigmentada. O método nasceu de um acidente ainda na faculdade: ao borrifar esmalte com o compressor, as partículas ficaram na superfície em vez de fundir.', 'https://www.ceramicreview.com/emerging-maker/emerging-maker-rie-aizawa/'),
+      v('Queima', 'A maior parte das obras é queimada a cerca de 1170 °C. Algumas peças passam por mais de dez queimas até ficarem prontas.', 'https://www.ceramicreview.com/emerging-maker/emerging-maker-rie-aizawa/'),
+      v('Queima', 'Já experimentou temperaturas mais altas, por volta de 1230 °C, baixando depois ou requeimando peças em temperatura alta. Numa queima repetida a 1230 °C, a superfície borrifada achatou com o calor refletido pela placa do forno.', 'https://www.ceramicreview.com/emerging-maker/emerging-maker-rie-aizawa/'),
+      v('Acabamentos', 'Peças maiores recebem barbotina pigmentada desde o início; as menores costumam ficar brancas até etapas mais adiantadas. A cada ciclo de borrifar e queimar, a cor ganha gradações sutis.', 'https://www.ceramicreview.com/emerging-maker/emerging-maker-rie-aizawa/'),
+      leitura('Aplicação de camadas', 'Nas imagens, a superfície parece feita de grânulos secos, sem vidrado contínuo, como sedimento acumulado.'),
+      hip('Atmosfera do forno', 'As fontes não dizem qual é o forno nem a atmosfera. A temperatura moderada e a cor obtida por pigmento sugerem forno elétrico, mas isso não está confirmado.'),
+    ],
+    estudar: [
+      'Pulverização de barbotina: pressão, distância e espessura de cada passada.',
+      'Texturas construídas por acumulação, camada sobre camada.',
+      'Compatibilidade entre massas e revestimentos: retração da massa e da barbotina.',
+      'Efeitos das queimas sucessivas sobre textura e cor.',
+      'Desenvolvimento de superfícies cromáticas em gradação.',
+    ],
+    publicacoes: [f('Emerging maker: Rie Aizawa — Ceramic Review (texto de Cormac Lehnen)', 'https://www.ceramicreview.com/emerging-maker/emerging-maker-rie-aizawa/', 'Entrevistas', '2026'), f('O mesmo artigo em PDF (Erskine, Hall & Coe)', 'https://ehc.art/assets/Ceramic-Review-July-August-2026-issue-Rie-Aizawa.pdf', 'Artigos', '2026'), f('Rie Aizawa展 — exposição individual', 'https://silver-shell.art/rieaizawa2024', 'Exposições', '2024')],
+    fontes: [f('Erskine, Hall & Coe — biografia', 'https://ehc.art/artists/aizawa-rie', 'Galerias'), f('Erskine, Hall & Coe — obras', 'https://ehc.art/artists/aizawa-rie/works', 'Galerias'), f('SILVER SHELL — exposição individual 2024', 'https://silver-shell.art/rieaizawa2024', 'Galerias'), f('Ceramic Review — Emerging maker', 'https://www.ceramicreview.com/emerging-maker/emerging-maker-rie-aizawa/', 'Revistas')],
+    retrato: 'https://cdn.ehc.art/assets/artists/RA/Aizawa-Rie-Portrait__ScaleMaxWidthWzk2MF0.jpeg?cdn-tag=21804&w=960',
+    tecnicas: ['Construção manual', 'Pulverização com compressor', 'Queimas sucessivas'], materiais: ['Massa com porcelana', 'Barbotina de porcelana', 'Pigmentos'], esmaltes: ['Barbotina pigmentada', 'Esmaltes de vidro comerciais', 'Textura granular'], queimas: ['Cerca de 1170 °C', 'Queimas múltiplas'], esteticas: ['Mineral', 'Orgânica', 'Erosão'], tiposObra: ['Esculturas', 'Potes'],
+    tags: ['pulverização', 'superfície mineral', 'queimas sucessivas'],
+    relacionados: ['art-hirai', 'art-iwasaki', 'art-kuwata'],
+  }],
 ]
-
 type O = Omit<Obra, 'id' | 'criadoEm' | 'atualizadoEm' | 'excluido' | 'favorito' | 'tags'> & { tags?: string[] }
 const iw = (serie: string, cod: string, img: string, prod = cod): [string, O] => [`obra-iwasaki-${cod}`, {
   artistaId: 'art-iwasaki', serie, titulo: `${serie} ${cod.toUpperCase()}`, imagem: `${IW}/wp-content/uploads/${img}`, fonte: `${IW}/product/${prod}/`, credito: 'Ryuji Iwasaki, site oficial',
@@ -482,17 +524,28 @@ const OBRAS: [string, O][] = [
   ['obra-kakurezaki-sanzoku', { artistaId: 'art-kakurezaki', titulo: 'Bizen, vaso de flores de três pés (備前三足花器)', imagem: 'https://www.kurodatoen.co.jp/wp-content/uploads/2017/09/1-243-250x250.jpg', fonte: 'https://www.kurodatoen.co.jp/cp_lineup/ryuichi-kakurezaki-2/', credito: 'Shibuya Kurodatoen', queima: 'Bizen' }],
   ['obra-kakurezaki-suiki', { artistaId: 'art-kakurezaki', titulo: 'Bizen, recipiente de saquê (備前酔器)', imagem: 'https://www.kurodatoen.co.jp/wp-content/uploads/2020/04/KR06-1-250x250.jpg', fonte: 'https://www.kurodatoen.co.jp/cp_lineup/ryuichi-kakurezaki-06/', credito: 'Shibuya Kurodatoen', queima: 'Bizen' }],
   ['obra-kakurezaki-kurowan', { artistaId: 'art-kakurezaki', titulo: 'Tigela negra (黒碗)', imagem: 'https://www.kurodatoen.co.jp/wp-content/uploads/2020/02/KR01-1-250x250.jpg', fonte: 'https://www.kurodatoen.co.jp/cp_lineup/ryuichi-kakurezaki-01/', credito: 'Shibuya Kurodatoen' }],
+  ['obra-aizawa-sarai', { artistaId: 'art-aizawa', titulo: 'Sarai no Ao', ano: '2023', dimensoes: '50,5 cm (altura)', materiais: 'Cerâmica', imagem: 'https://cdn.ehc.art/assets/artists/RA/RA-0001-01__FillMaxWzk2MCw3MjBd.jpg?cdn-tag=19030&w=960', fonte: 'https://ehc.art/artists/aizawa-rie/works/RA-0001/', credito: 'Erskine, Hall & Coe' }],
+  ['obra-aizawa-orykto-2', { artistaId: 'art-aizawa', titulo: 'Orykto', serie: 'Orykto', ano: '2026', dimensoes: '18,2 cm (altura)', materiais: 'Cerâmica', imagem: 'https://cdn.ehc.art/assets/artists/RA/RA-0002-1__FillMaxWzk2MCw3MjBd.jpg?cdn-tag=21656&w=960', fonte: 'https://ehc.art/artists/aizawa-rie/works/RA-0002/', credito: 'Erskine, Hall & Coe' }],
+  ['obra-aizawa-orykto-3', { artistaId: 'art-aizawa', titulo: 'Orykto', serie: 'Orykto', ano: '2026', dimensoes: '23 cm (altura)', materiais: 'Cerâmica', imagem: 'https://cdn.ehc.art/assets/artists/RA/RA-0003-1__FillMaxWzk2MCw3MjBd.jpg?cdn-tag=21666&w=960', fonte: 'https://ehc.art/artists/aizawa-rie/works/RA-0003/', credito: 'Erskine, Hall & Coe' }],
+  ['obra-aizawa-orykto-4', { artistaId: 'art-aizawa', titulo: 'Orykto', serie: 'Orykto', ano: '2026', dimensoes: '21,4 cm (altura)', materiais: 'Cerâmica', imagem: 'https://cdn.ehc.art/assets/artists/RA/RA-0004-1__FillMaxWzk2MCw3MjBd.jpg?cdn-tag=21675&w=960', fonte: 'https://ehc.art/artists/aizawa-rie/works/RA-0004/', credito: 'Erskine, Hall & Coe' }],
+  ['obra-aizawa-ss-b1', { artistaId: 'art-aizawa', titulo: 'Obra da exposição individual (título não informado)', serie: 'SILVER SHELL 2024', ano: '2024', imagem: 'https://silver-shell.art/wp-content/uploads/2024/11/b-1.jpg', fonte: 'https://silver-shell.art/rieaizawa2024', credito: 'SILVER SHELL' }],
+  ['obra-aizawa-ss-c', { artistaId: 'art-aizawa', titulo: 'Obra da exposição individual (título não informado)', serie: 'SILVER SHELL 2024', ano: '2024', imagem: 'https://silver-shell.art/wp-content/uploads/2024/11/c.jpg', fonte: 'https://silver-shell.art/rieaizawa2024', credito: 'SILVER SHELL' }],
+  ['obra-aizawa-ss-d', { artistaId: 'art-aizawa', titulo: 'Obra da exposição individual (título não informado)', serie: 'SILVER SHELL 2024', ano: '2024', imagem: 'https://silver-shell.art/wp-content/uploads/2024/11/d.jpg', fonte: 'https://silver-shell.art/rieaizawa2024', credito: 'SILVER SHELL' }],
+  ['obra-aizawa-ss-detalhe-1', { artistaId: 'art-aizawa', titulo: 'Detalhe de superfície (exposição de 2024)', serie: 'SILVER SHELL 2024', ano: '2024', imagem: 'https://silver-shell.art/wp-content/uploads/2024/11/IMG_20241125_131312508_HDR.jpg', fonte: 'https://silver-shell.art/rieaizawa2024', credito: 'SILVER SHELL' }],
+  ['obra-aizawa-ss-detalhe-2', { artistaId: 'art-aizawa', titulo: 'Vista da exposição de 2024', serie: 'SILVER SHELL 2024', ano: '2024', imagem: 'https://silver-shell.art/wp-content/uploads/2024/11/IMG_20241125_131339646.jpg', fonte: 'https://silver-shell.art/rieaizawa2024', credito: 'SILVER SHELL' }],
+  ['obra-aizawa-cr-1', { artistaId: 'art-aizawa', titulo: 'Obra publicada na Ceramic Review (título não informado)', serie: 'Ceramic Review 2026', imagem: 'https://www.ceramicreview.com/wp-content/uploads/2026/06/6CDAA0B4-F683-4B2A-B9AC-37BBF22C6CFD-1-3-1-1118x909.jpeg', fonte: 'https://www.ceramicreview.com/emerging-maker/emerging-maker-rie-aizawa/', credito: 'Ceramic Review' }],
+  ['obra-aizawa-cr-2', { artistaId: 'art-aizawa', titulo: 'Obra publicada na Ceramic Review (título não informado)', serie: 'Ceramic Review 2026', imagem: 'https://www.ceramicreview.com/wp-content/uploads/2026/06/4755BC2C-D393-4BA6-8315-C75D0154A084-3-2-1-1118x844.jpeg', fonte: 'https://www.ceramicreview.com/emerging-maker/emerging-maker-rie-aizawa/', credito: 'Ceramic Review' }],
+  ['obra-aizawa-cr-3', { artistaId: 'art-aizawa', titulo: 'Obra publicada na Ceramic Review (título não informado)', serie: 'Ceramic Review 2026', imagem: 'https://www.ceramicreview.com/wp-content/uploads/2026/06/IMG_0795-2-2-2-1118x746.jpg', fonte: 'https://www.ceramicreview.com/emerging-maker/emerging-maker-rie-aizawa/', credito: 'Ceramic Review' }],
 ]
-
 const CAPAS: Record<string, string> = {
   'art-kuwata': 'obra-kuwata-artbasel', 'art-segawa': 'obra-segawa-instalacao', 'art-hirai': 'obra-hirai-moonjar-2017', 'art-kusaka': 'obra-kusaka-line103',
   'art-hamana': 'obra-hamana-uzu', 'art-ueda': 'obra-ueda-2018', 'art-yamada': 'obra-yamada-enbu-2020', 'art-koie': 'obra-koie-oribe',
-  'art-ichikawa': 'obra-ichikawa-vp6', 'art-kakurezaki': 'obra-kakurezaki-mukozuke',
+  'art-ichikawa': 'obra-ichikawa-vp6', 'art-aizawa': 'obra-aizawa-sarai', 'art-kakurezaki': 'obra-kakurezaki-mukozuke',
 }
 
 /** Semeia o catálogo uma vez por aparelho, com ids fixos (não duplica entre aparelhos nem apaga o que já foi editado). */
 export async function semearArtistas() {
-  if (await db.ajustes.get('seed-artistas-v1')) return
+  if (await db.ajustes.get('seed-artistas-v2')) return
   const existentesA = new Set((await db.artistas.toArray()).map((x) => x.id))
   const existentesO = new Set((await db.obras.toArray()).map((x) => x.id))
   const as: Artista[] = ARTISTAS.filter(([id]) => !existentesA.has(id)).map(([id, a], i) => ({
@@ -500,5 +553,5 @@ export async function semearArtistas() {
   }))
   const os: Obra[] = OBRAS.filter(([id]) => !existentesO.has(id)).map(([id, o], i) => ({ ...base(id, i), tags: [], ...o }))
   await db.transaction('rw', db.artistas, db.obras, async () => { await db.artistas.bulkAdd(as); await db.obras.bulkAdd(os) })
-  await db.ajustes.put({ chave: 'seed-artistas-v1', valor: true })
+  await db.ajustes.put({ chave: 'seed-artistas-v2', valor: true })
 }

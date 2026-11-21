@@ -16,18 +16,27 @@ export const ANALISE = [
   ['materiais', 'Materiais'], ['superficieVolume', 'Superfície e volume'], ['reconhecivel', 'O que torna a obra reconhecível'],
 ] as const
 
-/** Campos usados nos filtros discretos da página Artistas. */
+/** Filtros recolhidos do Acervo de artistas. Cada filtro junta um ou mais campos do perfil. */
 export const FILTROS = [
-  { k: 'pais', l: 'País' }, { k: 'tecnicas', l: 'Técnica' }, { k: 'materiais', l: 'Material' },
-  { k: 'esteticas', l: 'Estética' }, { k: 'tiposObra', l: 'Tipo de obra' }, { k: 'queimas', l: 'Queima' },
+  { k: 'pais', l: 'País', ks: ['pais'] },
+  { k: 'linguagem', l: 'Linguagem artística', ks: ['esteticas'] },
+  { k: 'tecmat', l: 'Técnicas e materiais', ks: ['tecnicas', 'materiais', 'esmaltes'] },
+  { k: 'queimas', l: 'Queima', ks: ['queimas'] },
+  { k: 'tiposObra', l: 'Tipo de obra', ks: ['tiposObra'] },
 ] as const
 export type ChaveFiltro = (typeof FILTROS)[number]['k']
+type CampoLista = 'pais' | 'esteticas' | 'tecnicas' | 'materiais' | 'esmaltes' | 'queimas' | 'tiposObra'
+const filtro = (k: ChaveFiltro) => FILTROS.find((x) => x.k === k)!
+export const valoresDe = (a: Artista, k: ChaveFiltro) => [...new Set((filtro(k).ks as readonly CampoLista[]).flatMap((c) => a[c] ?? []))]
 
 export function valoresFiltro(as: Artista[], k: ChaveFiltro) {
   const m = new Map<string, number>()
-  as.forEach((a) => ((a[k] as string[] | undefined) ?? []).forEach((v) => m.set(v, (m.get(v) ?? 0) + 1)))
+  as.forEach((a) => valoresDe(a, k).forEach((v) => m.set(v, (m.get(v) ?? 0) + 1)))
   return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
 }
+
+/** Até três etiquetas principais para o card: as etiquetas do estudo, senão as características. */
+export const etiquetasPrincipais = (a: Artista) => (a.tags.length ? a.tags : a.caracteristicas).slice(0, 3)
 
 /** Imagem de uma obra: a foto guardada no aparelho ou a da fonte original. */
 export const temImagemObra = (o?: Pick<Obra, 'arquivo' | 'imagem'>) => !!(o?.arquivo || o?.imagem)

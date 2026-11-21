@@ -3,6 +3,7 @@ import { useAjuste } from '../db/settings'
 /** Seções dinâmicas da tela inicial — podem ser reordenadas e ocultadas em Ajustes. */
 export const SECOES_INICIO = [
   { id: 'atividade', nome: 'Atividade recente' },
+  { id: 'agenda', nome: 'Exposições em São Paulo' },
   { id: 'esmaltes', nome: 'Últimos esmaltes' },
   { id: 'testes', nome: 'Últimos testes' },
   { id: 'favoritas', nome: 'Referências favoritas' },
@@ -14,7 +15,8 @@ export interface SecaoCfg { id: SecaoId; on: boolean }
 export function mesclarSecoes(salvo?: SecaoCfg[]): SecaoCfg[] {
   const validos = new Set<string>(SECOES_INICIO.map((s) => s.id))
   const out = (salvo ?? []).filter((s) => validos.has(s.id))
-  for (const s of SECOES_INICIO) if (!out.some((o) => o.id === s.id)) out.push({ id: s.id, on: true })
+  // seção nova entra na posição padrão dela, sem mexer na ordem que a pessoa escolheu
+  SECOES_INICIO.forEach((s, i) => { if (!out.some((o) => o.id === s.id)) out.splice(Math.min(i, out.length), 0, { id: s.id, on: true }) })
   return out
 }
 export const useSecoesInicio = () => mesclarSecoes(useAjuste<SecaoCfg[] | undefined>('inicio.secoes', undefined))
