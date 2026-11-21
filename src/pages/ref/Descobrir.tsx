@@ -12,7 +12,7 @@ import { Sheet } from '../../ui/Sheet'
 import { useToast } from '../../ui/toast'
 import { TopoRef } from './Topo'
 import { EscolherGrupos, EscolherPainel } from './acoesRefs'
-import { atualizarGostoIA, buscarPorFoto, iaConfigurada, interpretarBusca, type Consulta, type TemaCurtidas } from '../../lib/iaRepertorio'
+import { atualizarGostoIA, buscarPorFoto, CHAVE_INSPIRA, inspirarDoAcervo, type InspiracaoAcervo, iaConfigurada, interpretarBusca, type Consulta, type TemaCurtidas } from '../../lib/iaRepertorio'
 import { CompararObra, ExplicarObra, ObraDoDia, TemasDasCurtidas, useObraDoDia } from './descobrirExtras'
 
 const MODOS: [Modo, string][] = [['para-voce', 'Para você'], ['fora-da-curva', 'Fora da curva'], ['novos-artistas', 'Novos artistas'], ['cores-texturas', 'Cores e texturas'], ['formas-volumes', 'Formas e volumes']]
@@ -50,7 +50,7 @@ export default function Descobrir() {
 
   useEffect(() => { lerPerfil().then((p) => setCurtidos(new Set(p.curtidos))) }, [])
   // a leitura do gosto pela IA se renova sozinha quando há curtidas novas (no máximo a cada 12 horas)
-  useEffect(() => { atualizarGostoIA().catch(() => undefined) }, [])
+  useEffect(() => { atualizarGostoIA().catch(() => undefined); inspirarDoAcervo().catch(() => undefined) }, [])
 
   const carregar = useCallback(async (novo: boolean, c: Contexto = ctx, m: Modo = modo) => {
     if (c.tipo === 'curtidas') {
@@ -367,6 +367,7 @@ function AjustesCuradoria({ onClose }: { onClose: () => void }) {
       <button className="btn sm ghost" onClick={() => mudar({ ...p, pesos: PESOS_PADRAO })}>Pesos padrão</button>
     </div>
     <LeituraIA p={p} onNova={(g) => setP({ ...p, gostoIA: g })} />
+    <LeituraPastas />
     <div className="filtro-sec"><div className="filtro-tit"><span>O que o app aprendeu</span></div>
       {top.length ? <div className="chips wrap">{top.map(([t]) => <button key={t} className="chip" onClick={() => { const termos = { ...p.termos }; delete termos[t]; mudar({ ...p, termos }) }}>{t}<X size={12} /></button>)}</div> : <p className="faint" style={{ fontSize: 13 }}>Ainda nada. Curta, salve e recuse imagens no feed.</p>}
       {univ.length > 0 && <p className="faint" style={{ fontSize: 12.5, marginTop: 10 }}>Universos: {univ.slice(0, 6).map(([u]) => UNIVERSOS[u]?.nome ?? u).join(', ')}</p>}
@@ -398,6 +399,28 @@ function LeituraIA({ p, onNova }: { p: Perfil; onNova: (g: Perfil['gostoIA']) =>
       <p className="faint" style={{ fontSize: 12, marginTop: 6 }}>Atualizada em {new Date(g.quando).toLocaleDateString('pt-BR')}. Renova sozinha quando há curtidas novas, no máximo a cada 12 horas.</p>
     </> : <p className="faint" style={{ fontSize: 13 }}>Depois de algumas curtidas, a IA lê o seu gosto e sugere buscas novas para o feed.</p>}
     <button className="btn sm ghost" style={{ marginTop: 6 }} disabled={rodando} onClick={agora}><Sparkles size={14} className={rodando ? 'gira' : ''} />{rodando ? 'Lendo o seu gosto…' : 'Atualizar leitura agora'}</button>
+  </div>
+}
+
+/** O que a IA tirou das suas pastas e referências para o feed. */
+function LeituraPastas() {
+  const [l, setL] = useState<InspiracaoAcervo>()
+  const [rodando, setRodando] = useState(false)
+  const toast = useToast()
+  useEffect(() => { db.ajustes.get(CHAVE_INSPIRA).then((a) => a?.valor && setL(a.valor as InspiracaoAcervo)) }, [])
+  async function agora() {
+    setRodando(true)
+    try { const n = await inspirarDoAcervo(true); if (n) { setL(n); toast('Pastas relidas. O próximo lote já usa.') } else toast('Precisa da IA configurada e de algumas referências.') }
+    catch (e) { toast('A IA não respondeu: ' + (e as Error).message) }
+    finally { setRodando(false) }
+  }
+  return <div className="filtro-sec"><div className="filtro-tit"><span>Suas pastas no feed (IA)</span></div>
+    {l ? <>
+      <p style={{ fontSize: 14, lineHeight: 1.5, margin: '0 0 8px' }}>{l.leitura}</p>
+      <p className="faint" style={{ fontSize: 12.5 }}>Buscas tiradas das pastas: {l.consultas.slice(0, 10).map((c) => c.q).join(', ')}{l.consultas.length > 10 ? '…' : ''}</p>
+      <p className="faint" style={{ fontSize: 12, marginTop: 6 }}>Lidas em {new Date(l.quando).toLocaleDateString('pt-BR')} ({l.n} referências e estudos). Renova sozinha a cada um ou três dias, conforme o acervo cresce.</p>
+    </> : <p className="faint" style={{ fontSize: 13 }}>A IA lê suas pastas (Pinterest, Instagram, grupos) e os estudos de artistas da Biblioteca e tira deles buscas novas para o feed.</p>}
+    <button className="btn sm ghost" style={{ marginTop: 6 }} disabled={rodando} onClick={agora}><Sparkles size={14} className={rodando ? 'gira' : ''} />{rodando ? 'Lendo as pastas…' : 'Reler minhas pastas agora'}</button>
   </div>
 }
 
