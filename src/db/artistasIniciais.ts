@@ -485,7 +485,48 @@ const ARTISTAS: [string, A][] = [
     tags: ['pulverização', 'superfície mineral', 'queimas sucessivas'],
     relacionados: ['art-hirai', 'art-iwasaki', 'art-kuwata'],
   }],
+  ['art-romanowska', {
+    ...vazio,
+    nome: 'Karolina Romanowska', pais: ['Estados Unidos'], atuacao: 'Madison, Wisconsin',
+    especialidade: 'Máscaras e esculturas de cerâmica',
+    linguagem: 'Máscaras de grés construídas à mão, cheias de chifres, línguas, gotas e padrões em relevo, com expressões que vão do medo à euforia.',
+    bio: 'Artista baseada em Madison, Wisconsin, nos Estados Unidos. Faz esculturas e máscaras de cerâmica que vão do tamanho miniatura ao tamanho natural. Nascimento, formação e país de origem não aparecem nas fontes consultadas.\n\nEm 2022 teve obras expostas no Overture Center, em Madison, e participou de uma coletiva na Higher Art Gallery, em Traverse City. Em 2024 participou da coletiva "A Little Vacation" na Gallery ERGO. Segundo o Artsy, ainda não tinha exposição individual. A revista Colossal publicou reportagens sobre as máscaras em 2022 e em 2024.',
+    caracteristicas: ['Máscaras expressivas', 'Construção com placas, rolos e moldes', 'Engobes coloridos', 'Padrões em relevo'],
+    afinidade: 'O oposto da contenção de Iwasaki: aqui a cor e o relevo servem à expressão de personagens. A ligação está no uso da superfície colorida como assunto.',
+    analise: {
+      formas: 'Máscaras e rostos de criaturas com chifres pontudos, línguas achatadas, gotas e múltiplos olhos.',
+      paleta: 'Cores vivas e tons pastel combinados na mesma peça.',
+      texturas: 'Superfícies com muitos padrões e relevos aplicados.',
+      composicao: 'Simétrica e frontal, como uma máscara, com acúmulo de elementos ao redor do rosto.',
+      materiais: 'Grés com engobes coloridos.',
+      superficieVolume: 'O relevo e a cor são trabalhados uma cor e uma textura de cada vez, segundo a Colossal.',
+      reconhecivel: 'Máscaras de personagens fantásticos, coloridas e cheias de saliências, entre o assustador e o alegre.',
+    },
+    processos: [
+      v('Construção manual', 'Constrói as máscaras à mão, combinando placas, rolos e moldes para formar línguas achatadas, gotas individuais e chifres de ponta fina.', 'https://www.thisiscolossal.com/2022/07/karolina-romanowska-ceramic-masks/'),
+      v('Argila', 'As peças são de grés.', 'https://www.thisiscolossal.com/2022/07/karolina-romanowska-ceramic-masks/'),
+      v('Engobes', 'Prefere engobes coloridos para dar dimensão e textura ao grés.', 'https://www.thisiscolossal.com/2022/07/karolina-romanowska-ceramic-masks/'),
+      v('Acabamentos', 'Decora cada máscara com muitos padrões e superfícies em relevo, em cores vivas, aplicando uma cor e uma textura de cada vez.', 'https://www.thisiscolossal.com/2024/06/karolina-romanowska-masks/'),
+      v('Queima', 'Diz que, depois da queima de biscoito, não consegue mais mudar a estrutura da peça.', 'https://www.thisiscolossal.com/2024/06/karolina-romanowska-masks/'),
+      leitura('Aplicação de camadas', 'Nas imagens, o relevo parece aplicado em pequenas peças coladas (bolinhas, gotas, pétalas) antes da queima.'),
+      hip('Queima', 'Temperatura, forno e se há esmalte por cima dos engobes não são informados nas fontes.'),
+    ],
+    estudar: [
+      'Placas, rolos e moldes combinados numa mesma peça.',
+      'Engobes coloridos sobre grés: cor e textura juntas.',
+      'Padrões em relevo aplicados uma cor de cada vez.',
+      'Expressão de personagens: o rosto como composição.',
+      'Planejar a forma antes do biscoito, quando a estrutura deixa de poder mudar.',
+    ],
+    publicacoes: [f('Wildly Expressive Masks by Karolina Romanowska — Colossal', 'https://www.thisiscolossal.com/2022/07/karolina-romanowska-ceramic-masks/', 'Reportagens', '2022'), f('Karolina Romanowska Embraces the Nature of Clay — Colossal', 'https://www.thisiscolossal.com/2024/06/karolina-romanowska-masks/', 'Reportagens', '2024'), f('A Little Vacation — Gallery ERGO (coletiva)', 'https://www.artsy.net/show/gallery-ergo-a-little-vacation', 'Exposições', '2024')],
+    fontes: [f('Site oficial', 'https://www.karolinasculpture.com/', 'Site oficial'), f('Artsy — currículo', 'https://www.artsy.net/artist/karolina-romanowska/cv', 'Catálogos'), f('Colossal (2022)', 'https://www.thisiscolossal.com/2022/07/karolina-romanowska-ceramic-masks/', 'Revistas'), f('Colossal (2024)', 'https://www.thisiscolossal.com/2024/06/karolina-romanowska-masks/', 'Revistas')],
+    site: 'https://www.karolinasculpture.com/', instagram: 'karolinasculpture',
+    tecnicas: ['Construção manual', 'Placas', 'Acordelado', 'Moldes'], materiais: ['Grés'], esmaltes: ['Engobes coloridos', 'Relevo'], queimas: [], esteticas: ['Expressiva', 'Fantástica', 'Colorida'], tiposObra: ['Máscaras', 'Esculturas'],
+    tags: ['máscaras', 'engobe colorido', 'relevo'],
+    relacionados: ['art-kuwata'],
+  }],
 ]
+
 type O = Omit<Obra, 'id' | 'criadoEm' | 'atualizadoEm' | 'excluido' | 'favorito' | 'tags'> & { tags?: string[] }
 const iw = (serie: string, cod: string, img: string, prod = cod): [string, O] => [`obra-iwasaki-${cod}`, {
   artistaId: 'art-iwasaki', serie, titulo: `${serie} ${cod.toUpperCase()}`, imagem: `${IW}/wp-content/uploads/${img}`, fonte: `${IW}/product/${prod}/`, credito: 'Ryuji Iwasaki, site oficial',
@@ -536,11 +577,19 @@ const OBRAS: [string, O][] = [
   ['obra-aizawa-cr-1', { artistaId: 'art-aizawa', titulo: 'Obra publicada na Ceramic Review (título não informado)', serie: 'Ceramic Review 2026', imagem: 'https://www.ceramicreview.com/wp-content/uploads/2026/06/6CDAA0B4-F683-4B2A-B9AC-37BBF22C6CFD-1-3-1-1118x909.jpeg', fonte: 'https://www.ceramicreview.com/emerging-maker/emerging-maker-rie-aizawa/', credito: 'Ceramic Review' }],
   ['obra-aizawa-cr-2', { artistaId: 'art-aizawa', titulo: 'Obra publicada na Ceramic Review (título não informado)', serie: 'Ceramic Review 2026', imagem: 'https://www.ceramicreview.com/wp-content/uploads/2026/06/4755BC2C-D393-4BA6-8315-C75D0154A084-3-2-1-1118x844.jpeg', fonte: 'https://www.ceramicreview.com/emerging-maker/emerging-maker-rie-aizawa/', credito: 'Ceramic Review' }],
   ['obra-aizawa-cr-3', { artistaId: 'art-aizawa', titulo: 'Obra publicada na Ceramic Review (título não informado)', serie: 'Ceramic Review 2026', imagem: 'https://www.ceramicreview.com/wp-content/uploads/2026/06/IMG_0795-2-2-2-1118x746.jpg', fonte: 'https://www.ceramicreview.com/emerging-maker/emerging-maker-rie-aizawa/', credito: 'Ceramic Review' }],
+  ['obra-romanowska-1', { artistaId: 'art-romanowska', titulo: 'Máscara (título não informado)', serie: 'Colossal 2022', materiais: 'Grés e engobes coloridos', tecnica: 'Construção manual', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2022/07/romanowska-2-scaled.jpg', fonte: 'https://www.thisiscolossal.com/2022/07/karolina-romanowska-ceramic-masks/', credito: '© Karolina Romanowska, via Colossal' }],
+  ['obra-romanowska-2', { artistaId: 'art-romanowska', titulo: 'Máscara (título não informado)', serie: 'Colossal 2022', materiais: 'Grés e engobes coloridos', tecnica: 'Construção manual', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2022/07/romanowska-4.jpg', fonte: 'https://www.thisiscolossal.com/2022/07/karolina-romanowska-ceramic-masks/', credito: '© Karolina Romanowska, via Colossal' }],
+  ['obra-romanowska-3', { artistaId: 'art-romanowska', titulo: 'Máscara (título não informado)', serie: 'Colossal 2022', materiais: 'Grés e engobes coloridos', tecnica: 'Construção manual', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2022/07/romanowska-3-scaled.jpg', fonte: 'https://www.thisiscolossal.com/2022/07/karolina-romanowska-ceramic-masks/', credito: '© Karolina Romanowska, via Colossal' }],
+  ['obra-romanowska-4', { artistaId: 'art-romanowska', titulo: 'Máscara (título não informado)', serie: 'Colossal 2022', materiais: 'Grés e engobes coloridos', tecnica: 'Construção manual', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2022/07/romanowska-10.jpg', fonte: 'https://www.thisiscolossal.com/2022/07/karolina-romanowska-ceramic-masks/', credito: '© Karolina Romanowska, via Colossal' }],
+  ['obra-romanowska-5', { artistaId: 'art-romanowska', titulo: 'Máscara (título não informado)', serie: 'Colossal 2024', materiais: 'Grés e engobes coloridos', tecnica: 'Construção manual', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2024/06/karolina-1-1-scaled.jpg', fonte: 'https://www.thisiscolossal.com/2024/06/karolina-romanowska-masks/', credito: '© Karolina Romanowska, via Colossal' }],
+  ['obra-romanowska-6', { artistaId: 'art-romanowska', titulo: 'Máscara (título não informado)', serie: 'Colossal 2024', materiais: 'Grés e engobes coloridos', tecnica: 'Construção manual', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2024/06/karolina-9-1.jpg', fonte: 'https://www.thisiscolossal.com/2024/06/karolina-romanowska-masks/', credito: '© Karolina Romanowska, via Colossal' }],
+  ['obra-romanowska-7', { artistaId: 'art-romanowska', titulo: 'Máscara (título não informado)', serie: 'Colossal 2024', materiais: 'Grés e engobes coloridos', tecnica: 'Construção manual', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2024/06/karolina-3-1-scaled.jpg', fonte: 'https://www.thisiscolossal.com/2024/06/karolina-romanowska-masks/', credito: '© Karolina Romanowska, via Colossal' }],
+  ['obra-romanowska-8', { artistaId: 'art-romanowska', titulo: 'Máscara (título não informado)', serie: 'Colossal 2024', materiais: 'Grés e engobes coloridos', tecnica: 'Construção manual', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2024/06/karolina-2-1-scaled.jpg', fonte: 'https://www.thisiscolossal.com/2024/06/karolina-romanowska-masks/', credito: '© Karolina Romanowska, via Colossal' }],
 ]
 const CAPAS: Record<string, string> = {
   'art-kuwata': 'obra-kuwata-artbasel', 'art-segawa': 'obra-segawa-instalacao', 'art-hirai': 'obra-hirai-moonjar-2017', 'art-kusaka': 'obra-kusaka-line103',
   'art-hamana': 'obra-hamana-uzu', 'art-ueda': 'obra-ueda-2018', 'art-yamada': 'obra-yamada-enbu-2020', 'art-koie': 'obra-koie-oribe',
-  'art-ichikawa': 'obra-ichikawa-vp6', 'art-aizawa': 'obra-aizawa-sarai', 'art-kakurezaki': 'obra-kakurezaki-mukozuke',
+  'art-ichikawa': 'obra-ichikawa-vp6', 'art-aizawa': 'obra-aizawa-sarai', 'art-romanowska': 'obra-romanowska-5', 'art-kakurezaki': 'obra-kakurezaki-mukozuke',
 }
 
 /** Semeia o catálogo uma vez por aparelho, com ids fixos (não duplica entre aparelhos nem apaga o que já foi editado). */
