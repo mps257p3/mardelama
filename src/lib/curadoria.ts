@@ -78,6 +78,21 @@ export const EPOCAS: Record<Epoca, { nome: string; periodo?: Periodo; consultas:
   antiga: { nome: 'Antiga', periodo: { ate: 1879 }, consultas: [] },
 }
 const dentro = (ano: number, p: Periodo) => (p.de == null || ano >= p.de) && (p.ate == null || ano <= p.ate)
+/** O que costuma deixar o feed sem graça (moedas, fragmentos, documentos…) perde pontos, a não ser que você goste. */
+const SEM_GRACA = /\b(coin|medal|token|sherd|shard|fragment|potsherd|document|letter|manuscript leaf|leaf from|page from|map of|postage stamp|stamp|banknote|seal impression|negative|glass plate|lantern slide|specimen sheet|button|bead|weight|label|trade card|ticket|receipt|deed|certificate|bookplate|playing card|textile sample|sample book|wallpaper sample)\b/i
+const semGraca = (x: ItemDescoberta, pesos: Record<string, number>) => SEM_GRACA.test(x.titulo + ' ' + x.termos.join(' ')) && !x.termos.some((t) => (pesos[t] ?? 0) > 2) ? 5 : 0
+/** Variedade no topo: no máximo 2 obras do mesmo autor e ~1/3 do lote de uma mesma fonte; o excedente vai para o fim. */
+function variar(xs: ItemDescoberta[]) {
+  const porAutor = new Map<string, number>(); const porFonte = new Map<string, number>()
+  const tetoFonte = Math.max(3, Math.ceil(xs.length * .34))
+  const topo: ItemDescoberta[] = [], fim: ItemDescoberta[] = []
+  for (const x of xs) {
+    const a = (x.autor ?? '').toLowerCase(); const na = a && !/unknown|anonymous|desconhecid/.test(a) ? (porAutor.get(a) ?? 0) : 0; const nf = porFonte.get(x.fonte) ?? 0
+    if (na >= 2 || nf >= tetoFonte) { fim.push(x); continue }
+    if (a) porAutor.set(a, na + 1); porFonte.set(x.fonte, nf + 1); topo.push(x)
+  }
+  return [...topo, ...fim]
+}
 /** Pequeno bônus para o recente quando a época é "todas": o feed não fica dominado por acervo antigo. */
 const bonusRecente = (x: ItemDescoberta) => { const a = x.fonte === 'wm' ? undefined : anoDe(x.data); return a == null ? (x.fonte === 'ov' ? 1.5 : 0) : a >= 1960 ? 3 : a >= 1880 ? 1.5 : 0 }
 
@@ -159,6 +174,15 @@ export async function planejar(perfil: Perfil, modo: Modo, n = 8, epoca: Epoca =
       const autor = it.autor && !/unknown|anonymous|desconhecido|anônimo|artist$/i.test(it.autor) ? it.autor : undefined
       const q = autor && Math.random() < .5 ? autor : it.termos.slice(0, 2).join(' ') || it.consulta
       if (q) { pedidos.push({ q, universo: it.universo, tipo: 'proximo', motivo: `Porque você curtiu “${it.titulo.slice(0, 60)}”` }); usados++ }
+    }
+  }
+  // suas pastas e referências (Pinterest, Instagram, grupos) lidas pela IA: até metade do que sobra
+  if (modo === 'para-voce' || modo === 'fora-da-curva') {
+    const insp = ((await db.ajustes.get('ia.acervoInspira'))?.valor as { consultas: { q: string; universo: string; pasta: string; porque: string }[] } | undefined)?.consultas ?? []
+    const vagas = modo === 'fora-da-curva' ? 2 : Math.max(1, Math.ceil((nP - usados) / 2))
+    for (const c of [...insp].sort(() => Math.random() - .5).slice(0, vagas)) {
+      pedidos.push({ q: c.q, universo: c.universo, tipo: 'proximo', motivo: c.pasta === 'estudos de artistas' ? `Dos seus estudos de artistas: ${c.porque}` : c.pasta && c.pasta !== 'acervo' ? `Da sua pasta “${c.pasta}”` : `Do seu acervo: ${c.porque}` })
+      if (modo === 'para-voce') usados++
     }
   }
   // ideias da IA a partir do seu gosto: até metade do que é "perto do que você gosta"
@@ -263,10 +287,10 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
   // um sorteio na nota e as obras "para sair da curva" preservam espaço para o inesperado.
   if (pedidos.some((p) => p.tipo === 'proximo' || p.tipo === 'adjacente')) {
     const pesos = pesosDoGosto(perfil)
-    const comNota = itens.map((x) => ({ x, n: notaDoGosto(x, pesos, perfil) + (epoca === 'todas' ? bonusRecente(x) : 0) }))
+    const comNota = itens.map((x) => ({ x, n: notaDoGosto(x, pesos, perfil) + (epoca === 'todas' ? bonusRecente(x) : 0) - semGraca(x, pesos) + (/^(Da sua pasta|Do seu acervo|Dos seus estudos)/.test(x.motivo ?? '') ? 3 : 0) }))
       .filter(({ x, n }) => n > -8 || x.motivo?.startsWith('Para sair'))
       .map(({ x, n }) => ({ x, ordem: x.motivo?.startsWith('Para sair') ? 4 + Math.random() * 6 : Math.max(-5, Math.min(15, n)) + Math.random() * 6 }))
-    return { itens: comNota.sort((a, b) => b.ordem - a.ordem).map(({ x }) => x), estados: [...estados.values()] }
+    return { itens: variar(comNota.sort((a, b) => b.ordem - a.ordem).map(({ x }) => x)), estados: [...estados.values()] }
   }
   return { itens, estados: [...estados.values()] }
 }

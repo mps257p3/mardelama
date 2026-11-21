@@ -104,6 +104,25 @@ const ESQUEMAS = {
     },
   },
 }
+// inspiração vinda do acervo (pastas do Pinterest, Instagram, referências)
+ESQUEMAS.acervo = {
+  type: 'object', additionalProperties: false, required: ['leitura', 'consultas'],
+  properties: {
+    leitura: { type: 'string', description: 'Uma frase em segunda pessoa sobre o que as pastas e referências mostram do repertório visual da pessoa.' },
+    consultas: {
+      type: 'array', description: 'De 12 a 16 consultas para acervos de museus e coleções abertas, inspiradas nas pastas. Metade próxima do que já está nas pastas, metade um passo além (o que um bom curador mostraria a quem montou essas pastas).',
+      items: {
+        type: 'object', additionalProperties: false, required: ['q', 'universo', 'pasta', 'porque'],
+        properties: {
+          q: { type: 'string', description: 'Consulta curta em inglês (2 a 4 palavras), específica e visual (artista, técnica, forma, movimento), nunca genérica como "art" ou "design".' },
+          universo: { type: 'string', description: 'Um dos universos criativos informados.' },
+          pasta: { type: 'string', description: 'Nome exato da pasta (ou "acervo") que inspirou a consulta.' },
+          porque: { type: 'string', description: 'Motivo em português, curto (até 8 palavras).' },
+        },
+      },
+    },
+  },
+}
 // busca por foto: mesma resposta da busca por texto
 ESQUEMAS.foto = ESQUEMAS.buscar
 // curtidas agrupadas em temas
@@ -151,6 +170,20 @@ Em outras_linguas, traduza o núcleo do pedido para holandês (Rijksmuseum), din
 Termos que a pessoa costuma curtir: ${(d.gosto ?? []).slice(0, 20).join(', ') || 'nenhum ainda'}.
 ${d.nota ? 'O que a pessoa quer com a foto: "' + String(d.nota).slice(0, 200) + '"\n' : ''}Um ceramista fotografou isto (uma peça dele, um objeto, uma textura, algo na rua) e quer achar obras parecidas em acervos de museus.
 Em "leitura", diga em uma frase o que você vê que guiou a busca (forma, superfície, cor, técnica aparente). Monte consultas em inglês que achem obras com a mesma forma, superfície, técnica ou tema, de épocas e culturas variadas. Em outras_linguas, o núcleo da busca nos idiomas pedidos.` },
+      ],
+    }
+  }
+  if (acao === 'acervo') {
+    const imgs = (d.imagens ?? []).filter((u) => /^https:\/\//.test(u)).slice(0, 12)
+    return {
+      esforco: 'low', max: 5000,
+      conteudo: [
+        ...imgs.map((url) => ({ type: 'image', source: { type: 'url', url } })),
+        { type: 'text', text: `Universos disponíveis: ${(d.universos ?? []).join(', ')}.
+${imgs.length ? 'As imagens acima são amostras das pastas (uma por pasta, na ordem da lista).\n' : ''}Pastas e referências que um ceramista guardou (Pinterest, Instagram, acervo próprio), com nome da pasta e exemplos do que tem nela:
+${JSON.stringify(d.pastas ?? []).slice(0, 24000)}
+Consultas que já foram feitas recentemente (evite repetir): ${(d.recentes ?? []).slice(0, 40).join(', ') || 'nenhuma'}.
+A partir disso, proponha consultas para um feed de descoberta que traga coisas novas e interessantes, ligadas a essas pastas. Prefira nomes de artistas, movimentos, técnicas e formas específicas a termos genéricos.` },
       ],
     }
   }
