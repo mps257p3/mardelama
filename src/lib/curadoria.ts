@@ -79,7 +79,7 @@ export const EPOCAS: Record<Epoca, { nome: string; periodo?: Periodo; consultas:
 }
 const dentro = (ano: number, p: Periodo) => (p.de == null || ano >= p.de) && (p.ate == null || ano <= p.ate)
 /** Pequeno bônus para o recente quando a época é "todas": o feed não fica dominado por acervo antigo. */
-const bonusRecente = (x: ItemDescoberta) => { const a = anoDe(x.data); return a == null ? (x.fonte === 'ov' ? 1.5 : 0) : a >= 1960 ? 3 : a >= 1880 ? 1.5 : 0 }
+const bonusRecente = (x: ItemDescoberta) => { const a = x.fonte === 'wm' ? undefined : anoDe(x.data); return a == null ? (x.fonte === 'ov' ? 1.5 : 0) : a >= 1960 ? 3 : a >= 1880 ? 1.5 : 0 }
 
 export const TEMAS: { id: string; nome: string; universo: string; consultas: string[] }[] = [
   { id: 'contemporaneos', nome: 'Artistas contemporâneos', universo: 'contemporanea', consultas: EPOCAS.contemporanea.consultas.slice(8) },
@@ -239,7 +239,8 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
       try {
         let xs = await f.buscar(p.q, periodo ? porConsulta * 2 : porConsulta, pagina, periodo)
         // fora da época pedida sai; sem data só fica o Openverse (fotos atuais) no filtro contemporâneo
-        if (periodo) xs = xs.filter((x) => { const a = anoDe(x.data); return a == null ? epoca === 'contemporanea' && x.fonte === 'ov' : dentro(a, periodo) }).slice(0, porConsulta)
+        // na Wikimedia a data é a da fotografia, não a da obra: não serve para o filtro de época
+        if (periodo) xs = xs.filter((x) => { const a = x.fonte === 'wm' ? undefined : anoDe(x.data); return a == null ? epoca === 'contemporanea' && x.fonte === 'ov' : dentro(a, periodo) }).slice(0, porConsulta)
         // acervo pequeno para essa consulta: a página sorteada veio vazia, volta para uma das primeiras
         if (!xs.length && pagina > 1 && !periodo) xs = await f.buscar(p.q, porConsulta, 1 + Math.floor(Math.random() * Math.min(2, pagina - 1)))
         estados.set(f.id, { id: f.id, ok: true, quando: Date.now() })
