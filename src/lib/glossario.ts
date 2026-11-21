@@ -3,7 +3,7 @@
  * `chaves` são as grafias procuradas nos textos (perfis de artistas) para criar os links automáticos.
  * Termos genéricos demais (torno, placa…) ficam fora da busca automática.
  */
-export type CatGlossario = 'Esmaltes e superfícies' | 'Queima e fornos' | 'Formas' | 'Técnicas' | 'Materiais' | 'Tradições e estética'
+export type CatGlossario = 'Argila e preparo' | 'Técnicas' | 'Esmaltes e superfícies' | 'Queima e fornos' | 'Materiais' | 'Defeitos' | 'Formas' | 'Tradições e estética'
 
 export interface Termo {
   id: string
@@ -15,9 +15,132 @@ export interface Termo {
   ver?: string[]
 }
 
-export const CATS_GLOSSARIO: CatGlossario[] = ['Esmaltes e superfícies', 'Queima e fornos', 'Formas', 'Técnicas', 'Materiais', 'Tradições e estética']
+export const CATS_GLOSSARIO: CatGlossario[] = ['Argila e preparo', 'Técnicas', 'Esmaltes e superfícies', 'Queima e fornos', 'Materiais', 'Defeitos', 'Formas', 'Tradições e estética']
 
 export const GLOSSARIO: Termo[] = [
+
+  // Argila e preparo
+  { id: 'argila', termo: 'Argila', cat: 'Argila e preparo', ver: ['plasticidade', 'gres', 'faianca'],
+    def: 'Matéria-prima da cerâmica: mineral muito fino que, com água, fica plástico e pode ser modelado; com o calor, endurece de forma permanente.' },
+  { id: 'massa', termo: 'Massa cerâmica', cat: 'Argila e preparo', ver: ['argila', 'chamote'],
+    def: 'Mistura pronta de argilas, fundentes e cargas (como quartzo e chamote) preparada para um uso e uma temperatura de queima.' },
+  { id: 'barbotina', termo: 'Barbotina', cat: 'Argila e preparo', chaves: ['barbotina'], ver: ['engobe', 'colagem', 'riscar-colar'],
+    def: 'Argila diluída em água até virar uma pasta ou um líquido. Serve para colar partes, para fazer engobe e, com defloculante, para colagem em molde de gesso.' },
+  { id: 'chamote', termo: 'Chamote', cat: 'Argila e preparo', chaves: ['chamote', 'grog'],
+    def: 'Argila já queimada e moída, misturada à massa. Diminui a retração, ajuda na secagem e dá estrutura e textura, por isso é comum em peças grandes e na escultura.' },
+  { id: 'plasticidade', termo: 'Plasticidade', cat: 'Argila e preparo',
+    def: 'Capacidade da argila de mudar de forma sem rachar e manter a forma nova. Argilas mais plásticas são boas para o torno; menos plásticas racham mais facilmente.' },
+  { id: 'sovar', termo: 'Sovar (amassar)', cat: 'Argila e preparo', ver: ['argila'],
+    def: 'Amassar a argila para deixá-la homogênea e tirar bolhas de ar, que podem estourar na queima. Técnicas comuns: cabeça de carneiro e espiral (kikumomi).' },
+  { id: 'couro', termo: 'Ponto de couro', cat: 'Argila e preparo', chaves: ['ponto de couro'], ver: ['osso'],
+    def: 'Fase da secagem em que a peça já está firme, mas ainda úmida. É o momento de tornear o pé, colar alças, entalhar e aplicar engobe.' },
+  { id: 'osso', termo: 'Ponto de osso (cru seco)', cat: 'Argila e preparo', ver: ['couro', 'biscoito'],
+    def: 'Peça totalmente seca, mais clara e muito frágil, pronta para a primeira queima.' },
+  { id: 'retracao-argila', termo: 'Retração da argila', cat: 'Argila e preparo', ver: ['chamote'],
+    def: 'Diminuição de tamanho da peça ao secar e ao queimar, por perda de água e por vitrificação. Costuma ficar entre 8% e 15% no total, conforme a massa.' },
+  { id: 'reaproveitamento', termo: 'Reaproveitamento de argila', cat: 'Argila e preparo',
+    def: 'Sobras de argila crua podem ser molhadas, secas até o ponto certo e sovadas de novo. Argila já queimada não volta a ser plástica.' },
+
+  // Técnicas ocidentais e gerais
+  { id: 'modelagem', termo: 'Modelagem manual', cat: 'Técnicas', ver: ['acordelado', 'placa', 'beliscao'],
+    def: 'Construção sem torno, com as mãos e ferramentas simples. Inclui beliscão, acordelado e placas.' },
+  { id: 'beliscao', termo: 'Beliscão (pinch)', cat: 'Técnicas', chaves: ['beliscão', 'pinch'],
+    def: 'Forma feita a partir de uma bola de argila aberta com o polegar e afinada com beliscões regulares.' },
+  { id: 'placa', termo: 'Placas', cat: 'Técnicas', chaves: ['placas', 'slab'],
+    def: 'Construção com lâminas de argila abertas com rolo ou laminadora, cortadas e unidas.' },
+  { id: 'torno', termo: 'Torno', cat: 'Técnicas', ver: ['centralizar', 'tornear-pe'],
+    def: 'Roda giratória onde a argila é centralizada, aberta e puxada para formar peças simétricas.' },
+  { id: 'centralizar', termo: 'Centralizar', cat: 'Técnicas', ver: ['torno'],
+    def: 'Primeiro passo no torno: deixar a argila girando perfeitamente no centro, sem oscilar.' },
+  { id: 'tornear-pe', termo: 'Tornear o pé (retornear)', cat: 'Técnicas', ver: ['couro'],
+    def: 'Com a peça em ponto de couro, virá-la no torno e retirar argila da base com ferramentas para formar o pé e acertar o peso.' },
+  { id: 'riscar-colar', termo: 'Riscar e colar', cat: 'Técnicas', ver: ['barbotina'],
+    def: 'Forma de unir duas partes: riscar as superfícies, passar barbotina e pressionar. Evita que a junta se abra na secagem ou na queima.' },
+  { id: 'colagem', termo: 'Colagem em molde (slip casting)', cat: 'Técnicas', chaves: ['slip casting', 'colagem'], ver: ['barbotina', 'molde'],
+    def: 'Barbotina líquida despejada num molde de gesso. O gesso absorve a água e forma uma parede de argila; o excesso é escorrido.' },
+  { id: 'molde', termo: 'Molde de gesso', cat: 'Técnicas', chaves: ['molde', 'moldes'], ver: ['colagem'],
+    def: 'Forma de gesso usada para colagem ou para prensar placas de argila, permitindo repetir a mesma peça.' },
+  { id: 'sgraffito', termo: 'Esgrafito (sgraffito)', cat: 'Técnicas', chaves: ['sgraffito', 'esgrafito'], ver: ['engobe'],
+    def: 'Riscar através de uma camada de engobe ou esmalte para revelar a cor de baixo.' },
+  { id: 'cera', termo: 'Reserva com cera', cat: 'Técnicas', ver: ['imersao'],
+    def: 'Cera aplicada onde o esmalte ou o engobe não deve aderir, como o pé da peça ou um desenho. Queima e desaparece no forno.' },
+  { id: 'carimbo', termo: 'Carimbo e impressão', cat: 'Técnicas',
+    def: 'Texturas e desenhos pressionados na argila mole com carimbos, rendas, folhas ou objetos.' },
+  { id: 'decalque', termo: 'Decalque', cat: 'Técnicas',
+    def: 'Imagem impressa em papel especial aplicada sobre o esmalte queimado e fixada numa terceira queima, de baixa temperatura.' },
+
+  // Esmaltes (gerais)
+  { id: 'esmalte', termo: 'Esmalte (vidrado)', cat: 'Esmaltes e superfícies', ver: ['frita', 'fundente', 'silica'],
+    def: 'Camada que vira vidro na queima, cobrindo a peça. Formada basicamente por sílica (forma o vidro), fundentes (baixam o ponto de fusão) e alumina (estabiliza).' },
+  { id: 'transparente', termo: 'Esmalte transparente', cat: 'Esmaltes e superfícies',
+    def: 'Deixa ver a argila ou o engobe por baixo. Pode ser incolor ou tingido.' },
+  { id: 'opaco', termo: 'Esmalte opaco', cat: 'Esmaltes e superfícies', ver: ['opacificante'],
+    def: 'Cobre a cor da argila. A opacidade vem de opacificantes (como zircônio ou estanho) ou de cristais que se formam no resfriamento.' },
+  { id: 'fosco', termo: 'Fosco, acetinado e brilhante', cat: 'Esmaltes e superfícies',
+    def: 'Graus de brilho da superfície. O fosco vem de microcristais ou de pouca fusão; o acetinado fica no meio; o brilhante é um vidro liso e bem fundido.' },
+  { id: 'cristalino', termo: 'Esmalte cristalino', cat: 'Esmaltes e superfícies',
+    def: 'Esmalte em que se formam cristais visíveis (em geral silicato de zinco) durante um resfriamento controlado.' },
+  { id: 'subesmalte', termo: 'Subesmalte (underglaze)', cat: 'Esmaltes e superfícies', chaves: ['underglaze', 'subesmalte'], ver: ['sobresmalte'],
+    def: 'Cor aplicada sobre a peça crua ou o biscoito, antes do esmalte transparente. Permite pintar com precisão.' },
+  { id: 'sobresmalte', termo: 'Sobresmalte (overglaze)', cat: 'Esmaltes e superfícies', chaves: ['overglaze', 'sobresmalte'], ver: ['lustre-metalico', 'decalque'],
+    def: 'Cores, lustres e decalques aplicados sobre o esmalte já queimado e fixados numa queima de baixa temperatura.' },
+  { id: 'imersao', termo: 'Aplicação por imersão (banho)', cat: 'Esmaltes e superfícies', chaves: ['imersão'], ver: ['pulverizacao'],
+    def: 'Mergulhar a peça no esmalte por alguns segundos. A espessura depende do tempo, da densidade do esmalte e da porosidade do biscoito.' },
+  { id: 'pulverizacao', termo: 'Aplicação por pulverização', cat: 'Esmaltes e superfícies', chaves: ['pulverização', 'pulverizado', 'pistola', 'compressor'], ver: ['imersao'],
+    def: 'Esmalte ou engobe borrifado com pistola e compressor. Permite gradações e camadas finas; exige cabine e máscara.' },
+  { id: 'densidade', termo: 'Densidade do esmalte', cat: 'Esmaltes e superfícies',
+    def: 'Quanto pó há na água do esmalte, medida em gramas por mililitro. Controla a espessura da camada aplicada.' },
+
+  // Queima (geral)
+  { id: 'monoqueima', termo: 'Monoqueima', cat: 'Queima e fornos', chaves: ['monoqueima'], ver: ['biscoito'],
+    def: 'Esmaltar a peça crua e queimá-la uma única vez, sem biscoito.' },
+  { id: 'vitrificacao', termo: 'Vitrificação', cat: 'Queima e fornos', ver: ['gres', 'porcelana'],
+    def: 'Formação de vidro dentro da massa durante a queima, que reduz a porosidade e aumenta a resistência.' },
+  { id: 'cone', termo: 'Cone pirométrico', cat: 'Queima e fornos', chaves: ['cone'], ver: ['curva'],
+    def: 'Pequena peça que se curva ao receber certa quantidade de calor (temperatura e tempo juntos). Mostra o trabalho de calor real, que o termômetro sozinho não indica.' },
+  { id: 'curva', termo: 'Curva de queima', cat: 'Queima e fornos', ver: ['patamar', 'cone'],
+    def: 'Programação de subida, patamar e descida de temperatura ao longo do tempo. Há curvas guardadas em Biblioteca › Técnicas.' },
+  { id: 'patamar', termo: 'Patamar', cat: 'Queima e fornos', chaves: ['patamar'], ver: ['curva'],
+    def: 'Tempo em que o forno fica na mesma temperatura, para igualar o calor ou deixar o esmalte alisar.' },
+  { id: 'quartzo', termo: 'Inversão do quartzo', cat: 'Queima e fornos', ver: ['choque'],
+    def: 'Por volta de 573 °C o quartzo muda de forma e de volume. Subir ou baixar rápido demais nessa faixa pode trincar as peças.' },
+  { id: 'choque', termo: 'Choque térmico', cat: 'Queima e fornos', chaves: ['choque térmico'], ver: ['raku'],
+    def: 'Trinca causada por mudança brusca de temperatura. Massas com chamote e porosas resistem melhor, por isso são usadas no raku.' },
+  { id: 'baixa-alta', termo: 'Baixa e alta temperatura', cat: 'Queima e fornos', ver: ['faianca', 'gres'],
+    def: 'Baixa temperatura vai até cerca de 1100 °C (faiança, terracota, raku). Alta temperatura fica em torno de 1200 °C a 1300 °C (grés, porcelana).' },
+  { id: 'forno-eletrico', termo: 'Forno elétrico', cat: 'Queima e fornos', chaves: ['forno elétrico'], ver: ['oxidacao'],
+    def: 'Forno com resistências. A queima é em oxidação e muito controlável, com controlador programável.' },
+  { id: 'forno-gas', termo: 'Forno a gás', cat: 'Queima e fornos', chaves: ['forno a gás'], ver: ['reducao'],
+    def: 'Forno com queimadores. Permite controlar a entrada de ar e fazer queimas em redução.' },
+
+  // Materiais básicos
+  { id: 'faianca', termo: 'Faiança e terracota', cat: 'Materiais', chaves: ['faiança', 'terracota'], ver: ['baixa-alta'],
+    def: 'Massas de baixa temperatura que ficam porosas depois de queimadas. A terracota é avermelhada; a faiança costuma ser clara e esmaltada.' },
+  { id: 'silica', termo: 'Sílica (quartzo)', cat: 'Materiais', chaves: ['sílica', 'quartzo'], ver: ['esmalte'],
+    def: 'Principal formadora de vidro nos esmaltes e parte das massas.' },
+  { id: 'fundente', termo: 'Fundente', cat: 'Materiais', chaves: ['fundente', 'fundentes'], ver: ['feldspato', 'frita'],
+    def: 'Material que baixa a temperatura de fusão do esmalte ou da massa, como feldspatos, carbonato de cálcio, dolomita e fritas.' },
+  { id: 'frita', termo: 'Frita', cat: 'Materiais', chaves: ['frita', 'fritas'], ver: ['fundente'],
+    def: 'Vidro industrial moído, pré-fundido para tornar estáveis materiais solúveis ou tóxicos. Base de muitos esmaltes de baixa temperatura.' },
+  { id: 'oxidos', termo: 'Óxidos corantes', cat: 'Materiais', chaves: ['óxido de ferro', 'óxido de cobre', 'cobalto', 'óxido de manganês'], ver: ['pigmento'],
+    def: 'Óxidos metálicos que dão cor: ferro (mel, marrom, celadon), cobre (verde ou vermelho), cobalto (azul), manganês (marrom e roxo), cromo (verde).' },
+  { id: 'pigmento', termo: 'Pigmento cerâmico (corante)', cat: 'Materiais', chaves: ['pigmento', 'pigmentos', 'pigmentada', 'pigmentado'], ver: ['oxidos'],
+    def: 'Cor industrial estável, pré-calcinada, usada em massas, engobes e esmaltes. Dá cores mais previsíveis que os óxidos.' },
+  { id: 'opacificante', termo: 'Opacificante', cat: 'Materiais', ver: ['opaco'],
+    def: 'Material que deixa o esmalte opaco, como o silicato de zircônio e o óxido de estanho.' },
+
+  // Defeitos
+  { id: 'furos', termo: 'Furos (pinholes)', cat: 'Defeitos', chaves: ['pinholes', 'pinhole'],
+    def: 'Pequenos furos no esmalte causados por gases que saem da massa ou do esmalte e não se fecham. Patamar e resfriamento lento ajudam.' },
+  { id: 'escorrimento', termo: 'Escorrimento', cat: 'Defeitos', chaves: ['escorrido', 'escorridos', 'escorrimento'],
+    def: 'Esmalte que desce e cola na placa do forno. Vem de camada grossa ou de esmalte fluido demais para a temperatura.' },
+  { id: 'lascamento', termo: 'Lascamento (shivering)', cat: 'Defeitos', ver: ['craquelado'],
+    def: 'O esmalte se solta em lascas, sobretudo nas bordas, por estar comprimido demais em relação à massa. É o oposto do craquelado.' },
+  { id: 'trinca', termo: 'Trincas de secagem', cat: 'Defeitos', ver: ['retracao-argila'],
+    def: 'Rachaduras causadas por secagem desigual, paredes de espessuras muito diferentes ou juntas mal coladas.' },
+  { id: 'bolhas', termo: 'Bolhas e fervura', cat: 'Defeitos',
+    def: 'Bolhas no esmalte por excesso de temperatura, camada grossa ou gases presos.' },
+
   // Esmaltes e superfícies
   { id: 'shino', termo: 'Shino', original: '志野', cat: 'Esmaltes e superfícies', chaves: ['shino'], ver: ['mino', 'feldspato'],
     def: 'Família de esmaltes surgida na região de Mino, no Japão, no período Momoyama (fim do século XVI). Esmalte espesso e leitoso, rico em feldspato, com pequenos furos na superfície e, onde fica mais fino, tons alaranjados. Variantes conhecidas: e-Shino (com pintura de ferro por baixo) e nezumi-Shino (sobre engobe de ferro, acinzentado).' },

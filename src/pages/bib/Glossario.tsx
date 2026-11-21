@@ -40,7 +40,7 @@ export default function Glossario() {
       <HeroSecao s={s} />
       <div className="search bib-busca" style={{ marginTop: 18 }}>
         <Search size={17} />
-        <input className="input" placeholder="Buscar termo (shino, anagama, chawan…)" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="input" placeholder="Buscar termo (barbotina, biscoito, shino…)" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
       <div className="chips" style={{ margin: '12px 0 4px' }}>
         <button className={'chip' + (!cat ? ' on' : '')} onClick={() => setCat(undefined)}>Todos</button>
@@ -49,18 +49,20 @@ export default function Glossario() {
       {CATS_GLOSSARIO.filter((c) => lista.some((t) => t.cat === c)).map((c) => (
         <section key={c} className="glo-cat">
           <h2>{c}</h2>
-          {lista.filter((t) => t.cat === c).map((t) => (
-            <article key={t.id} id={t.id} className={'glo-termo' + (alvo === t.id ? ' alvo' : '')}>
-              <h3>{t.termo}{t.original && <span className="orig">{t.original}</span>}</h3>
-              <p>{t.def}</p>
-              {(aparece.get(t.id)?.length ?? 0) > 0 && <p className="glo-mais">Aparece em: {aparece.get(t.id)!.map((a, i) => <span key={a.id}>{i ? ', ' : ''}<Link to={`/biblioteca/artistas/${a.id}`}>{a.nome}</Link></span>)}</p>}
-              {t.ver && <p className="glo-mais">Ver também: {t.ver.map((v, i) => { const x = termoPorId(v); return x && <span key={v}>{i ? ', ' : ''}<Link to={`#${v}`} onClick={() => { setQ(''); setCat(undefined) }}>{x.termo}</Link></span> })}</p>}
-            </article>
+          {lista.filter((t) => t.cat === c).sort((x, y) => x.termo.localeCompare(y.termo, 'pt-BR')).map((t) => (
+            <details key={t.id + (alvo === t.id ? '-alvo' : '') + (q ? '-q' : '')} id={t.id} className={'glo-termo' + (alvo === t.id ? ' alvo' : '')} open={alvo === t.id || (!!q.trim() && lista.length <= 6)}>
+              <summary><h3>{t.termo}{t.original && <span className="orig">{t.original}</span>}</h3></summary>
+              <div className="glo-def">
+                <p>{t.def}</p>
+                {(aparece.get(t.id)?.length ?? 0) > 0 && <p className="glo-mais">Aparece em: {aparece.get(t.id)!.map((a, i) => <span key={a.id}>{i ? ', ' : ''}<Link to={`/biblioteca/artistas/${a.id}`}>{a.nome}</Link></span>)}</p>}
+                {t.ver && <p className="glo-mais">Ver também: {t.ver.map((v, i) => { const x = termoPorId(v); return x && <span key={v}>{i ? ', ' : ''}<Link to={`#${v}`} onClick={() => { setQ(''); setCat(undefined) }}>{x.termo}</Link></span> })}</p>}
+              </div>
+            </details>
           ))}
         </section>
       ))}
       {lista.length === 0 && <p className="faint" style={{ marginTop: 20 }}>Nenhum termo encontrado.</p>}
-      <p className="faint" style={{ fontSize: 12.5, marginTop: 28 }}>Definições curtas, sem receitas nem temperaturas. Sentiu falta de algum termo? Peça aqui no projeto que ele entra no glossário.</p>
+      <p className="faint" style={{ fontSize: 12.5, marginTop: 28 }}>Definições curtas e gerais, sem receitas. Sentiu falta de algum termo? Peça aqui no projeto que ele entra no glossário.</p>
     </div>
   )
 }

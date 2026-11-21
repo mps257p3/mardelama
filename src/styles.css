@@ -905,3 +905,11 @@ a.visor-btn { text-decoration: none; }
 .expo-mini .t { font: 500 22px/1.1 var(--serif); margin-top: 2px; }
 .expo-mini .s { font-size: 13px; color: var(--ink-2); }
 .expo-mini .d { font-size: 12px; color: var(--ink-3); margin-top: auto; }
+.glo-termo { padding: 0; }
+.glo-termo > summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 0; min-height: 52px; }
+.glo-termo > summary::-webkit-details-marker { display: none; }
+.glo-termo > summary::after { content: '+'; font: 300 22px/1 var(--sans); color: var(--ink-3); transition: transform .3s var(--ease); flex: none; }
+.glo-termo[open] > summary::after { transform: rotate(45deg); }
+.glo-termo > summary h3 { font-size: 21px; }
+.glo-def { padding: 0 0 16px; }
+.glo-def p:first-child { margin-top: 0; }
