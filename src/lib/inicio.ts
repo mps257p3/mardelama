@@ -2,8 +2,8 @@ import { useAjuste } from '../db/settings'
 
 /** Seções dinâmicas da tela inicial — podem ser reordenadas e ocultadas em Ajustes. */
 export const SECOES_INICIO = [
-  { id: 'atividade', nome: 'Atividade recente' },
   { id: 'agenda', nome: 'Exposições em São Paulo' },
+  { id: 'atividade', nome: 'Atividade recente' },
   { id: 'esmaltes', nome: 'Últimos esmaltes' },
   { id: 'testes', nome: 'Últimos testes' },
   { id: 'favoritas', nome: 'Referências favoritas' },
