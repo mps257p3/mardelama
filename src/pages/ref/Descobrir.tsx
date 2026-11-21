@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { BookOpen, Bookmark, BookmarkCheck, Columns2, Compass, ExternalLink, EyeOff, Heart, LayoutDashboard, RefreshCw, Search, SlidersHorizontal, Sparkles, Plug, X, ScanSearch } from 'lucide-react'
+import { BookOpen, Bookmark, BookmarkCheck, Camera, Columns2, Compass, ExternalLink, EyeOff, Heart, LayoutDashboard, RefreshCw, Search, SlidersHorizontal, Sparkles, Plug, X, ScanSearch } from 'lucide-react'
 import { db } from '../../db/schema'
 import { FONTES, FONTES_PENDENTES, FONTE, type ItemDescoberta } from '../../lib/fontes'
 import { buscarLote, descurtir, lerPerfil, PERFIL_VAZIO, PESOS_PADRAO, planejar, registrar, retomarFonte, salvarNoAcervo, salvarPerfil, TEMAS, traduz, UNIVERSOS, type EstadoFonte, type Interacao, type Modo, type Perfil } from '../../lib/curadoria'
@@ -12,18 +12,20 @@ import { Sheet } from '../../ui/Sheet'
 import { useToast } from '../../ui/toast'
 import { TopoRef } from './Topo'
 import { EscolherGrupos, EscolherPainel } from './acoesRefs'
-import { atualizarGostoIA, iaConfigurada, interpretarBusca, type Consulta } from '../../lib/iaRepertorio'
-import { CompararObra, ExplicarObra, ObraDoDia, useObraDoDia } from './descobrirExtras'
+import { atualizarGostoIA, buscarPorFoto, iaConfigurada, interpretarBusca, type Consulta, type TemaCurtidas } from '../../lib/iaRepertorio'
+import { CompararObra, ExplicarObra, ObraDoDia, TemasDasCurtidas, useObraDoDia } from './descobrirExtras'
 
 const MODOS: [Modo, string][] = [['para-voce', 'Para você'], ['fora-da-curva', 'Fora da curva'], ['novos-artistas', 'Novos artistas'], ['cores-texturas', 'Cores e texturas'], ['formas-volumes', 'Formas e volumes']]
 const VALIDADE = 30 * 60000   // ao voltar ao Descobrir depois de meia hora, vem um lote novo
-type Contexto = { tipo: 'feed' } | { tipo: 'busca'; q: string; leitura?: string; consultas?: Consulta[]; tema?: string; deRef?: string } | { tipo: 'semelhantes'; item: ItemDescoberta } | { tipo: 'curtidas' }
+type Contexto = { tipo: 'feed' } | { tipo: 'busca'; q: string; leitura?: string; consultas?: Consulta[]; tema?: string; deRef?: string; foto?: string } | { tipo: 'semelhantes'; item: ItemDescoberta } | { tipo: 'curtidas' }
 interface Cache { itens: ItemDescoberta[]; quando: number; modo: Modo; ctx: Contexto }
 // o lote fica só na memória: navegar pelo app e voltar mantém o feed; recarregar a página traz material novo
 let memoria: Cache | undefined
 const lerCache = () => memoria
 const gravarCache = (c: Cache) => { memoria = { ...c, itens: c.itens.slice(-300) } }
 const DICA_CURTIR = 'descobrir.dicaCurtir'
+const DICA_GESTOS = 'descobrir.dicaGestos'
+const LIMIAR = 80   // px de arrasto para valer o gesto
 
 export default function Descobrir() {
   const toast = useToast()
@@ -124,7 +126,7 @@ export default function Descobrir() {
       try { const n = Number(localStorage.getItem(DICA_CURTIR) ?? 0); if (n < 3) { localStorage.setItem(DICA_CURTIR, String(n + 1)); toast('Curtida. O próximo lote traz mais coisas assim.') } } catch { /* sem armazenamento */ }
       return
     }
-    if (tipo === 'recusar') { await registrar(item, 'recusar'); setItens((xs) => xs.filter((x) => x.id !== item.id)); setVisor(undefined); toast('Entendido. Menos coisas assim.'); return }
+    if (tipo === 'recusar') { await registrar(item, 'recusar'); setItens((xs) => xs.filter((x) => x.id !== item.id)); toast('Entendido. Menos coisas assim.'); return }
     if (tipo === 'salvar') {
       // salva e já oferece o grupo (pasta) das Referências; dá para fechar sem escolher
       const ref = salvos.get(item.id) ?? await salvarNoAcervo(item)
@@ -155,9 +157,28 @@ export default function Descobrir() {
     const c: Contexto = { tipo: 'busca', q: t.nome, tema: id, consultas: [...t.consultas].sort(() => Math.random() - .5).map((q) => ({ q, universo: t.universo })) }
     setQ(''); setCtx(c); setItens([]); window.scrollTo(0, 0); carregar(true, c)
   }
-  function abrirCurtidas() { const c: Contexto = { tipo: 'curtidas' }; setQ(''); setCtx(c); setItens([]); window.scrollTo(0, 0); carregar(true, c) }
+  function abrirCurtidas() { const c: Contexto = { tipo: 'curtidas' }; setTemaCurt(undefined); setQ(''); setCtx(c); setItens([]); window.scrollTo(0, 0); carregar(true, c) }
   const obraDoDia = useObraDoDia(itens, ctx.tipo === 'feed' && modo === 'para-voce')
   const [visorUnico, setVisorUnico] = useState<ItemDescoberta>()
+  const [temaCurt, setTemaCurt] = useState<TemaCurtidas>()
+  const lista = ctx.tipo === 'curtidas' && temaCurt ? itens.filter((x) => temaCurt.ids.includes(x.id)) : itens
+
+  /** Busca por foto: tirada na hora ou da galeria. */
+  async function porFoto(arq?: File) {
+    if (!arq) return
+    if (!(await iaConfigurada())) { toast('A busca por foto precisa da IA configurada.'); return }
+    let c: Contexto = { tipo: 'busca', q: 'sua foto', foto: URL.createObjectURL(arq) }
+    setQ(''); setCtx(c); setItens([]); setVisor(undefined); window.scrollTo(0, 0); setInterpretando(true)
+    try { const l = await buscarPorFoto(arq); c = { ...c, leitura: l.leitura, consultas: l.consultas }; setCtx(c) }
+    catch (err) { toast('Não deu para ler a foto: ' + (err as Error).message); setInterpretando(false); return }
+    setInterpretando(false)
+    registrar(null, 'pesquisar', (c.consultas ?? []).filter((x) => !x.lingua).flatMap((x) => x.q.split(/\s+/)).filter((w) => w.length > 3))
+    carregar(true, c)
+  }
+  function maisDoTema(t: TemaCurtidas) {
+    const c: Contexto = { tipo: 'busca', q: t.nome, leitura: t.descricao, consultas: [{ q: t.consulta, universo: '' }] }
+    setTemaCurt(undefined); setQ(t.nome); setCtx(c); setItens([]); window.scrollTo(0, 0); carregar(true, c)
+  }
 
   const falhas = estados.filter((e) => !e.ok && !e.pausada)
   return (
@@ -174,6 +195,7 @@ export default function Descobrir() {
         <form className="busca-c" onSubmit={buscar}><Search size={16} />
           <input className="input" placeholder="Pesquisar ou descrever o que procura" value={q} onChange={(e) => setQ(e.target.value)} enterKeyHint="search" />
           {q && <button type="button" className="limpar-busca" aria-label="Limpar" onClick={voltarAoFeed}><X size={15} /></button>}
+          <label className="busca-foto" aria-label="Buscar por foto" title="Buscar por foto"><Camera size={17} /><input type="file" accept="image/*" hidden onChange={(e) => { porFoto(e.target.files?.[0]); e.target.value = '' }} /></label>
         </form>
       </TopoRef>
 
@@ -190,10 +212,11 @@ export default function Descobrir() {
       )}
       {ctx.tipo !== 'feed' && (
         <div className="contexto-desc">
-          <span>{ctx.tipo === 'curtidas' ? <>Suas curtidas{itens.length ? ` (${itens.length})` : ''}</> : ctx.tipo === 'busca' ? (ctx.deRef ? <>Semelhantes a <b>{ctx.deRef}</b>{ctx.leitura && <small className="leitura-ia"><Sparkles size={12} /> {ctx.leitura}</small>}</> : ctx.tema ? <>Tema <b>{ctx.q}</b></> : <>Resultados para <b>“{ctx.q}”</b>{ctx.leitura && <small className="leitura-ia"><Sparkles size={12} /> {ctx.leitura}</small>}</>) : <>Mais como <b>{ctx.item.titulo}</b></>}</span>
+          <span>{ctx.tipo === 'curtidas' ? <>Suas curtidas{itens.length ? ` (${itens.length})` : ''}</> : ctx.tipo === 'busca' ? (ctx.foto ? <><img className="busca-foto-mini" src={ctx.foto} alt="" />Parecidos com a sua foto{ctx.leitura && <small className="leitura-ia"><Sparkles size={12} /> {ctx.leitura}</small>}</> : ctx.deRef ? <>Semelhantes a <b>{ctx.deRef}</b>{ctx.leitura && <small className="leitura-ia"><Sparkles size={12} /> {ctx.leitura}</small>}</> : ctx.tema ? <>Tema <b>{ctx.q}</b></> : <>Resultados para <b>“{ctx.q}”</b>{ctx.leitura && <small className="leitura-ia"><Sparkles size={12} /> {ctx.leitura}</small>}</>) : <>Mais como <b>{ctx.item.titulo}</b></>}</span>
           <button className="btn sm ghost" onClick={voltarAoFeed}>Voltar ao feed</button>
         </div>
       )}
+      {ctx.tipo === 'curtidas' && <TemasDasCurtidas itens={itens} sel={temaCurt} onSel={setTemaCurt} onMais={maisDoTema} />}
       {ctx.tipo === 'feed' && modo === 'para-voce' && obraDoDia && <ObraDoDia x={obraDoDia} curtido={curtidos.has(obraDoDia.id)} salvo={salvos.has(obraDoDia.id)} onAbrir={() => setVisorUnico(obraDoDia)} onCurtir={() => agir(obraDoDia, 'curtir')} onSalvar={() => agir(obraDoDia, 'salvar')} />}
 
       {falhas.length > 0 && !carregando && <p className="aviso-fonte">{falhas.map((f) => FONTE[f.id].nome).join(', ')} não {falhas.length > 1 ? 'responderam' : 'respondeu'} agora ({falhas[0].erro}). As outras seguem normalmente.</p>}
@@ -203,11 +226,11 @@ export default function Descobrir() {
           <span className="serif">{ctx.tipo === 'curtidas' ? 'Nenhuma curtida ainda.' : estados.length && estados.every((e) => !e.ok) ? 'As fontes não responderam.' : 'Nada por aqui ainda.'}</span>
           <span>{estados.length && estados.every((e) => !e.ok) ? 'Confira a internet e toque em atualizar.' : 'Toque em atualizar para buscar novas referências.'}</span>
           <button className="btn sm" onClick={() => carregar(true)}><RefreshCw size={14} />Atualizar</button></div>
-      ) : <MuralDescobrir itens={itens} curtidos={curtidos} salvos={salvos} onAbrir={setVisor} onAgir={agir} />}
+      ) : <MuralDescobrir itens={lista} curtidos={curtidos} salvos={salvos} onAbrir={setVisor} onAgir={agir} />}
       {(carregando || interpretando) && <div className="carregando-desc">{interpretando ? <><Sparkles size={16} className="gira" />Entendendo o pedido…</> : <><RefreshCw size={16} className="gira" />Buscando nos acervos…</>}</div>}
       <div ref={fim} style={{ height: 1 }} />
 
-      {visor != null && itens[visor] && <VisorDescobrir itens={itens} inicio={visor} curtidos={curtidos} salvos={salvos} onClose={() => setVisor(undefined)} onAgir={agir} />}
+      {visor != null && lista[visor] && <VisorDescobrir itens={lista} inicio={visor} curtidos={curtidos} salvos={salvos} onClose={() => setVisor(undefined)} onAgir={agir} />}
       {visorUnico && <VisorDescobrir itens={[visorUnico]} inicio={0} curtidos={curtidos} salvos={salvos} onClose={() => setVisorUnico(undefined)} onAgir={(x, t) => { if (t === 'semelhantes' || t === 'recusar') setVisorUnico(undefined); return agir(x, t) }} />}
       {grupoPara && <EscolherGrupos ids={[grupoPara]} onClose={() => setGrupoPara(undefined)} />}
       {painel === 'ajustes' && <AjustesCuradoria onClose={() => setPainel(undefined)} />}
@@ -240,6 +263,8 @@ function VisorDescobrir({ itens, inicio, curtidos, salvos, onClose, onAgir }: { 
   const [pop, setPop] = useState(0)
   const ultimoToque = useRef(0)
   const toque = useRef<{ x: number; y: number } | undefined>(undefined)
+  const [arrasto, setArrasto] = useState<{ dx: number; dy: number }>()
+  const [dica] = useState(() => { try { const k = Number(localStorage.getItem(DICA_GESTOS) ?? 0); if (k < 4) { localStorage.setItem(DICA_GESTOS, String(k + 1)); return true } } catch { /* sem armazenamento */ } return false })
   const toast = useToast()
   const n = itens.length; const x = itens[Math.min(i, n - 1)]
   const ir = (d: number) => setI((v) => (v + d + n) % n)
@@ -254,17 +279,36 @@ function VisorDescobrir({ itens, inicio, curtidos, salvos, onClose, onAgir }: { 
     if (!salvos.has(x.id)) { await registrar(x, tipo === 'painel' ? 'painel' : 'salvar'); toast('Salvo no acervo') } else if (tipo === 'painel') await registrar(x, 'painel')
     setAcao({ tipo, ref })
   }
+  async function salvarRapido() {
+    if (salvos.has(x.id)) { toast('Já está no acervo'); return }
+    await salvarNoAcervo(x); await registrar(x, 'salvar'); toast('Salvo no acervo')
+  }
+  // gestos no celular: → curte e passa, ← descarta, ↑ salva no acervo, ↓ fecha
+  function soltar(dx: number, dy: number) {
+    setArrasto(undefined)
+    if (Math.abs(dx) > LIMIAR && Math.abs(dx) > Math.abs(dy)) {
+      if (dx > 0) { if (!curtidos.has(x.id)) onAgir(x, 'curtir'); setPop((v) => v + 1); setTimeout(() => ir(1), 260) }
+      else onAgir(x, 'recusar')
+    } else if (dy < -LIMIAR && Math.abs(dy) > Math.abs(dx)) salvarRapido()
+    else if (dy > LIMIAR * 1.5 && Math.abs(dy) > Math.abs(dx)) onClose()
+  }
+  const rotulo = !arrasto ? undefined : Math.abs(arrasto.dx) > Math.abs(arrasto.dy) ? (arrasto.dx > 40 ? 'Curtir' : arrasto.dx < -40 ? 'Não gostei' : undefined) : (arrasto.dy < -40 ? 'Salvar' : arrasto.dy > 60 ? 'Fechar' : undefined)
   return createPortal(
-    <div className="visor visor-ref" role="dialog" aria-label={x.titulo}
-      onTouchStart={(e) => { toque.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } }}
-      onTouchEnd={(e) => { const t = toque.current; toque.current = undefined; if (!t) return; const dx = e.changedTouches[0].clientX - t.x, dy = e.changedTouches[0].clientY - t.y; if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) ir(dx < 0 ? 1 : -1); else if (dy > 100 && Math.abs(dy) > Math.abs(dx)) onClose() }}>
+    <div className="visor visor-ref" role="dialog" aria-label={x.titulo}>
       <div className="visor-topo"><span>{FONTE[x.fonte].nome}</span><button className="visor-btn" aria-label="Fechar" onClick={onClose}><X size={20} /></button></div>
-      <div className="visor-img" onClick={() => {
+      <div className="visor-img"
+        onTouchStart={(e) => { toque.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } }}
+        onTouchMove={(e) => { const t = toque.current; if (t) setArrasto({ dx: e.touches[0].clientX - t.x, dy: e.touches[0].clientY - t.y }) }}
+        onTouchEnd={(e) => { const t = toque.current; toque.current = undefined; if (t) soltar(e.changedTouches[0].clientX - t.x, e.changedTouches[0].clientY - t.y) }}
+        onTouchCancel={() => { toque.current = undefined; setArrasto(undefined) }}
+        onClick={() => {
         // toque duplo na imagem curte (como nas redes)
         const agora = Date.now()
         if (agora - ultimoToque.current < 320) { if (!curtidos.has(x.id)) onAgir(x, 'curtir'); setPop((v) => v + 1); ultimoToque.current = 0 } else ultimoToque.current = agora
-      }}><img key={x.id} src={x.imagemGrande} alt={x.titulo} referrerPolicy="no-referrer" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={(e) => { if (e.currentTarget.src !== x.imagem) e.currentTarget.src = x.imagem }} />
-        {pop > 0 && <Heart key={pop} size={86} className="coracao-pop" fill="currentColor" />}</div>
+      }}><img key={x.id} src={x.imagemGrande} alt={x.titulo} referrerPolicy="no-referrer" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', transform: arrasto ? `translate(${arrasto.dx}px, ${Math.min(arrasto.dy, 0) + Math.max(arrasto.dy, 0) * .5}px) rotate(${arrasto.dx / 25}deg)` : undefined, transition: arrasto ? 'none' : 'transform .2s ease' }} onError={(e) => { if (e.currentTarget.src !== x.imagem) e.currentTarget.src = x.imagem }} />
+        {pop > 0 && <Heart key={pop} size={86} className="coracao-pop" fill="currentColor" />}
+        {rotulo && <span className={'gesto-rotulo ' + rotulo.toLowerCase().replace(/\s/g, '-')}>{rotulo}</span>}
+        {dica && !arrasto && <span className="gesto-dica">→ curte · ← não gostei · ↑ salva · ↓ fecha</span>}</div>
       <div className="desc-info">
         <p className="t">{x.titulo}</p>
         <p className="s">{[x.autor, x.data].filter(Boolean).join(' · ')}</p>

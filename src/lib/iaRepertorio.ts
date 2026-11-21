@@ -53,11 +53,37 @@ export async function interpretarBusca(pedido: string): Promise<LeituraBusca> {
   const ja = await db.ajustes.get(k)
   if (ja?.valor) return ja.valor as LeituraBusca
   const perfil = await lerPerfil()
-  const r = await chamar<LeituraBusca & { outras_linguas?: { lingua: string; q: string }[] }>({ acao: 'buscar', pedido, universos: Object.keys(UNIVERSOS), gosto: topo(perfil.termos, 20) }, 45000)
+  const out = montarLeitura(await chamar<RespostaBusca>({ acao: 'buscar', pedido, universos: Object.keys(UNIVERSOS), gosto: topo(perfil.termos, 20) }, 45000))
+  await db.ajustes.put({ chave: k, valor: out })
+  return out
+}
+
+type RespostaBusca = LeituraBusca & { outras_linguas?: { lingua: string; q: string }[] }
+function montarLeitura(r: RespostaBusca): LeituraBusca {
   const universo = r.consultas[0]?.universo ?? ''
   const locais = (r.outras_linguas ?? []).flatMap((o) => (ACERVO_DA_LINGUA[o.lingua] ?? []).map((fonte) => ({ q: o.q, universo, fonte, lingua: o.lingua })))
-  const out: LeituraBusca = { leitura: r.leitura, consultas: [...r.consultas.slice(0, 6), ...locais.slice(0, 10)] }
-  await db.ajustes.put({ chave: k, valor: out })
+  return { leitura: r.leitura, consultas: [...r.consultas.slice(0, 6), ...locais.slice(0, 10)] }
+}
+
+/** Busca por foto: a IA olha a imagem (reduzida a 1024 px) e monta as consultas. A foto não fica guardada em lugar nenhum. */
+export async function buscarPorFoto(foto: Blob, nota?: string): Promise<LeituraBusca> {
+  const perfil = await lerPerfil()
+  return montarLeitura(await chamar<RespostaBusca>({ acao: 'foto', imagem: { base64: await paraBase64(foto), tipo: 'image/jpeg' }, nota, universos: Object.keys(UNIVERSOS), gosto: topo(perfil.termos, 20) }, 60000))
+}
+
+export interface TemaCurtidas { nome: string; descricao: string; ids: string[]; consulta: string }
+export interface TemasCurtidas { quando: number; n: number; temas: TemaCurtidas[] }
+/** Agrupa as curtidas em temas. Guardado no aparelho; refeito quando há curtidas novas ou a pedido. */
+export async function agruparCurtidas(forcar = false): Promise<TemasCurtidas> {
+  const perfil = await lerPerfil()
+  const itens = (perfil.curtidasItens ?? []).slice(-200)
+  const ja = (await db.ajustes.get('ia.temasCurtidas'))?.valor as TemasCurtidas | undefined
+  if (ja && !forcar && ja.n === itens.length) return ja
+  const r = await chamar<{ temasCurtidas: TemaCurtidas[] }>({ acao: 'agrupar', curtidas: itens.map((x) => ({ id: x.id, titulo: x.titulo, autor: x.autor, termos: x.termos.slice(0, 5) })) }, 90000)
+  const validos = new Set(itens.map((x) => x.id))
+  const temas = r.temasCurtidas.map((t) => ({ ...t, ids: t.ids.filter((id) => validos.has(id)) })).filter((t) => t.ids.length > 0)
+  const out = { quando: Date.now(), n: itens.length, temas }
+  await db.ajustes.put({ chave: 'ia.temasCurtidas', valor: out })
   return out
 }
 

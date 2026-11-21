@@ -104,6 +104,26 @@ const ESQUEMAS = {
     },
   },
 }
+// busca por foto: mesma resposta da busca por texto
+ESQUEMAS.foto = ESQUEMAS.buscar
+// curtidas agrupadas em temas
+ESQUEMAS.agrupar = {
+  type: 'object', additionalProperties: false, required: ['temasCurtidas'],
+  properties: {
+    temasCurtidas: {
+      type: 'array', description: 'De 3 a 8 temas que ligam as obras curtidas.',
+      items: {
+        type: 'object', additionalProperties: false, required: ['nome', 'descricao', 'ids', 'consulta'],
+        properties: {
+          nome: { type: 'string', description: 'Nome curto e concreto do tema em português (2 a 4 palavras), como "superfícies craqueladas" ou "bichos híbridos".' },
+          descricao: { type: 'string', description: 'Uma frase dizendo o que une essas obras: forma, superfície, gesto, cor, época.' },
+          ids: lista('Ids das obras curtidas que pertencem ao tema (só ids da lista dada; uma obra pode estar em mais de um tema).'),
+          consulta: { type: 'string', description: 'Consulta curta em inglês para buscar mais obras desse tema nos acervos.' },
+        },
+      },
+    },
+  },
+}
 
 const SISTEMA = `Você ajuda um ceramista brasileiro a organizar e ampliar seu repertório de referências visuais.
 Escreva em português do Brasil, num tom editorial, sóbrio e preciso.
@@ -119,6 +139,27 @@ Termos que a pessoa costuma curtir: ${(d.gosto ?? []).slice(0, 20).join(', ') ||
 Pedido: "${String(d.pedido ?? '').slice(0, 400)}"
 O pedido pode vir em português ou em qualquer idioma. Transforme-o em consultas em inglês para acervos abertos de museus (Art Institute of Chicago, The Met, Cleveland, V&A, Smithsonian, Library of Congress, Wikimedia Commons). Varie os ângulos: obra, material, forma, técnica, época, natureza.
 Em outras_linguas, traduza o núcleo do pedido para holandês (Rijksmuseum), dinamarquês (SMK), francês, alemão, italiano, espanhol e português (Europeana e Wikimedia), com o termo técnico que o acervo usaria (ex.: esmalte cerâmico = glazuur, glasur, glaçure, Glasur, smalto, esmalte).` }],
+    }
+  }
+  if (acao === 'foto') {
+    const img = d.imagem ?? {}
+    return {
+      esforco: 'low', max: 2500,
+      conteudo: [
+        { type: 'image', source: { type: 'base64', media_type: img.tipo || 'image/jpeg', data: img.base64 } },
+        { type: 'text', text: `Universos disponíveis: ${(d.universos ?? []).join(', ')}.
+Termos que a pessoa costuma curtir: ${(d.gosto ?? []).slice(0, 20).join(', ') || 'nenhum ainda'}.
+${d.nota ? 'O que a pessoa quer com a foto: "' + String(d.nota).slice(0, 200) + '"\n' : ''}Um ceramista fotografou isto (uma peça dele, um objeto, uma textura, algo na rua) e quer achar obras parecidas em acervos de museus.
+Em "leitura", diga em uma frase o que você vê que guiou a busca (forma, superfície, cor, técnica aparente). Monte consultas em inglês que achem obras com a mesma forma, superfície, técnica ou tema, de épocas e culturas variadas. Em outras_linguas, o núcleo da busca nos idiomas pedidos.` },
+      ],
+    }
+  }
+  if (acao === 'agrupar') {
+    return {
+      esforco: 'low', max: 5000,
+      conteudo: [{ type: 'text', text: `Obras que um ceramista curtiu no feed de descoberta (id, título, autor, termos):
+${JSON.stringify(d.curtidas ?? []).slice(0, 30000)}
+Agrupe essas obras em temas visuais que ajudem a pessoa a entender o próprio gosto e a organizar referências. Prefira temas de forma, superfície, gesto e assunto a categorias genéricas de museu. Use só ids da lista.` }],
     }
   }
   if (acao === 'catalogar') {
@@ -186,6 +227,7 @@ export async function POST(req) {
   const acao = d?.acao
   const p = ESQUEMAS[acao] && pedidoDe(acao, d)
   if (!p) return json({ erro: 'Ação desconhecida' }, 400)
+  if (acao === 'foto' && !d.imagem?.base64) return json({ erro: 'Sem imagem' }, 400)
   if ((acao === 'catalogar' || acao === 'explicar') && !d.imagem?.base64 && !/^https:\/\//.test(d.imagem?.url ?? '')) return json({ erro: 'Sem imagem' }, 400)
 
   const client = new Anthropic()
