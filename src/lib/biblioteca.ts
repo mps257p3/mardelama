@@ -26,7 +26,7 @@ export interface SecaoBib {
 /** As seções da Biblioteca, na ordem do feed. Cada categoria antiga entra em exatamente uma seção. */
 export const SECOES: SecaoBib[] = [
   {
-    slug: 'artistas', span: 4, nome: 'Artistas', desc: 'Artistas, obras e linguagens que ampliam as possibilidades da cerâmica.',
+    slug: 'artistas', span: 4, nome: 'Estudos de artistas', desc: 'Estudos sobre artistas, obras e linguagens que ampliam as possibilidades da cerâmica.',
     cats: ['Artistas'], capa: 'https://iwasakiryuji.com/wp-content/uploads/2023/08/ig1601_00.jpg', reserva: '/areas/esmaltes.jpg', credito: 'Ryuji Iwasaki, site oficial',
     atalhos: [{ to: '/biblioteca/colecoes', nome: 'Coleções pessoais', desc: 'Artistas e obras por tema' }],
   },
