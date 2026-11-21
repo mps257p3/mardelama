@@ -24,6 +24,8 @@ let memoria: Cache | undefined
 const lerCache = () => memoria
 const gravarCache = (c: Cache) => { memoria = { ...c, itens: c.itens.slice(-300) } }
 const DICA_CURTIR = 'descobrir.dicaCurtir'
+const DICA_GESTOS = 'descobrir.dicaGestos'
+const LIMIAR = 80   // px de arrasto para valer o gesto
 
 export default function Descobrir() {
   const toast = useToast()
@@ -124,7 +126,7 @@ export default function Descobrir() {
       try { const n = Number(localStorage.getItem(DICA_CURTIR) ?? 0); if (n < 3) { localStorage.setItem(DICA_CURTIR, String(n + 1)); toast('Curtida. O próximo lote traz mais coisas assim.') } } catch { /* sem armazenamento */ }
       return
     }
-    if (tipo === 'recusar') { await registrar(item, 'recusar'); setItens((xs) => xs.filter((x) => x.id !== item.id)); setVisor(undefined); toast('Entendido. Menos coisas assim.'); return }
+    if (tipo === 'recusar') { await registrar(item, 'recusar'); setItens((xs) => xs.filter((x) => x.id !== item.id)); toast('Entendido. Menos coisas assim.'); return }
     if (tipo === 'salvar') {
       // salva e já oferece o grupo (pasta) das Referências; dá para fechar sem escolher
       const ref = salvos.get(item.id) ?? await salvarNoAcervo(item)
@@ -240,6 +242,8 @@ function VisorDescobrir({ itens, inicio, curtidos, salvos, onClose, onAgir }: { 
   const [pop, setPop] = useState(0)
   const ultimoToque = useRef(0)
   const toque = useRef<{ x: number; y: number } | undefined>(undefined)
+  const [arrasto, setArrasto] = useState<{ dx: number; dy: number }>()
+  const [dica] = useState(() => { try { const k = Number(localStorage.getItem(DICA_GESTOS) ?? 0); if (k < 4) { localStorage.setItem(DICA_GESTOS, String(k + 1)); return true } } catch { /* sem armazenamento */ } return false })
   const toast = useToast()
   const n = itens.length; const x = itens[Math.min(i, n - 1)]
   const ir = (d: number) => setI((v) => (v + d + n) % n)
@@ -254,17 +258,36 @@ function VisorDescobrir({ itens, inicio, curtidos, salvos, onClose, onAgir }: { 
     if (!salvos.has(x.id)) { await registrar(x, tipo === 'painel' ? 'painel' : 'salvar'); toast('Salvo no acervo') } else if (tipo === 'painel') await registrar(x, 'painel')
     setAcao({ tipo, ref })
   }
+  async function salvarRapido() {
+    if (salvos.has(x.id)) { toast('Já está no acervo'); return }
+    await salvarNoAcervo(x); await registrar(x, 'salvar'); toast('Salvo no acervo')
+  }
+  // gestos no celular: → curte e passa, ← descarta, ↑ salva no acervo, ↓ fecha
+  function soltar(dx: number, dy: number) {
+    setArrasto(undefined)
+    if (Math.abs(dx) > LIMIAR && Math.abs(dx) > Math.abs(dy)) {
+      if (dx > 0) { if (!curtidos.has(x.id)) onAgir(x, 'curtir'); setPop((v) => v + 1); setTimeout(() => ir(1), 260) }
+      else onAgir(x, 'recusar')
+    } else if (dy < -LIMIAR && Math.abs(dy) > Math.abs(dx)) salvarRapido()
+    else if (dy > LIMIAR * 1.5 && Math.abs(dy) > Math.abs(dx)) onClose()
+  }
+  const rotulo = !arrasto ? undefined : Math.abs(arrasto.dx) > Math.abs(arrasto.dy) ? (arrasto.dx > 40 ? 'Curtir' : arrasto.dx < -40 ? 'Não gostei' : undefined) : (arrasto.dy < -40 ? 'Salvar' : arrasto.dy > 60 ? 'Fechar' : undefined)
   return createPortal(
-    <div className="visor visor-ref" role="dialog" aria-label={x.titulo}
-      onTouchStart={(e) => { toque.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } }}
-      onTouchEnd={(e) => { const t = toque.current; toque.current = undefined; if (!t) return; const dx = e.changedTouches[0].clientX - t.x, dy = e.changedTouches[0].clientY - t.y; if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) ir(dx < 0 ? 1 : -1); else if (dy > 100 && Math.abs(dy) > Math.abs(dx)) onClose() }}>
+    <div className="visor visor-ref" role="dialog" aria-label={x.titulo}>
       <div className="visor-topo"><span>{FONTE[x.fonte].nome}</span><button className="visor-btn" aria-label="Fechar" onClick={onClose}><X size={20} /></button></div>
-      <div className="visor-img" onClick={() => {
+      <div className="visor-img"
+        onTouchStart={(e) => { toque.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } }}
+        onTouchMove={(e) => { const t = toque.current; if (t) setArrasto({ dx: e.touches[0].clientX - t.x, dy: e.touches[0].clientY - t.y }) }}
+        onTouchEnd={(e) => { const t = toque.current; toque.current = undefined; if (t) soltar(e.changedTouches[0].clientX - t.x, e.changedTouches[0].clientY - t.y) }}
+        onTouchCancel={() => { toque.current = undefined; setArrasto(undefined) }}
+        onClick={() => {
         // toque duplo na imagem curte (como nas redes)
         const agora = Date.now()
         if (agora - ultimoToque.current < 320) { if (!curtidos.has(x.id)) onAgir(x, 'curtir'); setPop((v) => v + 1); ultimoToque.current = 0 } else ultimoToque.current = agora
-      }}><img key={x.id} src={x.imagemGrande} alt={x.titulo} referrerPolicy="no-referrer" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={(e) => { if (e.currentTarget.src !== x.imagem) e.currentTarget.src = x.imagem }} />
-        {pop > 0 && <Heart key={pop} size={86} className="coracao-pop" fill="currentColor" />}</div>
+      }}><img key={x.id} src={x.imagemGrande} alt={x.titulo} referrerPolicy="no-referrer" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', transform: arrasto ? `translate(${arrasto.dx}px, ${Math.min(arrasto.dy, 0) + Math.max(arrasto.dy, 0) * .5}px) rotate(${arrasto.dx / 25}deg)` : undefined, transition: arrasto ? 'none' : 'transform .2s ease' }} onError={(e) => { if (e.currentTarget.src !== x.imagem) e.currentTarget.src = x.imagem }} />
+        {pop > 0 && <Heart key={pop} size={86} className="coracao-pop" fill="currentColor" />}
+        {rotulo && <span className={'gesto-rotulo ' + rotulo.toLowerCase().replace(/\s/g, '-')}>{rotulo}</span>}
+        {dica && !arrasto && <span className="gesto-dica">→ curte · ← não gostei · ↑ salva · ↓ fecha</span>}</div>
       <div className="desc-info">
         <p className="t">{x.titulo}</p>
         <p className="s">{[x.autor, x.data].filter(Boolean).join(' · ')}</p>
