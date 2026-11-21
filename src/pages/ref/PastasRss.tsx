@@ -26,6 +26,7 @@ export function PastasRss() {
       const r = await acompanharVarios(link, (t) => setOcupado(t))
       const partes = [
         r.pastas.length ? `${r.pastas.length === 1 ? `Acompanhando “${r.pastas[0]}”` : `${r.pastas.length} pastas acompanhadas`}: ${r.novos} pins novos` : '',
+        r.ja ? `${r.ja} já acompanhadas` : '',
         r.buscas.length ? `${r.buscas.length} ${r.buscas.length === 1 ? 'busca virou interesse' : 'buscas viraram interesses'} do Descobrir` : '',
         r.falhas.length ? `${r.falhas.length} não deram certo` : '',
       ].filter(Boolean)
@@ -42,7 +43,7 @@ export function PastasRss() {
   return (
     <section className="pin-conta">
       <h3>Pastas públicas</h3>
-      <p className="faint">Cole o link de uma pasta pública do Pinterest (sua ou de qualquer pessoa) ou de um perfil. O app lê o RSS oficial dela e traz os pins novos para o Acervo, no grupo com o nome da pasta. Não precisa de login. Pode colar vários links de uma vez, um por linha. Links de busca do Pinterest viram interesses do Descobrir (buscas não têm RSS). Pastas secretas não têm RSS.</p>
+      <p className="faint">Cole o link de uma pasta pública do Pinterest (sua ou de qualquer pessoa) ou de um perfil. O app lê o RSS oficial dela e traz os pins novos para o Acervo, no grupo com o nome da pasta. Não precisa de login. Pode colar vários links de uma vez, um por linha, também no formato “Nome | link” (o nome vira o nome do grupo); uma linha sem link vale como categoria dos grupos seguintes. Links de busca do Pinterest viram interesses do Descobrir (buscas não têm RSS). Pastas secretas não têm RSS.</p>
       <div className="pin-rss-add">
         <textarea className="input" rows={link.includes('\n') ? 4 : 1} inputMode="url" placeholder="https://br.pinterest.com/perfil/nome-da-pasta/" value={link} onChange={(e) => setLink(e.target.value)} />
         <button className="btn primary" disabled={!!ocupado || !link.trim()} onClick={adicionar}>{ocupado ?? 'Acompanhar'}</button>
