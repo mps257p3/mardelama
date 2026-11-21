@@ -5,7 +5,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { BookOpen, Bookmark, BookmarkCheck, Camera, Columns2, Compass, ExternalLink, EyeOff, Heart, LayoutDashboard, RefreshCw, Search, SlidersHorizontal, Sparkles, Plug, X, ScanSearch } from 'lucide-react'
 import { db } from '../../db/schema'
 import { FONTES, FONTES_PENDENTES, FONTE, type ItemDescoberta } from '../../lib/fontes'
-import { buscarLote, descurtir, lerPerfil, PERFIL_VAZIO, PESOS_PADRAO, planejar, registrar, retomarFonte, salvarNoAcervo, salvarPerfil, TEMAS, traduz, UNIVERSOS, type EstadoFonte, type Interacao, type Modo, type Perfil } from '../../lib/curadoria'
+import { buscarLote, EPOCAS, type Epoca, descurtir, lerPerfil, PERFIL_VAZIO, PESOS_PADRAO, planejar, registrar, retomarFonte, salvarNoAcervo, salvarPerfil, TEMAS, traduz, UNIVERSOS, type EstadoFonte, type Interacao, type Modo, type Perfil } from '../../lib/curadoria'
 import { useAjuste, definirAjuste } from '../../db/settings'
 import { Menu } from '../../ui/Menu'
 import { Sheet } from '../../ui/Sheet'
@@ -18,7 +18,7 @@ import { CompararObra, ExplicarObra, ObraDoDia, TemasDasCurtidas, useObraDoDia }
 const MODOS: [Modo, string][] = [['para-voce', 'Para você'], ['fora-da-curva', 'Fora da curva'], ['novos-artistas', 'Novos artistas'], ['cores-texturas', 'Cores e texturas'], ['formas-volumes', 'Formas e volumes']]
 const VALIDADE = 30 * 60000   // ao voltar ao Descobrir depois de meia hora, vem um lote novo
 type Contexto = { tipo: 'feed' } | { tipo: 'busca'; q: string; leitura?: string; consultas?: Consulta[]; tema?: string; deRef?: string; foto?: string } | { tipo: 'semelhantes'; item: ItemDescoberta } | { tipo: 'curtidas' }
-interface Cache { itens: ItemDescoberta[]; quando: number; modo: Modo; ctx: Contexto }
+interface Cache { itens: ItemDescoberta[]; quando: number; modo: Modo; ctx: Contexto; epoca?: Epoca }
 // o lote fica só na memória: navegar pelo app e voltar mantém o feed; recarregar a página traz material novo
 let memoria: Cache | undefined
 const lerCache = () => memoria
@@ -30,6 +30,7 @@ const LIMIAR = 80   // px de arrasto para valer o gesto
 export default function Descobrir() {
   const toast = useToast()
   const modo = useAjuste<Modo>('descobrir.modo', 'para-voce')
+  const epoca = useAjuste<Epoca>('descobrir.epoca', 'todas')
   const cache = useRef(lerCache())
   const [ctx, setCtx] = useState<Contexto>(cache.current?.ctx ?? { tipo: 'feed' })
   const [itens, setItens] = useState<ItemDescoberta[]>(cache.current?.itens ?? [])
@@ -55,7 +56,7 @@ export default function Descobrir() {
     if (c.tipo === 'curtidas') {
       if (!novo) return
       const perfil = await lerPerfil(); const lista = [...(perfil.curtidasItens ?? [])].reverse()
-      setItens(lista); gravarCache({ itens: lista, quando: Date.now(), modo: m, ctx: c }); return
+      setItens(lista); gravarCache({ itens: lista, quando: Date.now(), modo: m, ctx: c, epoca }); return
     }
     if (ocupado.current) return
     ocupado.current = true; setCarregando(true)
@@ -67,8 +68,8 @@ export default function Descobrir() {
       if (c.tipo === 'busca' && c.consultas?.length) pedidos = c.consultas.map((x) => ({ q: x.q, universo: x.universo, fonte: x.fonte, tipo: 'busca' as const }))
       else if (c.tipo === 'busca') { const t = traduz(c.q); pedidos = FONTES.map(() => ({ q: t, tipo: 'busca' as const })).concat(FONTES.map(() => ({ q: t, tipo: 'busca' as const }))) }
       else if (c.tipo === 'semelhantes') { const it = c.item; const base = [it.autor, ...it.termos.slice(0, 3)].filter(Boolean) as string[]; pedidos = base.flatMap((b) => [{ q: b, universo: it.universo, tipo: 'semelhantes' as const }]).slice(0, 6) }
-      else pedidos = await planejar(perfil, m, 8)
-      let { itens: novos, estados: es } = await buscarLote(perfil, pedidos, conhecidos, 6, rodada.current)
+      else pedidos = await planejar(perfil, m, 8, epoca)
+      let { itens: novos, estados: es } = await buscarLote(perfil, pedidos, conhecidos, 6, rodada.current, epoca)
       if (m === 'novos-artistas' && c.tipo === 'feed') {
         const conhecidosArt = new Set([...Object.keys(perfil.artistas), ...(await db.referencias.toArray()).map((r) => r.autor).filter(Boolean) as string[]])
         novos = novos.filter((x) => !x.autor || !conhecidosArt.has(x.autor))
@@ -76,11 +77,11 @@ export default function Descobrir() {
       setEstados(es)
       const lista = novo ? novos : [...itens, ...novos]
       setItens(lista)
-      gravarCache({ itens: lista, quando: Date.now(), modo: m, ctx: c })
+      gravarCache({ itens: lista, quando: Date.now(), modo: m, ctx: c, epoca })
       if (c.tipo === 'feed' && novos.length) { perfil.vistos = [...perfil.vistos.slice(-1500), ...novos.map((x) => x.id)]; await salvarPerfil(perfil) }
       if (!novos.length && es.length && es.every((e) => !e.ok)) toast('As fontes não responderam agora. Tente de novo em instantes.')
     } finally { ocupado.current = false; setCarregando(false) }
-  }, [ctx, modo, itens, toast])
+  }, [ctx, modo, epoca, itens, toast])
 
   // primeira abertura, troca de modo ou feed vencido: busca novo lote
   useEffect(() => {
@@ -88,10 +89,10 @@ export default function Descobrir() {
     // veio de uma referência do acervo ("Ver semelhantes")
     const ref = params.get('ref')
     if (ref) { setParams({}, { replace: true }); cache.current = { itens: [], quando: 0, modo, ctx }; semelhantesDaRef(ref); return }
-    if (!c || !c.itens.length || c.modo !== modo || (c.ctx.tipo === 'feed' && Date.now() - c.quando > VALIDADE)) carregar(true, ctx, modo)
-    cache.current = { itens: [], quando: 0, modo, ctx }
+    if (!c || !c.itens.length || c.modo !== modo || (c.epoca ?? 'todas') !== epoca || (c.ctx.tipo === 'feed' && Date.now() - c.quando > VALIDADE)) carregar(true, ctx, modo)
+    cache.current = { itens: [], quando: 0, modo, ctx, epoca }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modo])
+  }, [modo, epoca])
 
   useEffect(() => {
     const el = fim.current; if (!el) return
@@ -202,6 +203,11 @@ export default function Descobrir() {
       {ctx.tipo === 'feed' && (
         <div className="chips" style={{ marginBottom: 8 }}>
           {MODOS.map(([k, l]) => <button key={k} className={'chip' + (modo === k ? ' on' : '')} onClick={() => { if (modo !== k) { setItens([]); definirAjuste('descobrir.modo', k) } }}>{l}</button>)}
+        </div>
+      )}
+      {ctx.tipo !== 'curtidas' && (
+        <div className="chips epocas" role="group" aria-label="Época" style={{ marginBottom: 8 }}>
+          {(Object.keys(EPOCAS) as Epoca[]).map((k) => <button key={k} className={'chip' + (epoca === k ? ' on' : '')} onClick={() => { if (epoca !== k) { setItens([]); definirAjuste('descobrir.epoca', k) } }}>{EPOCAS[k].nome}</button>)}
         </div>
       )}
       {(ctx.tipo === 'feed' || (ctx.tipo === 'busca' && ctx.tema) || ctx.tipo === 'curtidas') && (
