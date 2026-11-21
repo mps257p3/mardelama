@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { BookOpen, FolderHeart, Heart, LayoutGrid, List, Pencil, Plus, Search, SlidersHorizontal, Sparkles, X } from 'lucide-react'
@@ -12,6 +12,7 @@ import { Sheet } from '../../../ui/Sheet'
 import { HeroSecao } from '../SecaoBiblioteca'
 import { ImgObra } from './ImgObra'
 import { PesquisaIA } from './PesquisaIA'
+import { ignorarSugestao, sugerirArtistas, type SugestaoArtista } from '../../../lib/sugestaoArtistas'
 
 type Filtros = Partial<Record<ChaveFiltro, string>>
 
@@ -50,7 +51,9 @@ export default function Artistas() {
   const [f, setF] = useState<Filtros>({})
   const [fav, setFav] = useState(false)
   const [painel, setPainel] = useState(false)
-  const [ia, setIa] = useState(false)
+  const [ia, setIa] = useState<false | true | string>(false)
+  const [sugestoes, setSugestoes] = useState<SugestaoArtista[]>([])
+  useEffect(() => { if (!artistas) return; let vivo = true; sugerirArtistas(artistas).then((x) => vivo && setSugestoes(x)).catch(() => undefined); return () => { vivo = false } }, [artistas])
 
   const ordenados = useMemo(() => [...(artistas ?? [])].sort((a, b) =>
     ordem === 'alfabetica' ? a.nome.localeCompare(b.nome, 'pt-BR') :
@@ -66,7 +69,7 @@ export default function Artistas() {
     <div className="page bib">
       <HeroSecao s={s} />
       <div className="secao-head" style={{ marginTop: 26 }}>
-        <h2>Acervo de artistas</h2>
+        <h2>Estudos de artistas</h2>
         <Menu rotulo="Novo estudo" botao={<span className="btn sm"><Plus size={14} />Novo</span>} itens={[
           { l: 'Estudo em branco', icon: <Pencil size={16} />, to: '/biblioteca/artistas/novo' },
           { l: 'Pesquisar com IA (nome ou link)', icon: <Sparkles size={16} />, onClick: () => setIa(true) },
@@ -87,6 +90,21 @@ export default function Artistas() {
         {ativos.map(([k, v]) => <button key={k} className="chip on" onClick={() => setF({ ...f, [k]: undefined })}>{v} <X size={12} /></button>)}
       </div>}
 
+      {sugestoes.length > 0 && !q && !nFiltros && <section className="art-sugestoes" aria-label="Sugestões de estudo">
+        {sugestoes.map((x) => (
+          <div key={x.nome} className="art-sugestao">
+            {x.imagens.length > 0 && <div className="fotos">{x.imagens.map((u) => <img key={u} src={u} alt="" referrerPolicy="no-referrer" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none' }} />)}</div>}
+            <div className="txt">
+              <p className="eyebrow"><Sparkles size={12} /> Sugestão das suas curtidas</p>
+              <p>Você curtiu ou salvou <b>{x.vezes} obras</b> de <b>{x.nome}</b>. Quer criar um estudo?</p>
+              <div className="acoes">
+                <button className="btn sm primary" onClick={() => setIa(x.nome)}><Sparkles size={14} />Criar estudo</button>
+                <button className="btn sm ghost" onClick={async () => { await ignorarSugestao(x.nome); setSugestoes(sugestoes.filter((y) => y !== x)) }}>Agora não</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </section>}
       {artistas && artistas.length === 0 && <div className="empty"><span className="serif">Preparando o acervo…</span><span>Os estudos iniciais aparecem em instantes.</span></div>}
       <div className={lista ? 'art-lista' : 'art-feed'}>
         {vis.map((a) => <CardArtista key={a.id} a={a} capa={obraDeCapa(a, obras)} lista={lista} />)}
@@ -113,7 +131,7 @@ export default function Artistas() {
           </div>) : null })}
         <button className="btn primary" style={{ width: '100%', marginTop: 20 }} onClick={() => setPainel(false)}>Ver {vis.length} {vis.length === 1 ? 'artista' : 'artistas'}</button>
       </Sheet>}
-      {ia && <PesquisaIA onClose={() => setIa(false)} />}
+      {ia && <PesquisaIA nomeInicial={typeof ia === 'string' ? ia : undefined} onClose={() => setIa(false)} />}
     </div>
   )
 }

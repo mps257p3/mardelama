@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, ExternalLink, FolderPlus, Heart, ImagePlus, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react'
+import { ArrowLeft, Check, ExternalLink, FolderPlus, Heart, ImageIcon, ImagePlus, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react'
+import { Sheet } from '../../../ui/Sheet'
 import { db, novo, uid, type Artista, type Certeza, type Nota, type Obra } from '../../../db/schema'
 import { alternarFavorito, excluir } from '../../../db/hooks'
 import { ANALISE, CERTEZA, TEMAS_PROCESSO, gostoDosArtistas, recomendar, vivos, type Sugestao } from '../../../lib/artistas'
@@ -41,6 +42,7 @@ export default function ArtistaDetalhe() {
   const [visor, setVisor] = useState<number>()
   const [colecao, setColecao] = useState(false)
   const [ia, setIa] = useState(false)
+  const [trocaCapa, setTrocaCapa] = useState(false)
   const [todasVer, setTodasVer] = useState(false)
   const [sug, setSug] = useState<Sugestao[]>([])
   useEffect(() => { if (!a) return; let vivo = true; gostoDosArtistas(todos).then((g) => vivo && setSug(recomendar(a, todos, g))); return () => { vivo = false } }, [a, todos])
@@ -76,7 +78,7 @@ export default function ArtistaDetalhe() {
   return (
     <div className="page bib art">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link to="/biblioteca/artistas" className="back"><ArrowLeft size={15} />Acervo de artistas</Link>
+        <Link to="/biblioteca/artistas" className="back"><ArrowLeft size={15} />Estudos de artistas</Link>
         <div style={{ display: 'flex', gap: 2 }}>
           <button className="iconbtn" aria-label={a.favorito ? 'Remover dos favoritos' : 'Favoritar'} onClick={() => alternarFavorito('artistas', a.id, a.favorito)}><Heart size={19} fill={a.favorito ? 'currentColor' : 'none'} /></button>
           <Menu itens={[
@@ -93,7 +95,20 @@ export default function ArtistaDetalhe() {
       <figure className="art-capa" onClick={() => capa && setVisor(obras.indexOf(capa))}>
         <ImgObra o={capa} alt={capa?.titulo ?? a.nome} />
         {capa?.credito && <figcaption>{[capa.titulo, capa.credito].filter(Boolean).join(' · ')}</figcaption>}
+        <button className="btn sm capa-trocar" onClick={(e) => { e.stopPropagation(); setTrocaCapa(true) }}><ImageIcon size={14} />Trocar capa</button>
       </figure>
+      {trocaCapa && <Sheet onClose={() => setTrocaCapa(false)} label="Trocar capa" alto>
+        <h3>Foto de capa</h3>
+        <p className="faint" style={{ fontSize: 13.5, margin: '4px 0 12px' }}>Escolha uma das obras ou envie uma foto sua.</p>
+        <div className="capa-opcoes">
+          <Link className="capa-op nova" to={`/biblioteca/obras/nova?artista=${a.id}&capa=1`}><ImagePlus size={22} strokeWidth={1.4} /><span>Enviar foto</span></Link>
+          {obras.filter((o) => o.arquivo || o.imagem).map((o) => (
+            <button key={o.id} className={'capa-op' + (capa?.id === o.id ? ' on' : '')} aria-label={o.titulo} onClick={async () => { await salvar({ capa: o.id }); setTrocaCapa(false) }}>
+              <ImgObra o={o} />{capa?.id === o.id && <span className="capa-marca"><Check size={14} /></span>}
+            </button>
+          ))}
+        </div>
+      </Sheet>}
       <header className="art-titulo">
         <p className="eyebrow">{[a.pais.join(' / '), a.especialidade].filter(Boolean).join(' · ')}</p>
         <h1>{a.nome}</h1>
