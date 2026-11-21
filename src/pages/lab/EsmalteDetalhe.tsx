@@ -1,3 +1,4 @@
+import { ArtistasAfins } from '../bib/art/ArtistasAfins'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -99,6 +100,7 @@ export default function EsmalteDetalhe() {
           <Relacoes tipo="esmalte" id={e.id} extras={[
             ...(receita && !receita.excluido ? [{ tipo: 'receita' as const, id: receita.id, titulo: receita.nome, sub: `versão ${receita.versaoAtual}`, to: `/receitas/${receita.id}` }] : []),
           ]} />
+          <ArtistasAfins termos={[e.acabamento, e.textura, ...e.tags, ...(fam as string[])]} />
         </div>
       </div>
       <GaleriaPecas titulo="Peças com este esmalte" fotos={e.pecas ?? []}

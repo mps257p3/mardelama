@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Search, Settings, ImagePlus } from 'lucide-react'
-import { db } from '../db/schema'
+import { db, type Exposicao } from '../db/schema'
+import { fimEfetivo, periodo } from './bib/Agenda'
 import { useArquivoUrl } from '../db/files'
 import { useAjuste } from '../db/settings'
 import { AREAS } from '../ui/nav'
@@ -139,7 +140,32 @@ function SecNotas() {
   )
 }
 
+function SecAgenda() {
+  const itens = useLiveQuery(async () => {
+    const hoje = new Date(); const h = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`
+    const es = vivos(await db.exposicoes.toArray())
+    const fim = (e: Exposicao) => fimEfetivo(e) ?? '9999'
+    const cartaz = es.filter((e) => (e.inicio ?? '') <= h && fim(e) >= h).sort((a, b) => fim(a).localeCompare(fim(b)))
+    const breve = es.filter((e) => (e.inicio ?? '') > h).sort((a, b) => (a.inicio ?? '').localeCompare(b.inicio ?? ''))
+    return [...cartaz.map((e) => ({ e, quando: 'Em cartaz' })), ...breve.map((e) => ({ e, quando: 'Em breve' }))].slice(0, 4)
+  }, [])
+  if (!itens?.length) return null
+  return (
+    <Secao titulo="Exposições em São Paulo" link={{ to: '/biblioteca/agenda', label: 'Ver agenda' }}>
+      <div className="expo-trilho">{itens.map(({ e, quando }) => (
+        <Link key={e.id} to={`/biblioteca/agenda#${e.id}`} className="expo-mini">
+          <span className="q">{quando}{e.favorito ? ' · quero ir' : ''}</span>
+          <span className="t">{e.titulo}</span>
+          <span className="s">{e.local}</span>
+          <span className="d">{periodo(e)}</span>
+        </Link>
+      ))}</div>
+    </Secao>
+  )
+}
+
 const SECOES: Record<SecaoId, () => React.ReactElement | null> = {
+  agenda: SecAgenda,
   atividade: SecAtividade, esmaltes: SecEsmaltes, testes: SecTestes, favoritas: SecFavoritas, notas: SecNotas,
 }
 

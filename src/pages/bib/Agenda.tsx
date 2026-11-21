@@ -15,10 +15,10 @@ import { HeroSecao } from './SecaoBiblioteca'
 const hojeISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
 const data = (iso?: string) => { if (!iso) return ''; const [a, m, d] = iso.split('-').map(Number); return `${d} ${MESES[m - 1]} ${a}` }
-const periodo = (e: Exposicao) => [e.inicio && (e.fim || e.fimAprox ? data(e.inicio) : 'desde ' + data(e.inicio)), e.fim ? 'até ' + data(e.fim) : e.fimAprox].filter(Boolean).join(' · ')
+export const periodo = (e: Exposicao) => [e.inicio && (e.fim || e.fimAprox ? data(e.inicio) : 'desde ' + data(e.inicio)), e.fim ? 'até ' + data(e.fim) : e.fimAprox].filter(Boolean).join(' · ')
 const mapa = (e: Exposicao) => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(`${e.local}, ${e.endereco ?? ''}, São Paulo`)
 /** Sem dia de encerramento, consideramos o fim do mês citado (ex.: "até janeiro de 2027"). */
-function fimEfetivo(e: Exposicao) {
+export function fimEfetivo(e: Exposicao) {
   if (e.fim) return e.fim
   const m = e.fimAprox && /(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\w*\s+de\s+(\d{4})/i.exec(e.fimAprox)
   if (!m) return undefined

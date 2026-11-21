@@ -1,3 +1,4 @@
+import { ArtistasAfins } from '../bib/art/ArtistasAfins'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AlertTriangle, ArrowLeft, ExternalLink, FileText, Heart, Layers, Pencil, ShoppingBag, Trash2 } from 'lucide-react'
@@ -73,6 +74,7 @@ export default function MaterialDetalhe() {
             {compras.map((c) => <p key={c.id} className="muted" style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}><ShoppingBag size={15} />{c.quantidade} · {c.valorEstimado != null ? brl(c.valorEstimado) + ' estimado' : 'a cotar'} · {c.status === 'planejada' ? 'compra planejada' : 'comprado'}</p>)}
             <p style={{ marginTop: 8 }}><Link to="/compras" style={{ textDecoration: 'underline', fontSize: 14 }}>Lista de compras e fornecedores</Link></p></>}
           <div style={{ marginTop: 32 }}><Relacoes tipo="material" id={m.id} /></div>
+          <ArtistasAfins termos={[m.nome]} titulo="Artistas que documentam este material" />
         </div>
       </div>
     </div>

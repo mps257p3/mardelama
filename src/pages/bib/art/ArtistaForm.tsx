@@ -34,12 +34,12 @@ export default function ArtistaForm() {
     const x: A = { ...a, nome: a.nome.trim(), pais: txt.pais.split(',').map((p) => p.trim()).filter(Boolean), caracteristicas: textoParaLista(txt.caracteristicas), estudar: textoParaLista(txt.estudar), publicacoes: textoFontes(txt.publicacoes), fontes: textoFontes(txt.fontes), processos: a.processos.filter((p) => p.texto.trim()) }
     if (x.id) { await db.artistas.put({ ...(x as Artista), atualizadoEm: Date.now() }); nav(`/biblioteca/artistas/${x.id}`, { replace: true }) }
     else { const n = novo(x); await db.artistas.add(n); nav(`/biblioteca/artistas/${n.id}`, { replace: true }) }
-    toast('Artista salvo')
+    toast('Estudo salvo')
   }
   return (
     <div className="page" style={{ maxWidth: 900 }}>
       <Link to={a.id ? `/biblioteca/artistas/${a.id}` : '/biblioteca/artistas'} className="back"><ArrowLeft size={15} />Voltar</Link>
-      <p className="eyebrow">{a.id ? 'Editar artista' : 'Novo artista'}</p>
+      <p className="eyebrow">{a.id ? 'Editar estudo' : 'Novo estudo de artista'}</p>
       <h1 style={{ marginTop: 8, marginBottom: 8 }}>{a.nome || 'Sem nome'}</h1>
       <p className="faint" style={{ fontSize: 13.5, marginBottom: 24 }}>Só o nome é obrigatório. Deixe vazio o que não estiver documentado: o perfil mostra "Não documentado".</p>
       <div className="form">
@@ -80,7 +80,7 @@ export default function ArtistaForm() {
         <Campo label="Publicações (uma por linha: título | link | tipo | ano)" wide><AreaTexto rows={4} value={txt.publicacoes} onChange={t('publicacoes')} /></Campo>
         <Campo label="Fontes (uma por linha: título | link | tipo)" wide><AreaTexto rows={4} value={txt.fontes} onChange={t('fontes')} /></Campo>
       </div>
-      <div className="barra-salvar"><button className="btn ghost" onClick={() => nav(-1)}>Cancelar</button><button className="btn primary" onClick={salvar}>Salvar artista</button></div>
+      <div className="barra-salvar"><button className="btn ghost" onClick={() => nav(-1)}>Cancelar</button><button className="btn primary" onClick={salvar}>Salvar estudo</button></div>
     </div>
   )
 }

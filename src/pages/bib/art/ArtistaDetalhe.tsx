@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, ExternalLink, FolderPlus, Heart, ImagePlus, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react'
-import { db, type Artista, type Certeza, type Obra } from '../../../db/schema'
+import { db, novo, uid, type Artista, type Certeza, type Nota, type Obra } from '../../../db/schema'
 import { alternarFavorito, excluir } from '../../../db/hooks'
 import { ANALISE, CERTEZA, TEMAS_PROCESSO, gostoDosArtistas, recomendar, vivos, type Sugestao } from '../../../lib/artistas'
 import { Menu } from '../../../ui/Menu'
@@ -20,9 +20,11 @@ import { termosNoTexto } from '../../../lib/glossario'
 
 const ND = <span className="nd">Não documentado</span>
 
-function Bloco({ titulo, children, aberto = false, id }: { titulo: string; children: React.ReactNode; aberto?: boolean; id?: string }) {
-  return <details className="art-bloco" open={aberto} id={id}><summary><h2>{titulo}</h2></summary><div className="corpo">{children}</div></details>
+function Bloco({ titulo, children, aberto = false, id, n }: { titulo: string; children: React.ReactNode; aberto?: boolean; id?: string; n?: number }) {
+  return <details className="art-bloco" open={aberto} id={id}><summary><h2>{n != null && <span className="num">{String(n).padStart(2, '0')}</span>}{titulo}</h2></summary><div className="corpo">{children}</div></details>
 }
+
+const MATERIAIS = [['materiais', 'Materiais'], ['esmaltes', 'Esmaltes e superfícies'], ['queimas', 'Queima'], ['tecnicas', 'Técnicas']] as const
 
 function Selo({ c }: { c: Certeza }) { return <span className={'selo ' + c} title={CERTEZA[c].desc}>{CERTEZA[c].rotulo}</span> }
 
@@ -47,9 +49,23 @@ export default function ArtistaDetalhe() {
   const galeria = useMemo(() => obras.filter((o) => !serie || o.serie === serie), [obras, serie])
   const termos = useMemo(() => a ? termosNoTexto([a.bio, a.linguagem, ...a.processos.map((p) => p.texto), ...a.esmaltes, ...a.queimas, ...a.tecnicas].join(' ')) : [], [a])
 
+  const relacionados = useMemo(() => a ? todos.filter((b) => b.id !== a.id && (a.relacionados.includes(b.id) || b.relacionados.includes(a.id))) : [], [a, todos])
+  const notasEstudo = useLiveQuery(async () => {
+    if (!id) return []
+    const rs = vivos([...await db.relacoes.where('[aTipo+aId]').equals(['artista', id]).toArray(), ...await db.relacoes.where('[bTipo+bId]').equals(['artista', id]).toArray()])
+    const ids = rs.map((r) => (r.aTipo === 'nota' ? r.aId : r.bTipo === 'nota' ? r.bId : '')).filter(Boolean)
+    return vivos((await db.notas.bulkGet(ids)).filter(Boolean) as Nota[])
+  }, [id], [] as Nota[])
+
   if (a === undefined) return null
   if (!a || a.excluido) return <div className="page"><p>Artista não encontrado.</p></div>
   const capa = obraDeCapa(a, obras)
+  async function anotarExperimento(tema: string) {
+    const n = novo({ titulo: `${a!.nome} · ${tema}`, corpo: `<p>Experimento a partir do estudo de <strong>${a!.nome}</strong>.</p><p><em>Tema:</em> ${tema}</p><p></p>`, imagens: [], arquivos: [], audios: [], tags: ['estudo de artista'] })
+    await db.notas.add(n)
+    await db.relacoes.add({ id: uid(), aTipo: 'artista', aId: a!.id, bTipo: 'nota', bId: n.id, criadoEm: Date.now(), atualizadoEm: Date.now(), excluido: 0 })
+    nav(`/caderno/${n.id}`)
+  }
   const salvar = (p: Partial<Artista>) => db.artistas.update(a.id, { ...p, atualizadoEm: Date.now() })
   const proc = new Map<string, typeof a.processos>()
   a.processos.forEach((p) => proc.set(p.tema, [...(proc.get(p.tema) ?? []), p]))
@@ -60,7 +76,7 @@ export default function ArtistaDetalhe() {
   return (
     <div className="page bib art">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link to="/biblioteca/artistas" className="back"><ArrowLeft size={15} />Artistas</Link>
+        <Link to="/biblioteca/artistas" className="back"><ArrowLeft size={15} />Acervo de artistas</Link>
         <div style={{ display: 'flex', gap: 2 }}>
           <button className="iconbtn" aria-label={a.favorito ? 'Remover dos favoritos' : 'Favoritar'} onClick={() => alternarFavorito('artistas', a.id, a.favorito)}><Heart size={19} fill={a.favorito ? 'currentColor' : 'none'} /></button>
           <Menu itens={[
@@ -85,8 +101,23 @@ export default function ArtistaDetalhe() {
         {a.caracteristicas.length > 0 && <div className="pills" style={{ marginTop: 12 }}>{a.caracteristicas.map((c) => <span key={c} className="pill">{c}</span>)}</div>}
       </header>
 
-      <section className="art-galeria">
-        <div className="section-head"><h2>Obras</h2><Link to={`/biblioteca/obras/nova?artista=${a.id}`} className="faint" style={{ fontSize: 13, display: 'inline-flex', gap: 4, alignItems: 'center' }}><Plus size={14} />Adicionar</Link></div>
+      <div className="art-blocos">
+        <Bloco n={1} titulo="Apresentação do artista" aberto>
+          <dl className="art-ficha">
+            <dt>Nome original</dt><dd>{a.nomeOriginal || ND}</dd>
+            <dt>País</dt><dd>{a.pais.join(' / ') || ND}</dd>
+            <dt>Nascimento</dt><dd>{a.nascimento || ND}</dd>
+            <dt>Atuação</dt><dd>{a.atuacao || ND}</dd>
+          </dl>
+          {a.retrato && <figure className="art-retrato"><img src={a.retrato} alt={`Retrato de ${a.nome}`} referrerPolicy="no-referrer" loading="lazy" onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none' }} /><figcaption>Foto: {host(a.retrato)}</figcaption></figure>}
+          {a.linguagem && <p className="art-lead">{a.linguagem}</p>}
+          {a.bio ? a.bio.split(/\n{2,}/).map((p, i) => <p key={i} className="art-p">{p}</p>) : <p>{ND}</p>}
+          {a.afinidade && <aside className="art-afinidade"><p className="eyebrow">Afinidade com Ryuji Iwasaki</p><p>{a.afinidade}</p></aside>}
+        </Bloco>
+      </div>
+
+      <section className="art-galeria art-bloco-fixo">
+        <div className="section-head"><h2><span className="num">02</span>Galeria de obras</h2><Link to={`/biblioteca/obras/nova?artista=${a.id}`} className="faint" style={{ fontSize: 13, display: 'inline-flex', gap: 4, alignItems: 'center' }}><Plus size={14} />Adicionar</Link></div>
         {series.length > 1 && <div className="chips" style={{ marginBottom: 12 }}>
           <button className={'chip' + (!serie ? ' on' : '')} onClick={() => setSerie(undefined)}>Todas</button>
           {series.map((s) => <button key={s} className={'chip' + (serie === s ? ' on' : '')} onClick={() => setSerie(serie === s ? undefined : s)}>{s}</button>)}
@@ -107,25 +138,12 @@ export default function ArtistaDetalhe() {
       </section>
 
       <div className="art-blocos">
-        <Bloco titulo="Apresentação" aberto>
-          <dl className="art-ficha">
-            <dt>Nome original</dt><dd>{a.nomeOriginal || ND}</dd>
-            <dt>País</dt><dd>{a.pais.join(' / ') || ND}</dd>
-            <dt>Nascimento</dt><dd>{a.nascimento || ND}</dd>
-            <dt>Atuação</dt><dd>{a.atuacao || ND}</dd>
-          </dl>
-          {a.retrato && <figure className="art-retrato"><img src={a.retrato} alt={`Retrato de ${a.nome}`} referrerPolicy="no-referrer" loading="lazy" onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none' }} /><figcaption>Foto: {host(a.retrato)}</figcaption></figure>}
-          {a.linguagem && <p className="art-lead">{a.linguagem}</p>}
-          {a.bio ? a.bio.split(/\n{2,}/).map((p, i) => <p key={i} className="art-p">{p}</p>) : <p>{ND}</p>}
-          {a.afinidade && <aside className="art-afinidade"><p className="eyebrow">Afinidade com Ryuji Iwasaki</p><p>{a.afinidade}</p></aside>}
-        </Bloco>
-
-        <Bloco titulo="Linguagem artística">
+        <Bloco n={3} titulo="Linguagem artística">
           <p className="faint" style={{ fontSize: 13, marginTop: 0 }}>Leitura editorial a partir das obras e das fontes. É interpretação, não informação do artista.</p>
           <dl className="art-analise">{ANALISE.map(([k, l]) => <div key={k}><dt>{l}</dt><dd>{a.analise?.[k] || ND}</dd></div>)}</dl>
         </Bloco>
 
-        <Bloco titulo="Técnicas e processos">
+        <Bloco n={4} titulo="Técnicas e processos">
           <div className="legenda-selos">{(Object.keys(CERTEZA) as Certeza[]).map((c) => <span key={c}><Selo c={c} /> {CERTEZA[c].desc}</span>)}</div>
           <div className="processos">
             {[...TEMAS_PROCESSO, ...temasExtras].map((t) => {
@@ -137,15 +155,23 @@ export default function ArtistaDetalhe() {
             })}
           </div>
           <p className="faint" style={{ fontSize: 12.5 }}>Receitas, temperaturas e composições só aparecem quando publicadas pelo artista ou por fonte confiável.</p>
-          {termos.length > 0 && <p style={{ fontSize: 13.5, marginTop: 8 }}>No glossário: {termos.map((t, i) => <span key={t.id}>{i ? ', ' : ''}<Link to={`/biblioteca/glossario#${t.id}`} style={{ textDecoration: 'underline' }}>{t.termo}</Link></span>)}</p>}
         </Bloco>
 
-        {a.estudar.length > 0 && <Bloco titulo="O que estudar neste artista?" aberto>
-          <ol className="estudar">{a.estudar.map((x, i) => <li key={i}>{x}</li>)}</ol>
-          <p className="faint" style={{ fontSize: 12.5 }}>Pontos para desenvolver o seu trabalho, sem copiar o dele.</p>
-        </Bloco>}
+        <Bloco n={5} titulo="Materiais e esmaltes">
+          {MATERIAIS.some(([k]) => a[k].length) ? <dl className="art-ficha">{MATERIAIS.map(([k, l]) => <div key={k} style={{ display: 'contents' }}><dt>{l}</dt><dd>{a[k].length ? <span className="pills">{a[k].map((x) => <span key={x} className="pill">{x}</span>)}</span> : ND}</dd></div>)}</dl> : <p>{ND}</p>}
+          {(proc.get('Argila') || proc.get('Esmaltes') || proc.get('Engobes')) && <p className="faint" style={{ fontSize: 13 }}>Detalhes documentados sobre argila, engobes e esmaltes estão em Técnicas e processos.</p>}
+          {termos.length > 0 && <p style={{ fontSize: 13.5, marginTop: 12 }}>No glossário: {termos.map((t, i) => <span key={t.id}>{i ? ', ' : ''}<Link to={`/biblioteca/glossario#${t.id}`} style={{ textDecoration: 'underline' }}>{t.termo}</Link></span>)}</p>}
+        </Bloco>
 
-        <Bloco titulo="Publicações e fontes">
+        <Bloco n={6} titulo="O que estudar neste artista?" aberto>
+          {a.estudar.length ? <ol className="estudar">{a.estudar.map((x, i) => {
+            const nota = notasEstudo.find((n) => n.titulo === `${a.nome} · ${x}`)
+            return <li key={i}>{x}<span className="estudar-acao">{nota ? <Link to={`/caderno/${nota.id}`}>Ver meu experimento</Link> : <button onClick={() => anotarExperimento(x)}>+ Anotar experimento</button>}</span></li>
+          })}</ol> : <p>{ND}</p>}
+          <p className="faint" style={{ fontSize: 12.5 }}>Pontos para desenvolver o seu trabalho, sem copiar o dele. Cada experimento vira uma anotação no Caderno, ligada a este estudo.</p>
+        </Bloco>
+
+        <Bloco n={7} titulo="Livros, entrevistas e publicações">
           {pubs.size === 0 ? ND : [...pubs.entries()].map(([tipo, ps]) => (
             <div key={tipo} style={{ marginBottom: 14 }}>
               <p className="eyebrow" style={{ marginBottom: 6 }}>{tipo}</p>
@@ -157,24 +183,9 @@ export default function ArtistaDetalhe() {
         </Bloco>
       </div>
 
-      {sug.length > 0 && <section className="secao">
-        <div className="secao-head"><h2>Você também pode gostar de</h2></div>
-        <div className="trilho sug">
-          {sug.map(({ a: b, motivos }) => (
-            <Link key={b.id} to={`/biblioteca/artistas/${b.id}`} className="peca-mini">
-              <span className="ph"><ImgObra o={obraDeCapa(b, todasObras)} /></span>
-              <span className="t">{b.nome}</span>
-              <span className="s">{motivos[0] ?? b.pais.join(' / ')}</span>
-            </Link>
-          ))}
-        </div>
-      </section>}
-
-      <section className="secao"><Relacoes tipo="artista" id={a.id} /></section>
-
       <section className="minha-pesquisa">
         <p className="eyebrow">Só seu · separado das informações documentadas</p>
-        <h2>Minha pesquisa</h2>
+        <h2><span className="num">08</span>Anotações pessoais</h2>
         <h4>Observações</h4>
         <TextoRico value={a.notas ?? ''} onChange={(v) => salvar({ notas: v })} placeholder="O que você percebe, o que quer testar…" />
         <h4>Hipóteses de processo</h4>
@@ -183,7 +194,33 @@ export default function ArtistaDetalhe() {
         <ListaEditavel itens={a.links ?? []} link rotulo="link" vazio="Nenhum link ainda." onSalvar={(v) => salvar({ links: v })} />
         <h4>Etiquetas</h4>
         <Tags value={a.tags} onChange={(v) => salvar({ tags: v })} />
+        <div style={{ marginTop: 22 }} />
+        <Relacoes tipo="artista" id={a.id} />
         <GaleriaPecas fotos={a.fotos ?? []} onChange={(v) => salvar({ fotos: v })} titulo="Minhas fotografias" />
+      </section>
+
+      <section className="secao art-bloco-fixo">
+        <div className="secao-head"><h2><span className="num">09</span>Artistas relacionados</h2></div>
+        {relacionados.length > 0 && <div className="trilho sug" style={{ marginBottom: 18 }}>
+          {relacionados.map((b) => (
+            <Link key={b.id} to={`/biblioteca/artistas/${b.id}`} className="peca-mini">
+              <span className="ph"><ImgObra o={obraDeCapa(b, todasObras)} /></span>
+              <span className="t">{b.nome}</span>
+              <span className="s">{b.pais.join(' / ')}</span>
+            </Link>
+          ))}
+        </div>}
+        {sug.length > 0 && <><p className="eyebrow" style={{ marginBottom: 10 }}>Você também pode gostar de</p>
+        <div className="trilho sug">
+          {sug.map(({ a: b, motivos }) => (
+            <Link key={b.id} to={`/biblioteca/artistas/${b.id}`} className="peca-mini">
+              <span className="ph"><ImgObra o={obraDeCapa(b, todasObras)} /></span>
+              <span className="t">{b.nome}</span>
+              <span className="s">{motivos[0] ?? b.pais.join(' / ')}</span>
+            </Link>
+          ))}
+        </div></>}
+        {!relacionados.length && !sug.length && <p>{ND}</p>}
       </section>
 
       {visor != null && <VisorObras obras={obras} inicio={visor} artista={a} onClose={() => setVisor(undefined)} />}

@@ -1,3 +1,4 @@
+import { ArtistasAfins } from '../bib/art/ArtistasAfins'
 import { Link, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AlertTriangle, ArrowLeft } from 'lucide-react'
@@ -59,6 +60,7 @@ export default function FamiliaDetalhe() {
         <div className="lista">{dados.comerciais.map((c) => <Link key={c.id} to={`/engenharia-reversa/${c.id}`} style={{ gridTemplateColumns: '1fr auto' }}><span className="t">{c.fabricante} {c.nome}</span><span className="faint">{c.codigo}</span></Link>)}</div>
       </Secao>}
       <div style={{ marginTop: 32 }}><Relacoes tipo="familia" id={f.id} /></div>
+      <ArtistasAfins termos={[f.nome, ...(f.nome.match(/\(([^)]+)\)/)?.slice(1) ?? [])]} />
     </div>
   )
 }
