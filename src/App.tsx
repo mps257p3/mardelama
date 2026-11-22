@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Layout } from './ui/Layout'
 import { ToastProvider } from './ui/toast'
 import Home from './pages/Home'
@@ -59,6 +59,12 @@ import ComercialDetalhe from './pages/lab/ComercialDetalhe'
 import Compras from './pages/lab/Compras'
 import Superficies from './pages/lab/Superficies'
 
+/** /referencias sozinho vai para o Descobrir; com parâmetros (ex.: ?grupo=) é um link antigo do Acervo. */
+function EntradaReferencias() {
+  const { search } = useLocation()
+  return <Navigate to={search ? '/referencias/acervo' + search : '/referencias/descobrir'} replace />
+}
+
 export default function App() {
   return (
     <ToastProvider>
@@ -90,7 +96,9 @@ export default function App() {
           <Route path="testes/comparar" element={<TesteComparar />} />
           <Route path="testes/:id" element={<TesteDetalhe />} />
           <Route path="testes/:id/editar" element={<TesteForm />} />
-          <Route path="referencias" element={<Referencias />} />
+          {/* Referências abre no Descobrir; links antigos com ?grupo= etc. continuam caindo no Acervo */}
+          <Route path="referencias" element={<EntradaReferencias />} />
+          <Route path="referencias/acervo" element={<Referencias />} />
           <Route path="referencias/nova" element={<ReferenciaForm key="nova" />} />
           <Route path="referencias/grupos" element={<Colecoes />} />
           <Route path="referencias/grupos/gerenciar" element={<Grupos />} />

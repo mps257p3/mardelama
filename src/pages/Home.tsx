@@ -116,7 +116,7 @@ function SecFavoritas() {
     .map<Peca>((r) => ({ id: r.id, to: `/referencias/${r.id}`, titulo: r.titulo, sub: r.autor, foto: r.imagens[0] })), [])
   if (!itens?.length) return null
   return (
-    <Secao titulo="Referências favoritas" link={itens.length ? { to: '/referencias', label: 'Ver referências' } : undefined}>
+    <Secao titulo="Referências favoritas" link={itens.length ? { to: '/referencias/acervo', label: 'Ver referências' } : undefined}>
       {itens.length ? <Trilho itens={itens} tipo="referencia" /> : null}
     </Secao>
   )

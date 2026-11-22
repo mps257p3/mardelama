@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { BookOpen, Bookmark, BookmarkCheck, Camera, Columns2, Compass, ExternalLink, EyeOff, Heart, LayoutDashboard, RefreshCw, Search, SlidersHorizontal, Sparkles, Plug, X, ScanSearch } from 'lucide-react'
+import { BookOpen, Bookmark, BookmarkCheck, Camera, Columns2, Compass, ExternalLink, EyeOff, Heart, LayoutDashboard, RefreshCw, Search, SlidersHorizontal, Sparkles, Plug, X, ScanSearch, ChevronDown } from 'lucide-react'
 import { db } from '../../db/schema'
-import { FONTES, FONTES_PENDENTES, FONTE, type ItemDescoberta } from '../../lib/fontes'
+import { CHAVE_REVISTAS_OFF, FONTES, FONTES_PENDENTES, FONTE, retomarSite, sitePausado, type FonteId, type ItemDescoberta } from '../../lib/fontes'
+import { SECOES, SEM_CAMINHO, SITES } from '../../lib/revistasSites.js'
 import { buscarLote, consultasDoTema, revistasDoTema, EPOCAS, type Epoca, descurtir, lerPerfil, PERFIL_VAZIO, PESOS_PADRAO, planejar, registrar, retomarFonte, salvarNoAcervo, salvarPerfil, TEMAS, traduz, UNIVERSOS, type EstadoFonte, type Interacao, type Modo, type Perfil } from '../../lib/curadoria'
 import { useAjuste, definirAjuste } from '../../db/settings'
 import { Menu } from '../../ui/Menu'
@@ -431,20 +432,62 @@ function LeituraPastas() {
   </div>
 }
 
+const GRUPOS_FONTES: { nome: string; desc: string; ids: FonteId[] }[] = [
+  { nome: 'Museus e bibliotecas', desc: 'Acervos públicos pelas APIs oficiais. Obra com autoria, data e licença.', ids: ['aic', 'met', 'cma', 'vam', 'smk', 'rijks', 'mia', 'si', 'loc', 'eu'] },
+  { nome: 'Imagens abertas', desc: 'Fotos com licença livre (Wikimedia, Openverse). Mais variadas e mais atuais.', ids: ['wm', 'ov'] },
+]
+
+/** Uma linha de fonte: nome, estado e o botão de ligar/desligar. */
+function LinhaFonte({ nome, estado, ligada, onTrocar }: { nome: string; estado: string; ligada: boolean; onTrocar: () => void }) {
+  return <div className="row fonte-linha">
+    <div><div className="t">{nome}</div><div className="s">{estado}</div></div>
+    <button className={'chip' + (ligada ? ' on' : '')} aria-pressed={ligada} onClick={onTrocar}>{ligada ? 'Ligada' : 'Desligada'}</button>
+  </div>
+}
+
+/** Grupo que abre e fecha, com a contagem de ligadas e "ligar/desligar todas". */
+function GrupoFontes({ nome, desc, ligadas, total, onTodas, aberto, children }: { nome: string; desc?: string; ligadas: number; total: number; onTodas?: (ligar: boolean) => void; aberto?: boolean; children: React.ReactNode }) {
+  return <details className="fontes-grupo" open={aberto}>
+    <summary><span className="fg-nome">{nome}</span><span className="fg-conta">{total ? `${ligadas} de ${total}` : ''}</span><ChevronDown size={18} className="fg-seta" /></summary>
+    <div className="fg-corpo">
+      {desc && <p className="faint fg-desc">{desc}</p>}
+      {onTodas && total > 1 && <div className="fg-acoes"><button className="btn sm ghost" onClick={() => onTodas(true)}>Ligar todas</button><button className="btn sm ghost" onClick={() => onTodas(false)}>Desligar todas</button></div>}
+      <div className="lista">{children}</div>
+    </div>
+  </details>
+}
+
 function PainelFontes({ estados, onClose }: { estados: EstadoFonte[]; onClose: () => void }) {
   const [p, setP] = useState<Perfil>()
+  const off = new Set(useAjuste<string[]>(CHAVE_REVISTAS_OFF, []))
   useEffect(() => { lerPerfil().then(setP) }, [])
   if (!p) return null
+  const salvar = async (fontes: Perfil['fontes']) => { const np = { ...p, fontes }; setP(np); await salvarPerfil(np) }
+  const trocarFonte = (id: FonteId) => { retomarFonte(id); salvar({ ...p.fontes, [id]: !p.fontes[id] }) }
+  const todasFontes = (ids: FonteId[], ligar: boolean) => { ids.forEach(retomarFonte); salvar({ ...p.fontes, ...Object.fromEntries(ids.map((i) => [i, ligar])) }) }
+  const salvarOff = (s: Set<string>) => definirAjuste(CHAVE_REVISTAS_OFF, [...s])
+  const trocarRevista = (id: string) => { const s = new Set(off); if (s.has(id)) { s.delete(id); retomarSite(id) } else s.add(id); salvarOff(s) }
+  const todasRevistas = (ids: string[], ligar: boolean) => { const s = new Set(off); ids.forEach((i) => { if (ligar) { s.delete(i); retomarSite(i) } else s.add(i) }); salvarOff(s) }
+  const estadoFonte = (id: FonteId) => { const e = estados.find((x) => x.id === id); return !p.fontes[id] ? 'Desligada' : !e ? 'Ainda não consultada nesta sessão' : e.ok ? 'Respondendo normalmente' : e.pausada ? `Recusou os pedidos (${e.erro}). Pausada por algumas horas.` : `Sem resposta: ${e.erro}` }
+  const revOn = p.fontes.rev
+  const idsRev = Object.keys(SITES)
   return <Sheet label="Fontes" onClose={onClose}>
     <h3>Fontes</h3>
-    <p className="faint" style={{ fontSize: 13, margin: '4px 0 12px' }}>Acervos abertos consultados pelas APIs oficiais. Nada é salvo no seu acervo sem você pedir; ao salvar, guardamos autoria, licença e o link original.</p>
-    <div className="lista">
-      {FONTES.map((f) => { const e = estados.find((x) => x.id === f.id); return (
-        <div key={f.id} className="row" style={{ gridTemplateColumns: '1fr auto' }}>
-          <div><div className="t">{f.nome}</div><div className="s">{!p.fontes[f.id] ? 'Desligada' : !e ? 'Ainda não consultada nesta sessão' : e.ok ? 'Respondendo normalmente' : e.pausada ? `Recusou os pedidos (${e.erro}). Pausada por algumas horas; as outras fontes cobrem o feed.` : `Sem resposta: ${e.erro}`}</div></div>
-          <button className={'chip' + (p.fontes[f.id] ? ' on' : '')} onClick={async () => { retomarFonte(f.id); const np = { ...p, fontes: { ...p.fontes, [f.id]: !p.fontes[f.id] } }; setP(np); await salvarPerfil(np) }}>{p.fontes[f.id] ? 'Ligada' : 'Desligada'}</button>
-        </div>) })}
-      {FONTES_PENDENTES.map((f) => <div key={f.nome} className="row" style={{ gridTemplateColumns: '1fr' }}><div><div className="t">{f.nome}</div><div className="s">{f.estado}</div></div></div>)}
-    </div>
+    <p className="faint" style={{ fontSize: 13, margin: '4px 0 12px' }}>Toque num grupo para abrir. Nada vai para o seu acervo sem você pedir; ao salvar, guardamos autoria, licença e o link original.</p>
+    {GRUPOS_FONTES.map((g) => (
+      <GrupoFontes key={g.nome} nome={g.nome} desc={g.desc} ligadas={g.ids.filter((i) => p.fontes[i]).length} total={g.ids.length} onTodas={(l) => todasFontes(g.ids, l)}>
+        {g.ids.map((id) => <LinhaFonte key={id} nome={FONTE[id].nome} estado={estadoFonte(id)} ligada={!!p.fontes[id]} onTrocar={() => trocarFonte(id)} />)}
+      </GrupoFontes>))}
+    <GrupoFontes nome="Revistas de arte" desc="Lidas pelo RSS público de cada revista: cada post vira até 3 imagens. Só trazem produção atual (ficam fora nas épocas Antiga e Moderna). Uma revista sem feed descansa 24 h sozinha." ligadas={revOn ? idsRev.filter((i) => !off.has(i)).length : 0} total={idsRev.length} aberto>
+      <LinhaFonte nome="Todas as revistas" estado={revOn ? estadoFonte('rev') : 'Desligadas: nenhuma revista entra no feed'} ligada={revOn} onTrocar={() => trocarFonte('rev')} />
+      {revOn && SECOES.map((sec) => { const ids = idsRev.filter((i) => SITES[i].secao === sec.id); return (
+        <GrupoFontes key={sec.id} nome={sec.nome} ligadas={ids.filter((i) => !off.has(i)).length} total={ids.length} onTodas={(l) => todasRevistas(ids, l)}>
+          {ids.map((id) => <LinhaFonte key={id} nome={SITES[id].nome} estado={off.has(id) ? 'Desligada' : sitePausado(id) ? 'Não respondeu: descansando por 24 h' : SITES[id].base.replace(/^https:\/\/(www\.)?/, '')} ligada={!off.has(id)} onTrocar={() => trocarRevista(id)} />)}
+        </GrupoFontes>) })}
+    </GrupoFontes>
+    <GrupoFontes nome="Sem caminho aberto" desc="Sites pedidos que não têm API nem RSS para buscar imagens." ligadas={0} total={0}>
+      {[...FONTES_PENDENTES.map((f) => ({ nome: f.nome, motivo: f.estado })), ...SEM_CAMINHO].map((f) => <div key={f.nome} className="row fonte-linha sem"><div><div className="t">{f.nome}</div><div className="s">{f.motivo}</div></div></div>)}
+    </GrupoFontes>
+    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}><button className="btn primary" onClick={onClose}>Pronto</button></div>
   </Sheet>
 }
