@@ -773,6 +773,119 @@ const ARTISTAS: [string, A][] = [
     tags: ['biomórfica', 'cor viva', 'Premio Faenza'],
     relacionados: ['art-romanowska', 'art-mourao'],
   }],
+  ['art-manson', {
+    ...vazio,
+    nome: 'Rebecca Manson', pais: ['Estados Unidos'], atuacao: 'Nova York (Brooklyn)',
+    especialidade: 'Esculturas de porcelana feitas de milhares de pequenas peças',
+    linguagem: 'Asas de borboleta e de mariposa, folhas e "peles" monumentais montadas com milhares de fragmentos de porcelana amassados à mão e esmaltados em cores e brilhos variados, com o desenho da natureza ampliado.',
+    bio: 'Escultora baseada em Nova York (a Meer, em 2018, diz Brooklyn). Bacharel pela Rhode Island School of Design (RISD) em 2011. Segundo a Phaidon, começou criança, em escola e acampamentos de cerâmica. Data e local de nascimento não aparecem nas fontes consultadas.\n\nAs obras recentes são grandes asas de borboleta e mariposa feitas de milhares de pedacinhos de porcelana, que a equipe chama de "smushes". Entre elas estão "Pelt of a Giant Hawk Moth" (2022), "Grafted Wing" e "CRISPR wing" (2023), e "Purple Aurora", "Blue Admiral Wing" e "Double Madagascar" (2025). Expôs na Josh Lilley (Londres), no Modern Art Museum of Fort Worth e na Jessica Silverman (San Francisco), com a mostra "Time, You Must Be Laughing". Fez residências no Ártico, no Zentrum für Keramik (Berlim) e na Cal State Long Beach. Recebeu a Windgate Fellowship (2011) e a Windgate Project Grant (2016). Diz que usa a cerâmica "como metáfora do corpo individual e social".',
+    caracteristicas: ['Acúmulo de milhares de peças', 'Porcelana', 'Asas e folhas monumentais', 'Esmaltes lustrosos e dicroicos'],
+    afinidade: 'Cor e superfície construídas por acúmulo: cada pedacinho é uma amostra de esmalte, e o conjunto vira uma pintura.',
+    analise: {
+      formas: 'Asas de borboleta e mariposa, folhas e peles, em escala monumental.',
+      paleta: 'Muito variada, imitando o desenho real das asas, com lustres e esmaltes dicroicos.',
+      texturas: 'Superfície escamada, feita de milhares de pequenos discos e lascas.',
+      composicao: 'Silhueta desenhada em escala real e preenchida peça a peça, como um mosaico em relevo.',
+      materiais: 'Porcelana e outras argilas, esmaltes, pigmentos e estruturas de metal e epóxi.',
+      superficieVolume: 'A superfície é o próprio volume: as peças sobrepostas criam relevo e profundidade.',
+      reconhecivel: 'Asas gigantes de porcelana, feitas de "escamas" coloridas.',
+    },
+    processos: [
+      v('Projeto', 'Começa com esboço, testes de esmalte e maquetes digitais, e depois traça a silhueta em tela, em escala maior.', 'https://www.thisiscolossal.com/2024/01/rebecca-manson-wing-sculptures/'),
+      v('Peças', 'Milhares de pedacinhos de porcelana feitos à mão e achatados entre os dedos (os "smushes").', 'https://www.thisiscolossal.com/2024/01/rebecca-manson-wing-sculptures/'),
+      v('Biscoito', 'Os pedacinhos são biscoitados conforme o tamanho e o tipo de argila.', 'https://www.thisiscolossal.com/2024/01/rebecca-manson-wing-sculptures/'),
+      v('Esmaltação', 'Alguns são mergulhados aos punhados e depois postos no forno um a um. Outros são pulverizados ou pintados à mão.', 'https://www.thisiscolossal.com/2024/01/rebecca-manson-wing-sculptures/'),
+      v('Montagem', 'As peças são coladas e sustentadas por estruturas de metal e epóxi.', 'https://www.meer.com/en/46121-rebecca-manson'),
+      v('Esmaltes', 'Nas obras de 2025 usa esmaltes lustrosos e dicroicos.', 'https://www.thisiscolossal.com/2025/12/rebecca-manson-porcelain-butterfly-sculptures/'),
+      leitura('Queima', 'A Phaidon conta que às vezes ela queima acima do limite do material ou queima uma obra várias vezes. Temperaturas não são informadas.'),
+    ],
+    estudar: [
+      'Acúmulo: milhares de peças pequenas formando uma superfície.',
+      'Cartela de esmaltes testada em amostras antes da obra.',
+      'Esmaltação em lote (mergulho aos punhados) e queima peça a peça.',
+      'Estrutura de apoio para obras feitas de fragmentos.',
+      'Lustres e esmaltes dicroicos.',
+    ],
+    publicacoes: [f('Rebecca Manson wing sculptures — Colossal', 'https://www.thisiscolossal.com/2024/01/rebecca-manson-wing-sculptures/', 'Reportagens', '2024'), f('Porcelain butterfly sculptures — Colossal', 'https://www.thisiscolossal.com/2025/12/rebecca-manson-porcelain-butterfly-sculptures/', 'Reportagens', '2025'), f('Rebecca Manson on art, life & everything in between — Phaidon', 'https://www.phaidon.com/blogs/stories/rebecca-manson-on-art-life-everything-in-between', 'Entrevistas')],
+    fontes: [f('Site oficial', 'https://www.rebexman.com/', 'Site oficial'), f('Jessica Silverman', 'https://jessicasilvermangallery.com/rebecca-manson/', 'Galerias'), f('Meer (2018)', 'https://www.meer.com/en/46121-rebecca-manson', 'Revistas')],
+    site: 'https://www.rebexman.com/', instagram: 'rmanson',
+    tecnicas: ['Construção manual', 'Acúmulo de peças', 'Pulverização'], materiais: ['Porcelana', 'Metal e epóxi'], esmaltes: ['Lustres', 'Esmaltes dicroicos', 'Pigmentos'], queimas: ['Biscoito por tamanho e argila', 'Queimas múltiplas'], esteticas: ['Natureza ampliada', 'Monumental', 'Colorida'], tiposObra: ['Esculturas', 'Instalações'],
+    tags: ['porcelana', 'acúmulo', 'borboletas'],
+    relacionados: ['art-huotari', 'art-kurihara'],
+  }],
+  ['art-kurihara', {
+    ...vazio,
+    nome: 'Kaori Kurihara', pais: ['Japão', 'França'], atuacao: 'Paris',
+    especialidade: 'Esculturas botânicas de cerâmica',
+    linguagem: 'Frutas, flores e plantas imaginárias, modeladas à mão com padrões repetidos e geometria quase matemática, em cores vivas, entre o real e o inventado.',
+    bio: 'Ceramista japonesa radicada em Paris. Estudou cerâmica na Universidade Seika, em Kyoto. Na França aprendeu joalheria e esmaltação. Começou a carreira em 2015, ano em que ganhou o Prix de la Jeune Création Métiers d\'Art. Ela conta que o prêmio trouxe muitas encomendas durante um ano.\n\nCria frutas e flores inventadas, com escamas, pontas e espirais repetidas. Diz que se inspira no mundo vegetal, com atenção às formas e à sua repetição geométrica, e que se atrai por proporções como a razão áurea. Participou da Bienal Internacional de Belas-Artes e Artesanato de Paris e de exposição na Fundação Bernardaud (2019). Peças de 2023 incluem "Clown verdoyant", "Collectionneur de silence" e "Hug Me Quick". Nascimento, argila e queima não aparecem nas fontes consultadas.',
+    caracteristicas: ['Plantas e frutas inventadas', 'Padrões repetidos', 'Modelagem minuciosa', 'Cores vivas'],
+    afinidade: 'Geometria natural e repetição levadas à escultura: um estudo de como o padrão vira forma.',
+    analise: {
+      formas: 'Frutas, vagens, flores e brotos imaginários, com escamas, pontas e espirais.',
+      paleta: 'Cores vivas, muitas vezes mais intensas do que as das plantas reais.',
+      texturas: 'Superfícies cheias de relevos repetidos: pontos, escamas, sulcos e covinhas.',
+      composicao: 'Peças isoladas, como espécimes, com ordem geométrica rigorosa.',
+      materiais: 'Cerâmica esmaltada (argila não informada).',
+      superficieVolume: 'O padrão esculpido define o volume.',
+      reconhecivel: 'Frutas fantásticas cobertas de espinhos e escamas coloridas.',
+    },
+    processos: [
+      v('Construção', 'Primeiro constrói a base e depois acrescenta os detalhes, esculpindo os padrões com as mãos e uma série de ferramentas.', 'https://www.thisiscolossal.com/2022/01/kaori-kurihara-fruit-ceramics/'),
+      v('Sem gabarito', 'Trabalha sem ferramentas de traçado geométrico.', 'https://www.homofaber.com/en/artisans/kaori-kurihara-ceramics-france'),
+      v('Esmaltação', 'Aplica a esmaltação, aprendida na joalheria, nas esculturas muito detalhadas.', 'https://www.homofaber.com/en/artisans/kaori-kurihara-ceramics-france'),
+      v('Cor', 'Costuma intensificar a cor das plantas que reproduz.', 'https://www.thisiscolossal.com/2022/01/kaori-kurihara-fruit-ceramics/'),
+      hip('Argila e queima', 'Tipo de argila e temperatura não são informados.'),
+    ],
+    estudar: ['Repetição geométrica: espirais, escamas, razão áurea.', 'Construir a base e acrescentar o detalhe à mão.', 'Cor exagerada a partir da natureza.'],
+    publicacoes: [f('Kaori Kurihara — Colossal', 'https://www.thisiscolossal.com/2019/05/kaori-kurihara-ceramics/', 'Reportagens', '2019'), f('Fruit ceramics — Colossal', 'https://www.thisiscolossal.com/2022/01/kaori-kurihara-fruit-ceramics/', 'Reportagens', '2022'), f('Botanical ceramics — Colossal', 'https://www.thisiscolossal.com/2023/12/kaori-kurihara-botanical-ceramics/', 'Reportagens', '2023')],
+    fontes: [f('Site oficial', 'https://www.kaorikurihara.com/', 'Site oficial'), f('Homo Faber', 'https://www.homofaber.com/en/artisans/kaori-kurihara-ceramics-france', 'Catálogos')],
+    site: 'https://www.kaorikurihara.com/', instagram: 'kaorikurihara.ceramique',
+    tecnicas: ['Modelagem', 'Escultura de padrões'], materiais: [], esmaltes: ['Esmaltes coloridos'], queimas: [], esteticas: ['Botânica', 'Geométrica', 'Fantástica'], tiposObra: ['Esculturas'],
+    tags: ['botânica', 'padrões', 'frutas'],
+    relacionados: ['art-englund', 'art-huotari'],
+  }],
+  ['art-huotari', {
+    ...vazio,
+    nome: 'Marianne Huotari', pais: ['Finlândia'], nascimento: '1986, Finlândia', atuacao: 'Helsinque (Arabia Art Department Society)',
+    especialidade: 'Tapeçarias e esculturas de cerâmica costuradas',
+    linguagem: 'Centenas de contas, pétalas e discos de cerâmica feitos à mão e costurados com arame sobre estruturas de metal, formando "tapetes" de parede e esculturas que lembram jardins e paisagens.',
+    bio: 'Artista finlandesa nascida em 1986, com ateliê na Arabia Art Department Society, em Helsinque. Segundo o currículo da Hostler Burrows, tem bacharelado em Design (Savonia, Kuopio, 2009) e mestrado pela Universidade Aalto (2014). A Homo Faber, ao contrário, diz que ela não tem formação formal em cerâmica. A Colossal destaca a base em design têxtil. O trabalho parte do ryijy, o tapete tradicional finlandês.\n\nPrêmios: Taito-Finlandia e NYCxDesign (2024), finalista do LOEWE Foundation Craft Prize (2022) e Officine Saffi Award (prêmio de residência, 2021). Tem obras na EMMA (Museu de Arte Moderna de Espoo), na coleção do Estado finlandês e no Palazzo Fendi, em Milão. Fez encomendas como "Yunnan" (Jewel Changi Airport, 2019) e "Sirahviportti" (Helsinque, 2025). Expôs em Tóquio, Nova York (individual "Voyage" na HB381, 2026), Londres e Veneza (Homo Faber, 2022).',
+    caracteristicas: ['Peças costuradas', 'Acúmulo de contas e pétalas', 'Tradição têxtil (ryijy)', 'Cor em gradação'],
+    afinidade: 'Cor como assunto principal, mas fragmentada em centenas de peças: cada conta é uma amostra de esmalte.',
+    analise: {
+      formas: 'Tapetes de parede, colunas e volumes que lembram canteiros, frutas e cachos.',
+      paleta: 'Gradações ricas de cor, planejadas desde o início.',
+      texturas: 'Felpuda, como tapeçaria, feita de peças pequenas com marcas de dedo.',
+      composicao: 'Paisagens e topografias onduladas.',
+      materiais: 'Grés esmaltado, argila branca com pigmentos, arame e rede metálica.',
+      superficieVolume: 'A superfície felpuda de peças costuradas cria o volume.',
+      reconhecivel: 'Tapeçarias de cerâmica coloridas, como jardins costurados.',
+    },
+    processos: [
+      v('Estrutura', 'Solda uma estrutura de metal como base, com rede metálica por cima.', 'https://design-milk.com/dmtv-milkshake-artist-marianne-huotari-on-creating-maximum-impact-with-the-smallest-materials/'),
+      v('Peças', 'Enrola e belisca a argila em formas alongadas e pequenos discos com a marca dos dedos, cada um furado para passar o arame.', 'https://www.thisiscolossal.com/2022/07/marianne-huotari-ceramic-ryijy/'),
+      v('Cor', 'Mistura pigmento à argila branca para obter tons específicos e começa cada obra por uma cartela de cores e superfícies.', 'https://design-milk.com/dmtv-milkshake-artist-marianne-huotari-on-creating-maximum-impact-with-the-smallest-materials/'),
+      v('Esmaltação', 'Na esmaltação pendura as peças uma a uma para que não grudem umas nas outras na queima.', 'https://design-milk.com/dmtv-milkshake-artist-marianne-huotari-on-creating-maximum-impact-with-the-smallest-materials/'),
+      v('Montagem', 'Costura as peças à mão na base com um arame metálico que aguenta o calor do forno.', 'https://www.homofaber.com/en/artisans/marianne-huotari-ceramics-finland'),
+      v('Tempo', 'A etapa de forno leva cerca de dois dias. Uma peça de parede de 2 m levou seis meses.', 'https://design-milk.com/dmtv-milkshake-artist-marianne-huotari-on-creating-maximum-impact-with-the-smallest-materials/'),
+      hip('Queima', 'Temperatura e tipo de forno não são informados.'),
+    ],
+    estudar: [
+      'Contas e pétalas furadas: produção em série à mão.',
+      'Argila branca com pigmento para criar cartela de cores.',
+      'Pendurar peças para esmaltar e queimar sem grudar.',
+      'Costura em arame sobre rede metálica.',
+      'Tapeçaria (ryijy) como referência para cerâmica.',
+    ],
+    publicacoes: [f('Marianne Huotari ceramic ryijy — Colossal', 'https://www.thisiscolossal.com/2022/07/marianne-huotari-ceramic-ryijy/', 'Reportagens', '2022'), f('DMTV Milkshake — Design Milk', 'https://design-milk.com/dmtv-milkshake-artist-marianne-huotari-on-creating-maximum-impact-with-the-smallest-materials/', 'Vídeos', '2022')],
+    fontes: [f('Site oficial', 'https://mariannehuotari.fi/', 'Site oficial'), f('Hostler Burrows — currículo e obras', 'https://hostlerburrows.com/artists-designers/marianne-huotari', 'Galerias'), f('LOEWE Foundation — The Room', 'https://theroom.loewe.com/en/artists/marianne-huotari/', 'Instituições'), f('Homo Faber', 'https://www.homofaber.com/en/artisans/marianne-huotari-ceramics-finland', 'Catálogos')],
+    site: 'https://mariannehuotari.fi/', instagram: 'mariannehuotari',
+    retrato: 'https://hfgnext.s3.eu-west-3.amazonaws.com/img/4YL7Q000000PSTjWAO-center.jpg',
+    tecnicas: ['Construção manual', 'Beliscado', 'Costura em arame', 'Solda (estrutura)'], materiais: ['Grés', 'Argila branca com pigmentos', 'Arame e rede metálica'], esmaltes: ['Esmaltes coloridos', 'Argila pigmentada'], queimas: [], esteticas: ['Têxtil', 'Botânica', 'Colorida'], tiposObra: ['Tapeçarias de parede', 'Esculturas', 'Encomendas públicas'],
+    tags: ['tapeçaria', 'acúmulo', 'cor'],
+    relacionados: ['art-manson', 'art-kurihara'],
+  }],
 ]
 
 type O = Omit<Obra, 'id' | 'criadoEm' | 'atualizadoEm' | 'excluido' | 'favorito' | 'tags'> & { tags?: string[] }
@@ -860,18 +973,37 @@ const OBRAS: [string, O][] = [
   ['obra-renard-slump', { artistaId: 'art-renard', titulo: 'Slump', ano: '2024', imagem: 'https://static.wixstatic.com/media/cc4e87_cde6aa19ab8d4265ba4ccb2cb39a2d08~mv2.jpg/v1/fill/w_900,h_660,al_c,q_85/obra.jpg', fonte: 'https://www.lea-renard.com', credito: '© Léa Renard, site oficial' }],
   ['obra-renard-clementine', { artistaId: 'art-renard', titulo: 'Darling Clementine', ano: '2024', imagem: 'https://www.aic-iac.org/wp-content/uploads/Darling-Clementine-scaled.jpg', fonte: 'https://www.aic-iac.org/en/member/lea-renard/', credito: '© Léa Renard, via International Academy of Ceramics' }],
   ['obra-renard-garden', { artistaId: 'art-renard', titulo: 'Garden Party', ano: '2022', imagem: 'https://www.aic-iac.org/wp-content/uploads/GARDEN-PARTY-2022-scaled.jpg', fonte: 'https://www.aic-iac.org/en/member/lea-renard/', credito: '© Léa Renard, via International Academy of Ceramics' }],
+  ['obra-manson-grafted', { artistaId: 'art-manson', titulo: 'Grafted Wing', ano: '2023', materiais: 'Porcelana e esmaltes', tecnica: 'Acúmulo de peças', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2024/01/manson-.jpg', fonte: 'https://www.thisiscolossal.com/2024/01/rebecca-manson-wing-sculptures/', credito: '© Rebecca Manson, via Colossal' }],
+  ['obra-manson-grafted-det', { artistaId: 'art-manson', titulo: 'Grafted Wing (detalhe)', ano: '2023', materiais: 'Porcelana e esmaltes', tecnica: 'Acúmulo de peças', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2024/01/manson-1.jpg', fonte: 'https://www.thisiscolossal.com/2024/01/rebecca-manson-wing-sculptures/', credito: '© Rebecca Manson, via Colossal' }],
+  ['obra-manson-crispr', { artistaId: 'art-manson', titulo: 'CRISPR wing', ano: '2023', materiais: 'Porcelana e esmaltes', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2024/01/manson-5.jpg', fonte: 'https://www.thisiscolossal.com/2024/01/rebecca-manson-wing-sculptures/', credito: '© Rebecca Manson, via Colossal' }],
+  ['obra-manson-hawkmoth', { artistaId: 'art-manson', titulo: 'Pelt of a Giant Hawk Moth', ano: '2022', materiais: 'Porcelana e esmaltes', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2024/01/manson-6.jpg', fonte: 'https://www.thisiscolossal.com/2024/01/rebecca-manson-wing-sculptures/', credito: '© Rebecca Manson, via Colossal' }],
+  ['obra-manson-xanthoria', { artistaId: 'art-manson', titulo: 'Xanthoria Wing', materiais: 'Porcelana e esmaltes', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2024/01/manson-4.jpg', fonte: 'https://www.thisiscolossal.com/2024/01/rebecca-manson-wing-sculptures/', credito: '© Rebecca Manson, via Colossal' }],
+  ['obra-manson-madagascar', { artistaId: 'art-manson', titulo: 'Double Madagascar', serie: 'Time, You Must Be Laughing', ano: '2025', materiais: 'Porcelana, esmaltes lustrosos e dicroicos', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2025/12/manson-3.jpg', fonte: 'https://www.thisiscolossal.com/2025/12/rebecca-manson-porcelain-butterfly-sculptures/', credito: 'Foto: Lance Brewer, cortesia da artista, Josh Lilley e Jessica Silverman, via Colossal' }],
+  ['obra-manson-aurora', { artistaId: 'art-manson', titulo: 'Purple Aurora', serie: 'Time, You Must Be Laughing', ano: '2025', materiais: 'Porcelana, esmaltes lustrosos e dicroicos', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2025/12/manson-1.jpg', fonte: 'https://www.thisiscolossal.com/2025/12/rebecca-manson-porcelain-butterfly-sculptures/', credito: 'Foto: Lance Brewer, cortesia da artista, Josh Lilley e Jessica Silverman, via Colossal' }],
+  ['obra-kurihara-clown', { artistaId: 'art-kurihara', titulo: 'Clown verdoyant', ano: '2023', materiais: 'Cerâmica esmaltada', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2023/12/kurihara-3.jpg', fonte: 'https://www.thisiscolossal.com/2023/12/kaori-kurihara-botanical-ceramics/', credito: '© Kaori Kurihara, via Colossal' }],
+  ['obra-kurihara-silence', { artistaId: 'art-kurihara', titulo: 'Collectionneur de silence', ano: '2023', materiais: 'Cerâmica esmaltada', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2023/12/kurihara-8-scaled.jpg', fonte: 'https://www.thisiscolossal.com/2023/12/kaori-kurihara-botanical-ceramics/', credito: '© Kaori Kurihara, via Colossal' }],
+  ['obra-kurihara-lune', { artistaId: 'art-kurihara', titulo: 'En réponse au claire de lune', ano: '2023', materiais: 'Cerâmica esmaltada', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2023/12/kurihara-5-scaled.jpg', fonte: 'https://www.thisiscolossal.com/2023/12/kaori-kurihara-botanical-ceramics/', credito: '© Kaori Kurihara, via Colossal' }],
+  ['obra-kurihara-hug', { artistaId: 'art-kurihara', titulo: 'Hug Me Quick', ano: '2023', materiais: 'Cerâmica esmaltada', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2023/12/kurihara-2-scaled.jpg', fonte: 'https://www.thisiscolossal.com/2023/12/kaori-kurihara-botanical-ceramics/', credito: '© Kaori Kurihara, via Colossal' }],
+  ['obra-kurihara-danseuse', { artistaId: 'art-kurihara', titulo: 'Danseuse de boîte à musique', ano: '2023', materiais: 'Cerâmica esmaltada', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2023/12/kurihara-1.jpg', fonte: 'https://www.thisiscolossal.com/2023/12/kaori-kurihara-botanical-ceramics/', credito: '© Kaori Kurihara, via Colossal' }],
+  ['obra-kurihara-fruta', { artistaId: 'art-kurihara', titulo: 'Fruta imaginária (título não informado)', ano: '2022', materiais: 'Cerâmica esmaltada', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2022/01/kurihara-5.jpg', fonte: 'https://www.thisiscolossal.com/2022/01/kaori-kurihara-fruit-ceramics/', credito: '© Kaori Kurihara, via Colossal' }],
+  ['obra-huotari-ananas', { artistaId: 'art-huotari', titulo: 'Ananasakäämä', materiais: 'Cerâmica esmaltada, arame', tecnica: 'Peças costuradas', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2022/07/huotari-6-scaled.jpg', fonte: 'https://www.thisiscolossal.com/2022/07/marianne-huotari-ceramic-ryijy/', credito: 'Foto: Anna Autio · © Marianne Huotari, via Colossal' }],
+  ['obra-huotari-mandarin', { artistaId: 'art-huotari', titulo: 'Mandarin Garden', materiais: 'Cerâmica esmaltada, arame', tecnica: 'Peças costuradas', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2022/07/huotari-2.jpg', fonte: 'https://www.thisiscolossal.com/2022/07/marianne-huotari-ceramic-ryijy/', credito: 'Foto: Jefunne Gimpel · © Marianne Huotari, via Colossal' }],
+  ['obra-huotari-tipsy', { artistaId: 'art-huotari', titulo: 'Tipsy and Dazzled by Festives (detalhe)', materiais: 'Cerâmica esmaltada, arame', tecnica: 'Peças costuradas', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2022/07/huotari-3-scaled.jpg', fonte: 'https://www.thisiscolossal.com/2022/07/marianne-huotari-ceramic-ryijy/', credito: 'Foto: Anna Autio · © Marianne Huotari, via Colossal' }],
+  ['obra-huotari-shade', { artistaId: 'art-huotari', titulo: "Moment in the Shade e Eden's Euphoria", materiais: 'Cerâmica esmaltada, arame', tecnica: 'Peças costuradas', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2022/07/huotari-9.jpg', fonte: 'https://www.thisiscolossal.com/2022/07/marianne-huotari-ceramic-ryijy/', credito: 'Foto: Anna Autio · © Marianne Huotari, via Colossal' }],
+  ['obra-huotari-shallows', { artistaId: 'art-huotari', titulo: 'Shallows', materiais: 'Cerâmica esmaltada, arame', tecnica: 'Peças costuradas', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2022/07/huotari-8.jpg', fonte: 'https://www.thisiscolossal.com/2022/07/marianne-huotari-ceramic-ryijy/', credito: 'Foto: Anna Autio · © Marianne Huotari, via Colossal' }],
+  ['obra-huotari-lupine', { artistaId: 'art-huotari', titulo: 'Wild as Lupine', materiais: 'Cerâmica esmaltada, arame', tecnica: 'Peças costuradas', imagem: 'https://www.thisiscolossal.com/wp-content/uploads/2022/07/huotari-5.jpg', fonte: 'https://www.thisiscolossal.com/2022/07/marianne-huotari-ceramic-ryijy/', credito: 'Foto: Hanna Kaketti · © Marianne Huotari, via Colossal' }],
 ]
 const CAPAS: Record<string, string> = {
   'art-kuwata': 'obra-kuwata-artbasel', 'art-segawa': 'obra-segawa-instalacao', 'art-hirai': 'obra-hirai-moonjar-2017', 'art-kusaka': 'obra-kusaka-line103',
   'art-hamana': 'obra-hamana-uzu', 'art-ueda': 'obra-ueda-2018', 'art-yamada': 'obra-yamada-enbu-2020', 'art-koie': 'obra-koie-oribe',
   'art-ichikawa': 'obra-ichikawa-vp6', 'art-aizawa': 'obra-aizawa-sarai', 'art-romanowska': 'obra-romanowska-5', 'art-kakurezaki': 'obra-kakurezaki-mukozuke',
   'art-nedovic': 'obra-nedovic-lady54',
-  'art-brennand': 'obra-brennand-ovo', 'art-breve': 'obra-breve-chanfro', 'art-aterra': 'obra-aterra-empilhavel', 'art-mourao': 'obra-mourao-amago', 'art-englund': 'obra-englund-jaca', 'art-renard': 'obra-renard-subtle',
+  'art-brennand': 'obra-brennand-ovo', 'art-breve': 'obra-breve-chanfro', 'art-aterra': 'obra-aterra-empilhavel', 'art-mourao': 'obra-mourao-amago', 'art-englund': 'obra-englund-jaca', 'art-renard': 'obra-renard-subtle', 'art-manson': 'obra-manson-grafted', 'art-kurihara': 'obra-kurihara-clown', 'art-huotari': 'obra-huotari-ananas',
 }
 
 /** Semeia o catálogo uma vez por aparelho, com ids fixos (não duplica entre aparelhos nem apaga o que já foi editado). */
 export async function semearArtistas() {
-  if (await db.ajustes.get('seed-artistas-v5')) return
+  if (await db.ajustes.get('seed-artistas-v6')) return
   const existentesA = new Set((await db.artistas.toArray()).map((x) => x.id))
   const existentesO = new Set((await db.obras.toArray()).map((x) => x.id))
   const as: Artista[] = ARTISTAS.filter(([id]) => !existentesA.has(id)).map(([id, a], i) => ({
@@ -879,5 +1011,5 @@ export async function semearArtistas() {
   }))
   const os: Obra[] = OBRAS.filter(([id]) => !existentesO.has(id)).map(([id, o], i) => ({ ...base(id, i), tags: [], ...o }))
   await db.transaction('rw', db.artistas, db.obras, async () => { await db.artistas.bulkAdd(as); await db.obras.bulkAdd(os) })
-  await db.ajustes.put({ chave: 'seed-artistas-v5', valor: true })
+  await db.ajustes.put({ chave: 'seed-artistas-v6', valor: true })
 }
