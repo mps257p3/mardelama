@@ -943,3 +943,8 @@ a.visor-btn { text-decoration: none; }
 .chips.epocas .chip.on { background: var(--marrom); border-color: var(--marrom); color: var(--marfim); }
 .pin-rss-add { align-items: flex-start; }
 .pin-rss-add textarea.input { resize: vertical; min-height: 40px; font-size: 13.5px; line-height: 1.4; padding-top: 9px; }
+
+/* época como um chip com menu (economiza uma linha de filtros) */
+.chip.chip-sel { position: relative; padding: 0; }
+.chip.chip-sel select { appearance: none; -webkit-appearance: none; border: 0; background: transparent; color: inherit; font: inherit; height: 100%; padding: 0 26px 0 12px; cursor: pointer; }
+.chip.chip-sel::after { content: '▾'; position: absolute; right: 10px; top: 50%; transform: translateY(-52%); font-size: 10px; pointer-events: none; }

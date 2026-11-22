@@ -78,6 +78,9 @@ export const EPOCAS: Record<Epoca, { nome: string; periodo?: Periodo; consultas:
   antiga: { nome: 'Antiga', periodo: { ate: 1879 }, consultas: [] },
 }
 const dentro = (ano: number, p: Periodo) => (p.de == null || ano >= p.de) && (p.ate == null || ano <= p.ate)
+/** O Descobrir é um feed só de imagens de obras: páginas de livro, folhas de texto, documentos e PDFs nunca entram. */
+const PAGINA_LIVRO = /\b(page|pages|p\.\s?\d+|folio|fol\.\s?\d+|frontispiece|title[- ]page|book cover|text page|leaf \d+|plate \d+|pl\.\s?\d+|printed book|printed matter|book|books|codex|manuscript|página|livro|document|documents|letter|letters|deed|certificate|receipt|ticket|newspaper|periodical|magazine|pamphlet|broadside|sheet music|typescript|handwritten)\b|\.(pdf|djvu)\b/i
+const ehPaginaDeLivro = (x: ItemDescoberta) => PAGINA_LIVRO.test(x.titulo + ' | ' + x.termos.join(' | '))
 /** O que costuma deixar o feed sem graça (moedas, fragmentos, documentos…) perde pontos, a não ser que você goste. */
 const SEM_GRACA = /\b(coin|medal|token|sherd|shard|fragment|potsherd|document|letter|manuscript leaf|leaf from|page from|map of|postage stamp|stamp|banknote|seal impression|negative|glass plate|lantern slide|specimen sheet|button|bead|weight|label|trade card|ticket|receipt|deed|certificate|bookplate|playing card|textile sample|sample book|wallpaper sample)\b/i
 const semGraca = (x: ItemDescoberta, pesos: Record<string, number>) => SEM_GRACA.test(x.titulo + ' ' + x.termos.join(' ')) && !x.termos.some((t) => (pesos[t] ?? 0) > 2) ? 5 : 0
@@ -96,17 +99,32 @@ function variar(xs: ItemDescoberta[]) {
 /** Pequeno bônus para o recente quando a época é "todas": o feed não fica dominado por acervo antigo. */
 const bonusRecente = (x: ItemDescoberta) => { const a = x.fonte === 'wm' ? undefined : anoDe(x.data); return a == null ? (x.fonte === 'ov' ? 1.5 : 0) : a >= 1960 ? 3 : a >= 1880 ? 1.5 : 0 }
 
-export const TEMAS: { id: string; nome: string; universo: string; consultas: string[] }[] = [
+/** Tema do Descobrir. `exige`: o que o resultado precisa ser (pelo título e classificação) para entrar; `porEpoca`: nomes do tema que cabem na época escolhida. */
+export interface Tema { id: string; nome: string; universo: string; consultas: string[]; exige?: RegExp; porEpoca?: Partial<Record<Epoca, string[]>> }
+const EH_DESENHO = /\b(drawing|drawings|illustration|illustrations|illustrator|print|prints|woodcut|wood engraving|etching|engraving|lithograph|lithography|screenprint|serigraph|linocut|watercolou?r|gouache|ink|pen and ink|graphite|pencil|charcoal|chalk|pastel|poster|comic|cartoon|caricature|sketch|sketchbook|book illustration|design for|desenho|ilustração|gravura|tekening|prent|tegning|dessin|zeichnung|grafik)\b/i
+const EH_PINTURA = /\b(painting|paintings|oil on|tempera|acrylic|watercolou?r|gouache|fresco|on canvas|on panel|pintura|schilderij|maleri|peinture|gemälde)\b/i
+export const TEMAS: Tema[] = [
   { id: 'contemporaneos', nome: 'Artistas contemporâneos', universo: 'contemporanea', consultas: EPOCAS.contemporanea.consultas.slice(8) },
   { id: 'vanguardas', nome: 'Vanguardas', universo: 'contemporanea', consultas: EPOCAS.moderna.consultas },
   { id: 'esmaltes', nome: 'Esmaltes', universo: 'ceramica', consultas: ['crackle glaze', 'celadon', 'ash glaze', 'tenmoku', 'copper red glaze', 'lusterware', 'salt glaze stoneware', 'drip glaze'] },
   { id: 'animal', nome: 'Escultura animal', universo: 'escultura', consultas: ['animal sculpture', 'ceramic animal', 'animal figure terracotta', 'bird figure', 'animal head sculpture', 'zoomorphic vessel'] },
   { id: 'vasos', nome: 'Vasos', universo: 'ceramica', consultas: ['vase', 'storage jar', 'bottle vase', 'amphora', 'ceramic vessel', 'lidded jar'] },
-  { id: 'ilustradores', nome: 'Ilustradores', universo: 'ilustracao', consultas: ['Grandville', 'Gustave Dore', 'Arthur Rackham', 'Ernst Haeckel', 'Aubrey Beardsley', 'Ivan Bilibin', 'Kay Nielsen', 'Edward Lear', 'Kawanabe Kyosai', 'Maria Sibylla Merian', 'John Tenniel', 'Walter Crane', 'Hokusai manga', 'bestiary illustration'] },
-  { id: 'pintores', nome: 'Pintores', universo: 'pintura', consultas: ['Hieronymus Bosch', 'Pieter Bruegel', 'Odilon Redon', 'Henri Rousseau', 'Albert Eckhout', 'Frans Post', 'Jean-Baptiste Debret', 'Rugendas', 'Paul Klee', 'Utagawa Kuniyoshi', 'Ito Jakuchu', 'Franz Marc', 'Giorgio Morandi', 'Hilma af Klint'] },
+  { id: 'ilustradores', nome: 'Ilustradores', universo: 'ilustracao', consultas: ['Grandville', 'Gustave Dore', 'Arthur Rackham', 'Ernst Haeckel', 'Aubrey Beardsley', 'Ivan Bilibin', 'Kay Nielsen', 'Edward Lear', 'Kawanabe Kyosai', 'Maria Sibylla Merian', 'John Tenniel', 'Walter Crane', 'Hokusai manga', 'bestiary illustration'], exige: EH_DESENHO,
+    porEpoca: {
+      contemporanea: ['Saul Steinberg', 'Edward Gorey', 'Tomi Ungerer', 'Roland Topor', 'Maurice Sendak', 'Ralph Steadman', 'Quentin Blake', 'Jean-Michel Folon', 'Robert Crumb', 'Raymond Pettibon', 'Kiki Smith print', 'William Kentridge', 'Shaun Tan', 'contemporary illustration', 'contemporary drawing', 'screenprint'],
+      moderna: ['Kay Nielsen', 'Edmund Dulac', 'Arthur Rackham', 'Aubrey Beardsley', 'Ivan Bilibin', 'Winsor McCay', 'Alphonse Mucha', 'Walter Crane', 'Kawanabe Kyosai', 'Jose Guadalupe Posada', 'Edward Gorey', 'Saul Steinberg', 'Jean de Brunhoff', 'Art Nouveau poster'],
+    } },
+  { id: 'pintores', nome: 'Pintores', universo: 'pintura', consultas: ['Hieronymus Bosch', 'Pieter Bruegel', 'Odilon Redon', 'Henri Rousseau', 'Albert Eckhout', 'Frans Post', 'Jean-Baptiste Debret', 'Rugendas', 'Paul Klee', 'Utagawa Kuniyoshi', 'Ito Jakuchu', 'Franz Marc', 'Giorgio Morandi', 'Hilma af Klint'], exige: EH_PINTURA,
+    porEpoca: {
+      contemporanea: ['David Hockney', 'Paula Rego', 'Beatriz Milhazes', 'Peter Doig', 'Marlene Dumas', 'Alice Neel', 'Philip Guston', 'Gerhard Richter', 'Joan Mitchell', 'Bhupen Khakhar', 'Kerry James Marshall', 'Amy Sillman', 'contemporary painting'],
+      moderna: ['Paul Klee', 'Franz Marc', 'Giorgio Morandi', 'Hilma af Klint', 'Henri Rousseau', 'Odilon Redon', 'Tarsila do Amaral', 'Joan Miro', 'Marc Chagall', 'Henri Matisse', 'Wassily Kandinsky', 'Leonora Carrington', 'Remedios Varo'],
+    } },
   { id: 'contemporanea', nome: 'Cerâmica contemporânea', universo: 'ceramica', consultas: ['contemporary ceramics', 'ceramic artist studio', 'ceramic sculpture exhibition', 'studio pottery', 'ceramic installation', 'raku firing', 'wood fired pottery'] },
   { id: 'precolombiana', nome: 'Pré-colombiana', universo: 'americas', consultas: ['pre-columbian ceramic', 'moche vessel', 'maya vessel', 'nazca pottery', 'colima figure', 'marajoara', 'olmec figure'] },
 ]
+
+/** Consultas de um tema na época escolhida: se o tema tem nomes daquela época, usa só eles (Doré não aparece em "contemporânea"). */
+export function consultasDoTema(t: Tema, epoca: Epoca) { return epoca !== 'todas' && t.porEpoca?.[epoca] ? t.porEpoca[epoca]! : t.consultas }
 
 /** Algumas palavras em português do acervo traduzidas para buscar nas fontes. */
 const PT_EN: Record<string, string> = {
@@ -136,7 +154,7 @@ export async function sementesDoAcervo() {
   return [...c].sort((a, b) => b[1] - a[1]).slice(0, 12)
 }
 
-export interface Pedido { q: string; universo?: string; fonte?: FonteId; tipo: 'proximo' | 'adjacente' | 'experimental' | 'busca' | 'semelhantes'; motivo?: string }
+export interface Pedido { q: string; universo?: string; fonte?: FonteId; tema?: string; tipo: 'proximo' | 'adjacente' | 'experimental' | 'busca' | 'semelhantes'; motivo?: string }
 
 /** Termos com peso: o aprendido + um reforço para o que foi curtido/salvo recentemente (meia-vida de 14 dias). */
 export function pesosDoGosto(perfil: Perfil) {
@@ -174,6 +192,17 @@ export async function planejar(perfil: Perfil, modo: Modo, n = 8, epoca: Epoca =
       const autor = it.autor && !/unknown|anonymous|desconhecido|anônimo|artist$/i.test(it.autor) ? it.autor : undefined
       const q = autor && Math.random() < .5 ? autor : it.termos.slice(0, 2).join(' ') || it.consulta
       if (q) { pedidos.push({ q, universo: it.universo, tipo: 'proximo', motivo: `Porque você curtiu “${it.titulo.slice(0, 60)}”` }); usados++ }
+    }
+  }
+  // artistas dos seus estudos (Biblioteca): o nome, ou um esmalte/queima/técnica dele, entra em todo lote
+  if (modo === 'para-voce' || modo === 'novos-artistas' || modo === 'fora-da-curva') {
+    const estudos = (await db.artistas.toArray()).filter((a) => !a.excluido)
+    const k = Math.min(estudos.length, modo === 'para-voce' ? 2 : 1)
+    for (const a of [...estudos].sort((x, y) => Number(!!y.favorito) - Number(!!x.favorito) + Math.random() - .5).slice(0, k)) {
+      const tecnicas = [...(a.esmaltes ?? []), ...(a.queimas ?? []), ...(a.tecnicas ?? [])].filter((t) => /^[\x20-\x7e]+$/.test(t) && t.length < 30)
+      const q = modo !== 'novos-artistas' && tecnicas.length && Math.random() < .4 ? sorteio(tecnicas) : a.nome
+      pedidos.push({ q, universo: 'ceramica', tipo: 'proximo', motivo: q === a.nome ? `Dos seus estudos de artistas: ${a.nome}` : `Dos seus estudos: ${q}, como em ${a.nome}` })
+      if (modo === 'para-voce') usados++
     }
   }
   // suas pastas e referências (Pinterest, Instagram, grupos) lidas pela IA: até metade do que sobra
@@ -257,11 +286,15 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
     // no feed, cada atualização sorteia páginas mais fundas dos acervos (material novo); busca segue em ordem
     const pagina = p.tipo === 'busca' || p.tipo === 'semelhantes' ? 1 + rodada * 2 + Math.floor(i / ligadas.length) : 1 + Math.floor(Math.random() * 8)
     // consulta num idioma específico vai só para o acervo daquele idioma
+    const exige = p.tema ? TEMAS.find((t) => t.id === p.tema)?.exige : undefined
     const ordem = p.fonte ? ligadas.filter((f) => f.id === p.fonte) : ligadas.map((_, k) => ligadas[(inicio + k) % ligadas.length])
     for (const f of ordem) {
       if (falhou.has(f.id)) continue
       try {
-        let xs = await f.buscar(p.q, periodo ? porConsulta * 2 : porConsulta, pagina, periodo)
+        let xs = await f.buscar(p.q, periodo || exige ? porConsulta * 2 : porConsulta, pagina, periodo)
+        xs = xs.filter((x) => !ehPaginaDeLivro(x))
+        // tema com tipo definido (ex.: Ilustradores só desenho/gravura): o que não é daquele tipo sai, mesmo que o nome bata
+        if (exige) xs = xs.filter((x) => exige.test(x.titulo + ' | ' + x.termos.join(' | ')))
         // fora da época pedida sai; sem data só fica o Openverse (fotos atuais) no filtro contemporâneo
         // na Wikimedia a data é a da fotografia, não a da obra: não serve para o filtro de época
         if (periodo) xs = xs.filter((x) => { const a = x.fonte === 'wm' ? undefined : anoDe(x.data); return a == null ? epoca === 'contemporanea' && x.fonte === 'ov' : dentro(a, periodo) }).slice(0, porConsulta)
@@ -287,7 +320,8 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
   // um sorteio na nota e as obras "para sair da curva" preservam espaço para o inesperado.
   if (pedidos.some((p) => p.tipo === 'proximo' || p.tipo === 'adjacente')) {
     const pesos = pesosDoGosto(perfil)
-    const comNota = itens.map((x) => ({ x, n: notaDoGosto(x, pesos, perfil) + (epoca === 'todas' ? bonusRecente(x) : 0) - semGraca(x, pesos) + (/^(Da sua pasta|Do seu acervo|Dos seus estudos)/.test(x.motivo ?? '') ? 3 : 0) }))
+    const estudados = new Set((await db.artistas.toArray()).filter((a) => !a.excluido).map((a) => a.nome.toLowerCase()))
+    const comNota = itens.map((x) => ({ x, n: notaDoGosto(x, pesos, perfil) + (epoca === 'todas' ? bonusRecente(x) : 0) - semGraca(x, pesos) + (/^(Da sua pasta|Do seu acervo|Dos seus estudos)/.test(x.motivo ?? '') ? 3 : 0) + (x.autor && estudados.has(x.autor.toLowerCase()) ? 6 : 0) }))
       .filter(({ x, n }) => n > -8 || x.motivo?.startsWith('Para sair'))
       .map(({ x, n }) => ({ x, ordem: x.motivo?.startsWith('Para sair') ? 4 + Math.random() * 6 : Math.max(-5, Math.min(15, n)) + Math.random() * 6 }))
     return { itens: variar(comNota.sort((a, b) => b.ordem - a.ordem).map(({ x }) => x)), estados: [...estados.values()] }
