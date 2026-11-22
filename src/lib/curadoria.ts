@@ -85,6 +85,43 @@ const ehPaginaDeLivro = (x: ItemDescoberta) => PAGINA_LIVRO.test(x.titulo + ' | 
 const SEM_GRACA = /\b(coin|medal|token|sherd|shard|fragment|potsherd|document|letter|manuscript leaf|leaf from|page from|map of|postage stamp|stamp|banknote|seal impression|negative|glass plate|lantern slide|specimen sheet|button|bead|weight|label|trade card|ticket|receipt|deed|certificate|bookplate|playing card|textile sample|sample book|wallpaper sample)\b/i
 const semGraca = (x: ItemDescoberta, pesos: Record<string, number>) => SEM_GRACA.test(x.titulo + ' ' + x.termos.join(' ')) && !x.termos.some((t) => (pesos[t] ?? 0) > 2) ? 5 : 0
 /** Variedade no topo: no máximo 2 obras do mesmo autor e ~1/3 do lote de uma mesma fonte; o excedente vai para o fim. */
+/** Chave do artista que junta grafias diferentes ("de Waal, Edmund" = "Edmund de Waal"); anônimos não contam. */
+export function chaveAutor(a?: string) {
+  if (!a) return ''
+  const s = a.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\(.*?\)/g, ' ').replace(/[^a-z\s]/g, ' ')
+  if (/unknown|anonym|desconhecid|unidentified|various|workshop|manufactory|factory/.test(s)) return ''
+  return s.split(/\s+/).filter((w) => w.length > 1).sort().join(' ')
+}
+/** Mesma série: mesma consulta na mesma fonte (ex.: vários pratos da mesma coleção vindos de uma busca). */
+const chaveSerie = (x: ItemDescoberta) => x.fonte + '|' + (x.consulta ?? '')
+
+/**
+ * Mistura o lote antes de ir para a tela: no máximo `porAutor` obras do mesmo artista e `porSerie` da mesma série,
+ * contando também as que já estão na tela; o que passa disso sai. Depois intercala para não ficarem lado a lado
+ * (o mural tem duas colunas, então olha as 3 anteriores).
+ */
+export function diversificar(novos: ItemDescoberta[], antes: ItemDescoberta[] = [], porAutor = 2, porSerie = 3) {
+  const nA = new Map<string, number>(), nS = new Map<string, number>()
+  for (const x of antes.slice(-40)) { const a = chaveAutor(x.autor); if (a) nA.set(a, (nA.get(a) ?? 0) + 1) }
+  const ficam: ItemDescoberta[] = [], sobras: ItemDescoberta[] = []
+  for (const x of novos) {
+    const a = chaveAutor(x.autor), sr = chaveSerie(x)
+    if ((a && (nA.get(a) ?? 0) >= porAutor) || (nS.get(sr) ?? 0) >= porSerie) { sobras.push(x); continue }
+    if (a) nA.set(a, (nA.get(a) ?? 0) + 1); nS.set(sr, (nS.get(sr) ?? 0) + 1); ficam.push(x)
+  }
+  // lote muito curto: completa com as sobras (melhor repetir um pouco do que mostrar a tela vazia)
+  if (ficam.length < 6) ficam.push(...sobras.slice(0, 6 - ficam.length))
+  // intercala: cada obra entra onde não repete artista nem série das 3 anteriores
+  const fila = [...ficam]; const out: ItemDescoberta[] = []
+  const recentes = () => [...antes, ...out].slice(-3)
+  while (fila.length) {
+    const viz = recentes()
+    const k = fila.findIndex((x) => !viz.some((v) => (chaveAutor(v.autor) && chaveAutor(v.autor) === chaveAutor(x.autor)) || chaveSerie(v) === chaveSerie(x)))
+    out.push(fila.splice(k < 0 ? 0 : k, 1)[0])
+  }
+  return out
+}
+
 const ehAntiga = (x: ItemDescoberta) => { const a = x.fonte === 'wm' ? undefined : anoDe(x.data); return a != null && a < 1880 }
 /** `tetoAntigas`: em "Todas as épocas", no máximo ~1/4 do topo é acervo anterior a 1880 (o resto vai para o fim do lote). */
 function variar(xs: ItemDescoberta[], tetoAntigas = false) {
@@ -93,7 +130,7 @@ function variar(xs: ItemDescoberta[], tetoAntigas = false) {
   const tetoAnt = Math.max(2, Math.ceil(xs.length * .25)); let nAnt = 0
   const topo: ItemDescoberta[] = [], fim: ItemDescoberta[] = []
   for (const x of xs) {
-    const a = (x.autor ?? '').toLowerCase(); const na = a && !/unknown|anonymous|desconhecid/.test(a) ? (porAutor.get(a) ?? 0) : 0; const nf = porFonte.get(x.fonte) ?? 0
+    const a = chaveAutor(x.autor); const na = a ? (porAutor.get(a) ?? 0) : 0; const nf = porFonte.get(x.fonte) ?? 0
     const ant = tetoAntigas && ehAntiga(x)
     if (na >= 2 || nf >= tetoFonte || (ant && nAnt >= tetoAnt)) { fim.push(x); continue }
     if (a) porAutor.set(a, na + 1); porFonte.set(x.fonte, nf + 1); if (ant) nAnt++; topo.push(x)
