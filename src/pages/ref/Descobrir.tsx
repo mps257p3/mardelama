@@ -5,7 +5,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { BookOpen, Bookmark, BookmarkCheck, Camera, Columns2, Compass, ExternalLink, EyeOff, Heart, LayoutDashboard, RefreshCw, Search, SlidersHorizontal, Sparkles, Plug, X, ScanSearch } from 'lucide-react'
 import { db } from '../../db/schema'
 import { FONTES, FONTES_PENDENTES, FONTE, type ItemDescoberta } from '../../lib/fontes'
-import { buscarLote, EPOCAS, type Epoca, descurtir, lerPerfil, PERFIL_VAZIO, PESOS_PADRAO, planejar, registrar, retomarFonte, salvarNoAcervo, salvarPerfil, TEMAS, traduz, UNIVERSOS, type EstadoFonte, type Interacao, type Modo, type Perfil } from '../../lib/curadoria'
+import { buscarLote, consultasDoTema, EPOCAS, type Epoca, descurtir, lerPerfil, PERFIL_VAZIO, PESOS_PADRAO, planejar, registrar, retomarFonte, salvarNoAcervo, salvarPerfil, TEMAS, traduz, UNIVERSOS, type EstadoFonte, type Interacao, type Modo, type Perfil } from '../../lib/curadoria'
 import { useAjuste, definirAjuste } from '../../db/settings'
 import { Menu } from '../../ui/Menu'
 import { Sheet } from '../../ui/Sheet'
@@ -65,7 +65,7 @@ export default function Descobrir() {
       const perfil = await lerPerfil()
       const conhecidos = new Set([...(novo ? [] : itens.map((i) => i.id)), ...(c.tipo === 'feed' ? perfil.vistos.slice(-800) : [])])
       let pedidos
-      if (c.tipo === 'busca' && c.consultas?.length) pedidos = c.consultas.map((x) => ({ q: x.q, universo: x.universo, fonte: x.fonte, tipo: 'busca' as const }))
+      if (c.tipo === 'busca' && c.consultas?.length) pedidos = c.consultas.map((x) => ({ q: x.q, universo: x.universo, fonte: x.fonte, tema: c.tema, tipo: 'busca' as const }))
       else if (c.tipo === 'busca') { const t = traduz(c.q); pedidos = FONTES.map(() => ({ q: t, tipo: 'busca' as const })).concat(FONTES.map(() => ({ q: t, tipo: 'busca' as const }))) }
       else if (c.tipo === 'semelhantes') { const it = c.item; const base = [it.autor, ...it.termos.slice(0, 3)].filter(Boolean) as string[]; pedidos = base.flatMap((b) => [{ q: b, universo: it.universo, tipo: 'semelhantes' as const }]).slice(0, 6) }
       else pedidos = await planejar(perfil, m, 8, epoca)
@@ -89,6 +89,8 @@ export default function Descobrir() {
     // veio de uma referência do acervo ("Ver semelhantes")
     const ref = params.get('ref')
     if (ref) { setParams({}, { replace: true }); cache.current = { itens: [], quando: 0, modo, ctx }; semelhantesDaRef(ref); return }
+    // tema aberto e a época mudou: troca os nomes do tema pelos daquela época
+    if (c && (c.epoca ?? 'todas') !== epoca && ctx.tipo === 'busca' && ctx.tema) { const nc = ctxDoTema(ctx.tema, epoca); setCtx(nc); cache.current = { itens: [], quando: 0, modo, ctx: nc, epoca }; carregar(true, nc, modo); return }
     if (!c || !c.itens.length || c.modo !== modo || (c.epoca ?? 'todas') !== epoca || (c.ctx.tipo === 'feed' && Date.now() - c.quando > VALIDADE)) carregar(true, ctx, modo)
     cache.current = { itens: [], quando: 0, modo, ctx, epoca }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -152,10 +154,13 @@ export default function Descobrir() {
     carregar(true, c)
   }
   function voltarAoFeed() { const c: Contexto = { tipo: 'feed' }; setQ(''); setCtx(c); setItens([]); carregar(true, c) }
-  function abrirTema(id: string) {
+  function ctxDoTema(id: string, ep: Epoca): Contexto {
     const t = TEMAS.find((x) => x.id === id)!
+    return { tipo: 'busca', q: t.nome, tema: id, consultas: [...consultasDoTema(t, ep)].sort(() => Math.random() - .5).map((q) => ({ q, universo: t.universo })) }
+  }
+  function abrirTema(id: string) {
     if (ctx.tipo === 'busca' && ctx.tema === id) { voltarAoFeed(); return }
-    const c: Contexto = { tipo: 'busca', q: t.nome, tema: id, consultas: [...t.consultas].sort(() => Math.random() - .5).map((q) => ({ q, universo: t.universo })) }
+    const c = ctxDoTema(id, epoca)
     setQ(''); setCtx(c); setItens([]); window.scrollTo(0, 0); carregar(true, c)
   }
   function abrirCurtidas() { const c: Contexto = { tipo: 'curtidas' }; setTemaCurt(undefined); setQ(''); setCtx(c); setItens([]); window.scrollTo(0, 0); carregar(true, c) }
