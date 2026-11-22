@@ -94,9 +94,6 @@ export function PesquisaIA({ artista: existente, nomeInicial, onClose }: { artis
     if (novoEstudo) nav(`/biblioteca/artistas/${id}`)
   }
 
-  const Marca = ({ k, children }: { k: string; children: React.ReactNode }) => (
-    <label className="ia-item"><input type="checkbox" checked={m(k)} onChange={() => alternar(k)} /><span>{children}</span></label>
-  )
   const qtd = Object.values(marcado).filter(Boolean).length
 
   return (
@@ -111,19 +108,24 @@ export function PesquisaIA({ artista: existente, nomeInicial, onClose }: { artis
       </>}
       {r && <div className="ia-res">
         {r.avisos.length > 0 && <div className="aviso"><strong>Atenção:</strong><ul>{r.avisos.map((x) => <li key={x}>{x}</li>)}</ul></div>}
-        {TEXTOS.some(([k]) => r[k]) && <><h4>Dados gerais</h4>{TEXTOS.filter(([k]) => r[k]).map(([k, l]) => <Marca key={k} k={k}><b>{l}{a[k] ? ' (substitui o atual)' : ''}:</b> {r[k]}</Marca>)}</>}
-        {LISTAS.some(([k]) => r[k].length) && <><h4>Listas</h4>{LISTAS.filter(([k]) => r[k].length).map(([k, l]) => <Marca key={k} k={k}><b>{l}:</b> {r[k].join(' · ')}</Marca>)}</>}
+        {TEXTOS.some(([k]) => r[k]) && <><h4>Dados gerais</h4>{TEXTOS.filter(([k]) => r[k]).map(([k, l]) => <Marca m={m} alternar={alternar} key={k} k={k}><b>{l}{a[k] ? ' (substitui o atual)' : ''}:</b> {r[k]}</Marca>)}</>}
+        {LISTAS.some(([k]) => r[k].length) && <><h4>Listas</h4>{LISTAS.filter(([k]) => r[k].length).map(([k, l]) => <Marca m={m} alternar={alternar} key={k} k={k}><b>{l}:</b> {r[k].join(' · ')}</Marca>)}</>}
         {novoEstudo && <p style={{ margin: '4px 0 0' }}><b>Artista identificado:</b> {r.nome || 'não identificado'}</p>}
         {(r.tags.length > 0 || r.relacionados.length > 0) && <><h4>Etiquetas e relações</h4>
-          {r.tags.length > 0 && <Marca k="tags"><b>Etiquetas:</b> {r.tags.join(' · ')}</Marca>}
-          {r.relacionados.length > 0 && <Marca k="rel"><b>Relacionar com:</b> {r.relacionados.join(' · ')}</Marca>}</>}
-        {r.processos.length > 0 && <><h4>Técnicas e processos</h4>{r.processos.map((p, i) => <Marca key={i} k={'p' + i}><span className={'selo ' + p.certeza}>{CERTEZA[p.certeza].rotulo}</span> <b>{p.tema}:</b> {p.texto}{p.fonte && <> <a href={p.fonte} target="_blank" rel="noreferrer" className="faint">fonte</a></>}</Marca>)}</>}
-        {r.obras.length > 0 && <><h4>Obras com imagem na fonte</h4><div className="ia-obras">{r.obras.map((o, i) => <Marca key={i} k={'o' + i}><img src={o.imagem} alt="" referrerPolicy="no-referrer" loading="lazy" onError={(e) => { e.currentTarget.style.visibility = 'hidden' }} /><span>{o.titulo || 'Sem título'}{o.ano ? `, ${o.ano}` : ''}<br /><a href={o.fonte} target="_blank" rel="noreferrer" className="faint">{o.credito || 'fonte'}</a></span></Marca>)}</div></>}
-        {r.fontes.length > 0 && <><h4>Fontes</h4>{r.fontes.map((f, i) => <Marca key={i} k={'f' + i}>{f.url ? <a href={f.url} target="_blank" rel="noreferrer">{f.titulo}</a> : f.titulo}{f.tipo ? ` · ${f.tipo}` : ''}</Marca>)}</>}
-        {r.publicacoes.length > 0 && <><h4>Publicações</h4>{r.publicacoes.map((f, i) => <Marca key={i} k={'u' + i}>{f.url ? <a href={f.url} target="_blank" rel="noreferrer">{f.titulo}</a> : f.titulo}{f.ano ? ` · ${f.ano}` : ''}</Marca>)}</>}
+          {r.tags.length > 0 && <Marca m={m} alternar={alternar} k="tags"><b>Etiquetas:</b> {r.tags.join(' · ')}</Marca>}
+          {r.relacionados.length > 0 && <Marca m={m} alternar={alternar} k="rel"><b>Relacionar com:</b> {r.relacionados.join(' · ')}</Marca>}</>}
+        {r.processos.length > 0 && <><h4>Técnicas e processos</h4>{r.processos.map((p, i) => <Marca m={m} alternar={alternar} key={i} k={'p' + i}><span className={'selo ' + p.certeza}>{CERTEZA[p.certeza].rotulo}</span> <b>{p.tema}:</b> {p.texto}{p.fonte && <> <a href={p.fonte} target="_blank" rel="noreferrer" className="faint">fonte</a></>}</Marca>)}</>}
+        {r.obras.length > 0 && <><h4>Obras com imagem na fonte</h4><div className="ia-obras">{r.obras.map((o, i) => <Marca m={m} alternar={alternar} key={i} k={'o' + i}><img src={o.imagem} alt="" referrerPolicy="no-referrer" loading="lazy" onError={(e) => { e.currentTarget.style.visibility = 'hidden' }} /><span>{o.titulo || 'Sem título'}{o.ano ? `, ${o.ano}` : ''}<br /><a href={o.fonte} target="_blank" rel="noreferrer" className="faint">{o.credito || 'fonte'}</a></span></Marca>)}</div></>}
+        {r.fontes.length > 0 && <><h4>Fontes</h4>{r.fontes.map((f, i) => <Marca m={m} alternar={alternar} key={i} k={'f' + i}>{f.url ? <a href={f.url} target="_blank" rel="noreferrer">{f.titulo}</a> : f.titulo}{f.tipo ? ` · ${f.tipo}` : ''}</Marca>)}</>}
+        {r.publicacoes.length > 0 && <><h4>Publicações</h4>{r.publicacoes.map((f, i) => <Marca m={m} alternar={alternar} key={i} k={'u' + i}>{f.url ? <a href={f.url} target="_blank" rel="noreferrer">{f.titulo}</a> : f.titulo}{f.ano ? ` · ${f.ano}` : ''}</Marca>)}</>}
         <p className="faint" style={{ fontSize: 12.5 }}>Informação técnica sem link vira hipótese automaticamente. Confira as fontes antes de aplicar.</p>
         <div className="barra-salvar"><button className="btn ghost" onClick={onClose}>Descartar</button><button className="btn primary" disabled={!qtd} onClick={aplicar}>{novoEstudo ? `Criar estudo com ${qtd} ${qtd === 1 ? 'item' : 'itens'}` : `Aplicar ${qtd} ${qtd === 1 ? 'item' : 'itens'}`}</button></div>
       </div>}
     </Sheet>
   )
+}
+
+/** Item marcável do resultado (fora do componente para não ser recriado a cada clique). */
+function Marca({ k, children, m, alternar }: { k: string; children: React.ReactNode; m: (k: string) => boolean; alternar: (k: string) => void }) {
+  return <label className="ia-item"><input type="checkbox" checked={m(k)} onChange={() => alternar(k)} /><span>{children}</span></label>
 }

@@ -31,7 +31,7 @@ export default function ReferenciaDetalhe() {
       <div className="detalhe">
         <div>
           <div className="capa" style={{ aspectRatio: 'auto', minHeight: 240 }}>{r.imagens[foto] ? <Foto id={r.imagens[foto]} alt={r.titulo} style={{ height: 'auto', maxHeight: '78vh', objectFit: 'contain' }} /> : r.imagemExterna ? <ImgRef r={r} style={{ height: 'auto', maxHeight: '78vh', objectFit: 'contain' }} /> : <Images size={44} strokeWidth={1} />}</div>
-          {r.imagens.length > 1 && <div className="thumbs">{r.imagens.map((f, i) => <button key={f} className={i === foto ? 'on' : ''} onClick={() => setFoto(i)}><Foto id={f} /></button>)}</div>}
+          {r.imagens.length > 1 && <div className="thumbs">{r.imagens.map((f, i) => <button key={f} className={i === foto ? 'on' : ''} onClick={() => setFoto(i)} aria-label={`Foto ${i + 1}`}><Foto id={f} /></button>)}</div>}
         </div>
         <div>
           <p className="eyebrow">{r.tipo}</p>

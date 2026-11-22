@@ -2,7 +2,7 @@ import { Home, FlaskConical, Images, BookOpen, Feather, Calculator, Layers, Sett
 
 /** As seis áreas principais. `cor` identifica a área discretamente (ícones, etiquetas, indicadores). */
 export const AREAS = [
-  { slug: 'esmaltes', to: '/esmaltes', nome: 'Superfícies', desc: 'Esmaltes, fórmulas e testes', icon: FlaskConical, cor: '#3D5965', fase: 2 },
+  { slug: 'esmaltes', to: '/superficies', nome: 'Superfícies', desc: 'Esmaltes, fórmulas e testes', icon: FlaskConical, cor: '#3D5965', fase: 2 },
   { slug: 'materiais', to: '/materiais', nome: 'Materiais', desc: 'Argilas, fritas, óxidos e insumos', icon: Layers, cor: '#B46E4B', fase: 2 },
   { slug: 'referencias', to: '/referencias/descobrir', nome: 'Referências', desc: 'Imagens, artistas e ideias', icon: Images, cor: '#858D70', fase: 3 },
   { slug: 'biblioteca', to: '/biblioteca', nome: 'Biblioteca', desc: 'Técnicas, química e estudos', icon: BookOpen, cor: '#B49B70', fase: 4 },

@@ -26,7 +26,7 @@ export default function ReceitaComparar() {
   const fa = useFonte(a), fb = useFonte(b)
   const linhas = useMemo(() => (fa && fb ? comparar(fa.ings, fb.ings) : []), [fa, fb])
 
-  const Opcoes = () => <>
+  const opcoes = <>
     <option value="">Escolha…</option>
     {(receitas ?? []).map((r) => <optgroup key={r.id} label={r.nome}>
       <option value={'r:' + r.id}>{r.nome} — atual (v{r.versaoAtual})</option>
@@ -40,8 +40,8 @@ export default function ReceitaComparar() {
       <h1>Comparar formulações</h1>
       <p className="muted" style={{ marginTop: 8 }}>Compare receitas diferentes ou versões da mesma receita. A base é normalizada para 100% nos dois lados.</p>
       <div className="grade2" style={{ marginTop: 24 }}>
-        <select className="input" value={a} onChange={(e) => setA(e.target.value)}><Opcoes /></select>
-        <select className="input" value={b} onChange={(e) => setB(e.target.value)}><Opcoes /></select>
+        <select className="input" value={a} onChange={(e) => setA(e.target.value)}>{opcoes}</select>
+        <select className="input" value={b} onChange={(e) => setB(e.target.value)}>{opcoes}</select>
       </div>
       {fa && fb && (
         <div className="tabela-wrap" style={{ marginTop: 24 }}>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { cabecalhoLogin } from '../../../lib/login'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ImagePlus, Link2 } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -32,7 +33,7 @@ export default function ObraForm() {
     if (ehImagem(u)) { setO({ ...o!, imagem: u }); return }
     setLendo(true)
     try {
-      const r = await fetch('/api/previa?u=' + encodeURIComponent(u))
+      const r = await fetch('/api/previa?u=' + encodeURIComponent(u), { headers: await cabecalhoLogin() })
       const j = await r.json()
       if (!r.ok) throw new Error(j.erro || 'falhou')
       setO({ ...o!, fonte: u, imagem: j.imagem || o!.imagem, titulo: o!.titulo || j.titulo, credito: o!.credito || j.site })

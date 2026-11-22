@@ -33,7 +33,7 @@ export default function TesteDetalhe() {
       <div className="detalhe">
         <div>
           <div className="capa">{t.fotos[foto] ? <Foto id={t.fotos[foto]} /> : <TestTube size={44} strokeWidth={1} />}</div>
-          {t.fotos.length > 1 && <div className="thumbs">{t.fotos.map((f, i) => <button key={f} className={i === foto ? 'on' : ''} onClick={() => setFoto(i)}><Foto id={f} /></button>)}</div>}
+          {t.fotos.length > 1 && <div className="thumbs">{t.fotos.map((f, i) => <button key={f} className={i === foto ? 'on' : ''} onClick={() => setFoto(i)} aria-label={`Foto ${i + 1}`}><Foto id={f} /></button>)}</div>}
         </div>
         <div>
           <p className="eyebrow">Teste{t.planejado ? ' planejado' : ''}</p>

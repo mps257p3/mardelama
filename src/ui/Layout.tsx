@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Home, FlaskConical, Images, BookOpen, Plus, RefreshCw } from 'lucide-react'
 import { LATERAL, RODAPE } from './nav'
@@ -6,9 +6,10 @@ import { Monograma } from './Monograma'
 import { QuickAdd } from './QuickAdd'
 import { definirContexto, emFluxoDeCadastro } from '../lib/contexto'
 import { progressoSync } from '../db/sync'
+import { trocouDeTela } from '../lib/atualizacao'
 
 const AREA_DA_ROTA: [RegExp, string][] = [
-  [/^\/(esmaltes|receitas|testes|testoteca|laboratorio|queimas|bancada|familias|curvas|engenharia-reversa|compras)/, 'esmaltes'],
+  [/^\/(superficies|esmaltes|receitas|testes|testoteca|laboratorio|queimas|bancada|familias|curvas|engenharia-reversa|compras)/, 'esmaltes'],
   [/^\/materiais/, 'materiais'], [/^\/(referencias|paineis|compartilhar|cores)/, 'referencias'],
   [/^\/biblioteca/, 'biblioteca'], [/^\/(caderno|projetos|entrada)/, 'caderno'], [/^\/calculadoras/, 'calculadoras'],
 ]
@@ -17,6 +18,7 @@ export function Layout() {
   const [add, setAdd] = useState(false)
   const { pathname } = useLocation()
   useEffect(() => { if (!emFluxoDeCadastro(pathname)) definirContexto(undefined) }, [pathname])
+  useEffect(() => { trocouDeTela() }, [pathname])
   const area = AREA_DA_ROTA.find(([r]) => r.test(pathname))?.[1]
   return (
     <div className="app">
@@ -25,9 +27,9 @@ export function Layout() {
           <Monograma altura={40} />
           <span>Mar de<br />Lama</span>
         </NavLink>
-        {LATERAL.map(({ to, nome, icon: I }) => (
-          <NavLink key={to} to={to} end={to === '/'}><I size={18} strokeWidth={1.4} />{nome}</NavLink>
-        ))}
+        {LATERAL.map((x) => { const { to, nome, icon: I } = x; return (
+          <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => (isActive || (to === '/superficies' && /^\/(esmaltes|receitas|testes)(\/|$)/.test(pathname))) ? 'active' : ''}><I size={18} strokeWidth={1.4} />{nome}</NavLink>
+        ) })}
         <div className="sep" />
         <button className="navbtn" onClick={() => setAdd(true)}><Plus size={18} strokeWidth={1.4} />Novo</button>
         <div className="grow" />
@@ -37,7 +39,7 @@ export function Layout() {
       </aside>
 
       <main className="main" style={area ? { ['--area' as string]: `var(--c-${area})` } : undefined}>
-        <Outlet />
+        <Suspense fallback={<div className="carregando-tela" aria-busy="true" />}><Outlet /></Suspense>
         <ProgressoSync />
         <footer className="versao">Versão de {new Date(__VERSAO__).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })}</footer>
       </main>

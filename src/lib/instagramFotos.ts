@@ -1,4 +1,5 @@
 import { db } from '../db/schema'
+import { cabecalhoLogin } from './login'
 import { salvarArquivoDeUrl } from '../db/files'
 import { pendenteInstagram } from './instagram'
 
@@ -10,7 +11,7 @@ import { pendenteInstagram } from './instagram'
 
 export interface EstadoIG { configurado: boolean; usuario?: string; pagina?: string; erro?: string }
 export async function estadoInstagram(): Promise<EstadoIG> {
-  try { const r = await fetch('/api/instagram?acao=status'); return await r.json() } catch { return { configurado: false, erro: 'Sem conexão com o servidor' } }
+  try { const r = await fetch('/api/instagram?acao=status', { headers: await cabecalhoLogin() }); return await r.json() } catch { return { configurado: false, erro: 'Sem conexão com o servidor' } }
 }
 
 interface Progresso { feitos: Record<string, 'ok' | 'pessoal' | 'parcial'>; quando: number }
@@ -39,7 +40,7 @@ export async function buscarFotos(aoAndar: (a: Andamento) => void, cancelado: ()
     let after: string | null = null, paginas = 0, resultado: 'ok' | 'pessoal' | 'parcial' = 'ok'
     try {
       do {
-        const res = await fetch(`/api/instagram?acao=perfil&u=${encodeURIComponent(u)}${after ? '&after=' + encodeURIComponent(after) : ''}`)
+        const res = await fetch(`/api/instagram?acao=perfil&u=${encodeURIComponent(u)}${after ? '&after=' + encodeURIComponent(after) : ''}`, { headers: await cabecalhoLogin() })
         const j = await res.json().catch(() => ({ erro: `HTTP ${res.status}` }))
         if (res.status === 404) { resultado = 'pessoal'; break }
         if (!res.ok) { a.parou = j.erro ?? `HTTP ${res.status}`; aoAndar({ ...a }); await gravar(prog); return a }

@@ -6,7 +6,7 @@ import { db } from '../db/schema'
 const vivos = async (t: string) => (await db.table(t).toArray()).filter((x: { excluido?: 0 | 1 }) => !x.excluido).length
 
 const ITENS = [
-  { to: '/esmaltes', nome: 'Superfícies', desc: 'Esmaltes, fórmulas e testes', icon: FlaskConical, t: 'esmaltes' },
+  { to: '/superficies', nome: 'Superfícies', desc: 'Esmaltes, fórmulas e testes', icon: FlaskConical, t: 'esmaltes' },
   { to: '/familias', nome: 'Famílias', desc: 'B01 a B10: bases e comportamentos', icon: Shapes, t: 'familias' },
   { to: '/materiais', nome: 'Materiais', desc: 'Matérias-primas, preços e estoque', icon: Layers, t: 'materiais' },
   { to: '/curvas', nome: 'Curvas de queima', desc: 'Rampas, patamares e gráfico', icon: Flame, t: 'curvas' },

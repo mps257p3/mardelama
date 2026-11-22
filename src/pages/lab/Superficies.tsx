@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Info, Plus } from 'lucide-react'
 import { useFamilias, useEsmaltes, useReceitas, useTestes } from '../../db/hooks'
@@ -9,7 +9,7 @@ import Testes from './Testes'
 type Aba = 'esmaltes' | 'receitas' | 'testes'
 
 /** Esmaltes, fórmulas e testes numa só área, filtrados pela mesma família. */
-export default function Superficies({ aba }: { aba: Aba }) {
+export default function Superficies({ aba, entrada }: { aba: Aba; entrada?: boolean }) {
   const [sp, setSp] = useSearchParams()
   const nav = useNavigate()
   const fam = sp.get('fam') ?? ''
@@ -25,6 +25,13 @@ export default function Superficies({ aba }: { aba: Aba }) {
     testes: (testes ?? []).filter((t) => !fam || testeDaFamilia(t, fam, famEsm, famRec)).length,
   }
   const q = fam ? `?fam=${fam}` : ''
+  // ao entrar pela área, abre na primeira aba que tem algo (não numa lista vazia)
+  const carregou = esmaltes !== undefined && receitas !== undefined && testes !== undefined
+  useEffect(() => {
+    if (!entrada || !carregou || n.esmaltes) return
+    if (n.receitas) nav(`/receitas${q}`, { replace: true })
+    else if (n.testes) nav(`/testes${q}`, { replace: true })
+  }, [entrada, carregou, n.esmaltes, n.receitas, n.testes, nav, q])
   const ABAS: [Aba, string][] = [['esmaltes', 'Esmaltes'], ['receitas', 'Fórmulas'], ['testes', 'Testes']]
   return (
     <div className="page">

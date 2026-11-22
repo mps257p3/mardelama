@@ -170,13 +170,12 @@ export default function Planejar() {
 }
 
 function Triangulo({ n, itens }: { n: number; itens: Item[] }) {
-  let k = 0
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginTop: 18, overflowX: 'auto' }}>
       <span className="eyebrow">A</span>
       {Array.from({ length: n + 1 }, (_, linha) => (
         <div key={linha} style={{ display: 'flex', gap: 6 }}>
-          {Array.from({ length: linha + 1 }, () => { const it = itens[k++]; return <div key={k} title={it?.descricao} style={{ width: 54, height: 40, borderRadius: 8, background: 'var(--surface)', border: '1px solid var(--line-strong)', fontSize: 9.5, display: 'grid', placeItems: 'center', textAlign: 'center', lineHeight: 1.15, color: 'var(--ink-2)' }}>{it?.descricao.replace(/% [ABC]/g, '').replace(/ · /g, '/')}</div> })}
+          {Array.from({ length: linha + 1 }, (_, col) => { const k = (linha * (linha + 1)) / 2 + col; const it = itens[k]; return <div key={k} title={it?.descricao} style={{ width: 54, height: 40, borderRadius: 8, background: 'var(--surface)', border: '1px solid var(--line-strong)', fontSize: 9.5, display: 'grid', placeItems: 'center', textAlign: 'center', lineHeight: 1.15, color: 'var(--ink-2)' }}>{it?.descricao.replace(/% [ABC]/g, '').replace(/ · /g, '/')}</div> })}
         </div>
       ))}
       <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: (n + 1) * 60 }}><span className="eyebrow">B</span><span className="eyebrow">C</span></div>

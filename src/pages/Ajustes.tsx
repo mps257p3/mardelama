@@ -87,7 +87,7 @@ function Nuvem() {
             <button className="btn sm primary" disabled={ocupado} onClick={() => passo(sincronizar, (r) => `Sincronizado: ${r.enviados} enviados, ${r.recebidos} recebidos`)}><RefreshCw size={14} />Sincronizar agora</button>
             <button className="btn sm ghost" onClick={() => passo(sair, 'Você saiu da conta')}><LogOut size={14} />Sair</button>
             {progresso ? <span className="faint" style={{ fontSize: 12.5 }}>{progresso}</span>
-              : ultimo && <span className="faint" style={{ fontSize: 12.5 }}>Última: {new Date(ultimo.quando).toLocaleString('pt-BR')} · {ultimo.enviados} enviados, {ultimo.recebidos} recebidos</span>}
+              : ultimo && <span className="faint" style={{ fontSize: 12.5 }}>Última: {new Date(ultimo.quando).toLocaleString('pt-BR')} · {ultimo.enviados} enviados, {ultimo.recebidos} recebidos{ultimo.pendentes?.length ? ` · Pendente: ${ultimo.pendentes.join(', ')}` : ''}</span>}
             {erroSync && !progresso && <p className="aviso" style={{ width: '100%', fontSize: 13 }}>Erro na última tentativa ({new Date(erroSync.quando).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}): {erroSync.msg}</p>}
           </div>
         ) : config ? (

@@ -1,6 +1,7 @@
 // Instagram (API oficial com Login do Facebook): busca as fotos dos posts salvos em perfis comerciais e de criador,
 // pela "Business Discovery". O código de acesso fica só aqui, na variável META_TOKEN da Vercel.
 export const config = { runtime: 'edge' }
+import { exigirLogin } from './_login.js'
 
 const GRAPH = 'https://graph.facebook.com/v21.0'
 const json = (dados, status = 200) => new Response(JSON.stringify(dados), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } })
@@ -42,6 +43,8 @@ export default async function handler(req) {
   const u = new URL(req.url)
   const acao = u.searchParams.get('acao') ?? 'status'
   if (!token) return json({ configurado: false, erro: 'Falta o META_TOKEN na Vercel.' }, acao === 'status' ? 200 : 503)
+  // o token da Meta é pessoal: só quem está logado no app usa
+  const login = await exigirLogin(req); if (login.erro) return login.erro
   try {
     const conta = await minhaConta(token)
     if (acao === 'status') return json({ configurado: true, usuario: conta.usuario, pagina: conta.pagina })

@@ -2,6 +2,7 @@
 // Três tarefas: interpretar uma busca em linguagem natural, sugerir a catalogação de uma imagem
 // e sintetizar o repertório estético a partir do acervo. Nada é gravado aqui: o app mostra para revisão.
 import Anthropic from '@anthropic-ai/sdk'
+import { exigirLogin } from './_login.js'
 
 const MODELO = 'claude-opus-5-5'
 const BETAS = ['server-side-fallback-2026-07-01']
@@ -344,6 +345,8 @@ export async function GET() {
 
 export async function POST(req) {
   if (!process.env.ANTHROPIC_API_KEY) return json({ erro: 'IA não configurada: falta a chave ANTHROPIC_API_KEY na Vercel.' }, 503)
+  // só quem está logado no app gasta o crédito da Anthropic
+  const login = await exigirLogin(req); if (login.erro) return login.erro
   let d
   try { d = await req.json() } catch { return json({ erro: 'Pedido inválido' }, 400) }
   const acao = d?.acao

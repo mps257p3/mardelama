@@ -236,7 +236,12 @@ export default function Descobrir() {
       )}
       {ctx.tipo === 'curtidas' && <TemasDasCurtidas itens={itens} sel={temaCurt} onSel={setTemaCurt} onMais={maisDoTema} />}
 
-      {falhas.length > 0 && !carregando && <p className="aviso-fonte">{falhas.map((f) => FONTE[f.id].nome).join(', ')} não {falhas.length > 1 ? 'responderam' : 'respondeu'} agora ({falhas[0].erro}). As outras seguem normalmente.</p>}
+      {falhas.length > 0 && !carregando && (
+        <details className="aviso-fonte">
+          <summary>{falhas.length === 1 ? `${FONTE[falhas[0].id].nome} não respondeu agora.` : `${falhas.length} acervos não responderam agora.`} {falhas.length < estados.length ? 'Os outros seguem normalmente.' : 'Tente de novo em instantes.'}</summary>
+          <p className="faint" style={{ fontSize: 12.5, margin: '6px 0 0' }}>{falhas.map((f) => FONTE[f.id].nome).join(', ')}. Detalhe técnico: {falhas[0].erro}</p>
+        </details>
+      )}
 
       {itens.length === 0 && !carregando && !interpretando ? (
         <div className="empty"><Compass size={26} strokeWidth={1.1} style={{ color: 'var(--argila)' }} />
