@@ -20,10 +20,10 @@ export interface ItemDescoberta {
   motivo?: string           // por que a obra apareceu (mostrado no visor)
 }
 
-export type FonteId = 'aic' | 'met' | 'wm' | 'cma' | 'vam' | 'smk' | 'rijks' | 'eu' | 'mia' | 'si' | 'ov' | 'loc'
+export type FonteId = 'aic' | 'met' | 'wm' | 'cma' | 'vam' | 'smk' | 'rijks' | 'eu' | 'mia' | 'si' | 'ov' | 'loc' | 'rev'
 /** Faixa de anos pedida pelo filtro de época. As fontes que aceitam filtram na origem; as outras são filtradas depois. */
 export interface Periodo { de?: number; ate?: number }
-export interface Fonte { id: FonteId; nome: string; site: string; buscar: (q: string, n: number, pagina: number, periodo?: Periodo) => Promise<ItemDescoberta[]> }
+export interface Fonte { id: FonteId; nome: string; site: string; buscar: (q: string, n: number, pagina: number, periodo?: Periodo, universo?: string) => Promise<ItemDescoberta[]> }
 
 /** Ano aproximado a partir do texto de data das fontes ("1890", "ca. 1750", "19th century", "século XIX", "1960s"). */
 export function anoDe(data?: string): number | undefined {
@@ -292,11 +292,50 @@ const loc: Fonte = {
   },
 }
 
-export const FONTES: Fonte[] = [aic, met, wm, cma, vam, smk, rijks, eu, mia, si, ov, loc]
-export const FONTE: Record<FonteId, Fonte> = { aic, met, wm, cma, vam, smk, rijks, eu, mia, si, ov, loc }
+/**
+ * Revistas e blogs de arte e ilustração atuais (Colossal, BOOOOOOOM!, Artaxis, Ceramics Now…), pelo RSS público de cada site
+ * (api/revistas.js). Cada post vira até 3 imagens. Só tem obra recente: em épocas antigas a fonte fica quieta.
+ */
+const SITES_CERAMICA = ['artaxis', 'ceramicsnow', 'ceramicreview', 'can', 'colossal']
+const SITES_ILUSTRACAO = ['illustrationage', 'creativeboom', '3x3', 'wepresent', 'booooooom', 'colossal']
+const SITES_TODOS = ['artaxis', 'ceramicsnow', 'ceramicreview', 'can', 'colossal', 'booooooom', '3x3', 'creativeboom', 'illustrationage', 'wepresent']
+const UNIV_ILUSTRACAO = /ilustracao|gravura|pintura|literatura|design|fotografia/
+const UNIV_CERAMICA = /ceramica|escultura|esmalte|americas/
+const rev: Fonte = {
+  id: 'rev', nome: 'Revistas de arte', site: 'https://www.thisiscolossal.com',
+  async buscar(q, n, pagina, periodo, universo) {
+    if (periodo?.ate != null && periodo.ate < 1990) return []
+    const lista = universo && UNIV_ILUSTRACAO.test(universo) ? SITES_ILUSTRACAO : universo && UNIV_CERAMICA.test(universo) ? SITES_CERAMICA : SITES_TODOS
+    // cada consulta vai a 3 sites sorteados (os 10 de uma vez pesaria demais)
+    const sorteio = [...lista].sort(() => Math.random() - .5).slice(0, 3)
+    const res = await Promise.allSettled(sorteio.map(async (s) => {
+      const c = new AbortController(); const t = setTimeout(() => c.abort(), 15000)
+      try {
+        const r = await fetch(`/api/revistas?s=${s}&q=${encodeURIComponent(q)}&p=${pagina}`, { signal: c.signal })
+        const j = await r.json().catch(() => ({}))
+        if (!r.ok) throw new Error(j.erro ?? `HTTP ${r.status}`)
+        return (j.itens ?? []).map((x: Record<string, any>) => ({
+          id: `rev:${x.link.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}#${x.k}`, fonte: 'rev' as const,
+          titulo: limpa(x.titulo).slice(0, 140) || 'Sem título', data: x.data, imagem: x.imagem, imagemGrande: x.imagemGrande, link: x.link,
+          licenca: `© do artista · uso pessoal (via ${j.site})`, termos: palavras(...(x.termos ?? [])),
+        })) as ItemDescoberta[]
+      } finally { clearTimeout(t) }
+    }))
+    const ok = res.filter((r) => r.status === 'fulfilled').map((r) => (r as PromiseFulfilledResult<ItemDescoberta[]>).value)
+    if (!ok.length) throw new Error((res[0] as PromiseRejectedResult).reason?.message ?? 'Os sites não responderam')
+    // intercala os sites
+    const out: ItemDescoberta[] = []
+    for (let k = 0; out.length < n && k < 40; k++) for (const xs of ok) if (xs[k] && out.length < n) out.push(xs[k])
+    return out
+  },
+}
+
+export const FONTES: Fonte[] = [aic, met, wm, cma, vam, smk, rijks, eu, mia, si, ov, loc, rev]
+export const FONTE: Record<FonteId, Fonte> = { aic, met, wm, cma, vam, smk, rijks, eu, mia, si, ov, loc, rev }
 
 /** Fontes que dependem de configuração: mostradas com o estado real, nunca simuladas. */
 export const FONTES_PENDENTES = [
+  { nome: 'Artsy, Glazy, Digitalfire', estado: 'Artsy não tem API aberta para buscar obras. Glazy (receitas de esmalte) e Digitalfire (técnica) são texto e receitas, não um feed de imagens.' },
   { nome: 'Behance, Dribbble, ArtStation, Carbonmade', estado: 'Sem API aberta para buscar trabalhos de outras pessoas. Salve o que gostar pelo Recortes ou pelo Pinterest.' },
   { nome: 'Pinterest', estado: 'Não conectado. A API oficial só dá acesso às suas pastas e pins salvos (etapa 4).' },
 ]
