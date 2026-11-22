@@ -38,14 +38,14 @@ export default function ImportarInstagram() {
     try {
       const r = await importarInstagram(ex, { colecoes: [...marc], semColecao, posts: true, seguindo, hashtags })
       toast(r.posts || r.grupos || r.atualizados ? `${r.posts} posts novos no Acervo${r.grupos ? `, ${r.grupos} grupos novos` : ''}${r.atualizados ? `, ${r.atualizados} com grupos atualizados` : ''}` : 'Nada novo: esses posts já estavam no Acervo')
-      nav('/referencias')
+      nav('/referencias/acervo')
     } catch (err) { toast('Não deu para importar: ' + (err as Error).message) }
     finally { setOcupado(false) }
   }
 
   return (
     <div className="page" style={{ maxWidth: 720 }}>
-      <Link to="/referencias" className="back"><ArrowLeft size={15} />Referências</Link>
+      <Link to="/referencias/acervo" className="back"><ArrowLeft size={15} />Referências</Link>
       <p className="eyebrow">Repertório</p>
       <h1 style={{ marginTop: 6 }}>Importar do Instagram</h1>
       <p className="faint" style={{ fontSize: 13.5, marginTop: 6 }}>Use a exportação oficial (Central de Contas › Suas informações e permissões › Baixar suas informações, formato JSON). O Instagram não inclui as imagens dos posts de outras pessoas: cada post entra como um cartão com o @, a legenda e o link. Importar de novo não duplica.</p>

@@ -27,7 +27,7 @@ export default function ReferenciaDetalhe() {
 
   return (
     <div className="page">
-      <Link to="/referencias" className="back"><ArrowLeft size={15} />Referências</Link>
+      <Link to="/referencias/acervo" className="back"><ArrowLeft size={15} />Referências</Link>
       <div className="detalhe">
         <div>
           <div className="capa" style={{ aspectRatio: 'auto', minHeight: 240 }}>{r.imagens[foto] ? <Foto id={r.imagens[foto]} alt={r.titulo} style={{ height: 'auto', maxHeight: '78vh', objectFit: 'contain' }} /> : r.imagemExterna ? <ImgRef r={r} style={{ height: 'auto', maxHeight: '78vh', objectFit: 'contain' }} /> : <Images size={44} strokeWidth={1} />}</div>
@@ -44,7 +44,7 @@ export default function ReferenciaDetalhe() {
             <button className="btn sm" onClick={() => setAoPainel(true)}><LayoutDashboard size={14} />Levar a um painel</button>
             <Link className="btn sm" to={`/referencias/descobrir?ref=${r.id}`}><ScanSearch size={14} />Ver semelhantes</Link>
             {r.url && <a className="btn sm" href={r.url} target="_blank" rel="noreferrer"><ExternalLink size={14} />Abrir link</a>}
-            <button className="btn sm ghost" onClick={async () => { if (confirm('Excluir esta referência?')) { await excluir('referencias', r.id); nav('/referencias') } }}><Trash2 size={14} />Excluir</button>
+            <button className="btn sm ghost" onClick={async () => { if (confirm('Excluir esta referência?')) { await excluir('referencias', r.id); nav('/referencias/acervo') } }}><Trash2 size={14} />Excluir</button>
           </div>
           {gs.length > 0 && <div className="chips" style={{ flexWrap: 'wrap', marginTop: 22 }}>{gs.map((g) => <span key={g.id} className="chip">{g.nome}</span>)}</div>}
           {r.paleta?.length ? <div className="paleta" style={{ marginTop: 22, height: 40 }}>{r.paleta.map((c) => <span key={c} style={{ background: c }} title={c} />)}</div> : null}

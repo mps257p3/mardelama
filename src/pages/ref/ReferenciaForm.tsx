@@ -53,7 +53,7 @@ export default function ReferenciaForm() {
 
   return (
     <div className="page" style={{ maxWidth: 900 }}>
-      <Link to={r.id ? `/referencias/${r.id}` : '/referencias'} className="back"><ArrowLeft size={15} />Voltar</Link>
+      <Link to={r.id ? `/referencias/${r.id}` : '/referencias/acervo'} className="back"><ArrowLeft size={15} />Voltar</Link>
       <p className="eyebrow">{r.id ? 'Editar referência' : 'Nova referência'}</p>
       <h1 style={{ marginTop: 8, marginBottom: 28 }}>{r.titulo || 'Sem título'}</h1>
       <div className="form">

@@ -31,7 +31,7 @@ export default function Colecoes() {
           {lista.map((g) => {
             const capas = porGrupo.get(g.id) ?? []
             return (
-              <Link key={g.id} to={`/referencias?grupo=${g.id}`} className="colecao">
+              <Link key={g.id} to={`/referencias/acervo?grupo=${g.id}`} className="colecao">
                 <div className={'capa-col n' + Math.min(capas.length, 3)}>
                   {capas.length ? capas.slice(0, 3).map((c) => <div key={c.id}><ImgRef r={c} /></div>) : <div className="vazia"><Images size={26} strokeWidth={1.1} /></div>}
                 </div>

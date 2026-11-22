@@ -941,3 +941,19 @@ a.visor-btn { text-decoration: none; }
 .chip.chip-sel { position: relative; padding: 0; }
 .chip.chip-sel select { appearance: none; -webkit-appearance: none; border: 0; background: transparent; color: inherit; font: inherit; height: 100%; padding: 0 26px 0 12px; cursor: pointer; }
 .chip.chip-sel::after { content: '▾'; position: absolute; right: 10px; top: 50%; transform: translateY(-52%); font-size: 10px; pointer-events: none; }
+
+/* painel Fontes: grupos que abrem e fecham */
+.fontes-grupo { border: 1px solid var(--line); border-radius: 14px; margin: 0 0 10px; background: var(--surface); }
+.fontes-grupo > summary { list-style: none; display: flex; align-items: center; gap: 10px; padding: 14px 14px; cursor: pointer; min-height: 48px; }
+.fontes-grupo > summary::-webkit-details-marker { display: none; }
+.fontes-grupo .fg-nome { flex: 1; font-weight: 500; font-size: 15px; }
+.fontes-grupo .fg-conta { font-size: 12.5px; color: var(--ink-2); }
+.fontes-grupo .fg-seta { color: var(--ink-2); transition: transform .2s; flex: none; }
+.fontes-grupo[open] > summary .fg-seta { transform: rotate(180deg); }
+.fontes-grupo .fg-corpo { padding: 0 14px 10px; }
+.fontes-grupo .fg-desc { font-size: 12.5px; margin: 0 0 8px; }
+.fontes-grupo .fg-acoes { display: flex; gap: 6px; margin: 0 0 4px; }
+.fontes-grupo .fontes-grupo { background: var(--surface-2); margin: 8px 0 0; }
+.lista .row.fonte-linha { grid-template-columns: minmax(0, 1fr) auto; min-height: 56px; }
+.lista .row.fonte-linha.sem { grid-template-columns: 1fr; }
+.lista .row.fonte-linha .s { overflow-wrap: anywhere; }

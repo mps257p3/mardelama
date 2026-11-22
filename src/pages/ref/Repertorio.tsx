@@ -44,7 +44,7 @@ export default function Repertorio() {
   const r = s?.r
   return (
     <div className="page" style={{ maxWidth: 760 }}>
-      <Link to="/referencias" className="back"><ArrowLeft size={15} />Referências</Link>
+      <Link to="/referencias/descobrir" className="back"><ArrowLeft size={15} />Referências</Link>
       <p className="eyebrow">Repertório</p>
       <h1 style={{ marginTop: 6 }}>Meu repertório estético</h1>
       <p className="faint" style={{ fontSize: 13.5, marginTop: 6 }}>Uma leitura do seu acervo e do que você curte, salva e recusa no Descobrir. É uma interpretação: tire o que não for você e escreva o que falta.</p>

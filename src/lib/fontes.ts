@@ -1,3 +1,6 @@
+import { SITES } from './revistasSites.js'
+import { db } from '../db/schema'
+
 /**
  * Fontes abertas para o Descobrir. Cada fonte é um módulo com a mesma interface,
  * para que novas (Europeana, Pinterest, sites de artistas) entrem sem mexer no feed.
@@ -296,14 +299,17 @@ const loc: Fonte = {
  * Revistas e blogs de arte e ilustração atuais (Colossal, BOOOOOOOM!, Artaxis, Ceramics Now…), pelo RSS público de cada site
  * (api/revistas.js). Cada post vira até 3 imagens. Só tem obra recente: em épocas antigas a fonte fica quieta.
  */
-const SITES_CERAMICA = ['artaxis', 'ceramicsnow', 'ceramicreview', 'can', 'studiopotter', 'colossal']
-const SITES_ILUSTRACAO = ['illustrationage', 'creativeboom', '3x3', 'wepresent', 'booooooom', 'colossal', 'juxtapoz', 'hifructose', 'beautifulbizarre', 'rawvision']
-const SITES_BRASIL = ['select', 'amarello', 'dasartes', 'artebrasileiros', 'continente', 'zum', 'piseagrama', 'recorte', 'carbono', 'tatui']
-const SITES_ARTE = ['elephant', 'bomb', 'frieze', 'artreview', 'artforum', 'flashart', 'artmonthly', 'juxtapoz', 'rawvision']
-const SITES_TODOS = [...new Set([...SITES_CERAMICA, ...SITES_ILUSTRACAO, ...SITES_BRASIL, ...SITES_ARTE])]
+const IDS = Object.keys(SITES)
+const doTipo = (...t: string[]) => IDS.filter((id) => t.includes(SITES[id].tipo))
+const SITES_CERAMICA = [...doTipo('ceramica'), 'colossal']
+const SITES_ILUSTRACAO = doTipo('ilustracao')
+/** Revistas que você desligou no painel Fontes (ajuste sincronizado entre aparelhos). */
+export const CHAVE_REVISTAS_OFF = 'descobrir.revistasDesligadas'
 /** Site que falhou (sem feed, bloqueio) descansa 24 h neste aparelho, para não gastar consultas. */
 const PAUSA_REV = 'rev.pausa'
 const lerPausas = (): Record<string, number> => { try { return JSON.parse(localStorage.getItem(PAUSA_REV) ?? '{}') } catch { return {} } }
+export const sitePausado = (s: string) => (lerPausas()[s] ?? 0) > Date.now()
+export const retomarSite = (s: string) => { try { const p = lerPausas(); delete p[s]; localStorage.setItem(PAUSA_REV, JSON.stringify(p)) } catch { /* sem armazenamento */ } }
 const pausarSite = (s: string) => { try { const p = lerPausas(); p[s] = Date.now() + 86400000; localStorage.setItem(PAUSA_REV, JSON.stringify(p)) } catch { /* sem armazenamento */ } }
 const UNIV_ILUSTRACAO = /ilustracao|gravura|pintura|literatura|design|fotografia/
 const UNIV_CERAMICA = /ceramica|escultura|esmalte|americas/
@@ -311,13 +317,18 @@ const rev: Fonte = {
   id: 'rev', nome: 'Revistas de arte', site: 'https://www.thisiscolossal.com',
   async buscar(q, n, pagina, periodo, universo) {
     if (periodo?.ate != null && periodo.ate < 1990) return []
-    const base = universo && UNIV_ILUSTRACAO.test(universo) ? SITES_ILUSTRACAO : universo && UNIV_CERAMICA.test(universo) ? SITES_CERAMICA : SITES_TODOS
+    const desligadas = new Set(((await db.ajustes.get(CHAVE_REVISTAS_OFF))?.valor as string[] | undefined) ?? [])
+    const ligadas = (xs: string[]) => xs.filter((s) => !desligadas.has(s))
+    let base = ligadas(universo && UNIV_ILUSTRACAO.test(universo) ? SITES_ILUSTRACAO : universo && UNIV_CERAMICA.test(universo) ? SITES_CERAMICA : IDS)
+    if (!base.length) base = ligadas(IDS)
+    if (!base.length) return []
     const pausas = lerPausas(); const agora = Date.now()
     const lista = base.filter((s) => !(pausas[s] > agora))
     // cada consulta vai a 3 sites sorteados (todos de uma vez pesaria demais); às vezes um deles é brasileiro
     const sorteio = [...(lista.length ? lista : base)].sort(() => Math.random() - .5).slice(0, 3)
-    const br = SITES_BRASIL.filter((s) => !(pausas[s] > agora) && !sorteio.includes(s))
-    if (base !== SITES_TODOS && br.length && Math.random() < .35) sorteio[2] = br[Math.floor(Math.random() * br.length)]
+    // às vezes uma das três é brasileira ou japonesa, mesmo nos temas
+    const fora = ligadas(IDS.filter((s) => (SITES[s].secao === 'brasil' || SITES[s].secao === 'japao') && !(pausas[s] > agora) && !sorteio.includes(s)))
+    if (sorteio.length === 3 && fora.length && Math.random() < .35) sorteio[2] = fora[Math.floor(Math.random() * fora.length)]
     const res = await Promise.allSettled(sorteio.map(async (s) => {
       const c = new AbortController(); const t = setTimeout(() => c.abort(), 15000)
       try {

@@ -31,14 +31,14 @@ export default function ImportarPinterest() {
     try {
       const r = await importarPinterest(ex, { pastas: [...marc], buscas })
       toast(r.pins || r.grupos || r.atualizados ? `${r.pins} pins novos no Acervo${r.grupos ? `, ${r.grupos} grupos novos` : ''}${r.atualizados ? `, ${r.atualizados} com grupos atualizados` : ''}` : 'Nada novo: esses pins já estavam no Acervo')
-      nav('/referencias')
+      nav('/referencias/acervo')
     } catch (err) { toast('Não deu para importar: ' + (err as Error).message) }
     finally { setOcupado(false) }
   }
 
   return (
     <div className="page" style={{ maxWidth: 720 }}>
-      <Link to="/referencias" className="back"><ArrowLeft size={15} />Referências</Link>
+      <Link to="/referencias/acervo" className="back"><ArrowLeft size={15} />Referências</Link>
       <p className="eyebrow">Repertório</p>
       <h1 style={{ marginTop: 6 }}>Pinterest</h1>
       <PastasRss />

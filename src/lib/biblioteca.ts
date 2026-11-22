@@ -62,7 +62,7 @@ export const SECOES: SecaoBib[] = [
     slug: 'referencias', span: 3, nome: 'Referências', desc: 'Um arquivo visual de ideias, formas e possibilidades.',
     cats: ['História da arte'], capa: '/areas/referencias.jpg',
     atalhos: [
-      { to: '/referencias', nome: 'Acervo', desc: 'Todas as imagens guardadas' },
+      { to: '/referencias/acervo', nome: 'Acervo', desc: 'Todas as imagens guardadas' },
       { to: '/referencias/descobrir', nome: 'Descobrir', desc: 'Obras de museus e acervos' },
       { to: '/paineis', nome: 'Painéis', desc: 'Composições de estudo' },
     ],

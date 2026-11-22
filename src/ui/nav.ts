@@ -4,7 +4,7 @@ import { Home, FlaskConical, Images, BookOpen, Feather, Calculator, Layers, Sett
 export const AREAS = [
   { slug: 'esmaltes', to: '/esmaltes', nome: 'Superfícies', desc: 'Esmaltes, fórmulas e testes', icon: FlaskConical, cor: '#3D5965', fase: 2 },
   { slug: 'materiais', to: '/materiais', nome: 'Materiais', desc: 'Argilas, fritas, óxidos e insumos', icon: Layers, cor: '#B46E4B', fase: 2 },
-  { slug: 'referencias', to: '/referencias', nome: 'Referências', desc: 'Imagens, artistas e ideias', icon: Images, cor: '#858D70', fase: 3 },
+  { slug: 'referencias', to: '/referencias/descobrir', nome: 'Referências', desc: 'Imagens, artistas e ideias', icon: Images, cor: '#858D70', fase: 3 },
   { slug: 'biblioteca', to: '/biblioteca', nome: 'Biblioteca', desc: 'Técnicas, química e estudos', icon: BookOpen, cor: '#B49B70', fase: 4 },
   { slug: 'caderno', to: '/caderno', nome: 'Caderno', desc: 'Ideias, pesquisas e descobertas', icon: Feather, cor: '#987C79', fase: 4 },
   { slug: 'calculadoras', to: '/calculadoras', nome: 'Calculadoras', desc: 'Ferramentas para o ateliê', icon: Calculator, cor: '#594334', fase: 4 },
