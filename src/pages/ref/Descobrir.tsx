@@ -13,7 +13,7 @@ import { useToast } from '../../ui/toast'
 import { TopoRef } from './Topo'
 import { EscolherGrupos, EscolherPainel } from './acoesRefs'
 import { atualizarGostoIA, buscarPorFoto, CHAVE_INSPIRA, inspirarDoAcervo, type InspiracaoAcervo, iaConfigurada, interpretarBusca, type Consulta, type TemaCurtidas } from '../../lib/iaRepertorio'
-import { CompararObra, ExplicarObra, ObraDoDia, TemasDasCurtidas, useObraDoDia } from './descobrirExtras'
+import { CompararObra, ExplicarObra, TemasDasCurtidas } from './descobrirExtras'
 
 const MODOS: [Modo, string][] = [['para-voce', 'Para você'], ['fora-da-curva', 'Fora da curva'], ['novos-artistas', 'Novos artistas'], ['cores-texturas', 'Cores e texturas'], ['formas-volumes', 'Formas e volumes']]
 const VALIDADE = 30 * 60000   // ao voltar ao Descobrir depois de meia hora, vem um lote novo
@@ -169,7 +169,6 @@ export default function Descobrir() {
     setQ(''); setCtx(c); setItens([]); window.scrollTo(0, 0); carregar(true, c)
   }
   function abrirCurtidas() { const c: Contexto = { tipo: 'curtidas' }; setTemaCurt(undefined); setQ(''); setCtx(c); setItens([]); window.scrollTo(0, 0); carregar(true, c) }
-  const obraDoDia = useObraDoDia(itens, ctx.tipo === 'feed' && modo === 'para-voce')
   const [visorUnico, setVisorUnico] = useState<ItemDescoberta>()
   const [temaCurt, setTemaCurt] = useState<TemaCurtidas>()
   const lista = ctx.tipo === 'curtidas' && temaCurt ? itens.filter((x) => temaCurt.ids.includes(x.id)) : itens
@@ -232,7 +231,6 @@ export default function Descobrir() {
         </div>
       )}
       {ctx.tipo === 'curtidas' && <TemasDasCurtidas itens={itens} sel={temaCurt} onSel={setTemaCurt} onMais={maisDoTema} />}
-      {ctx.tipo === 'feed' && modo === 'para-voce' && obraDoDia && <ObraDoDia x={obraDoDia} curtido={curtidos.has(obraDoDia.id)} salvo={salvos.has(obraDoDia.id)} onAbrir={() => setVisorUnico(obraDoDia)} onCurtir={() => agir(obraDoDia, 'curtir')} onSalvar={() => agir(obraDoDia, 'salvar')} />}
 
       {falhas.length > 0 && !carregando && <p className="aviso-fonte">{falhas.map((f) => FONTE[f.id].nome).join(', ')} não {falhas.length > 1 ? 'responderam' : 'respondeu'} agora ({falhas[0].erro}). As outras seguem normalmente.</p>}
 

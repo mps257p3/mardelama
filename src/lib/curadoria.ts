@@ -85,19 +85,25 @@ const ehPaginaDeLivro = (x: ItemDescoberta) => PAGINA_LIVRO.test(x.titulo + ' | 
 const SEM_GRACA = /\b(coin|medal|token|sherd|shard|fragment|potsherd|document|letter|manuscript leaf|leaf from|page from|map of|postage stamp|stamp|banknote|seal impression|negative|glass plate|lantern slide|specimen sheet|button|bead|weight|label|trade card|ticket|receipt|deed|certificate|bookplate|playing card|textile sample|sample book|wallpaper sample)\b/i
 const semGraca = (x: ItemDescoberta, pesos: Record<string, number>) => SEM_GRACA.test(x.titulo + ' ' + x.termos.join(' ')) && !x.termos.some((t) => (pesos[t] ?? 0) > 2) ? 5 : 0
 /** Variedade no topo: no máximo 2 obras do mesmo autor e ~1/3 do lote de uma mesma fonte; o excedente vai para o fim. */
-function variar(xs: ItemDescoberta[]) {
+const ehAntiga = (x: ItemDescoberta) => { const a = x.fonte === 'wm' ? undefined : anoDe(x.data); return a != null && a < 1880 }
+/** `tetoAntigas`: em "Todas as épocas", no máximo ~1/4 do topo é acervo anterior a 1880 (o resto vai para o fim do lote). */
+function variar(xs: ItemDescoberta[], tetoAntigas = false) {
   const porAutor = new Map<string, number>(); const porFonte = new Map<string, number>()
   const tetoFonte = Math.max(3, Math.ceil(xs.length * .34))
+  const tetoAnt = Math.max(2, Math.ceil(xs.length * .25)); let nAnt = 0
   const topo: ItemDescoberta[] = [], fim: ItemDescoberta[] = []
   for (const x of xs) {
     const a = (x.autor ?? '').toLowerCase(); const na = a && !/unknown|anonymous|desconhecid/.test(a) ? (porAutor.get(a) ?? 0) : 0; const nf = porFonte.get(x.fonte) ?? 0
-    if (na >= 2 || nf >= tetoFonte) { fim.push(x); continue }
-    if (a) porAutor.set(a, na + 1); porFonte.set(x.fonte, nf + 1); topo.push(x)
+    const ant = tetoAntigas && ehAntiga(x)
+    if (na >= 2 || nf >= tetoFonte || (ant && nAnt >= tetoAnt)) { fim.push(x); continue }
+    if (a) porAutor.set(a, na + 1); porFonte.set(x.fonte, nf + 1); if (ant) nAnt++; topo.push(x)
   }
   return [...topo, ...fim]
 }
-/** Pequeno bônus para o recente quando a época é "todas": o feed não fica dominado por acervo antigo. */
-const bonusRecente = (x: ItemDescoberta) => { const a = x.fonte === 'wm' ? undefined : anoDe(x.data); return a == null ? (x.fonte === 'ov' ? 1.5 : 0) : a >= 1960 ? 3 : a >= 1880 ? 1.5 : 0 }
+/** Peso da data quando a época é "todas": o recente sobe e o acervo antigo de museu desce, para o feed não ficar no passado. */
+const bonusRecente = (x: ItemDescoberta) => { const a = x.fonte === 'wm' ? undefined : anoDe(x.data); return a == null ? (x.fonte === 'ov' || x.fonte === 'rev' ? 3 : 0) : a >= 1960 ? 4 : a >= 1880 ? 2 : a >= 1600 ? -2 : -4 }
+/** Consultas que o feed manda às revistas de arte (Colossal, Artaxis, Illustration Age…): produção atual. */
+const REVISTAS_FEED = ['ceramics', 'ceramic sculpture', 'clay', 'porcelain', 'illustration', 'drawing', 'sculpture', 'painting', 'installation', 'textile', 'printmaking', 'animal sculpture']
 
 /** Tema do Descobrir. `exige`: o que o resultado precisa ser (pelo título e classificação) para entrar; `porEpoca`: nomes do tema que cabem na época escolhida. */
 export interface Tema { id: string; nome: string; universo: string; consultas: string[]; exige?: RegExp; porEpoca?: Partial<Record<Epoca, string[]>>; revistas?: string[] }
@@ -243,9 +249,15 @@ export async function planejar(perfil: Perfil, modo: Modo, n = 8, epoca: Epoca =
   // época escolhida (ou, em "todas", um pouco de contemporâneo): troca parte do lote por consultas daquela época
   const ep = EPOCAS[epoca]
   const daEpoca = epoca === 'todas' ? EPOCAS.contemporanea.consultas : ep.consultas
-  const trocar = epoca === 'todas' ? 2 : epoca === 'antiga' ? 0 : Math.ceil(n * .4)
+  const trocar = epoca === 'todas' ? Math.ceil(n * .3) : epoca === 'antiga' ? 0 : Math.ceil(n * .4)
   const lista = [...daEpoca].sort(() => Math.random() - .5)
   for (let k = 0; k < Math.min(trocar, lista.length, pedidos.length); k++) pedidos[pedidos.length - 1 - k] = { q: lista[k], universo: 'contemporanea', tipo: 'adjacente', motivo: epoca === 'todas' ? 'Para o feed não ficar só no passado' : `Época: ${ep.nome}` }
+  // em "Todas" e "Contemporânea", duas consultas a mais vão direto às revistas de arte (o que se produz hoje)
+  if (epoca === 'todas' || epoca === 'contemporanea') {
+    const dosTermos = Object.entries(perfil.termos).filter(([k, v]) => v > 1 && /^[a-z][a-z ]{2,30}$/.test(k)).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k]) => k)
+    const qs = [...dosTermos, ...REVISTAS_FEED].sort(() => Math.random() - .5).slice(0, 2)
+    for (const q of qs) pedidos.push({ q, fonte: 'rev', tipo: 'adjacente', motivo: 'De uma revista de arte atual' })
+  }
   return pedidos
 }
 
@@ -329,7 +341,7 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
     const comNota = itens.map((x) => ({ x, n: notaDoGosto(x, pesos, perfil) + (epoca === 'todas' ? bonusRecente(x) : 0) - semGraca(x, pesos) + (/^(Da sua pasta|Do seu acervo|Dos seus estudos)/.test(x.motivo ?? '') ? 3 : 0) + (x.autor && estudados.has(x.autor.toLowerCase()) ? 6 : 0) }))
       .filter(({ x, n }) => n > -8 || x.motivo?.startsWith('Para sair'))
       .map(({ x, n }) => ({ x, ordem: x.motivo?.startsWith('Para sair') ? 4 + Math.random() * 6 : Math.max(-5, Math.min(15, n)) + Math.random() * 6 }))
-    return { itens: variar(comNota.sort((a, b) => b.ordem - a.ordem).map(({ x }) => x)), estados: [...estados.values()] }
+    return { itens: variar(comNota.sort((a, b) => b.ordem - a.ordem).map(({ x }) => x), epoca === 'todas'), estados: [...estados.values()] }
   }
   return { itens, estados: [...estados.values()] }
 }
