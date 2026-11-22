@@ -75,7 +75,7 @@ export function CapaFotos({ fotos, onChange, alt, vazio, rotuloAdd = 'Adicionar 
       </div>
       {fotos.length > 0 && (
         <div className="thumbs">
-          {fotos.length > 1 && fotos.map((f, i) => <button key={f} className={f === id ? 'on' : ''} onClick={() => setAtual(i)}><Foto id={f} /></button>)}
+          {fotos.length > 1 && fotos.map((f, i) => <button key={f} className={f === id ? 'on' : ''} onClick={() => setAtual(i)} aria-label={`Foto ${i + 1}`}><Foto id={f} /></button>)}
           <button className="thumb-add" onClick={esc.abrir} disabled={esc.salvando} aria-label={rotuloAdd}>{esc.salvando ? '…' : <ImagePlus size={18} strokeWidth={1.4} />}</button>
         </div>
       )}

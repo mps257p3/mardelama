@@ -1,4 +1,5 @@
 import { db, type Referencia } from '../db/schema'
+import { cabecalhoLogin } from './login'
 import { lerPerfil, salvarPerfil, UNIVERSOS, type GostoIA } from './curadoria'
 import type { FonteId, ItemDescoberta } from './fontes'
 import { FONTE, viaPonte } from './fontes'
@@ -31,7 +32,7 @@ export function iaConfigurada(): Promise<boolean> {
 export async function chamar<T>(corpo: Record<string, unknown>, ms = 90000): Promise<T> {
   const c = new AbortController(); const t = setTimeout(() => c.abort(), ms)
   try {
-    const r = await fetch('/api/ia', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(corpo), signal: c.signal })
+    const r = await fetch('/api/ia', { method: 'POST', headers: { 'content-type': 'application/json', ...(await cabecalhoLogin()) }, body: JSON.stringify(corpo), signal: c.signal })
     const j = await r.json().catch(() => ({ erro: `A IA não respondeu (HTTP ${r.status})` }))
     if (!r.ok || !j.resultado) throw new Error(j.erro ?? `HTTP ${r.status}`)
     return j.resultado as T

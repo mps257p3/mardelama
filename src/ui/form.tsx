@@ -56,7 +56,7 @@ export function Multi({ value, onChange, opcoes }: { value: string[]; onChange: 
 export function Estrelas({ value = 0, onChange, tamanho = 20 }: { value?: number; onChange?: (v: number) => void; tamanho?: number }) {
   return <div style={{ display: 'flex', gap: 2 }} aria-label={`Avaliação ${value} de 5`}>
     {[1, 2, 3, 4, 5].map((i) => (
-      <button type="button" key={i} disabled={!onChange} onClick={() => onChange?.(i === value ? 0 : i)}
+      <button type="button" key={i} aria-label={`${i} de 5`} aria-pressed={i <= value} disabled={!onChange} onClick={() => onChange?.(i === value ? 0 : i)}
         style={{ background: 'none', border: 0, padding: 2, cursor: onChange ? 'pointer' : 'default', color: i <= value ? 'var(--terracota)' : 'var(--line-strong)' }}>
         <Star size={tamanho} strokeWidth={1.3} fill={i <= value ? 'currentColor' : 'none'} />
       </button>

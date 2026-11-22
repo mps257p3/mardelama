@@ -24,7 +24,7 @@ export default async function handler(req) {
   let r
   try {
     r = await fetch(alvo, { headers: { 'User-Agent': 'MarDeLama/1.0 (atelie pessoal)', 'AIC-User-Agent': 'MarDeLama/1.0 (atelie pessoal)', Accept: req.headers.get('accept') || '*/*' } })
-  } catch (e) { return new Response('Fonte indisponível', { status: 502, headers: { 'access-control-allow-origin': '*' } }) }
+  } catch { return new Response('Fonte indisponível', { status: 502, headers: { 'access-control-allow-origin': '*' } }) }
   const h = new Headers()
   // as imagens do Mia chegam sem tipo; sem ele o app não aceita salvar
   h.set('content-type', r.headers.get('content-type') || (daMia ? 'image/jpeg' : 'application/octet-stream'))

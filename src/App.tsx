@@ -1,64 +1,79 @@
+import { lazy, type ComponentType } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Layout } from './ui/Layout'
 import { ToastProvider } from './ui/toast'
 import Home from './pages/Home'
-import Ajustes from './pages/Ajustes'
-import Laboratorio from './pages/Laboratorio'
-import EmBreve from './pages/EmBreve'
-import EsmalteForm from './pages/lab/EsmalteForm'
-import EsmalteDetalhe from './pages/lab/EsmalteDetalhe'
-import Familias from './pages/lab/Familias'
-import ReceitaNova from './pages/lab/ReceitaNova'
-import ReceitaEditor from './pages/lab/ReceitaEditor'
-import ReceitaComparar from './pages/lab/ReceitaComparar'
-import TesteForm from './pages/lab/TesteForm'
-import TesteDetalhe from './pages/lab/TesteDetalhe'
-import TesteComparar from './pages/lab/TesteComparar'
-import Planejar from './pages/lab/Planejar'
-import Referencias from './pages/ref/Referencias'
-import ReferenciaForm from './pages/ref/ReferenciaForm'
-import ReferenciaDetalhe from './pages/ref/ReferenciaDetalhe'
-import Grupos from './pages/ref/Grupos'
-import Colecoes from './pages/ref/Colecoes'
-import Descobrir from './pages/ref/Descobrir'
-import Repertorio from './pages/ref/Repertorio'
-import ImportarInstagram from './pages/ref/ImportarInstagram'
-import ImportarPinterest from './pages/ref/ImportarPinterest'
-import RetornoPinterest from './pages/ref/RetornoPinterest'
-import Privacidade from './pages/Privacidade'
-import Paineis from './pages/ref/Paineis'
-import PainelEditor from './pages/ref/PainelEditor'
-import Compartilhar from './pages/ref/Compartilhar'
-import Biblioteca from './pages/bib/Biblioteca'
-import ConteudoForm from './pages/bib/ConteudoForm'
-import ConteudoDetalhe from './pages/bib/ConteudoDetalhe'
-import SecaoBiblioteca from './pages/bib/SecaoBiblioteca'
 import { SECOES, SECOES_PROPRIAS } from './lib/biblioteca'
-import Artistas from './pages/bib/art/Artistas'
-import ArtistaDetalhe from './pages/bib/art/ArtistaDetalhe'
-import ArtistaForm from './pages/bib/art/ArtistaForm'
-import ObraDetalhe from './pages/bib/art/ObraDetalhe'
-import ObraForm from './pages/bib/art/ObraForm'
-import { ColecaoDetalhe, ColecoesLista } from './pages/bib/art/Colecoes'
-import Glossario from './pages/bib/Glossario'
-import Agenda from './pages/bib/Agenda'
-import Caderno from './pages/cad/Caderno'
-import NotaEditor from './pages/cad/NotaEditor'
-import NotaNova from './pages/cad/NotaNova'
-import Calculadoras from './pages/calc/Calculadoras'
-import Busca from './pages/Busca'
-import Atividade from './pages/Atividade'
-import Materiais from './pages/lab/Materiais'
-import MaterialForm from './pages/lab/MaterialForm'
-import MaterialDetalhe from './pages/lab/MaterialDetalhe'
-import FamiliaDetalhe from './pages/lab/FamiliaDetalhe'
-import Curvas from './pages/lab/Curvas'
-import CurvaDetalhe from './pages/lab/CurvaDetalhe'
-import Comerciais from './pages/lab/Comerciais'
-import ComercialDetalhe from './pages/lab/ComercialDetalhe'
-import Compras from './pages/lab/Compras'
-import Superficies from './pages/lab/Superficies'
 
+/**
+ * Cada área é baixada só quando é aberta (o app abre mais rápido). Se o arquivo da área sumiu
+ * porque saiu uma versão nova do app, recarrega uma vez para pegar a versão nova.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function carregar<T extends ComponentType<any>>(f: () => Promise<{ default: T }>) {
+  const marca = { ler: () => { try { return sessionStorage.getItem('recarregou-versao') } catch { return '1' } }, por: (v?: string) => { try { if (v) sessionStorage.setItem('recarregou-versao', v); else sessionStorage.removeItem('recarregou-versao') } catch { /* sem armazenamento */ } } }
+  return lazy(() => f().catch((e) => {
+    if (!marca.ler()) { marca.por('1'); location.reload(); return new Promise<never>(() => {}) }
+    throw e
+  }).then((m) => { marca.por(); return m }))
+}
+
+const Ajustes = carregar(() => import('./pages/Ajustes'))
+const Laboratorio = carregar(() => import('./pages/Laboratorio'))
+const EmBreve = carregar(() => import('./pages/EmBreve'))
+const EsmalteForm = carregar(() => import('./pages/lab/EsmalteForm'))
+const EsmalteDetalhe = carregar(() => import('./pages/lab/EsmalteDetalhe'))
+const Familias = carregar(() => import('./pages/lab/Familias'))
+const ReceitaNova = carregar(() => import('./pages/lab/ReceitaNova'))
+const ReceitaEditor = carregar(() => import('./pages/lab/ReceitaEditor'))
+const ReceitaComparar = carregar(() => import('./pages/lab/ReceitaComparar'))
+const TesteForm = carregar(() => import('./pages/lab/TesteForm'))
+const TesteDetalhe = carregar(() => import('./pages/lab/TesteDetalhe'))
+const TesteComparar = carregar(() => import('./pages/lab/TesteComparar'))
+const Planejar = carregar(() => import('./pages/lab/Planejar'))
+const Referencias = carregar(() => import('./pages/ref/Referencias'))
+const ReferenciaForm = carregar(() => import('./pages/ref/ReferenciaForm'))
+const ReferenciaDetalhe = carregar(() => import('./pages/ref/ReferenciaDetalhe'))
+const Grupos = carregar(() => import('./pages/ref/Grupos'))
+const Colecoes = carregar(() => import('./pages/ref/Colecoes'))
+const Descobrir = carregar(() => import('./pages/ref/Descobrir'))
+const Repertorio = carregar(() => import('./pages/ref/Repertorio'))
+const ImportarInstagram = carregar(() => import('./pages/ref/ImportarInstagram'))
+const ImportarPinterest = carregar(() => import('./pages/ref/ImportarPinterest'))
+const RetornoPinterest = carregar(() => import('./pages/ref/RetornoPinterest'))
+const Privacidade = carregar(() => import('./pages/Privacidade'))
+const Paineis = carregar(() => import('./pages/ref/Paineis'))
+const PainelEditor = carregar(() => import('./pages/ref/PainelEditor'))
+const Compartilhar = carregar(() => import('./pages/ref/Compartilhar'))
+const Biblioteca = carregar(() => import('./pages/bib/Biblioteca'))
+const ConteudoForm = carregar(() => import('./pages/bib/ConteudoForm'))
+const ConteudoDetalhe = carregar(() => import('./pages/bib/ConteudoDetalhe'))
+const SecaoBiblioteca = carregar(() => import('./pages/bib/SecaoBiblioteca'))
+const Artistas = carregar(() => import('./pages/bib/art/Artistas'))
+const ArtistaDetalhe = carregar(() => import('./pages/bib/art/ArtistaDetalhe'))
+const ArtistaForm = carregar(() => import('./pages/bib/art/ArtistaForm'))
+const ObraDetalhe = carregar(() => import('./pages/bib/art/ObraDetalhe'))
+const ObraForm = carregar(() => import('./pages/bib/art/ObraForm'))
+const ColecaoDetalhe = carregar(() => import('./pages/bib/art/Colecoes').then((m) => ({ default: m.ColecaoDetalhe })))
+const ColecoesLista = carregar(() => import('./pages/bib/art/Colecoes').then((m) => ({ default: m.ColecoesLista })))
+const Glossario = carregar(() => import('./pages/bib/Glossario'))
+const Agenda = carregar(() => import('./pages/bib/Agenda'))
+const Caderno = carregar(() => import('./pages/cad/Caderno'))
+const NotaEditor = carregar(() => import('./pages/cad/NotaEditor'))
+const NotaNova = carregar(() => import('./pages/cad/NotaNova'))
+const Calculadoras = carregar(() => import('./pages/calc/Calculadoras'))
+const Busca = carregar(() => import('./pages/Busca'))
+const Atividade = carregar(() => import('./pages/Atividade'))
+const Materiais = carregar(() => import('./pages/lab/Materiais'))
+const MaterialForm = carregar(() => import('./pages/lab/MaterialForm'))
+const MaterialDetalhe = carregar(() => import('./pages/lab/MaterialDetalhe'))
+const FamiliaDetalhe = carregar(() => import('./pages/lab/FamiliaDetalhe'))
+const Curvas = carregar(() => import('./pages/lab/Curvas'))
+const CurvaDetalhe = carregar(() => import('./pages/lab/CurvaDetalhe'))
+const Comerciais = carregar(() => import('./pages/lab/Comerciais'))
+const ComercialDetalhe = carregar(() => import('./pages/lab/ComercialDetalhe'))
+const Compras = carregar(() => import('./pages/lab/Compras'))
+const Superficies = carregar(() => import('./pages/lab/Superficies'))
 /** /referencias sozinho vai para o Descobrir; com parâmetros (ex.: ?grupo=) é um link antigo do Acervo. */
 function EntradaReferencias() {
   const { search } = useLocation()
@@ -74,7 +89,7 @@ export default function App() {
           <Route path="laboratorio" element={<Laboratorio />} />
           <Route path="ajustes" element={<Ajustes />} />
           <Route path="esmaltes" element={<Superficies aba="esmaltes" />} />
-          <Route path="superficies" element={<Superficies aba="esmaltes" />} />
+          <Route path="superficies" element={<Superficies aba="esmaltes" entrada />} />
           <Route path="esmaltes/novo" element={<EsmalteForm key="novo" />} />
           <Route path="esmaltes/familias" element={<Familias />} />
           <Route path="familias" element={<Familias />} />

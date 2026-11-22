@@ -16,6 +16,7 @@ import { iniciarPinterestAutomatico } from './lib/pinterestConta'
 import { iniciarRssAutomatico } from './lib/pinterestRss'
 import { registerSW } from 'virtual:pwa-register'
 import { db } from './db/schema'
+import { pedirAtualizacao } from './lib/atualizacao'
 
 // Se o banco do aparelho não abrir, mostra o motivo em vez de deixar as telas vazias.
 function aviso(texto: string) {
@@ -30,7 +31,7 @@ db.open().catch((e: Error) => aviso('Não consegui abrir os dados deste aparelho
 
 // Atualização do app instalado: verifica nova versão ao abrir, ao voltar para o app e a cada 20 min,
 // e recarrega sozinho quando houver (os dados ficam no aparelho e não são afetados).
-const atualizar = registerSW({
+registerSW({
   immediate: true,
   onRegisteredSW(_url, reg) {
     if (!reg) return
@@ -38,7 +39,8 @@ const atualizar = registerSW({
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checar() })
     setInterval(checar, 20 * 60 * 1000)
   },
-  onNeedRefresh() { atualizar(true) },
+  // não recarrega no meio de um formulário: espera a troca de tela
+  onNeedReload() { pedirAtualizacao(() => location.reload()) },
 })
 
 seedIfEmpty()

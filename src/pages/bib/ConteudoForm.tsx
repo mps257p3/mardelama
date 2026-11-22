@@ -16,7 +16,7 @@ export default function ConteudoForm() {
   const toast = useToast()
   const [sp] = useSearchParams()
   const [c, setC] = useState<C>()
-  useEffect(() => { (async () => setC(id ? await db.conteudos.get(id) : { titulo: '', categoria: sp.get('categoria') || 'Técnicas de modelagem', formato: 'texto', corpo: '', arquivos: [], tags: [] }))() }, [id])
+  useEffect(() => { (async () => setC(id ? await db.conteudos.get(id) : { titulo: '', categoria: sp.get('categoria') || 'Técnicas de modelagem', formato: 'texto', corpo: '', arquivos: [], tags: [] }))() }, [id, sp])
   if (!c) return null
   const set = <K extends keyof Conteudo>(k: K) => (v: Conteudo[K]) => setC({ ...c, [k]: v })
   async function salvar() {

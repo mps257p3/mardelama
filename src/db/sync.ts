@@ -2,6 +2,7 @@ import { pausaVinculo } from '../lib/contexto'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { db, type Arquivo } from './schema'
 import { definirAjuste } from './settings'
+import { mesclarGosto, type Gosto } from './gosto'
 
 /**
  * Sincronização com o Supabase. O aparelho continua sendo a fonte principal (funciona offline);
@@ -16,22 +17,6 @@ const TABELAS = ['familias', 'esmaltes', 'receitas', 'versoes', 'testes', 'mater
 const faltaTabela = (e: { code?: string; message?: string }) => e.code === '42P01' || e.code === 'PGRST205' || /does not exist|Could not find the table/i.test(e.message ?? '')
 /** Ajustes que viajam entre aparelhos: o perfil de gosto do Descobrir. */
 const AJUSTES_SINC = ['descobrir.perfil']
-type Gosto = { atualizadoEm?: number; curtidos?: string[]; recusados?: string[]; vistos?: string[]; curtidasItens?: { id: string }[]; [k: string]: unknown }
-const uniao = (a: string[] = [], b: string[] = [], max = 1500) => [...new Set([...a, ...b])].slice(-max)
-/** A versão mais recente vale para pesos e termos; listas (curtidas, recusas, vistos) somam as dos dois aparelhos. */
-function mesclarGosto(local: Gosto | undefined, remoto: Gosto | undefined): Gosto | undefined {
-  if (!remoto) return local
-  if (!local) return remoto
-  const [base, outro] = (remoto.atualizadoEm ?? 0) > (local.atualizadoEm ?? 0) ? [remoto, local] : [local, remoto]
-  const itens = new Map([...(outro.curtidasItens ?? []), ...(base.curtidasItens ?? [])].map((x) => [x.id, x]))
-  const curtidos = uniao(outro.curtidos, base.curtidos)
-  return {
-    ...base,
-    curtidos, recusados: uniao(outro.recusados, base.recusados), vistos: uniao(outro.vistos, base.vistos),
-    curtidasItens: [...itens.values()].filter((x) => curtidos.includes(x.id)).slice(-500),
-    atualizadoEm: Math.max(local.atualizadoEm ?? 0, remoto.atualizadoEm ?? 0),
-  }
-}
 const BUCKET = 'arquivos'
 const PAGINA = 1000
 const NOMES: Record<string, string> = { referencias: 'referências', grupos: 'grupos', esmaltes: 'esmaltes', receitas: 'receitas', testes: 'testes', conteudos: 'biblioteca' }
@@ -116,6 +101,22 @@ let progressoAtual: string | undefined
 export const progressoSync = () => progressoAtual
 export function avisarProgresso(texto?: string) { progressoAtual = texto; window.dispatchEvent(new CustomEvent('sync-progresso', { detail: texto })) }
 
+/** Lê as linhas alteradas depois de `desde`, em páginas de 1000, andando por (atualizado_em, id). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function* paginas(sb: SupabaseClient, tabela: string, desde: number): AsyncGenerator<any[]> {
+  let maxR = desde, ultimoId = ''
+  for (;;) {
+    const filtro = ultimoId ? `atualizado_em.gt.${maxR},and(atualizado_em.eq.${maxR},id.gt.${ultimoId})` : `atualizado_em.gt.${maxR}`
+    const { data, error } = await sb.from(tabela).select('*').or(filtro).order('atualizado_em').order('id').limit(PAGINA)
+    if (error) throw error
+    const lista = data ?? []
+    if (!lista.length) return
+    yield lista
+    const fim = lista[lista.length - 1]; maxR = fim.atualizado_em; ultimoId = fim.id
+    if (lista.length < PAGINA) return
+  }
+}
+
 async function executar(): Promise<ResultadoSync> {
   const sb = await cliente_(); if (!sb) throw new Error('Nuvem não configurada.')
   const user = (await sb.auth.getSession()).data.session?.user
@@ -169,15 +170,16 @@ async function executar(): Promise<ResultadoSync> {
       const { error } = await sb.from('relacoes').upsert(novos.map((x) => ({ id: x.id, a_tipo: x.aTipo, a_id: x.aId, b_tipo: x.bTipo, b_id: x.bId, criado_em: x.criadoEm, atualizado_em: x.atualizadoEm ?? x.criadoEm, excluido: !!x.excluido })))
       if (error) throw error; enviados += novos.length
     }
-    const { data, error } = await sb.from('relacoes').select('*').gt('atualizado_em', mk.recebido).order('atualizado_em')
-    if (error) throw error
+    // recebe em páginas, andando por (atualizado_em, id), como nas tabelas de conteúdo
     let maxR = mk.recebido
-    const lista = data ?? []
-    const atuais = await db.relacoes.bulkGet(lista.map((r) => r.id))
-    const trocar = lista.filter((r, i) => { maxR = Math.max(maxR, r.atualizado_em); const a = atuais[i]; return !(a && (a.atualizadoEm ?? a.criadoEm) >= r.atualizado_em) })
-      .map((r) => ({ id: r.id, aTipo: r.a_tipo, aId: r.a_id, bTipo: r.b_tipo, bId: r.b_id, criadoEm: r.criado_em, atualizadoEm: r.atualizado_em, excluido: (r.excluido ? 1 : 0) as 0 | 1 }))
-    if (trocar.length) await db.relacoes.bulkPut(trocar)
-    recebidos += trocar.length
+    for await (const lista of paginas(sb, 'relacoes', mk.recebido)) {
+      const atuais = await db.relacoes.bulkGet(lista.map((r) => r.id))
+      const trocar = lista.filter((r, i) => { const a = atuais[i]; return !(a && (a.atualizadoEm ?? a.criadoEm) >= r.atualizado_em) })
+        .map((r) => ({ id: r.id, aTipo: r.a_tipo, aId: r.a_id, bTipo: r.b_tipo, bId: r.b_id, criadoEm: r.criado_em, atualizadoEm: r.atualizado_em, excluido: (r.excluido ? 1 : 0) as 0 | 1 }))
+      if (trocar.length) await db.relacoes.bulkPut(trocar)
+      recebidos += trocar.length
+      maxR = lista[lista.length - 1].atualizado_em
+    }
     m.relacoes = { enviado: inicio, recebido: maxR }
   }
 
@@ -211,7 +213,8 @@ async function executar(): Promise<ResultadoSync> {
   // 4. arquivos (fotos, PDFs, áudios) por último: os registros já aparecem e as fotos vão chegando
   {
     const mk = m.arquivos ?? { enviado: 0, recebido: 0 }
-    const novos = (await db.arquivos.toArray()).filter((a) => (a.atualizadoEm ?? 0) > mk.enviado)
+    // só os arquivos alterados (pelo índice), sem carregar na memória todas as fotos do aparelho
+    const novos = await db.arquivos.where('atualizadoEm').above(mk.enviado).toArray()
     let feitos = 0
     await emParalelo(novos, 4, async (a) => {
       const { blob, ...meta } = a
@@ -219,20 +222,33 @@ async function executar(): Promise<ResultadoSync> {
       const { error } = await sb.from('arquivos').upsert(linha(meta)); if (error) throw error
       enviados++; avisarProgresso(`Enviando fotos e arquivos: ${++feitos} de ${novos.length}`)
     })
-    const { data, error } = await sb.from('arquivos').select('*').gt('atualizado_em', mk.recebido).order('atualizado_em')
-    if (error) throw error
-    let maxR = mk.recebido, baixados = 0
-    const lista = data ?? []
-    for (const r of lista) maxR = Math.max(maxR, r.atualizado_em)
-    await emParalelo(lista, 6, async (r) => {
-      const atual = await db.arquivos.get(r.id)
-      if (!(atual && (atual.atualizadoEm ?? 0) >= r.atualizado_em)) {
-        let blob = atual?.blob
-        if (!blob && !r.excluido) { const d = await sb.storage.from(BUCKET).download(`${user.id}/${r.id}`); if (d.error) return; blob = d.data }
-        await db.arquivos.put({ ...(local(r) as Omit<Arquivo, 'blob'>), blob: blob ?? new Blob() } as Arquivo); recebidos++
+    // a marca só avança até antes da primeira foto que não baixou: ela é tentada de novo na próxima vez
+    let maxR = mk.recebido, baixados = 0, falhou = false
+    for await (const lista of paginas(sb, 'arquivos', mk.recebido)) {
+      const ok = new Array<boolean>(lista.length).fill(true)
+      await emParalelo(lista.map((r, i) => [r, i] as const), 6, async ([r, i]) => {
+        const atual = await db.arquivos.get(r.id)
+        if (!(atual && (atual.atualizadoEm ?? 0) >= r.atualizado_em)) {
+          let blob = atual?.blob
+          if (!blob && !r.excluido) {
+            const d = await sb.storage.from(BUCKET).download(`${user.id}/${r.id}`).catch((e) => ({ data: null, error: e }))
+            if (d.error || !d.data) { ok[i] = false; return }
+            blob = d.data
+          }
+          await db.arquivos.put({ ...(local(r) as Omit<Arquivo, 'blob'>), blob: blob ?? new Blob() } as Arquivo); recebidos++
+        }
+        avisarProgresso(`Recebendo fotos e arquivos: ${++baixados}`)
+      })
+      const primeiraFalha = ok.indexOf(false)
+      if (primeiraFalha >= 0) {
+        falhou = true
+        // volta a marca para logo antes da que falhou (as já recebidas são puladas na próxima vez)
+        maxR = Math.max(mk.recebido, lista[primeiraFalha].atualizado_em - 1)
+        break
       }
-      avisarProgresso(`Recebendo fotos e arquivos: ${++baixados} de ${lista.length}`)
-    })
+      maxR = lista[lista.length - 1].atualizado_em
+    }
+    if (falhou) pendentes.push('fotos (algumas não baixaram; tento de novo na próxima sincronização)')
     m.arquivos = { enviado: inicio, recebido: maxR }
   }
 
