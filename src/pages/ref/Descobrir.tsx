@@ -6,7 +6,7 @@ import { BookOpen, Bookmark, BookmarkCheck, Camera, Columns2, Compass, ExternalL
 import { db } from '../../db/schema'
 import { CHAVE_REVISTAS_OFF, FONTES, FONTES_PENDENTES, FONTE, retomarSite, sitePausado, type FonteId, type ItemDescoberta } from '../../lib/fontes'
 import { SECOES, SEM_CAMINHO, SITES } from '../../lib/revistasSites.js'
-import { buscarLote, consultasDoTema, revistasDoTema, EPOCAS, type Epoca, descurtir, lerPerfil, PERFIL_VAZIO, PESOS_PADRAO, planejar, registrar, retomarFonte, salvarNoAcervo, salvarPerfil, TEMAS, traduz, UNIVERSOS, type EstadoFonte, type Interacao, type Modo, type Perfil } from '../../lib/curadoria'
+import { buscarLote, consultasDoTema, diversificar, revistasDoTema, EPOCAS, type Epoca, descurtir, lerPerfil, PERFIL_VAZIO, PESOS_PADRAO, planejar, registrar, retomarFonte, salvarNoAcervo, salvarPerfil, TEMAS, traduz, UNIVERSOS, type EstadoFonte, type Interacao, type Modo, type Perfil } from '../../lib/curadoria'
 import { useAjuste, definirAjuste } from '../../db/settings'
 import { Menu } from '../../ui/Menu'
 import { Sheet } from '../../ui/Sheet'
@@ -75,6 +75,9 @@ export default function Descobrir() {
         const conhecidosArt = new Set([...Object.keys(perfil.artistas), ...(await db.referencias.toArray()).map((r) => r.autor).filter(Boolean) as string[]])
         novos = novos.filter((x) => !x.autor || !conhecidosArt.has(x.autor))
       }
+      // variedade: poucas obras do mesmo artista ou série por leva (numa busca livre o artista pode repetir à vontade)
+      const busLivre = c.tipo === 'busca' && !c.tema
+      novos = diversificar(novos, novo ? [] : itens, busLivre ? 99 : c.tipo === 'semelhantes' ? 4 : 2, busLivre ? 99 : 3)
       setEstados(es)
       const lista = novo ? novos : [...itens, ...novos]
       setItens(lista)
