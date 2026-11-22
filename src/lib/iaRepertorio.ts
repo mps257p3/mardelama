@@ -191,3 +191,40 @@ export async function atualizarGostoIA(forcar = false): Promise<GostoIA | undefi
   await salvarPerfil({ ...atual, gostoIA: novo })
   return novo
 }
+
+export interface InspiracaoAcervo { quando: number; n: number; leitura: string; consultas: { q: string; universo: string; pasta: string; porque: string }[] }
+export const CHAVE_INSPIRA = 'ia.acervoInspira'
+
+/**
+ * As pastas (Pinterest, Instagram, grupos) e referências viram consultas para o Descobrir.
+ * Manda o nome de cada pasta, alguns exemplos e até 12 imagens de amostra. Refeito a cada 1 a 3 dias, ou quando o acervo cresce.
+ */
+export async function inspirarDoAcervo(forcar = false): Promise<InspiracaoAcervo | undefined> {
+  const ja = (await db.ajustes.get(CHAVE_INSPIRA))?.valor as InspiracaoAcervo | undefined
+  const refs = (await db.referencias.filter((r) => !r.excluido && !r.origem?.startsWith('descobrir:')).toArray())
+  if (refs.length < 5) return ja
+  const idade = ja ? Date.now() - ja.quando : Infinity
+  const nArt = await db.artistas.count()
+  if (!forcar && ja && (idade < 24 * 3600000 || (idade < 72 * 3600000 && Math.abs(refs.length + nArt - ja.n) < 10))) return ja
+  if (!(await iaConfigurada())) return ja
+  const grupos = (await db.grupos.toArray()).filter((g) => !g.excluido)
+  const porGrupo = new Map<string, Referencia[]>()
+  for (const r of refs) for (const g of r.grupos) { const l = porGrupo.get(g) ?? []; l.push(r); porGrupo.set(g, l) }
+  const resumo = (r: Referencia) => [r.titulo !== 'Pin' ? r.titulo : '', r.autor, r.tags.slice(0, 4).join(', '), (r.descricao ?? '').split('\n')[0].slice(0, 80)].filter(Boolean).join(' · ').slice(0, 140)
+  const sorteia = <T,>(xs: T[], n: number) => [...xs].sort(() => Math.random() - .5).slice(0, n)
+  const ordem = grupos.map((g) => ({ g, rs: porGrupo.get(g.id) ?? [] })).filter((x) => x.rs.length).sort((a, b) => b.rs.length - a.rs.length).slice(0, 30)
+  const pastas = ordem.map(({ g, rs }) => ({ nome: g.nome, descricao: g.descricao?.slice(0, 80), itens: rs.length, exemplos: sorteia(rs, 6).map(resumo).filter(Boolean) }))
+  const soltas = refs.filter((r) => !r.grupos.length)
+  if (soltas.length) pastas.push({ nome: 'acervo', descricao: 'referências sem pasta', itens: soltas.length, exemplos: sorteia(soltas, 10).map(resumo).filter(Boolean) })
+  // estudos de artistas da Biblioteca: nomes e linguagens entram como mais uma "pasta" (favoritos primeiro)
+  const artistas = (await db.artistas.toArray()).filter((a) => !a.excluido).sort((a, b) => Number(!!b.favorito) - Number(!!a.favorito)).slice(0, 25)
+  if (artistas.length) pastas.push({ nome: 'estudos de artistas', descricao: 'artistas que a pessoa estuda na Biblioteca', itens: artistas.length,
+    exemplos: artistas.map((a) => [a.nome, a.pais.join('/'), [...a.tecnicas, ...a.esteticas, ...a.tags].slice(0, 5).join(', ')].filter(Boolean).join(' · ').slice(0, 140)) })
+  const imagens = ordem.slice(0, 12).map(({ rs }) => sorteia(rs.filter((r) => /^https:\/\//.test(r.imagemExterna ?? '')), 1)[0]?.imagemExterna).filter((u): u is string => !!u)
+  const corpo = { acao: 'acervo', universos: Object.keys(UNIVERSOS), pastas, recentes: (ja?.consultas ?? []).map((c) => c.q) }
+  // se alguma imagem não abrir do lado da IA, tenta só com o texto
+  const r = await chamar<Omit<InspiracaoAcervo, 'quando' | 'n'>>({ ...corpo, imagens }, 90000).catch(() => chamar<Omit<InspiracaoAcervo, 'quando' | 'n'>>(corpo, 90000))
+  const out: InspiracaoAcervo = { quando: Date.now(), n: refs.length + nArt, leitura: r.leitura, consultas: r.consultas.filter((c) => c.q && UNIVERSOS[c.universo]) }
+  await db.ajustes.put({ chave: CHAVE_INSPIRA, valor: out })
+  return out
+}
