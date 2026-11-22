@@ -46,7 +46,7 @@ export function Layout() {
         <NavLink to="/" end><Home size={22} strokeWidth={1.4} />Início</NavLink>
         <NavLink to="/laboratorio" className={({ isActive }) => (isActive || area === 'esmaltes' || area === 'materiais' || area === 'calculadoras') ? 'active' : ''}><FlaskConical size={22} strokeWidth={1.4} />Laboratório</NavLink>
         <button className="plus" aria-label="Novo" onClick={() => setAdd(true)}><Plus size={24} strokeWidth={1.6} /></button>
-        <NavLink to="/referencias" className={({ isActive }) => (isActive || area === 'referencias') ? 'active' : ''}><Images size={22} strokeWidth={1.4} />Referências</NavLink>
+        <NavLink to="/referencias/descobrir" className={({ isActive }) => (isActive || area === 'referencias') ? 'active' : ''}><Images size={22} strokeWidth={1.4} />Referências</NavLink>
         <NavLink to="/biblioteca"><BookOpen size={22} strokeWidth={1.4} />Biblioteca</NavLink>
       </nav>
 

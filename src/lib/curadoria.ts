@@ -78,6 +78,9 @@ export const EPOCAS: Record<Epoca, { nome: string; periodo?: Periodo; consultas:
   antiga: { nome: 'Antiga', periodo: { ate: 1879 }, consultas: [] },
 }
 const dentro = (ano: number, p: Periodo) => (p.de == null || ano >= p.de) && (p.ate == null || ano <= p.ate)
+/** Páginas de livro, folhas de texto e PDFs: ficam fora do feed (só aparecem se você buscar por livro/página). */
+const PAGINA_LIVRO = /\b(page|pages|p\.\s?\d+|folio|fol\.\s?\d+|frontispiece|title[- ]page|book cover|text page|leaf \d+|plate \d+|pl\.\s?\d+|printed book|printed matter|book|books|codex|manuscript|página|livro)\b|\.(pdf|djvu)\b/i
+const ehPaginaDeLivro = (x: ItemDescoberta) => PAGINA_LIVRO.test(x.titulo + ' | ' + x.termos.join(' | '))
 /** O que costuma deixar o feed sem graça (moedas, fragmentos, documentos…) perde pontos, a não ser que você goste. */
 const SEM_GRACA = /\b(coin|medal|token|sherd|shard|fragment|potsherd|document|letter|manuscript leaf|leaf from|page from|map of|postage stamp|stamp|banknote|seal impression|negative|glass plate|lantern slide|specimen sheet|button|bead|weight|label|trade card|ticket|receipt|deed|certificate|bookplate|playing card|textile sample|sample book|wallpaper sample)\b/i
 const semGraca = (x: ItemDescoberta, pesos: Record<string, number>) => SEM_GRACA.test(x.titulo + ' ' + x.termos.join(' ')) && !x.termos.some((t) => (pesos[t] ?? 0) > 2) ? 5 : 0
@@ -176,6 +179,17 @@ export async function planejar(perfil: Perfil, modo: Modo, n = 8, epoca: Epoca =
       if (q) { pedidos.push({ q, universo: it.universo, tipo: 'proximo', motivo: `Porque você curtiu “${it.titulo.slice(0, 60)}”` }); usados++ }
     }
   }
+  // artistas dos seus estudos (Biblioteca): o nome, ou um esmalte/queima/técnica dele, entra em todo lote
+  if (modo === 'para-voce' || modo === 'novos-artistas' || modo === 'fora-da-curva') {
+    const estudos = (await db.artistas.toArray()).filter((a) => !a.excluido)
+    const k = Math.min(estudos.length, modo === 'para-voce' ? 2 : 1)
+    for (const a of [...estudos].sort((x, y) => Number(!!y.favorito) - Number(!!x.favorito) + Math.random() - .5).slice(0, k)) {
+      const tecnicas = [...(a.esmaltes ?? []), ...(a.queimas ?? []), ...(a.tecnicas ?? [])].filter((t) => /^[\x20-\x7e]+$/.test(t) && t.length < 30)
+      const q = modo !== 'novos-artistas' && tecnicas.length && Math.random() < .4 ? sorteio(tecnicas) : a.nome
+      pedidos.push({ q, universo: 'ceramica', tipo: 'proximo', motivo: q === a.nome ? `Dos seus estudos de artistas: ${a.nome}` : `Dos seus estudos: ${q}, como em ${a.nome}` })
+      if (modo === 'para-voce') usados++
+    }
+  }
   // suas pastas e referências (Pinterest, Instagram, grupos) lidas pela IA: até metade do que sobra
   if (modo === 'para-voce' || modo === 'fora-da-curva') {
     const insp = ((await db.ajustes.get('ia.acervoInspira'))?.valor as { consultas: { q: string; universo: string; pasta: string; porque: string }[] } | undefined)?.consultas ?? []
@@ -262,6 +276,7 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
       if (falhou.has(f.id)) continue
       try {
         let xs = await f.buscar(p.q, periodo ? porConsulta * 2 : porConsulta, pagina, periodo)
+        if (!(p.tipo === 'busca' && /book|livro|page|página|manuscri/i.test(p.q))) xs = xs.filter((x) => !ehPaginaDeLivro(x))
         // fora da época pedida sai; sem data só fica o Openverse (fotos atuais) no filtro contemporâneo
         // na Wikimedia a data é a da fotografia, não a da obra: não serve para o filtro de época
         if (periodo) xs = xs.filter((x) => { const a = x.fonte === 'wm' ? undefined : anoDe(x.data); return a == null ? epoca === 'contemporanea' && x.fonte === 'ov' : dentro(a, periodo) }).slice(0, porConsulta)
@@ -287,7 +302,8 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
   // um sorteio na nota e as obras "para sair da curva" preservam espaço para o inesperado.
   if (pedidos.some((p) => p.tipo === 'proximo' || p.tipo === 'adjacente')) {
     const pesos = pesosDoGosto(perfil)
-    const comNota = itens.map((x) => ({ x, n: notaDoGosto(x, pesos, perfil) + (epoca === 'todas' ? bonusRecente(x) : 0) - semGraca(x, pesos) + (/^(Da sua pasta|Do seu acervo|Dos seus estudos)/.test(x.motivo ?? '') ? 3 : 0) }))
+    const estudados = new Set((await db.artistas.toArray()).filter((a) => !a.excluido).map((a) => a.nome.toLowerCase()))
+    const comNota = itens.map((x) => ({ x, n: notaDoGosto(x, pesos, perfil) + (epoca === 'todas' ? bonusRecente(x) : 0) - semGraca(x, pesos) + (/^(Da sua pasta|Do seu acervo|Dos seus estudos)/.test(x.motivo ?? '') ? 3 : 0) + (x.autor && estudados.has(x.autor.toLowerCase()) ? 6 : 0) }))
       .filter(({ x, n }) => n > -8 || x.motivo?.startsWith('Para sair'))
       .map(({ x, n }) => ({ x, ordem: x.motivo?.startsWith('Para sair') ? 4 + Math.random() * 6 : Math.max(-5, Math.min(15, n)) + Math.random() * 6 }))
     return { itens: variar(comNota.sort((a, b) => b.ordem - a.ordem).map(({ x }) => x)), estados: [...estados.values()] }

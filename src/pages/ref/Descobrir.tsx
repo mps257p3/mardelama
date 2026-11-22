@@ -205,13 +205,12 @@ export default function Descobrir() {
           {MODOS.map(([k, l]) => <button key={k} className={'chip' + (modo === k ? ' on' : '')} onClick={() => { if (modo !== k) { setItens([]); definirAjuste('descobrir.modo', k) } }}>{l}</button>)}
         </div>
       )}
-      {ctx.tipo !== 'curtidas' && (
-        <div className="chips epocas" role="group" aria-label="Época" style={{ marginBottom: 8 }}>
-          {(Object.keys(EPOCAS) as Epoca[]).map((k) => <button key={k} className={'chip' + (epoca === k ? ' on' : '')} onClick={() => { if (epoca !== k) { setItens([]); definirAjuste('descobrir.epoca', k) } }}>{EPOCAS[k].nome}</button>)}
-        </div>
-      )}
       {(ctx.tipo === 'feed' || (ctx.tipo === 'busca' && ctx.tema) || ctx.tipo === 'curtidas') && (
         <div className="chips temas-desc" style={{ marginBottom: 10 }}>
+          {ctx.tipo !== 'curtidas' && <label className={'chip chip-sel' + (epoca !== 'todas' ? ' on' : '')} title="Época">
+            <select aria-label="Época" value={epoca} onChange={(e) => { setItens([]); definirAjuste('descobrir.epoca', e.target.value as Epoca) }}>
+              {(Object.keys(EPOCAS) as Epoca[]).map((k) => <option key={k} value={k}>{EPOCAS[k].nome}</option>)}
+            </select></label>}
           <button className={'chip' + (ctx.tipo === 'curtidas' ? ' on' : '')} onClick={() => (ctx.tipo === 'curtidas' ? voltarAoFeed() : abrirCurtidas())}><Heart size={13} fill={ctx.tipo === 'curtidas' ? 'currentColor' : 'none'} />Curtidas{curtidos.size ? ` ${curtidos.size}` : ''}</button>
           {TEMAS.map((t) => <button key={t.id} className={'chip' + (ctx.tipo === 'busca' && ctx.tema === t.id ? ' on' : '')} onClick={() => abrirTema(t.id)}>{t.nome}</button>)}
         </div>
