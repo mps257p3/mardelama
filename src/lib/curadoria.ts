@@ -30,7 +30,7 @@ export interface GostoIA { resumo: string; consultas: { q: string; universo: str
 export const PESOS_PADRAO: Record<Interacao, number> = { curtir: 1, salvar: 2, painel: 3, semelhantes: 1.5, pesquisar: 0.6, recusar: -2 }
 export const PERFIL_VAZIO: Perfil = {
   termos: {}, universos: {}, artistas: {}, temporario: {}, pesos: PESOS_PADRAO,
-  mistura: { proximo: 60, adjacente: 25, experimental: 15 }, fontes: { aic: true, met: true, wm: true, cma: true, vam: true, smk: true, rijks: true, eu: true, mia: true, si: true, ov: true, loc: true },
+  mistura: { proximo: 60, adjacente: 25, experimental: 15 }, fontes: { aic: true, met: true, wm: true, cma: true, vam: true, smk: true, rijks: true, eu: true, mia: true, si: true, ov: true, loc: true, rev: true },
   vistos: [], recusados: [], curtidos: [], historico: [], curtidasItens: [],
 }
 const CHAVE = 'descobrir.perfil'
@@ -100,31 +100,36 @@ function variar(xs: ItemDescoberta[]) {
 const bonusRecente = (x: ItemDescoberta) => { const a = x.fonte === 'wm' ? undefined : anoDe(x.data); return a == null ? (x.fonte === 'ov' ? 1.5 : 0) : a >= 1960 ? 3 : a >= 1880 ? 1.5 : 0 }
 
 /** Tema do Descobrir. `exige`: o que o resultado precisa ser (pelo título e classificação) para entrar; `porEpoca`: nomes do tema que cabem na época escolhida. */
-export interface Tema { id: string; nome: string; universo: string; consultas: string[]; exige?: RegExp; porEpoca?: Partial<Record<Epoca, string[]>> }
+export interface Tema { id: string; nome: string; universo: string; consultas: string[]; exige?: RegExp; porEpoca?: Partial<Record<Epoca, string[]>>; revistas?: string[] }
 const EH_DESENHO = /\b(drawing|drawings|illustration|illustrations|illustrator|print|prints|woodcut|wood engraving|etching|engraving|lithograph|lithography|screenprint|serigraph|linocut|watercolou?r|gouache|ink|pen and ink|graphite|pencil|charcoal|chalk|pastel|poster|comic|cartoon|caricature|sketch|sketchbook|book illustration|design for|desenho|ilustração|gravura|tekening|prent|tegning|dessin|zeichnung|grafik)\b/i
 const EH_PINTURA = /\b(painting|paintings|oil on|tempera|acrylic|watercolou?r|gouache|fresco|on canvas|on panel|pintura|schilderij|maleri|peinture|gemälde)\b/i
 export const TEMAS: Tema[] = [
-  { id: 'contemporaneos', nome: 'Artistas contemporâneos', universo: 'contemporanea', consultas: EPOCAS.contemporanea.consultas.slice(8) },
+  { id: 'contemporaneos', nome: 'Artistas contemporâneos', universo: 'contemporanea', consultas: EPOCAS.contemporanea.consultas.slice(8), revistas: ['sculpture', 'installation', 'ceramics', 'illustration', 'painting', 'textile', 'artist', 'exhibition'] },
   { id: 'vanguardas', nome: 'Vanguardas', universo: 'contemporanea', consultas: EPOCAS.moderna.consultas },
   { id: 'esmaltes', nome: 'Esmaltes', universo: 'ceramica', consultas: ['crackle glaze', 'celadon', 'ash glaze', 'tenmoku', 'copper red glaze', 'lusterware', 'salt glaze stoneware', 'drip glaze'] },
   { id: 'animal', nome: 'Escultura animal', universo: 'escultura', consultas: ['animal sculpture', 'ceramic animal', 'animal figure terracotta', 'bird figure', 'animal head sculpture', 'zoomorphic vessel'] },
   { id: 'vasos', nome: 'Vasos', universo: 'ceramica', consultas: ['vase', 'storage jar', 'bottle vase', 'amphora', 'ceramic vessel', 'lidded jar'] },
   { id: 'ilustradores', nome: 'Ilustradores', universo: 'ilustracao', consultas: ['Grandville', 'Gustave Dore', 'Arthur Rackham', 'Ernst Haeckel', 'Aubrey Beardsley', 'Ivan Bilibin', 'Kay Nielsen', 'Edward Lear', 'Kawanabe Kyosai', 'Maria Sibylla Merian', 'John Tenniel', 'Walter Crane', 'Hokusai manga', 'bestiary illustration'], exige: EH_DESENHO,
+    revistas: ['illustration', 'illustrator', 'drawing', 'drawings', 'picture book', 'zine', 'risograph', 'editorial illustration', 'comics', 'printmaking', 'sketchbook', 'ink drawing', 'animals illustration', 'surreal illustration'],
     porEpoca: {
       contemporanea: ['Saul Steinberg', 'Edward Gorey', 'Tomi Ungerer', 'Roland Topor', 'Maurice Sendak', 'Ralph Steadman', 'Quentin Blake', 'Jean-Michel Folon', 'Robert Crumb', 'Raymond Pettibon', 'Kiki Smith print', 'William Kentridge', 'Shaun Tan', 'contemporary illustration', 'contemporary drawing', 'screenprint'],
       moderna: ['Kay Nielsen', 'Edmund Dulac', 'Arthur Rackham', 'Aubrey Beardsley', 'Ivan Bilibin', 'Winsor McCay', 'Alphonse Mucha', 'Walter Crane', 'Kawanabe Kyosai', 'Jose Guadalupe Posada', 'Edward Gorey', 'Saul Steinberg', 'Jean de Brunhoff', 'Art Nouveau poster'],
     } },
   { id: 'pintores', nome: 'Pintores', universo: 'pintura', consultas: ['Hieronymus Bosch', 'Pieter Bruegel', 'Odilon Redon', 'Henri Rousseau', 'Albert Eckhout', 'Frans Post', 'Jean-Baptiste Debret', 'Rugendas', 'Paul Klee', 'Utagawa Kuniyoshi', 'Ito Jakuchu', 'Franz Marc', 'Giorgio Morandi', 'Hilma af Klint'], exige: EH_PINTURA,
+    revistas: ['painting', 'paintings', 'painter', 'oil painting', 'gouache', 'figurative painting'],
     porEpoca: {
       contemporanea: ['David Hockney', 'Paula Rego', 'Beatriz Milhazes', 'Peter Doig', 'Marlene Dumas', 'Alice Neel', 'Philip Guston', 'Gerhard Richter', 'Joan Mitchell', 'Bhupen Khakhar', 'Kerry James Marshall', 'Amy Sillman', 'contemporary painting'],
       moderna: ['Paul Klee', 'Franz Marc', 'Giorgio Morandi', 'Hilma af Klint', 'Henri Rousseau', 'Odilon Redon', 'Tarsila do Amaral', 'Joan Miro', 'Marc Chagall', 'Henri Matisse', 'Wassily Kandinsky', 'Leonora Carrington', 'Remedios Varo'],
     } },
-  { id: 'contemporanea', nome: 'Cerâmica contemporânea', universo: 'ceramica', consultas: ['contemporary ceramics', 'ceramic artist studio', 'ceramic sculpture exhibition', 'studio pottery', 'ceramic installation', 'raku firing', 'wood fired pottery'] },
+  { id: 'contemporanea', nome: 'Cerâmica contemporânea', universo: 'ceramica', consultas: ['contemporary ceramics', 'ceramic artist studio', 'ceramic sculpture exhibition', 'studio pottery', 'ceramic installation', 'raku firing', 'wood fired pottery'],
+    revistas: ['ceramics', 'ceramic sculpture', 'clay', 'porcelain', 'stoneware', 'glaze', 'pottery', 'vessel', 'ceramic artist'] },
   { id: 'precolombiana', nome: 'Pré-colombiana', universo: 'americas', consultas: ['pre-columbian ceramic', 'moche vessel', 'maya vessel', 'nazca pottery', 'colima figure', 'marajoara', 'olmec figure'] },
 ]
 
 /** Consultas de um tema na época escolhida: se o tema tem nomes daquela época, usa só eles (Doré não aparece em "contemporânea"). */
 export function consultasDoTema(t: Tema, epoca: Epoca) { return epoca !== 'todas' && t.porEpoca?.[epoca] ? t.porEpoca[epoca]! : t.consultas }
+/** Consultas que o tema manda direto às revistas de arte (Colossal, Illustration Age…): metade do tema em "Contemporânea", algumas em "Todas". */
+export function revistasDoTema(t: Tema, epoca: Epoca) { return !t.revistas || epoca === 'antiga' || epoca === 'moderna' ? [] : [...t.revistas].sort(() => Math.random() - .5).slice(0, epoca === 'contemporanea' ? 8 : 4) }
 
 /** Algumas palavras em português do acervo traduzidas para buscar nas fontes. */
 const PT_EN: Record<string, string> = {
@@ -291,8 +296,8 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
     for (const f of ordem) {
       if (falhou.has(f.id)) continue
       try {
-        let xs = await f.buscar(p.q, periodo || exige ? porConsulta * 2 : porConsulta, pagina, periodo)
-        xs = xs.filter((x) => !ehPaginaDeLivro(x))
+        let xs = await f.buscar(p.q, periodo || exige ? porConsulta * 2 : porConsulta, pagina, periodo, p.universo)
+        xs = xs.filter((x) => x.fonte === 'rev' || !ehPaginaDeLivro(x))
         // tema com tipo definido (ex.: Ilustradores só desenho/gravura): o que não é daquele tipo sai, mesmo que o nome bata
         if (exige) xs = xs.filter((x) => exige.test(x.titulo + ' | ' + x.termos.join(' | ')))
         // fora da época pedida sai; sem data só fica o Openverse (fotos atuais) no filtro contemporâneo

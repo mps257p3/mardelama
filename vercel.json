@@ -43,6 +43,9 @@
     },
     "api/fonte-node.js": {
       "maxDuration": 30
+    },
+    "api/revistas.js": {
+      "maxDuration": 30
     }
   }
 }

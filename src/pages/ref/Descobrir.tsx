@@ -5,7 +5,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { BookOpen, Bookmark, BookmarkCheck, Camera, Columns2, Compass, ExternalLink, EyeOff, Heart, LayoutDashboard, RefreshCw, Search, SlidersHorizontal, Sparkles, Plug, X, ScanSearch } from 'lucide-react'
 import { db } from '../../db/schema'
 import { FONTES, FONTES_PENDENTES, FONTE, type ItemDescoberta } from '../../lib/fontes'
-import { buscarLote, consultasDoTema, EPOCAS, type Epoca, descurtir, lerPerfil, PERFIL_VAZIO, PESOS_PADRAO, planejar, registrar, retomarFonte, salvarNoAcervo, salvarPerfil, TEMAS, traduz, UNIVERSOS, type EstadoFonte, type Interacao, type Modo, type Perfil } from '../../lib/curadoria'
+import { buscarLote, consultasDoTema, revistasDoTema, EPOCAS, type Epoca, descurtir, lerPerfil, PERFIL_VAZIO, PESOS_PADRAO, planejar, registrar, retomarFonte, salvarNoAcervo, salvarPerfil, TEMAS, traduz, UNIVERSOS, type EstadoFonte, type Interacao, type Modo, type Perfil } from '../../lib/curadoria'
 import { useAjuste, definirAjuste } from '../../db/settings'
 import { Menu } from '../../ui/Menu'
 import { Sheet } from '../../ui/Sheet'
@@ -156,7 +156,12 @@ export default function Descobrir() {
   function voltarAoFeed() { const c: Contexto = { tipo: 'feed' }; setQ(''); setCtx(c); setItens([]); carregar(true, c) }
   function ctxDoTema(id: string, ep: Epoca): Contexto {
     const t = TEMAS.find((x) => x.id === id)!
-    return { tipo: 'busca', q: t.nome, tema: id, consultas: [...consultasDoTema(t, ep)].sort(() => Math.random() - .5).map((q) => ({ q, universo: t.universo })) }
+    const museus = [...consultasDoTema(t, ep)].sort(() => Math.random() - .5).map((q) => ({ q, universo: t.universo }))
+    const revistas = revistasDoTema(t, ep).map((q) => ({ q, universo: t.universo, fonte: 'rev' as const }))
+    // intercala: revista, museu, revista, museu… (em "Contemporânea" as revistas trazem a produção atual)
+    const consultas: Consulta[] = []
+    for (let k = 0; k < Math.max(museus.length, revistas.length); k++) { if (revistas[k]) consultas.push(revistas[k]); if (museus[k]) consultas.push(museus[k]) }
+    return { tipo: 'busca', q: t.nome, tema: id, consultas }
   }
   function abrirTema(id: string) {
     if (ctx.tipo === 'busca' && ctx.tema === id) { voltarAoFeed(); return }
