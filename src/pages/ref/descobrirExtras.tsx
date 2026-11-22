@@ -1,53 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Bookmark, BookmarkCheck, FolderPlus, Heart, RefreshCw, ScanSearch, Sparkles, X } from 'lucide-react'
+import { FolderPlus, RefreshCw, ScanSearch, Sparkles, X } from 'lucide-react'
 import { db, novo, type Esmalte, type Referencia } from '../../db/schema'
 import { useArquivoUrl } from '../../db/files'
-import { definirAjuste, useAjuste } from '../../db/settings'
-import { FONTE, type ItemDescoberta } from '../../lib/fontes'
-import { lerPerfil, salvarNoAcervo } from '../../lib/curadoria'
+import { type ItemDescoberta } from '../../lib/fontes'
+import { salvarNoAcervo } from '../../lib/curadoria'
 import { agruparCurtidas, explicarObra, iaConfigurada, type Explicacao, type TemaCurtidas, type TemasCurtidas } from '../../lib/iaRepertorio'
 import { useToast } from '../../ui/toast'
 import { Sheet } from '../../ui/Sheet'
-
-const hoje = () => new Date().toLocaleDateString('sv-SE')
-
-/** Escolhe, uma vez por dia, a obra do lote que mais combina com o que você curtiu. */
-export function useObraDoDia(itens: ItemDescoberta[], ativo: boolean) {
-  const salva = useAjuste<{ dia: string; item: ItemDescoberta } | undefined>('descobrir.obraDoDia', undefined)
-  useEffect(() => {
-    if (!ativo || itens.length < 6) return
-    let vivo = true
-    ;(async () => {
-      const atual = (await db.ajustes.get('descobrir.obraDoDia'))?.valor as { dia: string } | undefined
-      if (!vivo || atual?.dia === hoje()) return
-      const p = await lerPerfil()
-      const nota = (x: ItemDescoberta) => x.termos.reduce((t, k) => t + (p.termos[k] ?? 0), 0) + (x.autor ? (p.artistas[x.autor] ?? 0) * 2 : 0) + (x.universo ? (p.universos[x.universo] ?? 0) * .5 : 0) + Math.random()
-      const ja = new Set(p.curtidos)
-      const melhor = [...itens].filter((x) => !ja.has(x.id)).sort((a, b) => nota(b) - nota(a))[0]
-      if (vivo && melhor) await definirAjuste('descobrir.obraDoDia', { dia: hoje(), item: melhor })
-    })()
-    return () => { vivo = false }
-  }, [ativo, itens])
-  return salva?.dia === hoje() ? salva.item : undefined
-}
-
-export function ObraDoDia({ x, curtido, salvo, onAbrir, onCurtir, onSalvar }: { x: ItemDescoberta; curtido: boolean; salvo: boolean; onAbrir: () => void; onCurtir: () => void; onSalvar: () => void }) {
-  return <section className="obra-dia">
-    <button className="obra-dia-img" onClick={onAbrir} aria-label={x.titulo}><img src={x.imagemGrande} alt={x.titulo} referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.src = x.imagem }} /></button>
-    <div className="obra-dia-txt">
-      <span className="eyebrow">Obra do dia</span>
-      <h2 className="serif">{x.titulo}</h2>
-      <p>{[x.autor, x.data].filter(Boolean).join(' · ')}</p>
-      <p className="faint">{FONTE[x.fonte]?.nome}</p>
-      <div className="obra-dia-acoes">
-        <button className={'btn sm' + (curtido ? ' primary' : '')} onClick={onCurtir}><Heart size={14} fill={curtido ? 'currentColor' : 'none'} />{curtido ? 'Curtida' : 'Curtir'}</button>
-        <button className="btn sm ghost" onClick={onSalvar}>{salvo ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}{salvo ? 'No acervo' : 'Salvar'}</button>
-        <button className="btn sm ghost" onClick={onAbrir}>Ver</button>
-      </div>
-    </div>
-  </section>
-}
 
 /** Explicação da obra pela IA: o que é, técnica, origem, o que observar e ideias para o ateliê. */
 export function ExplicarObra({ x, onClose }: { x: ItemDescoberta; onClose: () => void }) {

@@ -659,13 +659,6 @@ a.visor-btn { text-decoration: none; }
 .pin-painel:not(.on) .capa-p { opacity: .55; }
 
 /* Descobrir: obra do dia, ações com rótulo, comparar, explicação */
-.obra-dia { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 18px; align-items: center; background: var(--surface-2); border-radius: 16px; padding: 12px; margin: 2px 0 16px; }
-.obra-dia-img { border: 0; padding: 0; background: none; border-radius: 12px; overflow: hidden; cursor: zoom-in; aspect-ratio: 4 / 3; }
-.obra-dia-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.obra-dia-txt .eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--terracota, #B46E4B); }
-.obra-dia-txt h2 { font-size: 24px; line-height: 1.1; margin: 6px 0 6px; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.obra-dia-txt p { font-size: 13.5px; color: var(--ink-2); margin: 0 0 2px; }
-.obra-dia-acoes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 @media (max-width: 640px) { .obra-dia { grid-template-columns: 1fr; gap: 10px; } .obra-dia-txt h2 { font-size: 21px; } }
 .temas-desc .chip svg { margin-right: 4px; vertical-align: -2px; }
 .visor-acoes.rotulos { gap: 2px; }
