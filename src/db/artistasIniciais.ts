@@ -1251,6 +1251,38 @@ const ARTISTAS: [string, A][] = [
     tecnicas: ['Construção manual', 'Molde', 'Desenho', 'Gravura'], materiais: ['Porcelana', 'Barro refratário'], tiposObra: ['Bowls', 'Vasos', 'Pratos', 'Xícaras', 'Murais', 'Esculturas'], esteticas: ['Lúdica', 'Figurativa', 'Gráfica'],
     tags: ['espanha', 'gravura', 'murais', 'porcelana'],
   }],
+  ['art-ropalo', {
+    ...vazio,
+    nome: 'Anastasia Ropalo', nomeOriginal: 'Анастасия Ропало', pais: ['Rússia'], atuacao: 'Orenburg',
+    especialidade: 'Azulejos, pratos e espelhos pintados à mão',
+    linguagem: 'Pintura à mão sobre azulejos, pratos, espelhos e painéis, com flores, frutos, animais, insetos, mandalas e geometria, muitas vezes em azul e branco ou em cores quentes de folclore.',
+    bio: 'Artista radicada em Orenburg, na Rússia. Mudou-se do Cazaquistão para lá depois da escola. Entrou na escola de arte aos 10 anos e depois fez cinco anos de pintura na faculdade de artes de Orenburg, onde se formou "pintora e professora". Começou por volta de 2012, com pintura pontilhada numa caixa e em pratos, e transformou a página pessoal no Instagram em marca, que já passa de dez anos (entrevista à Mastera Academy, 2023).\n\nPinta à mão azulejos, pratos, espelhos, painéis, relógios e toalhas de mesa. As coleções citadas no site são "Meu jardim. Macieira", "Instintos" (com o espelho "Força invisível" e os painéis "Círculo dos instintos primários" e "Coração da luz"), "Jardim da tarde", "Jardim da manhã", "Cor e forma" e "Ritmo das pétalas". Tem uma ajudante que pinta as bordas dos azulejos e risca os desenhos nos espelhos. Dá o curso on-line "Inspirando-se na pintura" desde cerca de 2020, e já deu aulas presenciais em Moscou, São Petersburgo e na Itália. As fontes não dizem se ela faz a própria argila ou pinta sobre azulejo pronto, nem que tintas, esmaltes e queimas usa.',
+    caracteristicas: ['Pintura à mão', 'Azulejos e espelhos', 'Motivos florais e animais', 'Azul e branco'],
+    afinidade: 'Pintura sobre cerâmica como desenho de padrão: flores, frutos e bichos organizados em azulejos e molduras.',
+    analise: {
+      formas: 'Azulejos, pratos, espelhos com moldura de azulejo, painéis e relógios.',
+      paleta: 'Azul e branco em muitas peças. Também rosas, laranjas, verdes e roxos em séries mais recentes.',
+      composicao: 'Padrões simétricos, mandalas e motivos centrais emoldurados por bordas decoradas.',
+      reconhecivel: 'Azulejos e espelhos pintados à mão com flores, frutos e animais de inspiração folclórica.',
+    },
+    processos: [
+      v('Acabamentos', 'Pintura à mão. Começou com pintura pontilhada em caixas e pratos.', 'https://mastera.academy/art-ceramics-orenburg/'),
+      leitura('Esmaltes', 'Não se sabe se pinta sob ou sobre o esmalte, nem se os azulejos são feitos por ela.'),
+    ],
+    estudar: ['Pintura de padrão em azulejo, peça a peça.', 'Moldura de azulejos como suporte (espelhos).', 'Motivos florais e de folclore traduzidos em desenho próprio.', 'Azul e branco como paleta de estudo.'],
+    falas: [
+      { texto: 'Faço o mundo mais bonito.', original: 'Делаю мир красивее.', fonte: 'https://www.instagram.com/anastasia_ropalo/', veiculo: 'Instagram (bio)' },
+      { texto: 'A criação, me mergulhando de cabeça no processo, como que desenhou para mim uma saída da vida antiga e a porta de entrada para uma nova.', original: 'Творчество, погружая меня в процесс с головой, будто нарисовало мне выход из прежней жизни и входную дверь в новую.', fonte: 'https://mastera.academy/art-ceramics-orenburg/', veiculo: 'Mastera Academy (2023)' },
+      { texto: 'Para mim é mais fácil pintar 10 espelhos diferentes do que 10 iguais.', original: 'Для меня легче расписать 10 разных зеркал, чем 10 одинаковых.', fonte: 'https://mastera.academy/art-ceramics-orenburg/', veiculo: 'Mastera Academy (2023)' },
+      { texto: 'Sim, desde criança eu sabia que queria ligar a minha vida à criação.', original: 'Да, с самого детства я понимала, что хочу связать свою жизнь с творчеством.', fonte: 'https://mastera.academy/art-ceramics-orenburg/', veiculo: 'Mastera Academy (2023)' },
+    ],
+    series: [{ nome: 'Meu jardim. Macieira', original: 'Мой сад. Яблоня' }, { nome: 'Instintos', original: 'Инстинкты' }, { nome: 'Jardim da tarde', original: 'Вечерний сад' }, { nome: 'Jardim da manhã', original: 'Утренний сад' }],
+    publicacoes: [f('Расписные зеркала и плитки — Mastera Academy (entrevista)', 'https://mastera.academy/art-ceramics-orenburg/', 'Entrevistas', '2023'), f('Ceramic tiles painting by Anastasia Ropalo — Lushome', 'https://www.lushome.com/fabulous-blue-colors-romantic-patterns-ceramic-tiles-painting-anastasia-ropalo/186167', 'Reportagens', '2018'), f('來自俄羅斯的手繪瓷磚藝術家 — The Femin', 'https://thefemin.com/2021/04/russian-ceramic-tile-artist-anastasia-ropalo/', 'Reportagens', '2021')],
+    fontes: [f('Site oficial', 'https://anastasiaropalo.com/', 'Site oficial')],
+    site: 'https://anastasiaropalo.com/', instagram: 'anastasia_ropalo',
+    tecnicas: ['Pintura à mão', 'Pintura pontilhada'], tiposObra: ['Azulejos', 'Pratos', 'Espelhos', 'Painéis', 'Relógios'], esteticas: ['Folclórica', 'Floral', 'Azul e branco'],
+    tags: ['rússia', 'azulejos', 'pintura à mão'],
+  }],
   ...([
     ['art-taticouto', 'Tati Couto', 'ceramica_tati_couto', 'Cerâmica'],
     ['art-carnesalvaje', 'Carne Salvaje', 'carnesalvaje', 'Cerâmica'],
@@ -1439,6 +1471,14 @@ const OBRAS: [string, O][] = [
   ['obra-anaya-bodas', { artistaId: 'art-anaya', titulo: 'Peças para casamento', imagem: 'https://marinaanaya.com/cdn/shop/files/IMG_0913_700x700.jpg?v=1746862055', fonte: 'https://marinaanaya.com/', credito: 'Site da artista' }],
   ['obra-anaya-bordado', { artistaId: 'art-anaya', titulo: 'Tecido desenhado por Marina e bordado pela tia Mari', tecnica: 'Têxtil', imagem: 'https://talentoabordo.com/sites/default/files/styles/carousel_content_l/public/2022-08/05-MARINA-ANAYA-BORDADO.jpg?itok=GtAlQQis', fonte: 'https://talentoabordo.com/en/art/marina-anaya-artist', credito: '© Carmen R. Cuesta, via Talento a bordo' }],
   ['obra-anaya-cadernos', { artistaId: 'art-anaya', titulo: 'Cadernos de esboço de "Circo Marte"', serie: 'Circo Marte', imagem: 'https://talentoabordo.com/sites/default/files/styles/carousel_content_l/public/2022-08/02-MARINA-ANAYA-BOCETOS.jpg?itok=g2Z9AmB0', fonte: 'https://talentoabordo.com/en/art/marina-anaya-artist', credito: '© Carmen R. Cuesta, via Talento a bordo' }],
+  ['obra-ropalo-1', { artistaId: 'art-ropalo', titulo: "Azulejos com insetos", tecnica: 'Pintura à mão', imagem: 'https://www.lushome.com/wp-content/uploads/2018/02/painted-ceramics-by-anastasia-ropalo-russia-1.jpg', fonte: 'https://www.lushome.com/fabulous-blue-colors-romantic-patterns-ceramic-tiles-painting-anastasia-ropalo/186167', credito: 'Anastasia Ropalo, via Lushome (2018)', notas: 'Título traduzido da legenda da Lushome.' }],
+  ['obra-ropalo-2', { artistaId: 'art-ropalo', titulo: "Azulejo com borboleta, azul e branco", tecnica: 'Pintura à mão', imagem: 'https://www.lushome.com/wp-content/uploads/2018/02/painted-ceramics-by-anastasia-ropalo-russia-2.jpg', fonte: 'https://www.lushome.com/fabulous-blue-colors-romantic-patterns-ceramic-tiles-painting-anastasia-ropalo/186167', credito: 'Anastasia Ropalo, via Lushome (2018)', notas: 'Título traduzido da legenda da Lushome.' }],
+  ['obra-ropalo-3', { artistaId: 'art-ropalo', titulo: "Azulejo emoldurado, azul e branco", tecnica: 'Pintura à mão', imagem: 'https://www.lushome.com/wp-content/uploads/2018/02/painted-ceramics-by-anastasia-ropalo-russia-3.jpg', fonte: 'https://www.lushome.com/fabulous-blue-colors-romantic-patterns-ceramic-tiles-painting-anastasia-ropalo/186167', credito: 'Anastasia Ropalo, via Lushome (2018)', notas: 'Título traduzido da legenda da Lushome.' }],
+  ['obra-ropalo-4', { artistaId: 'art-ropalo', titulo: "Azulejos com padrões geométricos e florais", tecnica: 'Pintura à mão', imagem: 'https://www.lushome.com/wp-content/uploads/2018/02/painted-ceramics-by-anastasia-ropalo-russia-4.jpg', fonte: 'https://www.lushome.com/fabulous-blue-colors-romantic-patterns-ceramic-tiles-painting-anastasia-ropalo/186167', credito: 'Anastasia Ropalo, via Lushome (2018)', notas: 'Título traduzido da legenda da Lushome.' }],
+  ['obra-ropalo-5', { artistaId: 'art-ropalo', titulo: "Parede com pratos e azulejos pintados", tecnica: 'Pintura à mão', imagem: 'https://www.lushome.com/wp-content/uploads/2018/02/painted-ceramics-by-anastasia-ropalo-russia-5.jpg', fonte: 'https://www.lushome.com/fabulous-blue-colors-romantic-patterns-ceramic-tiles-painting-anastasia-ropalo/186167', credito: 'Anastasia Ropalo, via Lushome (2018)', notas: 'Título traduzido da legenda da Lushome.' }],
+  ['obra-ropalo-9', { artistaId: 'art-ropalo', titulo: "Relógio de parede com flores", tecnica: 'Pintura à mão', imagem: 'https://www.lushome.com/wp-content/uploads/2018/02/painted-ceramics-by-anastasia-ropalo-russia-9.jpg', fonte: 'https://www.lushome.com/fabulous-blue-colors-romantic-patterns-ceramic-tiles-painting-anastasia-ropalo/186167', credito: 'Anastasia Ropalo, via Lushome (2018)', notas: 'Título traduzido da legenda da Lushome.' }],
+  ['obra-ropalo-8', { artistaId: 'art-ropalo', titulo: "Pratos decorativos e azulejos", tecnica: 'Pintura à mão', imagem: 'https://www.lushome.com/wp-content/uploads/2018/02/painted-ceramics-by-anastasia-ropalo-russia-8.jpg', fonte: 'https://www.lushome.com/fabulous-blue-colors-romantic-patterns-ceramic-tiles-painting-anastasia-ropalo/186167', credito: 'Anastasia Ropalo, via Lushome (2018)', notas: 'Título traduzido da legenda da Lushome.' }],
+  ['obra-ropalo-7', { artistaId: 'art-ropalo', titulo: "Azulejos florais em azul", tecnica: 'Pintura à mão', imagem: 'https://www.lushome.com/wp-content/uploads/2018/02/painted-ceramics-by-anastasia-ropalo-russia-7.jpg', fonte: 'https://www.lushome.com/fabulous-blue-colors-romantic-patterns-ceramic-tiles-painting-anastasia-ropalo/186167', credito: 'Anastasia Ropalo, via Lushome (2018)', notas: 'Título traduzido da legenda da Lushome.' }],
 ]
 
 /** Falas dos próprios artistas, traduzidas livremente para o português, com o original e a fonte (conferidas em 23/11/2026). */
@@ -1509,12 +1549,12 @@ const CAPAS: Record<string, string> = {
   'art-westerlund': 'obra-westerlund-hf-1', 'art-poswa': 'obra-poswa-umthwalo-1', 'art-rudolph': 'obra-rudolph-doux', 'art-peck': 'obra-peck-stretch', 'art-ziperstein': 'obra-ziperstein-fawns',
   'art-41zero42': 'obra-41zero42-futura', 'art-bussoga': 'obra-bussoga-nts', 'art-mutina': 'obra-mutina-grcic', 'art-suro': 'obra-suro-colecao',
   'art-pizarro': 'obra-pizarro-1', 'art-ceudebarro': 'obra-ceudebarro-1', 'art-andreetta': 'obra-andreetta-mushroom', 'art-isabelsanchez': 'obra-isabelsanchez-monstruo',
-  'art-anaya': 'obra-anaya-kissing-bowl',
+  'art-anaya': 'obra-anaya-kissing-bowl', 'art-ropalo': 'obra-ropalo-2',
 }
 
 /** Semeia o catálogo uma vez por aparelho, com ids fixos (não duplica entre aparelhos nem apaga o que já foi editado). */
 export async function semearArtistas() {
-  if (await db.ajustes.get('seed-artistas-v9')) return
+  if (await db.ajustes.get('seed-artistas-v10')) return
   const existentesA = new Set((await db.artistas.toArray()).map((x) => x.id))
   const existentesO = new Set((await db.obras.toArray()).map((x) => x.id))
   const as: Artista[] = ARTISTAS.filter(([id]) => !existentesA.has(id)).map(([id, a], i) => ({
@@ -1534,5 +1574,5 @@ export async function semearArtistas() {
     }
     for (const x of semFalas) await db.artistas.update(x.id, { falas: FALAS[x.id], atualizadoEm: Date.now() })
   })
-  await db.ajustes.put({ chave: 'seed-artistas-v9', valor: true })
+  await db.ajustes.put({ chave: 'seed-artistas-v10', valor: true })
 }
