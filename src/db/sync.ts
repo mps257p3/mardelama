@@ -127,6 +127,16 @@ async function executar(): Promise<ResultadoSync> {
     for (const k of Object.keys(m)) m[k] = { ...m[k], recebido: 0 }
   }
 
+  // 1. uma só pergunta: o último horário de alteração de cada tabela no servidor (migração 006).
+  // Sem a função, segue consultando tabela por tabela como antes.
+  let ultimas: Record<string, number> | undefined
+  {
+    const { data, error } = await sb.rpc('ultimas_alteracoes')
+    if (!error && data && typeof data === 'object') ultimas = data as Record<string, number>
+  }
+  /** Nada novo no servidor desde a última vez que recebemos desta tabela. */
+  const semNovidade = (t: string, recebido: number) => !!ultimas && (ultimas[t] ?? 0) <= recebido
+
   // 2. tabelas de conteúdo, várias ao mesmo tempo; o aviso na tela só aparece quando há o que receber
   const pendentes: string[] = []
   await emParalelo(TABELAS.filter((t) => db.tables.some((x) => x.name === t)), 6, async (t) => {
@@ -143,6 +153,7 @@ async function executar(): Promise<ResultadoSync> {
     }
     if (pendentes.includes(t)) return
     enviados += novos.length
+    if (semNovidade(t, mk.recebido)) { m[t] = { enviado: inicio, recebido: mk.recebido }; return }
     // recebe em páginas de 1000 (limite do servidor), andando por (atualizado_em, id): itens importados em lote
     // têm o mesmo horário, e paginar só pelo horário perderia os que caem na virada da página
     let maxR = mk.recebido, ultimoId = '', parou = false
@@ -174,7 +185,7 @@ async function executar(): Promise<ResultadoSync> {
     }
     // recebe em páginas, andando por (atualizado_em, id), como nas tabelas de conteúdo
     let maxR = mk.recebido
-    for await (const lista of paginas(sb, 'relacoes', mk.recebido)) {
+    if (!semNovidade('relacoes', mk.recebido)) for await (const lista of paginas(sb, 'relacoes', mk.recebido)) {
       const atuais = await db.relacoes.bulkGet(lista.map((r) => r.id))
       const trocar = lista.filter((r, i) => { const a = atuais[i]; return !(a && (a.atualizadoEm ?? a.criadoEm) >= r.atualizado_em) })
         .map((r) => ({ id: r.id, aTipo: r.a_tipo, aId: r.a_id, bTipo: r.b_tipo, bId: r.b_id, criadoEm: r.criado_em, atualizadoEm: r.atualizado_em, excluido: (r.excluido ? 1 : 0) as 0 | 1 }))
@@ -189,7 +200,8 @@ async function executar(): Promise<ResultadoSync> {
   {
     const mk = m.ajustes ?? { enviado: 0, recebido: 0 }
     try {
-      const { data, error } = await sb.from('ajustes').select('*').in('id', AJUSTES_SINC).gt('atualizado_em', mk.recebido)
+      const { data, error } = semNovidade('ajustes', mk.recebido) ? { data: [], error: null }
+        : await sb.from('ajustes').select('*').in('id', AJUSTES_SINC).gt('atualizado_em', mk.recebido)
       if (error) throw error
       let maxR = mk.recebido
       for (const r of data ?? []) {
@@ -237,7 +249,7 @@ async function executar(): Promise<ResultadoSync> {
     let maxR = mk.recebido, baixados = 0, falhou = false
     // fotos que faltam no servidor: depois de 3 tentativas, desiste delas em vez de reler tudo a cada abertura
     const falhas = ((await db.ajustes.get('sync.falhasFotos'))?.valor as Record<string, number>) ?? {}
-    for await (const lista of paginas(sb, 'arquivos', mk.recebido)) {
+    if (!semNovidade('arquivos', mk.recebido)) for await (const lista of paginas(sb, 'arquivos', mk.recebido)) {
       const ok = new Array<boolean>(lista.length).fill(true)
       await emParalelo(lista.map((r, i) => [r, i] as const), 6, async ([r, i]) => {
         const atual = await db.arquivos.get(r.id)
