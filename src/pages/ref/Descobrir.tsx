@@ -13,7 +13,7 @@ import { Sheet } from '../../ui/Sheet'
 import { useToast } from '../../ui/toast'
 import { TopoRef } from './Topo'
 import { EscolherGrupos, EscolherPainel } from './acoesRefs'
-import { atualizarGostoIA, buscarPorFoto, CHAVE_INSPIRA, inspirarDoAcervo, type InspiracaoAcervo, iaConfigurada, interpretarBusca, type Consulta, type TemaCurtidas } from '../../lib/iaRepertorio'
+import { atualizarGostoIA, buscarPorFoto, CHAVE_INSPIRA, inspirarDoAcervo, type InspiracaoAcervo, iaConfigurada, interpretarBusca, leituraEmCache, type Consulta, type TemaCurtidas } from '../../lib/iaRepertorio'
 import { CompararObra, ExplicarObra, TemasDasCurtidas } from './descobrirExtras'
 
 const MODOS: [Modo, string][] = [['para-voce', 'Para você'], ['fora-da-curva', 'Fora da curva'], ['novos-artistas', 'Novos artistas'], ['cores-texturas', 'Cores e texturas'], ['formas-volumes', 'Formas e volumes']]
@@ -46,46 +46,64 @@ export default function Descobrir() {
   const rodada = useRef(0)
   const [params, setParams] = useSearchParams()
   const fim = useRef<HTMLDivElement>(null)
-  const ocupado = useRef(false)
+  const ocupado = useRef(0)
   const salvos = useLiveQuery(async () => new Map((await db.referencias.filter((r) => !!r.origem?.startsWith('descobrir:') && !r.excluido).toArray()).map((r) => [r.origem!.slice(10), r.id])), [], new Map<string, string>())
 
   useEffect(() => { lerPerfil().then((p) => setCurtidos(new Set(p.curtidos))) }, [])
   // a leitura do gosto pela IA se renova sozinha quando há curtidas novas (no máximo a cada 12 horas)
   useEffect(() => { atualizarGostoIA().catch(() => undefined); inspirarDoAcervo().catch(() => undefined) }, [])
 
-  const carregar = useCallback(async (novo: boolean, c: Contexto = ctx, m: Modo = modo) => {
+  const itensRef = useRef(itens)
+  useEffect(() => { itensRef.current = itens }, [itens])
+  /** `manterTela`: lote novo (da primeira página) que se soma ao que já está na tela, em vez de trocar. */
+  const carregar = useCallback(async (novo: boolean, c: Contexto = ctx, m: Modo = modo, manterTela = false) => {
     if (c.tipo === 'curtidas') {
       if (!novo) return
       const perfil = await lerPerfil(); const lista = [...(perfil.curtidasItens ?? [])].reverse()
       setItens(lista); gravarCache({ itens: lista, quando: Date.now(), modo: m, ctx: c, epoca }); return
     }
-    if (ocupado.current) return
-    ocupado.current = true; setCarregando(true)
+    // a busca refinada pela IA pode rodar junto da busca simples (as duas somam na tela)
+    if (ocupado.current && !manterTela) return
+    ocupado.current++; setCarregando(true)
     rodada.current = novo ? 0 : rodada.current + 1
     try {
       const perfil = await lerPerfil()
-      const conhecidos = new Set([...(novo ? [] : itens.map((i) => i.id)), ...(c.tipo === 'feed' ? perfil.vistos.slice(-800) : [])])
+      const conhecidos = new Set([...(novo && !manterTela ? [] : itensRef.current.map((i) => i.id)), ...(c.tipo === 'feed' ? perfil.vistos.slice(-800) : [])])
       let pedidos
       if (c.tipo === 'busca' && c.consultas?.length) pedidos = c.consultas.map((x) => ({ q: x.q, universo: x.universo, fonte: x.fonte, tema: c.tema, tipo: 'busca' as const }))
       else if (c.tipo === 'busca') { const t = traduz(c.q); pedidos = FONTES.map(() => ({ q: t, tipo: 'busca' as const })).concat(FONTES.map(() => ({ q: t, tipo: 'busca' as const }))) }
       else if (c.tipo === 'semelhantes') { const it = c.item; const base = [it.autor, ...it.termos.slice(0, 3)].filter(Boolean) as string[]; pedidos = base.flatMap((b) => [{ q: b, universo: it.universo, tipo: 'semelhantes' as const }]).slice(0, 6) }
       else pedidos = await planejar(perfil, m, 8, epoca)
-      let { itens: novos, estados: es } = await buscarLote(perfil, pedidos, conhecidos, 6, rodada.current, epoca)
-      if (m === 'novos-artistas' && c.tipo === 'feed') {
-        const conhecidosArt = new Set([...Object.keys(perfil.artistas), ...(await db.referencias.toArray()).map((r) => r.autor).filter(Boolean) as string[]])
-        novos = novos.filter((x) => !x.autor || !conhecidosArt.has(x.autor))
-      }
-      // variedade: poucas obras do mesmo artista ou série por leva (numa busca livre o artista pode repetir à vontade)
+      const conhecidosArt = m === 'novos-artistas' && c.tipo === 'feed'
+        ? new Set([...Object.keys(perfil.artistas), ...(await db.referencias.toArray()).map((r) => r.autor).filter(Boolean) as string[]])
+        : undefined
       const busLivre = c.tipo === 'busca' && !c.tema
-      novos = diversificar(novos, novo ? [] : itens, busLivre ? 99 : c.tipo === 'semelhantes' ? 4 : 2, busLivre ? 99 : 3)
+      const porAutor = busLivre ? 99 : c.tipo === 'semelhantes' ? 4 : 2, porSerie = busLivre ? 99 : 3
+      // mostra o que já chegou, sem esperar a fonte mais lenta. Numa atualização, a tela antiga fica até chegar
+      // o primeiro resultado; depois tudo se soma ao fim, sem mexer no que já está na tela.
+      let trocar = novo && !manterTela
+      const somar = (xs: ItemDescoberta[], substituir: boolean, final = false) => setItens((prev) => {
+        const antes = substituir ? [] : prev
+        const ids = new Set(antes.map((x) => x.id))
+        const lista = [...antes, ...diversificar(xs.filter((x) => !ids.has(x.id)), antes, porAutor, porSerie)]
+        itensRef.current = lista
+        if (final) gravarCache({ itens: lista, quando: Date.now(), modo: m, ctx: c, epoca })
+        return lista
+      })
+      const aoChegar = (xs: ItemDescoberta[]) => {
+        const filtrados = conhecidosArt ? xs.filter((x) => !x.autor || !conhecidosArt.has(x.autor)) : xs
+        if (!filtrados.length) return
+        somar(filtrados, trocar); trocar = false
+      }
+      let { itens: novos, estados: es } = await buscarLote(perfil, pedidos, conhecidos, 6, rodada.current, epoca, aoChegar)
+      if (conhecidosArt) novos = novos.filter((x) => !x.autor || !conhecidosArt.has(x.autor))
       setEstados(es)
-      const lista = novo ? novos : [...itens, ...novos]
-      setItens(lista)
-      gravarCache({ itens: lista, quando: Date.now(), modo: m, ctx: c, epoca })
+      // no fim, o que ainda não apareceu entra depois, na ordem do gosto (o que já está na tela não se mexe)
+      somar(novos, trocar, true)
       if (c.tipo === 'feed' && novos.length) { perfil.vistos = [...perfil.vistos.slice(-1500), ...novos.map((x) => x.id)]; await salvarPerfil(perfil) }
       if (!novos.length && es.length && es.every((e) => !e.ok)) toast('As fontes não responderam agora. Tente de novo em instantes.')
-    } finally { ocupado.current = false; setCarregando(false) }
-  }, [ctx, modo, epoca, itens, toast])
+    } finally { ocupado.current--; if (!ocupado.current) setCarregando(false) }
+  }, [ctx, modo, epoca, toast])
 
   // primeira abertura, troca de modo ou feed vencido: busca novo lote
   useEffect(() => {
@@ -148,14 +166,22 @@ export default function Descobrir() {
     let c: Contexto = { tipo: 'busca', q: t }
     setCtx(c); setItens([])
     // com a IA configurada, toda busca (em português ou outra língua) vira consultas em inglês e nos idiomas dos acervos
+    // a IA leva alguns segundos: enquanto ela entende o pedido, a busca simples já vai mostrando resultados
+    let simples: Promise<void> | undefined
     if (await iaConfigurada()) {
-      setInterpretando(true)
-      try { const l = await interpretarBusca(t); c = { ...c, leitura: l.leitura, consultas: l.consultas }; setCtx(c) }
-      catch (err) { toast('Busca sem IA: ' + (err as Error).message) }
-      finally { setInterpretando(false) }
+      const jaEntendida = await leituraEmCache(t)
+      if (jaEntendida) { c = { ...c, leitura: jaEntendida.leitura, consultas: jaEntendida.consultas }; setCtx(c) }
+      else {
+        simples = carregar(true, c)
+        setInterpretando(true)
+        try { const l = await interpretarBusca(t); c = { ...c, leitura: l.leitura, consultas: l.consultas }; setCtx(c) }
+        catch (err) { toast('Busca sem IA: ' + (err as Error).message) }
+        finally { setInterpretando(false) }
+      }
     }
     registrar(null, 'pesquisar', c.tipo === 'busca' && c.consultas ? c.consultas.filter((x) => !x.lingua).flatMap((x) => x.q.split(/\s+/)).filter((w) => w.length > 3) : traduz(t).split(/\s+/).filter((w) => w.length > 3))
-    carregar(true, c)
+    if (simples) { await simples; if (c.tipo === 'busca' && c.consultas) carregar(true, c, modo, true) }
+    else carregar(true, c)
   }
   function voltarAoFeed() { const c: Contexto = { tipo: 'feed' }; setQ(''); setCtx(c); setItens([]); carregar(true, c) }
   function ctxDoTema(id: string, ep: Epoca): Contexto {
@@ -249,7 +275,7 @@ export default function Descobrir() {
           <span>{estados.length && estados.every((e) => !e.ok) ? 'Confira a internet e toque em atualizar.' : 'Toque em atualizar para buscar novas referências.'}</span>
           <button className="btn sm" onClick={() => carregar(true)}><RefreshCw size={14} />Atualizar</button></div>
       ) : <MuralDescobrir itens={lista} curtidos={curtidos} salvos={salvos} onAbrir={setVisor} onAgir={agir} />}
-      {(carregando || interpretando) && <div className="carregando-desc">{interpretando ? <><Sparkles size={16} className="gira" />Entendendo o pedido…</> : <><RefreshCw size={16} className="gira" />Buscando nos acervos…</>}</div>}
+      {(carregando || interpretando) && <div className="carregando-desc">{interpretando ? <><Sparkles size={16} className="gira" />{itens.length ? 'Refinando a busca com a IA…' : 'Entendendo o pedido…'}</> : <><RefreshCw size={16} className="gira" />Buscando nos acervos…</>}</div>}
       <div ref={fim} style={{ height: 1 }} />
 
       {visor != null && lista[visor] && <VisorDescobrir itens={lista} inicio={visor} curtidos={curtidos} salvos={salvos} onClose={() => setVisor(undefined)} onAgir={agir} />}
