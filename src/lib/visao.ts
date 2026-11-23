@@ -38,16 +38,20 @@ export function carregarModelo(): Promise<Motor> {
   carga = (async () => {
     const t = await import('@huggingface/transformers')
     t.env.allowLocalModels = false
+    // sem isolamento entre origens o navegador não dá vários núcleos ao wasm: um só, sem tentar abrir workers
+    if (t.env.backends.onnx?.wasm) t.env.backends.onnx.wasm.numThreads = 1
     const aoProgresso = (p: { status: string; file?: string; loaded?: number; total?: number }) => {
       if (p.status !== 'progress' || !p.file || !p.total) return
       arquivos.set(p.file, { loaded: p.loaded ?? 0, total: p.total })
       let l = 0, tt = 0; for (const a of arquivos.values()) { l += a.loaded; tt += a.total }
       mudar({ fase: 'baixando', progresso: tt ? l / tt : 0 })
     }
-    const [proc, modelo] = await Promise.all([
+    // se travar depois do download (aparelho sem suporte), desiste em 90 s e o Descobrir segue sem o filtro
+    const prazo = new Promise<never>((_, rej) => setTimeout(() => rej(new Error('O modelo demorou demais para iniciar')), 90000))
+    const [proc, modelo] = await Promise.race([prazo, Promise.all([
       t.AutoProcessor.from_pretrained(MODELO, { progress_callback: aoProgresso }),
       t.CLIPVisionModelWithProjection.from_pretrained(MODELO, { dtype: 'q8', device: 'wasm', progress_callback: aoProgresso }),
-    ])
+    ])])
     mudar({ fase: 'pronto' })
     return { proc: proc as unknown as Motor['proc'], modelo: modelo as unknown as Motor['modelo'], RawImage: t.RawImage as unknown as Motor['RawImage'] }
   })()
