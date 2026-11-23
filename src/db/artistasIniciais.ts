@@ -1463,12 +1463,18 @@ const OBRAS: [string, O][] = [
   ['obra-andreetta-sobre', { artistaId: 'art-andreetta', titulo: 'Cerâmicas para a vida', imagem: 'https://images.tcdn.com.br/img/editor/up/1273355/sobre_desktop.jpg', fonte: 'https://www.nataliaandreetta.com/ceramicas-para-a-vida', credito: 'Natália Andreetta (site oficial)' }],
   ['obra-isabelsanchez-monstruo', { artistaId: 'art-isabelsanchez', titulo: 'Fragilidad de monstruo', ano: '2018', materiais: 'Cerâmica de alta temperatura', imagem: 'https://imparcialoaxaca.mx/wp-content/uploads/2018/08/Isabel-Sánchez-recrea-la-fragilidad-del-monstruo-1.jpg', fonte: 'https://imparcialoaxaca.mx/arte-y-cultura/isabel-sanchez-recrea-la-fragilidad-del-monstruo/', credito: 'El Imparcial de Oaxaca', serie: 'Fragilidad de monstruo' }],
   ['obra-isabelsanchez-perdon', { artistaId: 'art-isabelsanchez', titulo: 'Pido perdón y pido permiso', ano: '2026', imagem: 'https://danielbenoit.art/wp-content/uploads/2026/11/IMG_5249-scaled.jpeg', fonte: 'https://danielbenoit.art/isabel-sanchez-salgado/', credito: 'Daniel Benoit Cassou', notas: 'Exposição na CuatroSie7e Galería, Oaxaca.', serie: 'Pido perdón y pido permiso' }],
-  ['obra-anaya-kissing-bowl', { artistaId: 'art-anaya', titulo: 'The kissing bowl', materiais: 'Porcelana moldada e decorada à mão', imagem: 'https://hfgnext.s3.eu-west-3.amazonaws.com/img/4YL7Q000000PRZhWAO-headergd.jpg', fonte: 'https://www.homofaber.com/en/objects/a1VTG000000exvk2AA', credito: '© Marina Anaya, via Homo Faber' }],
+  ['obra-anaya-kissing-bowl', { artistaId: 'art-anaya', titulo: 'The kissing bowl', materiais: 'Porcelana moldada e decorada à mão', fonte: 'https://www.homofaber.com/en/objects/a1VTG000000exvk2AA', credito: '© Marina Anaya, via Homo Faber', notas: 'A imagem saiu do ar na fonte; veja a peça no Homo Faber.' }],
   ['obra-anaya-hf', { artistaId: 'art-anaya', titulo: 'Cerâmicas', imagem: 'https://hfgnext.s3.eu-west-3.amazonaws.com/img/4YL7Q000000PNm5WAG-center.jpg', fonte: 'https://www.homofaber.com/en/artisans/marina-anaya-ceramics-spain', credito: '© Marina Anaya, via Homo Faber', notas: 'A fonte não informa título nem ano.' }],
   ['obra-anaya-albor', { artistaId: 'art-anaya', titulo: 'Mural Albor', tecnica: 'Mural cerâmico', imagem: 'https://marinaanaya.com/cdn/shop/files/cuadrada_MURALMALAGA01_DEF_700x700.jpg?v=1769022681', fonte: 'https://marinaanaya.com/', credito: 'Site da artista', notas: 'Homenagem a Málaga e à sua identidade mediterrânea.' }],
   ['obra-anaya-mural', { artistaId: 'art-anaya', titulo: 'Mural cerâmico', tecnica: 'Mural cerâmico', imagem: 'https://marinaanaya.com/cdn/shop/files/52f379cc-f6fa-476a-bedf-155c93a9b933_588x588.jpg?v=1735461325', fonte: 'https://marinaanaya.com/blogs/ceramica/murales', credito: 'Site da artista' }],
   ['obra-anaya-home', { artistaId: 'art-anaya', titulo: 'Peças de cerâmica', imagem: 'https://marinaanaya.com/cdn/shop/files/image0_37f53438-eca4-4723-82cd-8e2933d1ee74_1148x1613.jpg?v=1794945299', fonte: 'https://marinaanaya.com/', credito: 'Site da artista', notas: 'A fonte não informa título.' }],
   ['obra-anaya-bodas', { artistaId: 'art-anaya', titulo: 'Peças para casamento', imagem: 'https://marinaanaya.com/cdn/shop/files/IMG_0913_700x700.jpg?v=1746862055', fonte: 'https://marinaanaya.com/', credito: 'Site da artista' }],
+  ['obra-anaya-murais-1', { artistaId: 'art-anaya', titulo: 'Mural cerâmico', serie: 'Murais', tecnica: 'Mural cerâmico', imagem: 'https://cdn.shopify.com/s/files/1/0510/9973/0108/files/1_1024x1024.jpg?v=1660217502', fonte: 'https://marinaanaya.com/blogs/ceramica/murales', credito: 'Site da artista', notas: 'Encomenda de mural; a fonte não informa título nem ano.' }],
+  ['obra-anaya-murais-3', { artistaId: 'art-anaya', titulo: 'Mural cerâmico', serie: 'Murais', tecnica: 'Mural cerâmico', imagem: 'https://cdn.shopify.com/s/files/1/0510/9973/0108/files/3_1024x1024.jpg?v=1660218449', fonte: 'https://marinaanaya.com/blogs/ceramica/murales', credito: 'Site da artista', notas: 'Encomenda de mural; a fonte não informa título nem ano.' }],
+  ['obra-anaya-murais-home', { artistaId: 'art-anaya', titulo: 'Mural cerâmico', serie: 'Murais', tecnica: 'Mural cerâmico', imagem: 'https://cdn.shopify.com/s/files/1/0510/9973/0108/files/mural_home_1024x1024.jpg?v=1660220927', fonte: 'https://marinaanaya.com/blogs/ceramica/murales', credito: 'Site da artista', notas: 'Encomenda de mural; a fonte não informa título nem ano.' }],
+  ['obra-anaya-murais-5', { artistaId: 'art-anaya', titulo: 'Mural cerâmico', serie: 'Murais', tecnica: 'Mural cerâmico', imagem: 'https://cdn.shopify.com/s/files/1/0510/9973/0108/files/5_1024x1024.jpg?v=1660218543', fonte: 'https://marinaanaya.com/blogs/ceramica/murales', credito: 'Site da artista', notas: 'Encomenda de mural; a fonte não informa título nem ano.' }],
+  ['obra-anaya-murais-6', { artistaId: 'art-anaya', titulo: 'Mural cerâmico', serie: 'Murais', tecnica: 'Mural cerâmico', imagem: 'https://cdn.shopify.com/s/files/1/0510/9973/0108/files/6_1024x1024.jpg?v=1660218570', fonte: 'https://marinaanaya.com/blogs/ceramica/murales', credito: 'Site da artista', notas: 'Encomenda de mural; a fonte não informa título nem ano.' }],
+  ['obra-anaya-murais-7', { artistaId: 'art-anaya', titulo: 'Mural cerâmico', serie: 'Murais', tecnica: 'Mural cerâmico', imagem: 'https://cdn.shopify.com/s/files/1/0510/9973/0108/files/7_1024x1024.jpg?v=1660218598', fonte: 'https://marinaanaya.com/blogs/ceramica/murales', credito: 'Site da artista', notas: 'Encomenda de mural; a fonte não informa título nem ano.' }],
   ['obra-anaya-bordado', { artistaId: 'art-anaya', titulo: 'Tecido desenhado por Marina e bordado pela tia Mari', tecnica: 'Têxtil', imagem: 'https://talentoabordo.com/sites/default/files/styles/carousel_content_l/public/2022-08/05-MARINA-ANAYA-BORDADO.jpg?itok=GtAlQQis', fonte: 'https://talentoabordo.com/en/art/marina-anaya-artist', credito: '© Carmen R. Cuesta, via Talento a bordo' }],
   ['obra-anaya-cadernos', { artistaId: 'art-anaya', titulo: 'Cadernos de esboço de "Circo Marte"', serie: 'Circo Marte', imagem: 'https://talentoabordo.com/sites/default/files/styles/carousel_content_l/public/2022-08/02-MARINA-ANAYA-BOCETOS.jpg?itok=g2Z9AmB0', fonte: 'https://talentoabordo.com/en/art/marina-anaya-artist', credito: '© Carmen R. Cuesta, via Talento a bordo' }],
   ['obra-ropalo-1', { artistaId: 'art-ropalo', titulo: "Azulejos com insetos", tecnica: 'Pintura à mão', imagem: 'https://www.lushome.com/wp-content/uploads/2018/02/painted-ceramics-by-anastasia-ropalo-russia-1.jpg', fonte: 'https://www.lushome.com/fabulous-blue-colors-romantic-patterns-ceramic-tiles-painting-anastasia-ropalo/186167', credito: 'Anastasia Ropalo, via Lushome (2018)', notas: 'Título traduzido da legenda da Lushome.' }],
@@ -1549,11 +1555,28 @@ const CAPAS: Record<string, string> = {
   'art-westerlund': 'obra-westerlund-hf-1', 'art-poswa': 'obra-poswa-umthwalo-1', 'art-rudolph': 'obra-rudolph-doux', 'art-peck': 'obra-peck-stretch', 'art-ziperstein': 'obra-ziperstein-fawns',
   'art-41zero42': 'obra-41zero42-futura', 'art-bussoga': 'obra-bussoga-nts', 'art-mutina': 'obra-mutina-grcic', 'art-suro': 'obra-suro-colecao',
   'art-pizarro': 'obra-pizarro-1', 'art-ceudebarro': 'obra-ceudebarro-1', 'art-andreetta': 'obra-andreetta-mushroom', 'art-isabelsanchez': 'obra-isabelsanchez-monstruo',
-  'art-anaya': 'obra-anaya-kissing-bowl', 'art-ropalo': 'obra-ropalo-2',
+  'art-anaya': 'obra-anaya-albor', 'art-ropalo': 'obra-ropalo-2',
+}
+
+/** Correção 23/11: a imagem de capa da Marina Anaya saiu do ar; troca a capa e a imagem morta (se o usuário não mexeu). */
+async function corrigirAnaya() {
+  if (await db.ajustes.get('fix-anaya-v1')) return
+  const morta = 'https://hfgnext.s3.eu-west-3.amazonaws.com/img/4YL7Q000000PRZhWAO-headergd.jpg'
+  const o = await db.obras.get('obra-anaya-kissing-bowl')
+  if (o && o.imagem === morta && !o.arquivo) await db.obras.update(o.id, { imagem: undefined, notas: o.notas || 'A imagem saiu do ar na fonte; veja a peça no Homo Faber.', atualizadoEm: Date.now() })
+  const a = await db.artistas.get('art-anaya')
+  if (a && a.capa === 'obra-anaya-kissing-bowl') await db.artistas.update(a.id, { capa: 'obra-anaya-albor', atualizadoEm: Date.now() })
+  if (a) {
+    const ja = new Set((await db.obras.where('artistaId').equals('art-anaya').toArray()).map((x) => x.id))
+    const novas = OBRAS.filter(([id, x]) => x.artistaId === 'art-anaya' && !ja.has(id)).map(([id, x], i) => ({ ...base(id, 900 + i), tags: [], ...x }) as Obra)
+    if (novas.length) await db.obras.bulkAdd(novas)
+  }
+  await db.ajustes.put({ chave: 'fix-anaya-v1', valor: true })
 }
 
 /** Semeia o catálogo uma vez por aparelho, com ids fixos (não duplica entre aparelhos nem apaga o que já foi editado). */
 export async function semearArtistas() {
+  await corrigirAnaya()
   if (await db.ajustes.get('seed-artistas-v10')) return
   const existentesA = new Set((await db.artistas.toArray()).map((x) => x.id))
   const existentesO = new Set((await db.obras.toArray()).map((x) => x.id))

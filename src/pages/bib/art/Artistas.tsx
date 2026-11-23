@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { BookOpen, FolderHeart, Heart, LayoutGrid, List, Pencil, Plus, Search, SlidersHorizontal, Sparkles, X } from 'lucide-react'
+import { BookOpen, FolderHeart, Heart, Trash2, LayoutGrid, List, Pencil, Plus, Search, SlidersHorizontal, Sparkles, X } from 'lucide-react'
 import { db, type Artista, type Obra } from '../../../db/schema'
 import { secaoPorSlug } from '../../../lib/biblioteca'
 import { FILTROS, etiquetasPrincipais, valoresDe, valoresFiltro, vivos, type ChaveFiltro } from '../../../lib/artistas'
@@ -12,6 +12,7 @@ import { Sheet } from '../../../ui/Sheet'
 import { HeroSecao } from '../SecaoBiblioteca'
 import { ImgObra } from './ImgObra'
 import { PesquisaIA } from './PesquisaIA'
+import { alternarFavorito, excluir } from '../../../db/hooks'
 import { ignorarSugestao, sugerirArtistas, type SugestaoArtista } from '../../../lib/sugestaoArtistas'
 
 type Filtros = Partial<Record<ChaveFiltro, string>>
@@ -23,10 +24,21 @@ export function obraDeCapa(a: Artista, obras: Obra[]) {
   return (escolhida && temImg(escolhida) ? escolhida : undefined) ?? minhas.find(temImg) ?? escolhida
 }
 
-function CardArtista({ a, capa, lista }: { a: Artista; capa?: Obra; lista: boolean }) {
+function CardArtista({ a, capa, lista, onMenu }: { a: Artista; capa?: Obra; lista: boolean; onMenu: (a: Artista) => void }) {
   const etq = etiquetasPrincipais(a)
+  // manter o dedo apertado (ou clique direito) abre as opções do estudo
+  const timer = useRef<number | undefined>(undefined)
+  const abriu = useRef(false)
+  const pos = useRef<[number, number]>([0, 0])
+  const parar = () => { clearTimeout(timer.current); timer.current = undefined }
   return (
-    <Link to={`/biblioteca/artistas/${a.id}`} className={lista ? 'art-linha' : 'art-card'}>
+    <Link to={`/biblioteca/artistas/${a.id}`} className={(lista ? 'art-linha' : 'art-card') + ' segurar'}
+      onTouchStart={(e) => { abriu.current = false; pos.current = [e.touches[0].clientX, e.touches[0].clientY]; parar(); timer.current = window.setTimeout(() => { abriu.current = true; navigator.vibrate?.(10); onMenu(a) }, 500) }}
+      onTouchMove={(e) => { if (Math.hypot(e.touches[0].clientX - pos.current[0], e.touches[0].clientY - pos.current[1]) > 10) parar() }}
+      // depois de abrir as opções, o soltar do dedo não vira clique (não fecha a folha nem abre o estudo)
+      onTouchEnd={(e) => { parar(); if (abriu.current) e.preventDefault() }} onTouchCancel={parar}
+      onContextMenu={(e) => { e.preventDefault(); if (!abriu.current) { parar(); onMenu(a) } }}
+      onClick={(e) => { if (abriu.current) { e.preventDefault(); abriu.current = false } }}>
       <span className="ph"><ImgObra o={capa} alt={capa?.titulo ?? a.nome} /></span>
       <span className="txt">
         <span className="pais">{a.pais.join(' / ') || 'País não documentado'}</span>
@@ -56,6 +68,8 @@ export default function Artistas() {
   const [ia, setIa] = useState<false | true | string>(false)
   const [sugestoes, setSugestoes] = useState<SugestaoArtista[]>([])
   const [verSug, setVerSug] = useState(false)
+  const [opcoes, setOpcoes] = useState<Artista>()
+  const nav = useNavigate()
   useEffect(() => { if (!artistas) return; let vivo = true; sugerirArtistas(artistas).then((x) => vivo && setSugestoes(x)).catch(() => undefined); return () => { vivo = false } }, [artistas])
 
   const ordenados = useMemo(() => [...(artistas ?? [])].sort((a, b) =>
@@ -117,7 +131,7 @@ export default function Artistas() {
       </Sheet>}
       {artistas && artistas.length === 0 && <div className="empty"><span className="serif">Preparando o acervo…</span><span>Os estudos iniciais aparecem em instantes.</span></div>}
       <div className={lista ? 'art-lista' : 'art-feed'}>
-        {vis.map((a) => <CardArtista key={a.id} a={a} capa={obraDeCapa(a, obras)} lista={lista} />)}
+        {vis.map((a) => <CardArtista key={a.id} a={a} capa={obraDeCapa(a, obras)} lista={lista} onMenu={setOpcoes} />)}
       </div>
       {artistas && artistas.length > 0 && vis.length === 0 && <p className="muted" style={{ marginTop: 16 }}>Nenhum artista com esses filtros.</p>}
       <Link to="/biblioteca/artistas/novo" className="art-add"><Plus size={16} />Adicionar estudo de artista</Link>
@@ -140,6 +154,14 @@ export default function Artistas() {
             <div className="chips" style={{ flexWrap: 'wrap' }}>{vs.map(([v, n]) => <button key={v} className={'chip' + (f[k] === v ? ' on' : '')} onClick={() => setF({ ...f, [k]: f[k] === v ? undefined : v })}>{v}<span style={{ opacity: .55 }}>{n}</span></button>)}</div>
           </div>) : null })}
         <button className="btn primary" style={{ width: '100%', marginTop: 20 }} onClick={() => setPainel(false)}>Ver {vis.length} {vis.length === 1 ? 'artista' : 'artistas'}</button>
+      </Sheet>}
+      {opcoes && <Sheet onClose={() => setOpcoes(undefined)} label={opcoes.nome}>
+        <h3>{opcoes.nome}</h3>
+        <div className="lista-opcoes" style={{ display: 'grid', gap: 8, marginTop: 12 }}>
+          <button className="btn" onClick={() => { alternarFavorito('artistas', opcoes.id, opcoes.favorito); setOpcoes(undefined) }}><Heart size={16} fill={opcoes.favorito ? 'currentColor' : 'none'} />{opcoes.favorito ? 'Remover dos favoritos' : 'Favoritar'}</button>
+          <button className="btn" onClick={() => { const id = opcoes.id; setOpcoes(undefined); nav(`/biblioteca/artistas/${id}/editar`) }}><Pencil size={16} />Editar perfil</button>
+          <button className="btn" style={{ color: 'var(--terracota)' }} onClick={async () => { if (confirm(`Excluir ${opcoes.nome} da Biblioteca?`)) { await excluir('artistas', opcoes.id); setOpcoes(undefined) } }}><Trash2 size={16} />Excluir artista</button>
+        </div>
       </Sheet>}
       {ia && <PesquisaIA nomeInicial={typeof ia === 'string' ? ia : undefined} onClose={() => setIa(false)} />}
     </div>
