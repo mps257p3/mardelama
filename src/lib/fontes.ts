@@ -21,6 +21,7 @@ export interface ItemDescoberta {
   universo?: string         // universo criativo de onde veio a consulta
   consulta?: string
   motivo?: string           // por que a obra apareceu (mostrado no visor)
+  artista?: string          // busca por um artista (Seus artistas, Na mesma linha): o nome pedido
 }
 
 export type FonteId = 'aic' | 'met' | 'wm' | 'cma' | 'vam' | 'smk' | 'rijks' | 'eu' | 'mia' | 'si' | 'ov' | 'loc' | 'rev'

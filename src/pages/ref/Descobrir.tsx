@@ -15,9 +15,11 @@ import { TopoRef } from './Topo'
 import { EscolherGrupos, EscolherPainel } from './acoesRefs'
 import { atualizarGostoIA, buscarPorFoto, CHAVE_INSPIRA, inspirarDoAcervo, type InspiracaoAcervo, iaConfigurada, interpretarBusca, leituraEmCache, artistasNaMesmaLinha, type Consulta, type TemaCurtidas } from '../../lib/iaRepertorio'
 import { CompararObra, ExplicarObra, TemasDasCurtidas } from './descobrirExtras'
+import { ordenarPorNota, useEstadoVisao, useFiltroVisual, type Alvo } from './filtroVisual'
+import { imagemDaRef, imagemDeUrl, imagensDoArtista, imagensDoGosto } from '../../lib/visao'
 
 const VALIDADE = 30 * 60000   // ao voltar ao Descobrir depois de meia hora, vem um lote novo
-type Contexto = { tipo: 'feed' } | { tipo: 'busca'; q: string; leitura?: string; consultas?: Consulta[]; tema?: string; deRef?: string; foto?: string } | { tipo: 'semelhantes'; item: ItemDescoberta } | { tipo: 'curtidas' }
+type Contexto = { tipo: 'feed' } | { tipo: 'busca'; q: string; leitura?: string; consultas?: Consulta[]; tema?: string; deRef?: string; deRefId?: string; foto?: string } | { tipo: 'semelhantes'; item: ItemDescoberta } | { tipo: 'curtidas' }
 interface Cache { itens: ItemDescoberta[]; quando: number; modo: Modo; ctx: Contexto; epoca?: Epoca }
 // o lote fica só na memória: navegar pelo app e voltar mantém o feed; recarregar a página traz material novo
 let memoria: Cache | undefined
@@ -39,7 +41,7 @@ export default function Descobrir() {
   const [interpretando, setInterpretando] = useState(false)
   const [estados, setEstados] = useState<EstadoFonte[]>([])
   const [q, setQ] = useState(ctx.tipo === 'busca' ? ctx.q : '')
-  const [visor, setVisor] = useState<number>()
+  const [visor, setVisor] = useState<{ i: number; xs: ItemDescoberta[] }>()
   const [painel, setPainel] = useState<'ajustes' | 'fontes'>()
   const [curtidos, setCurtidos] = useState<Set<string>>(new Set())
   const [grupoPara, setGrupoPara] = useState<string>()
@@ -129,7 +131,7 @@ export default function Descobrir() {
   /** Obras parecidas com uma referência do acervo: a IA lê título, autor, tags e descrição e monta as buscas. */
   async function semelhantesDaRef(id: string) {
     const r = await db.referencias.get(id); if (!r) return
-    let c: Contexto = { tipo: 'busca', q: r.titulo, deRef: r.titulo }
+    let c: Contexto = { tipo: 'busca', q: r.titulo, deRef: r.titulo, deRefId: r.id }
     setCtx(c); setQ(''); setItens([]); setVisor(undefined); window.scrollTo(0, 0)
     if (await iaConfigurada()) {
       setInterpretando(true)
@@ -203,7 +205,27 @@ export default function Descobrir() {
   function abrirCurtidas() { const c: Contexto = { tipo: 'curtidas' }; setTemaCurt(undefined); setQ(''); setCtx(c); setItens([]); window.scrollTo(0, 0); carregar(true, c) }
   const [visorUnico, setVisorUnico] = useState<ItemDescoberta>()
   const [temaCurt, setTemaCurt] = useState<TemaCurtidas>()
-  const lista = ctx.tipo === 'curtidas' && temaCurt ? itens.filter((x) => temaCurt.ids.includes(x.id)) : itens
+  const base = ctx.tipo === 'curtidas' && temaCurt ? itens.filter((x) => temaCurt.ids.includes(x.id)) : itens
+
+  // filtro visual: compara cada imagem com as obras do artista estudado, com o seu acervo ou com a imagem de partida
+  const visual = useAjuste<boolean>('descobrir.visual', true)
+  const estV = useEstadoVisao()
+  const [verTodas, setVerTodas] = useState(false)
+  const chaveCtx = ctx.tipo === 'feed' ? 'feed:' + modo + ':' + epoca : ctx.tipo === 'semelhantes' ? 'sem:' + ctx.item.id : ctx.tipo === 'busca' ? 'busca:' + (ctx.foto ?? ctx.deRefId ?? ctx.tema ?? ctx.q) : 'curtidas'
+  const alvoDe = (x: ItemDescoberta): Alvo | undefined => {
+    if (ctx.tipo === 'semelhantes') { const it = ctx.item; return { modo: 'ordenar', chave: 'item:' + it.id, imagens: async () => [imagemDeUrl(it.imagem)] } }
+    if (ctx.tipo === 'busca' && ctx.foto) { const f = ctx.foto; return { modo: 'ordenar', chave: 'foto:' + f, imagens: async () => [imagemDeUrl(f)] } }
+    if (ctx.tipo === 'busca' && ctx.deRefId) { const id = ctx.deRefId; return { modo: 'ordenar', chave: 'ref:' + id, imagens: async () => { const r = await db.referencias.get(id); const im = r && imagemDaRef(r); return im ? [im] : [] } } }
+    if (ctx.tipo !== 'feed') return undefined
+    // o inesperado fica de fora do filtro: é de propósito que não se parece com nada
+    if (x.motivo?.startsWith('Para sair')) return undefined
+    if (x.artista) { const nome = x.artista; return { modo: 'filtrar', chave: 'art:' + nome, imagens: async () => { const a = await imagensDoArtista(nome); return a.length >= 2 ? a : imagensDoGosto() } } }
+    return { modo: 'filtrar', chave: 'gosto', imagens: () => imagensDoGosto() }
+  }
+  const { notas, escondidos, lendo } = useFiltroVisual(base, alvoDe, chaveCtx, visual && ctx.tipo !== 'curtidas')
+  useEffect(() => { setVerTodas(false) }, [chaveCtx])
+  const filtrada = verTodas ? base : base.filter((x) => !escondidos.has(x.id))
+  const lista = visual && (ctx.tipo === 'semelhantes' || (ctx.tipo === 'busca' && (ctx.foto || ctx.deRefId))) ? ordenarPorNota(filtrada, notas) : filtrada
 
   /** Busca por foto: tirada na hora ou da galeria. */
   async function porFoto(arq?: File) {
@@ -271,16 +293,24 @@ export default function Descobrir() {
         </details>
       )}
 
+      {visual && ctx.tipo !== 'curtidas' && (estV.fase === 'baixando' || estV.fase === 'erro' || lendo > 0 || escondidos.size > 0) && (
+        <p className="filtro-visual faint">
+          {estV.fase === 'baixando' ? <>Preparando o olhar do app (só na primeira vez){estV.progresso ? ` · ${Math.round(estV.progresso * 100)}%` : '…'}</>
+            : estV.fase === 'erro' ? <>O filtro visual não carregou agora. As imagens aparecem sem ele.</>
+            : lendo > 0 ? <>Comparando as imagens com {ctx.tipo === 'feed' ? (modo === 'seus-artistas' ? 'as obras dos seus estudos' : 'o seu acervo') : 'a imagem de partida'}…</> : null}
+          {escondidos.size > 0 && <>{estV.fase === 'pronto' && lendo === 0 ? '' : ' · '}{escondidos.size} {escondidos.size === 1 ? 'imagem não parecia' : 'imagens não pareciam'} com {modo === 'seus-artistas' ? 'o artista' : 'o que você guarda'}. <button className="link" onClick={() => setVerTodas((v) => !v)}>{verTodas ? 'Esconder' : 'Mostrar'}</button></>}
+        </p>
+      )}
       {itens.length === 0 && !carregando && !interpretando ? (
         <div className="empty"><Compass size={26} strokeWidth={1.1} style={{ color: 'var(--argila)' }} />
           <span className="serif">{ctx.tipo === 'curtidas' ? 'Nenhuma curtida ainda.' : estados.length && estados.every((e) => !e.ok) ? 'As fontes não responderam.' : 'Nada por aqui ainda.'}</span>
           <span>{estados.length && estados.every((e) => !e.ok) ? 'Confira a internet e toque em atualizar.' : 'Toque em atualizar para buscar novas referências.'}</span>
           <button className="btn sm" onClick={() => carregar(true)}><RefreshCw size={14} />Atualizar</button></div>
-      ) : <MuralDescobrir itens={lista} curtidos={curtidos} salvos={salvos} onAbrir={setVisor} onAgir={agir} />}
+      ) : <MuralDescobrir itens={lista} curtidos={curtidos} salvos={salvos} onAbrir={(i) => setVisor({ i, xs: lista })} onAgir={agir} />}
       {(carregando || interpretando) && <div className="carregando-desc">{interpretando ? <><Sparkles size={16} className="gira" />{itens.length ? 'Refinando a busca com a IA…' : 'Entendendo o pedido…'}</> : <><RefreshCw size={16} className="gira" />Buscando nos acervos…</>}</div>}
       <div ref={fim} style={{ height: 1 }} />
 
-      {visor != null && lista[visor] && <VisorDescobrir itens={lista} inicio={visor} curtidos={curtidos} salvos={salvos} onClose={() => setVisor(undefined)} onAgir={agir} />}
+      {visor && visor.xs[visor.i] && <VisorDescobrir itens={visor.xs} inicio={visor.i} curtidos={curtidos} salvos={salvos} onClose={() => setVisor(undefined)} onAgir={agir} />}
       {visorUnico && <VisorDescobrir itens={[visorUnico]} inicio={0} curtidos={curtidos} salvos={salvos} onClose={() => setVisorUnico(undefined)} onAgir={(x, t) => { if (t === 'semelhantes' || t === 'recusar') setVisorUnico(undefined); return agir(x, t) }} />}
       {grupoPara && <EscolherGrupos ids={[grupoPara]} onClose={() => setGrupoPara(undefined)} />}
       {painel === 'ajustes' && <AjustesCuradoria onClose={() => setPainel(undefined)} />}
@@ -368,7 +398,7 @@ function VisorDescobrir({ itens, inicio, curtidos, salvos, onClose, onAgir }: { 
       <div className="visor-acoes desc rotulos">
         <button className={'visor-acao' + (curtidos.has(x.id) ? ' on' : '')} onClick={() => onAgir(x, 'curtir')}><span className="visor-btn"><Heart size={18} fill={curtidos.has(x.id) ? 'currentColor' : 'none'} /></span>Curtir</button>
         <button className={'visor-acao' + (salvos.has(x.id) ? ' on' : '')} onClick={() => levar('grupos')}><span className="visor-btn">{salvos.has(x.id) ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}</span>Salvar</button>
-        <button className="visor-acao" onClick={() => onAgir(x, 'semelhantes')}><span className="visor-btn"><ScanSearch size={18} /></span>Mais assim</button>
+        <button className="visor-acao" onClick={() => onAgir(x, 'semelhantes')}><span className="visor-btn"><ScanSearch size={18} /></span>Mais como esta</button>
         <button className="visor-acao" onClick={() => setExtra('explicar')}><span className="visor-btn"><BookOpen size={18} /></span>Sobre</button>
         <button className="visor-acao" onClick={() => setExtra('comparar')}><span className="visor-btn"><Columns2 size={18} /></span>Comparar</button>
         <button className="visor-acao" onClick={() => onAgir(x, 'recusar')}><span className="visor-btn"><EyeOff size={18} /></span>Não gostei</button>
@@ -410,6 +440,7 @@ function AjustesCuradoria({ onClose }: { onClose: () => void }) {
         <label key={k} className="faixa"><span>{ROT_PESO[k]}</span><input type="range" min={k === 'recusar' ? -5 : 0} max={k === 'recusar' ? 0 : 5} step={0.5} value={p.pesos[k]} onChange={(e) => mudar({ ...p, pesos: { ...p.pesos, [k]: Number(e.target.value) } })} /><b>{p.pesos[k] > 0 ? '+' : ''}{p.pesos[k]}</b></label>))}
       <button className="btn sm ghost" onClick={() => mudar({ ...p, pesos: PESOS_PADRAO })}>Pesos padrão</button>
     </div>
+    <FiltroVisualAjuste />
     <LeituraIA p={p} onNova={(g) => setP({ ...p, gostoIA: g })} />
     <LeituraPastas />
     <div className="filtro-sec"><div className="filtro-tit"><span>O que o app aprendeu</span></div>
@@ -422,6 +453,15 @@ function AjustesCuradoria({ onClose }: { onClose: () => void }) {
     </div>
     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}><button className="btn primary" onClick={onClose}>Pronto</button></div>
   </Sheet>
+}
+
+/** Liga e desliga a comparação visual das imagens. */
+function FiltroVisualAjuste() {
+  const ligado = useAjuste<boolean>('descobrir.visual', true)
+  return <div className="filtro-sec"><div className="filtro-tit"><span>Olhar do app</span></div>
+    <label className="faixa" style={{ gridTemplateColumns: '1fr auto' }}><span>Comparar as imagens com o seu acervo e com as obras dos seus estudos</span><input type="checkbox" style={{ width: 'auto' }} checked={ligado} onChange={(e) => definirAjuste('descobrir.visual', e.target.checked)} /></label>
+    <p className="faint" style={{ fontSize: 12, marginTop: 6 }}>Um modelo de visão roda no próprio aparelho, sem IA paga. Em Seus artistas, some o que não se parece com as obras do artista. Em “Mais como esta”, o mais parecido vem primeiro. Na primeira vez ele baixa uns 12 MB.</p>
+  </div>
 }
 
 /** Leitura do gosto feita pela IA, com o que ela propôs buscar e o que evita. */

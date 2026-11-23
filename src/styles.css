@@ -1019,3 +1019,10 @@ a.visor-btn { text-decoration: none; }
 .art-sug-btn { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 12px 14px; margin: 4px 0 16px; border: 1px solid var(--line-strong); border-radius: var(--r); background: var(--surface); color: inherit; font: inherit; font-size: 14px; cursor: pointer; }
 .art-sug-btn b { font-weight: 600; }
 .art-sug-btn svg { color: var(--accent); flex: none; }
+
+/* filtro visual do Descobrir */
+.filtro-visual { font-size: 12.5px; margin: -2px 0 10px; }
+button.link { background: none; border: 0; padding: 0; font: inherit; color: var(--ink); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.parecidas-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; margin-top: 10px; }
+.parecidas-grade a { aspect-ratio: 1; overflow: hidden; border-radius: 6px; background: var(--surface-2); display: block; }
+.parecidas-grade img { width: 100%; height: 100%; object-fit: cover; display: block; }
