@@ -127,19 +127,21 @@ async function executar(): Promise<ResultadoSync> {
     for (const k of Object.keys(m)) m[k] = { ...m[k], recebido: 0 }
   }
 
-  avisarProgresso('Sincronizando os registros…')
-  // 2. tabelas de conteúdo
+  // 2. tabelas de conteúdo, várias ao mesmo tempo; o aviso na tela só aparece quando há o que receber
   const pendentes: string[] = []
-  for (const t of TABELAS) {
-    if (!db.tables.some((x) => x.name === t)) continue
+  await emParalelo(TABELAS.filter((t) => db.tables.some((x) => x.name === t)), 6, async (t) => {
     const mk = m[t] ?? { enviado: 0, recebido: 0 }
     const chave = t === 'versoes' ? 'criadoEm' : 'atualizadoEm'
-    const novos = (await db.table(t).toArray()).filter((x: any) => (x[chave] ?? 0) > mk.enviado)
+    // usa o índice quando existe, sem ler a tabela inteira
+    const tab = db.table(t)
+    const novos: any[] = tab.schema.indexes.some((i) => i.name === chave)
+      ? await tab.where(chave).above(mk.enviado).toArray()
+      : (await tab.toArray()).filter((x: any) => (x[chave] ?? 0) > mk.enviado)
     for (let i = 0; i < novos.length; i += 200) {
       const { error } = await sb.from(t).upsert(novos.slice(i, i + 200).map(linha))
       if (error) { if (faltaTabela(error)) { pendentes.push(t); break } throw error }
     }
-    if (pendentes.includes(t)) continue
+    if (pendentes.includes(t)) return
     enviados += novos.length
     // recebe em páginas de 1000 (limite do servidor), andando por (atualizado_em, id): itens importados em lote
     // têm o mesmo horário, e paginar só pelo horário perderia os que caem na virada da página
@@ -155,12 +157,12 @@ async function executar(): Promise<ResultadoSync> {
       if (trocar.length) await db.table(t).bulkPut(trocar)
       recebidos += trocar.length
       const fim = lista[lista.length - 1]; maxR = fim.atualizado_em; ultimoId = fim.id
-      if (lista.length > 200) avisarProgresso(`Recebendo ${NOMES[t] ?? t}: ${recebidos} itens`)
+      if (lista.length > 200) avisarProgresso(`Recebendo ${NOMES[t] ?? t}…`)
       if (lista.length < PAGINA) break
     }
-    if (parou) continue
+    if (parou) return
     m[t] = { enviado: inicio, recebido: maxR }
-  }
+  })
 
   // 3. relações
   {
@@ -209,21 +211,32 @@ async function executar(): Promise<ResultadoSync> {
   }
 
   await definirAjuste('sync.marcas', m)
+  // a revisão completa (troca de versão) já foi feita: um erro daqui em diante não a repete
+  await definirAjuste('sync.versao', VERSAO_SYNC)
 
   // 4. arquivos (fotos, PDFs, áudios) por último: os registros já aparecem e as fotos vão chegando
   {
     const mk = m.arquivos ?? { enviado: 0, recebido: 0 }
     // só os arquivos alterados (pelo índice), sem carregar na memória todas as fotos do aparelho
     const novos = await db.arquivos.where('atualizadoEm').above(mk.enviado).toArray()
-    let feitos = 0
+    let feitos = 0, primeiraFalhaEnvio = Infinity
     await emParalelo(novos, 4, async (a) => {
       const { blob, ...meta } = a
-      if (!a.excluido) { const { error } = await sb.storage.from(BUCKET).upload(`${user.id}/${a.id}`, blob, { upsert: true, contentType: a.mime }); if (error) throw error }
-      const { error } = await sb.from('arquivos').upsert(linha(meta)); if (error) throw error
-      enviados++; avisarProgresso(`Enviando fotos e arquivos: ${++feitos} de ${novos.length}`)
+      try {
+        if (!a.excluido) { const { error } = await sb.storage.from(BUCKET).upload(`${user.id}/${a.id}`, blob, { upsert: true, contentType: a.mime }); if (error) throw error }
+        const { error } = await sb.from('arquivos').upsert(linha(meta)); if (error) throw error
+        enviados++; avisarProgresso(`Enviando fotos: ${++feitos} de ${novos.length}`)
+      } catch (e) {
+        // uma foto que não sobe não trava o resto; é tentada de novo na próxima vez
+        console.warn('Envio de arquivo:', a.id, (e as Error)?.message)
+        primeiraFalhaEnvio = Math.min(primeiraFalhaEnvio, a.atualizadoEm ?? 0)
+      }
     })
+    if (primeiraFalhaEnvio < Infinity) pendentes.push('fotos (algumas não subiram; tento de novo na próxima sincronização)')
     // a marca só avança até antes da primeira foto que não baixou: ela é tentada de novo na próxima vez
     let maxR = mk.recebido, baixados = 0, falhou = false
+    // fotos que faltam no servidor: depois de 3 tentativas, desiste delas em vez de reler tudo a cada abertura
+    const falhas = ((await db.ajustes.get('sync.falhasFotos'))?.valor as Record<string, number>) ?? {}
     for await (const lista of paginas(sb, 'arquivos', mk.recebido)) {
       const ok = new Array<boolean>(lista.length).fill(true)
       await emParalelo(lista.map((r, i) => [r, i] as const), 6, async ([r, i]) => {
@@ -232,12 +245,12 @@ async function executar(): Promise<ResultadoSync> {
           let blob = atual?.blob
           if (!blob && !r.excluido) {
             const d = await sb.storage.from(BUCKET).download(`${user.id}/${r.id}`).catch((e) => ({ data: null, error: e }))
-            if (d.error || !d.data) { ok[i] = false; return }
-            blob = d.data
+            if (d.error || !d.data) { falhas[r.id] = (falhas[r.id] ?? 0) + 1; if (falhas[r.id] < 3) ok[i] = false; return }
+            blob = d.data; delete falhas[r.id]
+            avisarProgresso(`Recebendo fotos: ${++baixados}`)
           }
           await db.arquivos.put({ ...(local(r) as Omit<Arquivo, 'blob'>), blob: blob ?? new Blob() } as Arquivo); recebidos++
         }
-        avisarProgresso(`Recebendo fotos e arquivos: ${++baixados}`)
       })
       const primeiraFalha = ok.indexOf(false)
       if (primeiraFalha >= 0) {
@@ -249,21 +262,26 @@ async function executar(): Promise<ResultadoSync> {
       maxR = lista[lista.length - 1].atualizado_em
     }
     if (falhou) pendentes.push('fotos (algumas não baixaram; tento de novo na próxima sincronização)')
-    m.arquivos = { enviado: inicio, recebido: maxR }
+    await definirAjuste('sync.falhasFotos', falhas)
+    m.arquivos = { enviado: primeiraFalhaEnvio < Infinity ? primeiraFalhaEnvio - 1 : inicio, recebido: maxR }
   }
 
   await definirAjuste('sync.marcas', m)
-  await definirAjuste('sync.versao', VERSAO_SYNC)
   const res: ResultadoSync = { enviados, recebidos, quando: Date.now(), pendentes }
   await definirAjuste('sync.ultimo', res)
   return res
 }
 
-/** Sincroniza ao abrir, ao voltar a ficar online e a cada 3 minutos, quando houver login. */
+/** Sincroniza ao abrir, ao voltar ao app, ao voltar a ficar online e a cada 5 minutos, quando houver login. */
 export function iniciarSincronizacaoAutomatica() {
-  const tentar = async () => { if (navigator.onLine && (await usuario())) sincronizar().catch((e) => console.warn('Sincronização:', e.message)) }
+  let ultima = 0
+  const tentar = async () => {
+    // ao trocar de app e voltar logo, não sincroniza de novo (no máximo uma vez por minuto)
+    if (Date.now() - ultima < 60_000) return
+    if (navigator.onLine && (await usuario())) { ultima = Date.now(); sincronizar().catch((e) => console.warn('Sincronização:', e.message)) }
+  }
   tentar()
   window.addEventListener('online', tentar)
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') tentar() })
-  setInterval(tentar, 180_000)
+  setInterval(tentar, 300_000)
 }
