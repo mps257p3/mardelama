@@ -18,7 +18,9 @@ type Filtros = Partial<Record<ChaveFiltro, string>>
 
 export function obraDeCapa(a: Artista, obras: Obra[]) {
   const minhas = obras.filter((o) => o.artistaId === a.id)
-  return minhas.find((o) => o.id === a.capa) ?? minhas.find((o) => o.arquivo || o.imagem)
+  const temImg = (o: Obra) => !!(o.arquivo || o.imagem)
+  const escolhida = minhas.find((o) => o.id === a.capa)
+  return (escolhida && temImg(escolhida) ? escolhida : undefined) ?? minhas.find(temImg) ?? escolhida
 }
 
 function CardArtista({ a, capa, lista }: { a: Artista; capa?: Obra; lista: boolean }) {
@@ -53,6 +55,7 @@ export default function Artistas() {
   const [painel, setPainel] = useState(false)
   const [ia, setIa] = useState<false | true | string>(false)
   const [sugestoes, setSugestoes] = useState<SugestaoArtista[]>([])
+  const [verSug, setVerSug] = useState(false)
   useEffect(() => { if (!artistas) return; let vivo = true; sugerirArtistas(artistas).then((x) => vivo && setSugestoes(x)).catch(() => undefined); return () => { vivo = false } }, [artistas])
 
   const ordenados = useMemo(() => [...(artistas ?? [])].sort((a, b) =>
@@ -90,21 +93,28 @@ export default function Artistas() {
         {ativos.map(([k, v]) => <button key={k} className="chip on" onClick={() => setF({ ...f, [k]: undefined })}>{v} <X size={12} /></button>)}
       </div>}
 
-      {sugestoes.length > 0 && !q && !nFiltros && <section className="art-sugestoes" aria-label="Sugestões de estudo">
+      {sugestoes.length > 0 && !q && !nFiltros && <button className="art-sug-btn" onClick={() => setVerSug(true)}>
+        <Sparkles size={15} /><span><b>{sugestoes.length} {sugestoes.length === 1 ? 'sugestão' : 'sugestões'} de estudo</b> a partir das suas curtidas</span>
+      </button>}
+      {verSug && <Sheet onClose={() => setVerSug(false)} label="Sugestões de estudo" alto>
+        <h3>Sugestões de estudo</h3>
+        <p className="faint" style={{ fontSize: 13.5, margin: '4px 0 12px' }}>Artistas que você curtiu ou salvou várias vezes e que ainda não têm estudo.</p>
+        {sugestoes.length === 0 && <p className="muted">Nenhuma sugestão agora.</p>}
+        <section className="art-sugestoes" aria-label="Sugestões de estudo">
         {sugestoes.map((x) => (
           <div key={x.nome} className="art-sugestao">
             {x.imagens.length > 0 && <div className="fotos">{x.imagens.map((u) => <img key={u} src={u} alt="" referrerPolicy="no-referrer" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none' }} />)}</div>}
             <div className="txt">
-              <p className="eyebrow"><Sparkles size={12} /> Sugestão das suas curtidas</p>
-              <p>Você curtiu ou salvou <b>{x.vezes} obras</b> de <b>{x.nome}</b>. Quer criar um estudo?</p>
+              <p>Você curtiu ou salvou <b>{x.vezes} obras</b> de <b>{x.nome}</b>.</p>
               <div className="acoes">
-                <button className="btn sm primary" onClick={() => setIa(x.nome)}><Sparkles size={14} />Criar estudo</button>
+                <button className="btn sm primary" onClick={() => { setVerSug(false); setIa(x.nome) }}><Sparkles size={14} />Criar estudo</button>
                 <button className="btn sm ghost" onClick={async () => { await ignorarSugestao(x.nome); setSugestoes(sugestoes.filter((y) => y !== x)) }}>Agora não</button>
               </div>
             </div>
           </div>
         ))}
-      </section>}
+        </section>
+      </Sheet>}
       {artistas && artistas.length === 0 && <div className="empty"><span className="serif">Preparando o acervo…</span><span>Os estudos iniciais aparecem em instantes.</span></div>}
       <div className={lista ? 'art-lista' : 'art-feed'}>
         {vis.map((a) => <CardArtista key={a.id} a={a} capa={obraDeCapa(a, obras)} lista={lista} />)}

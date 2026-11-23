@@ -116,8 +116,39 @@ export default function ArtistaDetalhe() {
         {a.caracteristicas.length > 0 && <div className="pills" style={{ marginTop: 12 }}>{a.caracteristicas.map((c) => <span key={c} className="pill">{c}</span>)}</div>}
       </header>
 
+      <section className="art-galeria art-bloco-fixo">
+        <div className="section-head"><h2><span className="num">01</span>O trabalho</h2><Link to={`/biblioteca/obras/nova?artista=${a.id}`} className="faint" style={{ fontSize: 13, display: 'inline-flex', gap: 4, alignItems: 'center' }}><Plus size={14} />Adicionar</Link></div>
+        {series.length > 1 && <div className="chips" style={{ marginBottom: 12 }}>
+          <button className={'chip' + (!serie ? ' on' : '')} onClick={() => setSerie(undefined)}>Todas</button>
+          {series.map((s) => <button key={s} className={'chip' + (serie === s ? ' on' : '')} onClick={() => setSerie(serie === s ? undefined : s)}>{s}</button>)}
+        </div>}
+        {serie && a.series?.find((s) => s.nome === serie)?.url && <p className="faint" style={{ fontSize: 13, margin: '-4px 0 12px' }}>Série <b>{serie}</b> {a.series.find((s) => s.nome === serie)?.original} · <a href={a.series.find((s) => s.nome === serie)!.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>ver no site oficial</a></p>}
+        <div className="obras-mural">
+          {(todasVer || serie ? galeria : galeria.slice(0, 12)).map((o) => (
+            <button key={o.id} className="obra-card" onClick={() => setVisor(obras.indexOf(o))}>
+              <span className="ph"><ImgObra o={o} /></span>
+              <span className="t">{o.titulo || o.serie || 'Sem título'}{o.favorito ? <Heart size={11} fill="currentColor" /> : null}</span>
+              <span className="s">{[o.ano, host(o.fonte)].filter(Boolean).join(' · ')}</span>
+            </button>
+          ))}
+          {obras.length === 0 && <p className="faint">Nenhuma obra cadastrada ainda.</p>}
+        </div>
+        {!todasVer && !serie && galeria.length > 12 && <button className="btn" style={{ width: '100%', marginTop: 14 }} onClick={() => setTodasVer(true)}>Ver todas as {galeria.length} obras</button>}
+        {a.series && a.series.length > 0 && <p className="faint" style={{ fontSize: 12.5, marginTop: 10 }}>Séries no site oficial: {a.series.map((s, i) => <span key={s.nome}>{i ? ', ' : ''}{s.url ? <a href={s.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>{s.nome}</a> : s.nome}{s.original ? ` (${s.original})` : ''}</span>)}.</p>}
+      </section>
+      {a.falas && a.falas.length > 0 && <section className="art-falas art-bloco-fixo">
+        <div className="section-head"><h2>Nas palavras do artista</h2></div>
+        {a.falas.map((f, i) => (
+          <blockquote key={i} className="art-fala">
+            <p>“{f.texto}”</p>
+            {f.original && f.original !== f.texto && <p className="original">{f.original}</p>}
+            {(f.veiculo || f.fonte) && <cite>{f.fonte ? <a href={f.fonte} target="_blank" rel="noreferrer">{f.veiculo || host(f.fonte)}</a> : f.veiculo}</cite>}
+          </blockquote>
+        ))}
+        <p className="faint" style={{ fontSize: 12 }}>Tradução livre para o português. O original fica abaixo de cada fala.</p>
+      </section>}
       <div className="art-blocos">
-        <Bloco n={1} titulo="Apresentação do artista" aberto>
+        <Bloco n={2} titulo="Apresentação do artista" aberto>
           <dl className="art-ficha">
             <dt>Nome original</dt><dd>{a.nomeOriginal || ND}</dd>
             <dt>País</dt><dd>{a.pais.join(' / ') || ND}</dd>
@@ -131,26 +162,6 @@ export default function ArtistaDetalhe() {
         </Bloco>
       </div>
 
-      <section className="art-galeria art-bloco-fixo">
-        <div className="section-head"><h2><span className="num">02</span>Galeria de obras</h2><Link to={`/biblioteca/obras/nova?artista=${a.id}`} className="faint" style={{ fontSize: 13, display: 'inline-flex', gap: 4, alignItems: 'center' }}><Plus size={14} />Adicionar</Link></div>
-        {series.length > 1 && <div className="chips" style={{ marginBottom: 12 }}>
-          <button className={'chip' + (!serie ? ' on' : '')} onClick={() => setSerie(undefined)}>Todas</button>
-          {series.map((s) => <button key={s} className={'chip' + (serie === s ? ' on' : '')} onClick={() => setSerie(serie === s ? undefined : s)}>{s}</button>)}
-        </div>}
-        {serie && a.series?.find((s) => s.nome === serie)?.url && <p className="faint" style={{ fontSize: 13, margin: '-4px 0 12px' }}>Série <b>{serie}</b> {a.series.find((s) => s.nome === serie)?.original} · <a href={a.series.find((s) => s.nome === serie)!.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>ver no site oficial</a></p>}
-        <div className="obras-mural">
-          {(todasVer || serie ? galeria : galeria.slice(0, 8)).map((o) => (
-            <button key={o.id} className="obra-card" onClick={() => setVisor(obras.indexOf(o))}>
-              <span className="ph"><ImgObra o={o} /></span>
-              <span className="t">{o.titulo || o.serie || 'Sem título'}{o.favorito ? <Heart size={11} fill="currentColor" /> : null}</span>
-              <span className="s">{[o.ano, host(o.fonte)].filter(Boolean).join(' · ')}</span>
-            </button>
-          ))}
-          {obras.length === 0 && <p className="faint">Nenhuma obra cadastrada ainda.</p>}
-        </div>
-        {!todasVer && !serie && galeria.length > 8 && <button className="btn" style={{ width: '100%', marginTop: 14 }} onClick={() => setTodasVer(true)}>Ver todas as {galeria.length} obras</button>}
-        {a.series && a.series.length > 0 && <p className="faint" style={{ fontSize: 12.5, marginTop: 10 }}>Séries no site oficial: {a.series.map((s, i) => <span key={s.nome}>{i ? ', ' : ''}{s.url ? <a href={s.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>{s.nome}</a> : s.nome}{s.original ? ` (${s.original})` : ''}</span>)}.</p>}
-      </section>
 
       <div className="art-blocos">
         <Bloco n={3} titulo="Linguagem artística">
