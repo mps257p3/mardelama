@@ -40,8 +40,8 @@ export async function buscarFotos(aoAndar: (a: Andamento) => void, cancelado: ()
     let after: string | null = null, paginas = 0, resultado: 'ok' | 'pessoal' | 'parcial' = 'ok'
     try {
       do {
-        const res = await fetch(`/api/instagram?acao=perfil&u=${encodeURIComponent(u)}${after ? '&after=' + encodeURIComponent(after) : ''}`, { headers: await cabecalhoLogin() })
-        const j = await res.json().catch(() => ({ erro: `HTTP ${res.status}` }))
+        const res: Response = await fetch(`/api/instagram?acao=perfil&u=${encodeURIComponent(u)}${after ? '&after=' + encodeURIComponent(after) : ''}`, { headers: await cabecalhoLogin() })
+        const j: { erro?: string; itens: { codigo: string; imagem: string | null }[]; after?: string | null } = await res.json().catch(() => ({ erro: `HTTP ${res.status}` }))
         if (res.status === 404) { resultado = 'pessoal'; break }
         if (!res.ok) { a.parou = j.erro ?? `HTTP ${res.status}`; aoAndar({ ...a }); await gravar(prog); return a }
         for (const it of j.itens as { codigo: string; imagem: string | null }[]) {
@@ -51,7 +51,7 @@ export async function buscarFotos(aoAndar: (a: Andamento) => void, cancelado: ()
           try { foto = await salvarArquivoDeUrl(it.imagem, r.titulo) } catch { /* fica sem foto local */ }
           if (foto) { await db.referencias.update(r.id, { imagens: [foto], atualizadoEm: Date.now() }); a.fotos++; aoAndar({ ...a }) }
         }
-        after = j.after; paginas++
+        after = j.after ?? null; paginas++
       } while (after && faltam.size && paginas < MAX_PAGINAS && !cancelado())
       if (resultado === 'ok' && faltam.size) resultado = 'parcial'
     } catch (e) { a.parou = (e as Error).message; aoAndar({ ...a }); await gravar(prog); return a }

@@ -435,7 +435,7 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
         // acervo pequeno para essa consulta: a página sorteada veio vazia, volta para uma das primeiras
         if (!xs.length && pagina > 1 && !periodo) xs = await f.buscar(p.q, porConsulta, 1 + Math.floor(Math.random() * Math.min(2, pagina - 1)))
         estados.set(f.id, { id: f.id, ok: true, quando: Date.now() })
-        const prontos = xs.map((x) => ({ ...x, universo: p.universo, consulta: p.q, motivo: p.motivo }))
+        const prontos = xs.map((x) => ({ ...x, universo: p.universo, consulta: p.q, motivo: p.motivo, artista: p.nome }))
         avisar(prontos)
         return prontos
       } catch (e) {

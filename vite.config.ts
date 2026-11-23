@@ -26,6 +26,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,jpg,svg,woff2}'],
+        // o modelo de visão só carrega quando é usado; não entra na instalação do app
+        globIgnores: ['**/transformers*.js', '**/ort-*'],
         navigateFallback: '/index.html',
         skipWaiting: true,
         clientsClaim: true,

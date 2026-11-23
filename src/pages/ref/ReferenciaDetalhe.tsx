@@ -7,6 +7,7 @@ import { db, uid } from '../../db/schema'
 import { alternarFavorito, excluir, useGrupos, usePaineis } from '../../db/hooks'
 import { Foto } from '../../ui/form'
 import { ImgRef } from './ImgRef'
+import { ParecidasNoAcervo } from './Parecidas'
 import { Relacoes } from '../../ui/Relacoes'
 import { Sheet } from '../../ui/Sheet'
 import { useToast } from '../../ui/toast'
@@ -52,6 +53,7 @@ export default function ReferenciaDetalhe() {
           {r.comentarios && <><p className="eyebrow" style={{ marginTop: 22 }}>Comentários pessoais</p><p className="muted" style={{ whiteSpace: 'pre-wrap', marginTop: 6 }}>{r.comentarios}</p></>}
           {r.fonte && <p className="faint" style={{ marginTop: 16, fontSize: 13 }}>Fonte: {r.fonte}{r.licenca ? ' · ' + r.licenca : ''}</p>}
           {r.tags.length > 0 && <div className="pills" style={{ marginTop: 14 }}>{r.tags.map((t) => <span key={t} className="chip">#{t}</span>)}</div>}
+          <ParecidasNoAcervo key={r.id} r={r} />
           <div style={{ marginTop: 32 }}><Relacoes tipo="referencia" id={r.id} /></div>
         </div>
       </div>
