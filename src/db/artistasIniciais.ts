@@ -1217,6 +1217,40 @@ const ARTISTAS: [string, A][] = [
     tecnicas: ['Torno', 'Instalação'], queimas: ['Alta temperatura'], tiposObra: ['Instalações', 'Esculturas'], esteticas: ['Narrativa', 'Popular'],
     tags: ['méxico', 'oaxaca', 'instalação'],
   }],
+  ['art-anaya', {
+    ...vazio,
+    nome: 'Marina Anaya', nomeOriginal: 'Marina Anaya Gutiérrez', pais: ['Espanha'], atuacao: 'Madri (ateliê em Malasaña)', nascimento: '1972, Palência',
+    especialidade: 'Cerâmica, gravura, murais e objetos feitos à mão',
+    linguagem: 'Bowls, vasos, pratos, xícaras e murais cerâmicos com desenho livre e figuras como homens-pássaro e bocas que se beijam, numa arte lúdica que vem da gravura.',
+    bio: 'Artista nascida em 1972 em Palência (Talento a bordo), com ateliê em Malasaña, Madri. Estudou Belas Artes em Cuenca e frequentou a Escola de Cerâmica de Moncloa (Homo Faber). Com uma bolsa, foi para Florianópolis, no Brasil, e depois passou pelo Instituto Superior de Arte de Havana, em Cuba, que ela considera um doutorado, sobretudo em gravura. Abriu o primeiro ateliê em 1998.\n\nComeçou pela gravura e passou pela pintura, escultura e joalheria antes de chegar à cerâmica. Constrói as peças à mão, sem torno. Faz porcelana e barro refratário, bowls ("The kissing bowl", "Blue hued bird bowl", "Bird men"), vasos ("The kissing vase"), pratos, xícaras e murais cerâmicos, como o "Mural Albor", em Málaga. Exposições citadas no site: "Circo Marte", "Siempre junio", "Pasajeros del viento", "Galaxia Ayú", "Los Caribe" (Cádis e Lisboa), "Un instante infinito" e "Okinawa". Colaborou com o Museu Thyssen-Bornemisza, a Academia de Cinema, o Greenpeace e a galeria Loving Craft (Canalejas). Esmaltes e queima não aparecem nas fontes.',
+    caracteristicas: ['Construção manual, sem torno', 'Desenho e gravura na superfície', 'Figuras lúdicas', 'Murais cerâmicos'],
+    afinidade: 'Desenho de gravurista levado para o barro: figura, linha e cor sobre peças feitas à mão.',
+    analise: {
+      formas: 'Bowls, vasos, pratos, xícaras, esculturas e murais.',
+      paleta: 'Branco e azul em parte das peças ("White and blue bowls", "Blue hued bird bowl").',
+      materiais: 'Porcelana (o "kissing bowl" é moldado e decorado à mão) e barro refratário.',
+      reconhecivel: 'Peças com desenhos de figuras, pássaros e bocas, em traço solto.',
+    },
+    processos: [
+      v('Construção manual', 'Todas as peças de cerâmica são construídas à mão, sem torno.', 'https://www.homofaber.com/en/artisans/marina-anaya-ceramics-spain'),
+      v('Modelagem', 'O "kissing bowl" de porcelana é feito em molde e decorado à mão.', 'https://www.homofaber.com/en/objects/a1VTG000000exvk2AA'),
+      v('Argila', 'Trabalha com porcelana e barro refratário.', 'https://marinaanaya.com/blogs/ceramica'),
+    ],
+    estudar: ['Desenho de gravura aplicado na cerâmica.', 'Construção manual sem torno.', 'Mural cerâmico como extensão do trabalho.', 'Série de bowls com o mesmo personagem.'],
+    falas: [
+      { texto: 'Meu trabalho consiste em recuperar a essência do barro, da cerâmica tradicional.', original: 'Mi trabajo consiste en recuperar la esencia del barro, de la cerámica tradicional', fonte: 'https://marinaanaya.com/', veiculo: 'Site da artista' },
+      { texto: 'A cerâmica permite um contato muito direto com os materiais.', original: 'It allows you to have a very direct contact with materials.', fonte: 'https://www.homofaber.com/en/artisans/marina-anaya-ceramics-spain', veiculo: 'Homo Faber' },
+      { texto: 'Gosto de acompanhar com harmonia os ciclos da natureza e o que ela tem a nos oferecer.', original: 'I enjoy harmoniously following the cycles of nature and what it has to offer us.', fonte: 'https://www.homofaber.com/en/artisans/marina-anaya-ceramics-spain', veiculo: 'Homo Faber' },
+      { texto: 'Me vejo exatamente igual, criando com a mesma liberdade de quando era criança.', original: 'I see myself exactly the same, creating with the same freedom as I did when I was a child', fonte: 'https://talentoabordo.com/en/art/marina-anaya-artist', veiculo: 'Talento a bordo (2022)' },
+      { texto: 'Sou a favor de uma arte lúdica, sem manual de instruções, em que as peças falam por si.', original: 'I am in favour of an art that is playful, and an art without an instruction book in which the pieces speak for themselves', fonte: 'https://talentoabordo.com/en/art/marina-anaya-artist', veiculo: 'Talento a bordo (2022)' },
+    ],
+    series: [{ nome: 'Circo Marte' }, { nome: 'La lentitud es una barricada' }, { nome: 'Punki' }],
+    publicacoes: [f('Marina Anaya, artist — Talento a bordo', 'https://talentoabordo.com/en/art/marina-anaya-artist', 'Reportagens', '2022'), f('Imprensa (ELLE, El País, Harper\'s Bazaar…)', 'https://marinaanaya.com/blogs/prensa', 'Reportagens')],
+    fontes: [f('Site oficial', 'https://marinaanaya.com/', 'Site oficial'), f('Homo Faber', 'https://www.homofaber.com/en/artisans/marina-anaya-ceramics-spain', 'Guias'), f('Exposições', 'https://marinaanaya.com/blogs/exposiciones', 'Site oficial')],
+    site: 'https://marinaanaya.com/', instagram: 'marinaanaya',
+    tecnicas: ['Construção manual', 'Molde', 'Desenho', 'Gravura'], materiais: ['Porcelana', 'Barro refratário'], tiposObra: ['Bowls', 'Vasos', 'Pratos', 'Xícaras', 'Murais', 'Esculturas'], esteticas: ['Lúdica', 'Figurativa', 'Gráfica'],
+    tags: ['espanha', 'gravura', 'murais', 'porcelana'],
+  }],
   ...([
     ['art-taticouto', 'Tati Couto', 'ceramica_tati_couto', 'Cerâmica'],
     ['art-carnesalvaje', 'Carne Salvaje', 'carnesalvaje', 'Cerâmica'],
@@ -1397,6 +1431,14 @@ const OBRAS: [string, O][] = [
   ['obra-andreetta-sobre', { artistaId: 'art-andreetta', titulo: 'Cerâmicas para a vida', imagem: 'https://images.tcdn.com.br/img/editor/up/1273355/sobre_desktop.jpg', fonte: 'https://www.nataliaandreetta.com/ceramicas-para-a-vida', credito: 'Natália Andreetta (site oficial)' }],
   ['obra-isabelsanchez-monstruo', { artistaId: 'art-isabelsanchez', titulo: 'Fragilidad de monstruo', ano: '2018', materiais: 'Cerâmica de alta temperatura', imagem: 'https://imparcialoaxaca.mx/wp-content/uploads/2018/08/Isabel-Sánchez-recrea-la-fragilidad-del-monstruo-1.jpg', fonte: 'https://imparcialoaxaca.mx/arte-y-cultura/isabel-sanchez-recrea-la-fragilidad-del-monstruo/', credito: 'El Imparcial de Oaxaca', serie: 'Fragilidad de monstruo' }],
   ['obra-isabelsanchez-perdon', { artistaId: 'art-isabelsanchez', titulo: 'Pido perdón y pido permiso', ano: '2026', imagem: 'https://danielbenoit.art/wp-content/uploads/2026/11/IMG_5249-scaled.jpeg', fonte: 'https://danielbenoit.art/isabel-sanchez-salgado/', credito: 'Daniel Benoit Cassou', notas: 'Exposição na CuatroSie7e Galería, Oaxaca.', serie: 'Pido perdón y pido permiso' }],
+  ['obra-anaya-kissing-bowl', { artistaId: 'art-anaya', titulo: 'The kissing bowl', materiais: 'Porcelana moldada e decorada à mão', imagem: 'https://hfgnext.s3.eu-west-3.amazonaws.com/img/4YL7Q000000PRZhWAO-headergd.jpg', fonte: 'https://www.homofaber.com/en/objects/a1VTG000000exvk2AA', credito: '© Marina Anaya, via Homo Faber' }],
+  ['obra-anaya-hf', { artistaId: 'art-anaya', titulo: 'Cerâmicas', imagem: 'https://hfgnext.s3.eu-west-3.amazonaws.com/img/4YL7Q000000PNm5WAG-center.jpg', fonte: 'https://www.homofaber.com/en/artisans/marina-anaya-ceramics-spain', credito: '© Marina Anaya, via Homo Faber', notas: 'A fonte não informa título nem ano.' }],
+  ['obra-anaya-albor', { artistaId: 'art-anaya', titulo: 'Mural Albor', tecnica: 'Mural cerâmico', imagem: 'https://marinaanaya.com/cdn/shop/files/cuadrada_MURALMALAGA01_DEF_700x700.jpg?v=1769022681', fonte: 'https://marinaanaya.com/', credito: 'Site da artista', notas: 'Homenagem a Málaga e à sua identidade mediterrânea.' }],
+  ['obra-anaya-mural', { artistaId: 'art-anaya', titulo: 'Mural cerâmico', tecnica: 'Mural cerâmico', imagem: 'https://marinaanaya.com/cdn/shop/files/52f379cc-f6fa-476a-bedf-155c93a9b933_588x588.jpg?v=1735461325', fonte: 'https://marinaanaya.com/blogs/ceramica/murales', credito: 'Site da artista' }],
+  ['obra-anaya-home', { artistaId: 'art-anaya', titulo: 'Peças de cerâmica', imagem: 'https://marinaanaya.com/cdn/shop/files/image0_37f53438-eca4-4723-82cd-8e2933d1ee74_1148x1613.jpg?v=1794945299', fonte: 'https://marinaanaya.com/', credito: 'Site da artista', notas: 'A fonte não informa título.' }],
+  ['obra-anaya-bodas', { artistaId: 'art-anaya', titulo: 'Peças para casamento', imagem: 'https://marinaanaya.com/cdn/shop/files/IMG_0913_700x700.jpg?v=1746862055', fonte: 'https://marinaanaya.com/', credito: 'Site da artista' }],
+  ['obra-anaya-bordado', { artistaId: 'art-anaya', titulo: 'Tecido desenhado por Marina e bordado pela tia Mari', tecnica: 'Têxtil', imagem: 'https://talentoabordo.com/sites/default/files/styles/carousel_content_l/public/2022-08/05-MARINA-ANAYA-BORDADO.jpg?itok=GtAlQQis', fonte: 'https://talentoabordo.com/en/art/marina-anaya-artist', credito: '© Carmen R. Cuesta, via Talento a bordo' }],
+  ['obra-anaya-cadernos', { artistaId: 'art-anaya', titulo: 'Cadernos de esboço de "Circo Marte"', serie: 'Circo Marte', imagem: 'https://talentoabordo.com/sites/default/files/styles/carousel_content_l/public/2022-08/02-MARINA-ANAYA-BOCETOS.jpg?itok=g2Z9AmB0', fonte: 'https://talentoabordo.com/en/art/marina-anaya-artist', credito: '© Carmen R. Cuesta, via Talento a bordo' }],
 ]
 
 /** Falas dos próprios artistas, traduzidas livremente para o português, com o original e a fonte (conferidas em 23/11/2026). */
@@ -1467,11 +1509,12 @@ const CAPAS: Record<string, string> = {
   'art-westerlund': 'obra-westerlund-hf-1', 'art-poswa': 'obra-poswa-umthwalo-1', 'art-rudolph': 'obra-rudolph-doux', 'art-peck': 'obra-peck-stretch', 'art-ziperstein': 'obra-ziperstein-fawns',
   'art-41zero42': 'obra-41zero42-futura', 'art-bussoga': 'obra-bussoga-nts', 'art-mutina': 'obra-mutina-grcic', 'art-suro': 'obra-suro-colecao',
   'art-pizarro': 'obra-pizarro-1', 'art-ceudebarro': 'obra-ceudebarro-1', 'art-andreetta': 'obra-andreetta-mushroom', 'art-isabelsanchez': 'obra-isabelsanchez-monstruo',
+  'art-anaya': 'obra-anaya-kissing-bowl',
 }
 
 /** Semeia o catálogo uma vez por aparelho, com ids fixos (não duplica entre aparelhos nem apaga o que já foi editado). */
 export async function semearArtistas() {
-  if (await db.ajustes.get('seed-artistas-v8')) return
+  if (await db.ajustes.get('seed-artistas-v9')) return
   const existentesA = new Set((await db.artistas.toArray()).map((x) => x.id))
   const existentesO = new Set((await db.obras.toArray()).map((x) => x.id))
   const as: Artista[] = ARTISTAS.filter(([id]) => !existentesA.has(id)).map(([id, a], i) => ({
@@ -1491,5 +1534,5 @@ export async function semearArtistas() {
     }
     for (const x of semFalas) await db.artistas.update(x.id, { falas: FALAS[x.id], atualizadoEm: Date.now() })
   })
-  await db.ajustes.put({ chave: 'seed-artistas-v8', valor: true })
+  await db.ajustes.put({ chave: 'seed-artistas-v9', valor: true })
 }
