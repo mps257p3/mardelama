@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Search, Settings, ImagePlus } from 'lucide-react'
 import { db, type Exposicao } from '../db/schema'
+import { ImgObra } from './bib/art/ImgObra'
 import { fimEfetivo, periodo } from './bib/Agenda'
 import { useArquivoUrl } from '../db/files'
 import { useAjuste } from '../db/settings'
@@ -153,7 +154,8 @@ function SecAgenda() {
   return (
     <Secao titulo="Exposições em São Paulo" link={{ to: '/biblioteca/agenda', label: 'Ver agenda' }}>
       <div className="expo-trilho">{itens.map(({ e, quando }) => (
-        <Link key={e.id} to={`/biblioteca/agenda#${e.id}`} className="expo-mini">
+        <Link key={e.id} to={`/biblioteca/agenda#${e.id}`} className={'expo-mini' + (e.imagem || e.arquivo ? ' com-foto' : '')}>
+          {(e.imagem || e.arquivo) && <span className="expo-mini-foto"><ImgObra o={{ imagem: e.imagem, arquivo: e.arquivo, titulo: e.titulo }} /></span>}
           <span className="q">{quando}{e.favorito ? ' · quero ir' : ''}</span>
           <span className="t">{e.titulo}</span>
           <span className="s">{e.local}</span>
