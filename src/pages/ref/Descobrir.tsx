@@ -6,17 +6,16 @@ import { BookOpen, Bookmark, BookmarkCheck, Camera, Columns2, Compass, ExternalL
 import { db } from '../../db/schema'
 import { CHAVE_REVISTAS_OFF, FONTES, FONTES_PENDENTES, FONTE, retomarSite, sitePausado, type FonteId, type ItemDescoberta } from '../../lib/fontes'
 import { SECOES, SEM_CAMINHO, SITES } from '../../lib/revistasSites.js'
-import { buscarLote, consultasDoTema, diversificar, revistasDoTema, EPOCAS, type Epoca, descurtir, lerPerfil, PERFIL_VAZIO, PESOS_PADRAO, planejar, registrar, retomarFonte, salvarNoAcervo, salvarPerfil, TEMAS, traduz, UNIVERSOS, type EstadoFonte, type Interacao, type Modo, type Perfil } from '../../lib/curadoria'
+import { buscarLote, consultasDoTema, diversificar, MODOS, modoValido, revistasDoTema, EPOCAS, type Epoca, descurtir, lerPerfil, PERFIL_VAZIO, PESOS_PADRAO, planejar, registrar, retomarFonte, salvarNoAcervo, salvarPerfil, TEMAS, traduz, UNIVERSOS, type EstadoFonte, type Interacao, type Modo, type Perfil } from '../../lib/curadoria'
 import { useAjuste, definirAjuste } from '../../db/settings'
 import { Menu } from '../../ui/Menu'
 import { Sheet } from '../../ui/Sheet'
 import { useToast } from '../../ui/toast'
 import { TopoRef } from './Topo'
 import { EscolherGrupos, EscolherPainel } from './acoesRefs'
-import { atualizarGostoIA, buscarPorFoto, CHAVE_INSPIRA, inspirarDoAcervo, type InspiracaoAcervo, iaConfigurada, interpretarBusca, leituraEmCache, type Consulta, type TemaCurtidas } from '../../lib/iaRepertorio'
+import { atualizarGostoIA, buscarPorFoto, CHAVE_INSPIRA, inspirarDoAcervo, type InspiracaoAcervo, iaConfigurada, interpretarBusca, leituraEmCache, artistasNaMesmaLinha, type Consulta, type TemaCurtidas } from '../../lib/iaRepertorio'
 import { CompararObra, ExplicarObra, TemasDasCurtidas } from './descobrirExtras'
 
-const MODOS: [Modo, string][] = [['para-voce', 'Para você'], ['fora-da-curva', 'Fora da curva'], ['novos-artistas', 'Novos artistas'], ['cores-texturas', 'Cores e texturas'], ['formas-volumes', 'Formas e volumes']]
 const VALIDADE = 30 * 60000   // ao voltar ao Descobrir depois de meia hora, vem um lote novo
 type Contexto = { tipo: 'feed' } | { tipo: 'busca'; q: string; leitura?: string; consultas?: Consulta[]; tema?: string; deRef?: string; foto?: string } | { tipo: 'semelhantes'; item: ItemDescoberta } | { tipo: 'curtidas' }
 interface Cache { itens: ItemDescoberta[]; quando: number; modo: Modo; ctx: Contexto; epoca?: Epoca }
@@ -30,7 +29,8 @@ const LIMIAR = 80   // px de arrasto para valer o gesto
 
 export default function Descobrir() {
   const toast = useToast()
-  const modo = useAjuste<Modo>('descobrir.modo', 'para-voce')
+  // grupos antigos (Fora da curva, Novos artistas…) guardados no aparelho voltam para Para você
+  const modo = modoValido(useAjuste<Modo>('descobrir.modo', 'para-voce'))
   const epoca = useAjuste<Epoca>('descobrir.epoca', 'todas')
   const cache = useRef(lerCache())
   const [ctx, setCtx] = useState<Contexto>(cache.current?.ctx ?? { tipo: 'feed' })
@@ -51,7 +51,8 @@ export default function Descobrir() {
 
   useEffect(() => { lerPerfil().then((p) => setCurtidos(new Set(p.curtidos))) }, [])
   // a leitura do gosto pela IA se renova sozinha quando há curtidas novas (no máximo a cada 12 horas)
-  useEffect(() => { atualizarGostoIA().catch(() => undefined); inspirarDoAcervo().catch(() => undefined) }, [])
+  // "Na mesma linha" já fica pronta em segundo plano (a lista de artistas parecidos vale por 7 dias)
+  useEffect(() => { atualizarGostoIA().catch(() => undefined); inspirarDoAcervo().catch(() => undefined); artistasNaMesmaLinha().catch(() => undefined) }, [])
 
   const itensRef = useRef(itens)
   useEffect(() => { itensRef.current = itens }, [itens])
@@ -74,8 +75,9 @@ export default function Descobrir() {
       else if (c.tipo === 'busca') { const t = traduz(c.q); pedidos = FONTES.map(() => ({ q: t, tipo: 'busca' as const })).concat(FONTES.map(() => ({ q: t, tipo: 'busca' as const }))) }
       else if (c.tipo === 'semelhantes') { const it = c.item; const base = [it.autor, ...it.termos.slice(0, 3)].filter(Boolean) as string[]; pedidos = base.flatMap((b) => [{ q: b, universo: it.universo, tipo: 'semelhantes' as const }]).slice(0, 6) }
       else pedidos = await planejar(perfil, m, 8, epoca)
-      const conhecidosArt = m === 'novos-artistas' && c.tipo === 'feed'
-        ? new Set([...Object.keys(perfil.artistas), ...(await db.referencias.toArray()).map((r) => r.autor).filter(Boolean) as string[]])
+      // "Na mesma linha" mostra gente parecida com os estudos, nunca os próprios estudados
+      const conhecidosArt = m === 'mesma-linha' && c.tipo === 'feed'
+        ? new Set((await db.artistas.toArray()).filter((a) => !a.excluido).map((a) => a.nome))
         : undefined
       const busLivre = c.tipo === 'busca' && !c.tema
       const porAutor = busLivre ? 99 : c.tipo === 'semelhantes' ? 4 : 2, porSerie = busLivre ? 99 : 3

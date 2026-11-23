@@ -234,3 +234,24 @@ export async function inspirarDoAcervo(forcar = false): Promise<InspiracaoAcervo
   await db.ajustes.put({ chave: CHAVE_INSPIRA, valor: out })
   return out
 }
+
+/** Artistas na mesma linha dos estudos (Biblioteca), mas fora deles. Renovado quando os estudos mudam ou a cada 7 dias. */
+export interface Afim { nome: string; consulta: string; perto_de: string; porque: string }
+interface AfinsSalvos { quando: number; base: string; afins: Afim[] }
+const CHAVE_AFINS = 'ia.afins'
+export async function artistasNaMesmaLinha(forcar = false): Promise<Afim[]> {
+  const estudos = (await db.artistas.toArray()).filter((a) => !a.excluido)
+  const base = estudos.map((a) => a.id).sort().join(',')
+  const ja = (await db.ajustes.get(CHAVE_AFINS))?.valor as AfinsSalvos | undefined
+  if (!forcar && ja && ja.base === base && Date.now() - ja.quando < 7 * 24 * 3600000) return ja.afins
+  if (!estudos.length || !(await iaConfigurada())) return ja?.afins ?? []
+  const conhecidos = [...new Set([...estudos.map((a) => a.nome), ...(await db.referencias.toArray()).map((r) => r.autor).filter(Boolean) as string[]])]
+  const r = await chamar<{ afins: Afim[] }>({
+    acao: 'afins', conhecidos,
+    estudos: estudos.slice(0, 40).map((a) => ({ nome: a.nome, pais: a.pais, tecnicas: a.tecnicas.slice(0, 5), esteticas: a.esteticas.slice(0, 5), linguagem: a.linguagem?.slice(0, 200) })),
+  }, 90000)
+  const nomes = new Set(conhecidos.map((n) => n.toLowerCase()))
+  const afins = (r.afins ?? []).filter((x) => x.nome && x.consulta && !nomes.has(x.nome.toLowerCase()))
+  await db.ajustes.put({ chave: CHAVE_AFINS, valor: { quando: Date.now(), base, afins } satisfies AfinsSalvos })
+  return afins
+}

@@ -7,7 +7,12 @@ import { anoDe, FONTE, FONTES, type FonteId, type ItemDescoberta, type Periodo }
  */
 
 export type Interacao = 'curtir' | 'salvar' | 'painel' | 'semelhantes' | 'pesquisar' | 'recusar'
-export type Modo = 'para-voce' | 'fora-da-curva' | 'novos-artistas' | 'cores-texturas' | 'formas-volumes'
+/** Modos antigos (ainda usados por dentro do planejamento). */
+type ModoBase = 'para-voce' | 'fora-da-curva' | 'novos-artistas' | 'cores-texturas' | 'formas-volumes'
+/** Grupos do Descobrir por origem (teste pedido pelo Marcelo em 23/11/2026). */
+export type Modo = 'para-voce' | 'museus' | 'revistas' | 'seus-artistas' | 'mesma-linha'
+export const MODOS: [Modo, string][] = [['para-voce', 'Para você'], ['museus', 'Museus'], ['revistas', 'Revistas'], ['seus-artistas', 'Seus artistas'], ['mesma-linha', 'Na mesma linha']]
+export const modoValido = (m: unknown): Modo => (MODOS.some(([k]) => k === m) ? m as Modo : 'para-voce')
 
 export interface Perfil {
   termos: Record<string, number>        // preferências consolidadas
@@ -63,7 +68,7 @@ export const UNIVERSOS: Record<string, { nome: string; consultas: string[]; vizi
   objetos: { nome: 'Objetos e artefatos', consultas: ['amulet', 'ritual mask', 'vessel', 'reliquary', 'figural vessel', 'toy'], vizinhos: ['ceramica', 'arte-popular', 'escultura'] },
 }
 
-const MODO_CONSULTAS: Partial<Record<Modo, string[]>> = {
+const MODO_CONSULTAS: Partial<Record<ModoBase, string[]>> = {
   'cores-texturas': ['glaze surface', 'crackle glaze', 'celadon', 'lusterware', 'iridescent', 'patina bronze', 'lichen', 'mineral specimen', 'textile weave', 'enamel', 'lacquer', 'mosaic'],
   'formas-volumes': ['vessel form', 'biomorphic', 'seed pod', 'shell', 'skull', 'figural vessel', 'gourd', 'sculpture abstract form', 'architectural model', 'coral'],
 }
@@ -202,7 +207,7 @@ export async function sementesDoAcervo() {
   return [...c].sort((a, b) => b[1] - a[1]).slice(0, 12)
 }
 
-export interface Pedido { q: string; universo?: string; fonte?: FonteId; tema?: string; tipo: 'proximo' | 'adjacente' | 'experimental' | 'busca' | 'semelhantes'; motivo?: string }
+export interface Pedido { q: string; universo?: string; fonte?: FonteId; soMuseus?: boolean; tema?: string; tipo: 'proximo' | 'adjacente' | 'experimental' | 'busca' | 'semelhantes'; motivo?: string }
 
 /** Termos com peso: o aprendido + um reforço para o que foi curtido/salvo recentemente (meia-vida de 14 dias). */
 export function pesosDoGosto(perfil: Perfil) {
@@ -219,7 +224,7 @@ export function pesosDoGosto(perfil: Perfil) {
 const nomeU = (u?: string) => (u ? UNIVERSOS[u]?.nome ?? u : '')
 
 /** Monta as consultas de um lote conforme o modo e a mistura 60/25/15 (ajustável). Cada pedido leva o motivo, mostrado no visor. */
-export async function planejar(perfil: Perfil, modo: Modo, n = 8, epoca: Epoca = 'todas'): Promise<Pedido[]> {
+async function planejarBase(perfil: Perfil, modo: ModoBase, n = 8, epoca: Epoca = 'todas'): Promise<Pedido[]> {
   let { proximo, adjacente, experimental } = perfil.mistura
   if (modo === 'fora-da-curva') { proximo = 0; adjacente = 30; experimental = 70 }
   const tot = proximo + adjacente + experimental || 1
@@ -320,6 +325,42 @@ export function retomarFonte(id: FonteId) { try { localStorage.removeItem(chaveP
 const pausar = (id: FonteId, erro: string) => { try { localStorage.setItem(chavePausa(id), JSON.stringify({ ate: Date.now() + PAUSA_MS, erro })) } catch { /* sem armazenamento */ } }
 const recusaDura = (msg: string) => /HTTP (403|404|410|429)/.test(msg)
 
+/** Monta o lote de consultas de cada grupo do Descobrir. */
+export async function planejar(perfil: Perfil, modo: Modo, n = 8, epoca: Epoca = 'todas'): Promise<Pedido[]> {
+  const embaralha = <T,>(xs: T[]) => [...xs].sort(() => Math.random() - .5)
+  if (modo === 'museus') {
+    // o mesmo feed do seu gosto, só nos acervos de museus
+    const ps = (await planejarBase(perfil, 'para-voce', n, epoca)).filter((p) => p.fonte !== 'rev')
+    return ps.map((p) => ({ ...p, soMuseus: true }))
+  }
+  if (modo === 'revistas') {
+    // metade com os termos do seu gosto, metade com o que as revistas estão publicando agora
+    const ps = (await planejarBase(perfil, 'para-voce', Math.ceil(n / 2), 'todas')).filter((p) => !/^(Dos seus estudos|Época)/.test(p.motivo ?? ''))
+    const atuais = embaralha(REVISTAS_FEED).slice(0, n - ps.length).map((q) => ({ q, tipo: 'adjacente' as const, motivo: 'Publicado agora nas revistas' }))
+    return [...ps.map((p) => ({ ...p, fonte: 'rev' as const, motivo: p.motivo ?? 'Nas revistas de arte' })), ...atuais.map((p) => ({ ...p, fonte: 'rev' as const }))]
+  }
+  const estudos = (await db.artistas.toArray()).filter((a) => !a.excluido)
+  if (modo === 'seus-artistas') {
+    if (!estudos.length) return planejarBase(perfil, 'para-voce', n, epoca)
+    // favoritos aparecem mais; cada artista vai aos museus e às revistas
+    const escolhidos = [...estudos].sort((x, y) => Number(!!y.favorito) - Number(!!x.favorito) + Math.random() * 1.5 - .75).slice(0, Math.ceil(n / 2))
+    return escolhidos.flatMap((a) => [
+      { q: a.nome, universo: 'ceramica', tipo: 'proximo' as const, motivo: `Dos seus estudos: ${a.nome}` },
+      { q: a.nome, fonte: 'rev' as const, tipo: 'proximo' as const, motivo: `Nas revistas: ${a.nome}` },
+    ]).slice(0, n)
+  }
+  // na mesma linha: artistas parecidos com os estudados, mas que não estão nos estudos
+  const { artistasNaMesmaLinha } = await import('./iaRepertorio')
+  const afins = await artistasNaMesmaLinha().catch(() => [])
+  if (afins.length) {
+    return embaralha(afins).slice(0, n).map((a, k) => ({ q: a.consulta, universo: 'ceramica', fonte: k % 3 === 2 ? 'rev' as const : undefined, tipo: 'proximo' as const, motivo: `Na linha de ${a.perto_de}: ${a.porque}` }))
+  }
+  // sem IA: técnicas e estéticas dos estudos trazem gente que trabalha parecido
+  const termos = [...new Set(estudos.flatMap((a) => [...a.tecnicas, ...a.esteticas, ...a.esmaltes]).filter((t) => /^[\x20-\x7e]+$/.test(t) && t.length < 30))]
+  if (!termos.length) return planejarBase(perfil, 'novos-artistas', n, epoca)
+  return embaralha(termos).slice(0, n).map((t) => ({ q: t, universo: 'ceramica', tipo: 'proximo' as const, motivo: `Técnica dos seus estudos: ${t}` }))
+}
+
 /** Executa as consultas nas fontes ligadas, remove repetidos, vistos e recusados. Se uma fonte falha, a consulta tenta a próxima. */
 /**
  * Busca um lote nos acervos. `aoChegar` recebe os itens à medida que cada consulta responde,
@@ -352,7 +393,8 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
     const pagina = p.tipo === 'busca' || p.tipo === 'semelhantes' ? 1 + rodada * 2 + Math.floor(i / ligadas.length) : 1 + Math.floor(Math.random() * 8)
     // consulta num idioma específico vai só para o acervo daquele idioma
     const exige = p.tema ? TEMAS.find((t) => t.id === p.tema)?.exige : undefined
-    const ordem = p.fonte ? ligadas.filter((f) => f.id === p.fonte) : ligadas.map((_, k) => ligadas[(inicio + k) % ligadas.length])
+    const daqui = p.soMuseus ? ligadas.filter((f) => f.id !== 'rev') : ligadas
+    const ordem = p.fonte ? ligadas.filter((f) => f.id === p.fonte) : daqui.map((_, k) => daqui[(inicio + k) % daqui.length])
     for (const f of ordem) {
       if (falhou.has(f.id)) continue
       try {
