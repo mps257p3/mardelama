@@ -12,12 +12,14 @@ const EXPOSICOES: E[] = [
     inicio: '2026-10-06', fim: '2027-05-30', gratuita: true,
     curadoria: 'Natasha Barzaghi Geenen e Carolina De Angelis',
     descricao: 'Mostra sobre os seis fornos antigos do Japão (Bizen, Echizen, Seto, Shigaraki, Tamba e Tokoname), conhecidos juntos como Rokkoyō, com produção contínua desde o século XII. Terça a sexta, 10h às 18h; sábados, domingos e feriados, 10h às 19h.',
-    url: 'https://japanhousesp.com.br/en/exhibition/ceramics-in-progress/', fonte: 'https://quegostoso.tur.br/2026/10/11/ceramica-japonesa-ganha-mostra-na-japan-house/',
+    url: 'https://japanhousesp.com.br/en/exhibition/ceramics-in-progress/',
+    imagem: 'https://i0.wp.com/quegostoso.tur.br/wp-content/uploads/2026/10/Ceramica-japonesa-ganha-mostra-na-Japan-House-3-Foto-Estevam-Romera-Divulgacao-Japan-House-Sao-Paulo.jpg?fit=852%2C564&ssl=1', fonte: 'https://quegostoso.tur.br/2026/10/11/ceramica-japonesa-ganha-mostra-na-japan-house/',
   },
   {
     id: 'expo-ovo-massa-2026', titulo: 'Massa', local: 'Loja da ,ovo', endereco: 'Rua Estados Unidos, 2.104, Jardins',
     inicio: '2026-11-24', fim: '2026-12-23',
     artistas: 'Ana Takeda, Heloisa Galvão, Hideko Honma, Kimi Nii, Megumi Yuasa, Nydia Rocha e Paula Juchem', curadoria: 'Gerson de Oliveira',
+    imagem: 'https://images.elle.com.br/2026/11/exposicoes-em-sao-paulo-3.jpg', // obra de Heloisa Galvão, foto Cassiana Der Haroutounian
     descricao: 'Coletiva com a cerâmica como material principal, reunindo nomes históricos e contemporâneos da cerâmica feita em São Paulo.',
     fonte: ELLE,
   },
@@ -25,12 +27,21 @@ const EXPOSICOES: E[] = [
     id: 'expo-mendes-wood-kansai-noguchi-syotatsu', titulo: 'Kansai Noguchi & Syotatsu', local: 'Mendes Wood DM', endereco: 'Rua Barra Funda, 216, Barra Funda',
     inicio: '2026-11-28', fimAprox: 'até janeiro de 2027',
     artistas: 'Kansai Noguchi e Syotatsu',
+    imagem: 'https://images.elle.com.br/2026/11/exposicoes-em-sao-paulo-6-620x783.jpg', // Circle of the sun (2026), de Syotatsu; divulgação
     descricao: 'Exposição em dupla com cerâmica e pintura com materiais naturais. A fonte não informa o dia de encerramento.',
     url: 'https://mendeswooddm.com/', fonte: ELLE,
   },
 ]
 
 export async function semearAgenda() {
+  // v2: fotos das exposições da curadoria (só onde ainda não há foto)
+  if (!(await db.ajustes.get('seed-agenda-v2'))) {
+    for (const e of EXPOSICOES) {
+      const x = await db.exposicoes.get(e.id)
+      if (x && e.imagem && !x.imagem && !x.arquivo) await db.exposicoes.update(e.id, { imagem: e.imagem, atualizadoEm: Date.now() })
+    }
+    await db.ajustes.put({ chave: 'seed-agenda-v2', valor: true })
+  }
   if (await db.ajustes.get('seed-agenda-v1')) return
   const existentes = new Set((await db.exposicoes.toArray()).map((x) => x.id))
   const novas = EXPOSICOES.filter((e) => !existentes.has(e.id)).map((e): Exposicao => ({ ...e, criadoEm: T, atualizadoEm: T, excluido: 0, favorito: 0, origem: 'curadoria', conferidoEm: CONF }))
