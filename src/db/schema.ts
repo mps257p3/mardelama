@@ -334,6 +334,9 @@ export interface Analise { formas?: string; paleta?: string; texturas?: string; 
 export interface SerieArtista { nome: string; original?: string; url?: string; desc?: string }
 
 /** Artista da Biblioteca. Campos desconhecidos ficam vazios ("Não documentado"); nada é inventado. */
+/** Fala do próprio artista: texto traduzido para pt-BR, original e fonte. */
+export interface FalaArtista { texto: string; original?: string; fonte?: string; veiculo?: string }
+
 export interface Artista extends Base {
   nome: string
   nomeOriginal?: string
@@ -351,6 +354,7 @@ export interface Artista extends Base {
   processos: Processo[]
   estudar: string[]            // "O que estudar neste artista?"
   series?: SerieArtista[]      // famílias de acabamento / séries com nome oficial
+  falas?: FalaArtista[]        // citações do artista, traduzidas, com o original e a fonte
   publicacoes: Fonte[]         // livros, catálogos, entrevistas, reportagens, vídeos, exposições
   fontes: Fonte[]              // sites oficiais, galerias, páginas consultadas
   instagram?: string

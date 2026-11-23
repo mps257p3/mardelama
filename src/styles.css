@@ -965,3 +965,14 @@ a.visor-btn { text-decoration: none; }
 @supports (-webkit-touch-callout: none) {
   .input, select.input, textarea.input, input, select, textarea, [contenteditable] { font-size: 16px; }
 }
+
+/* Estudos: falas traduzidas e botão de sugestões */
+.art-falas { margin-top: 28px; }
+.art-fala { margin: 0 0 18px; padding: 2px 0 2px 16px; border-left: 2px solid var(--accent); }
+.art-fala > p:first-child { font-family: var(--serif); font-size: 21px; line-height: 1.45; margin: 0; }
+.art-fala .original { font-size: 13px; opacity: .62; margin: 6px 0 0; font-style: italic; }
+.art-fala cite { display: block; font-style: normal; font-size: 12px; opacity: .7; margin-top: 6px; }
+.art-fala cite a { text-decoration: underline; }
+.art-sug-btn { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 12px 14px; margin: 4px 0 16px; border: 1px solid var(--line-strong); border-radius: var(--r); background: var(--surface); color: inherit; font: inherit; font-size: 14px; cursor: pointer; }
+.art-sug-btn b { font-weight: 600; }
+.art-sug-btn svg { color: var(--accent); flex: none; }
