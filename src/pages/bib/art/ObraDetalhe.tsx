@@ -11,7 +11,7 @@ import { TextoEditavel } from '../../../ui/editavel'
 import { Tags } from '../../../ui/form'
 import { useToast } from '../../../ui/toast'
 import { ImgObra } from './ImgObra'
-import { fichaObra } from './VisorObras'
+import { fichaObra, VisorObras } from './VisorObras'
 import { AdicionarAColecao } from './Colecoes'
 
 /** Página de uma obra: ficha, fonte e conexões com referências, esmaltes, técnicas, testes e anotações. */
@@ -22,6 +22,7 @@ export default function ObraDetalhe() {
   const o = useLiveQuery(() => db.obras.get(id!), [id])
   const a = useLiveQuery(() => (o ? db.artistas.get(o.artistaId) : undefined), [o?.artistaId])
   const [col, setCol] = useState(false)
+  const [visor, setVisor] = useState(false)
   if (o === undefined) return null
   if (!o || o.excluido) return <div className="page"><p>Obra não encontrada.</p></div>
   const salvar = (p: Partial<Obra>) => db.obras.update(o.id, { ...p, atualizadoEm: Date.now() })
@@ -41,7 +42,7 @@ export default function ObraDetalhe() {
         </div>
       </div>
       <div className="detalhe">
-        <div><div className="capa" style={{ aspectRatio: 'auto', minHeight: 280, background: 'var(--surface-2)' }}><ImgObra o={o} style={{ objectFit: 'contain', maxHeight: '70dvh' }} /></div>
+        <div><div className="capa" style={{ aspectRatio: 'auto', minHeight: 280, background: 'var(--surface-2)', cursor: 'zoom-in' }} onClick={() => setVisor(true)}><ImgObra o={o} style={{ objectFit: 'contain', maxHeight: '70dvh' }} /></div>
           {o.fonte && <p className="faint" style={{ fontSize: 12.5, marginTop: 8 }}>Imagem: <a href={o.fonte} target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>{o.credito || 'fonte original'}</a> · uso pessoal, direitos do autor.</p>}
         </div>
         <div>
@@ -67,6 +68,7 @@ export default function ObraDetalhe() {
         </div>
       </div>
       {col && <AdicionarAColecao item={{ tipo: 'obra', id: o.id }} onClose={() => setCol(false)} />}
+      {visor && <VisorObras obras={[o]} inicio={0} artista={a} onClose={() => setVisor(false)} />}
     </div>
   )
 }

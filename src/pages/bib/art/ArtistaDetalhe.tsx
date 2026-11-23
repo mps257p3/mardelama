@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Check, ExternalLink, FolderPlus, Heart, ImageIcon, ImagePlus, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react'
+import { ArrowLeft, Check, Download, ExternalLink, FolderPlus, Heart, ImageIcon, ImagePlus, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react'
 import { Sheet } from '../../../ui/Sheet'
 import { db, novo, uid, type Artista, type Certeza, type Nota, type Obra } from '../../../db/schema'
 import { alternarFavorito, excluir } from '../../../db/hooks'
@@ -18,6 +18,7 @@ import { obraDeCapa } from './Artistas'
 import { AdicionarAColecao } from './Colecoes'
 import { PesquisaIA } from './PesquisaIA'
 import { termosNoTexto } from '../../../lib/glossario'
+import { useToast } from '../../../ui/toast'
 
 const ND = <span className="nd">Não documentado</span>
 
@@ -45,6 +46,8 @@ export default function ArtistaDetalhe() {
   const [trocaCapa, setTrocaCapa] = useState(false)
   const [todasVer, setTodasVer] = useState(false)
   const [sug, setSug] = useState<Sugestao[]>([])
+  const [exportando, setExportando] = useState<string>()
+  const toast = useToast()
   useEffect(() => { if (!a) return; let vivo = true; gostoDosArtistas(todos).then((g) => vivo && setSug(recomendar(a, todos, g))); return () => { vivo = false } }, [a, todos])
 
   const series = useMemo(() => [...new Set(obras.map((o) => o.serie).filter(Boolean) as string[])], [obras])
@@ -86,6 +89,12 @@ export default function ArtistaDetalhe() {
             { l: 'Adicionar obra', icon: <ImagePlus size={16} />, to: `/biblioteca/obras/nova?artista=${a.id}` },
             { l: 'Adicionar à coleção', icon: <FolderPlus size={16} />, onClick: () => setColecao(true) },
             { l: 'Pesquisar com IA', icon: <Sparkles size={16} />, onClick: () => setIa(true) },
+            { l: 'Exportar artista', icon: <Download size={16} />, onClick: async () => {
+              if (exportando) return
+              setExportando('Preparando…')
+              try { const { exportarArtista } = await import('../../../lib/exportarArtista'); await exportarArtista(a, setExportando); toast('Estudo exportado') }
+              catch (e) { toast('Não consegui exportar: ' + (e as Error).message) } finally { setExportando(undefined) }
+            } },
             { sep: true, l: '' },
             { l: 'Excluir artista', icon: <Trash2 size={16} />, onClick: async () => { if (confirm(`Excluir ${a.nome} da Biblioteca?`)) { await excluir('artistas', a.id); nav('/biblioteca/artistas') } } },
           ]} />
@@ -249,6 +258,7 @@ export default function ArtistaDetalhe() {
         {!relacionados.length && !sug.length && <p>{ND}</p>}
       </section>
 
+      {exportando && <div className="sync-pill" role="status">{exportando}</div>}
       {visor != null && <VisorObras obras={obras} inicio={visor} artista={a} onClose={() => setVisor(undefined)} />}
       {colecao && <AdicionarAColecao item={{ tipo: 'artista', id: a.id }} onClose={() => setColecao(false)} />}
       {ia && <PesquisaIA artista={a} onClose={() => setIa(false)} />}

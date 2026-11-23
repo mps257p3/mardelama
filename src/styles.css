@@ -688,6 +688,9 @@ a.visor-btn { text-decoration: none; }
 
 /* gestos no visor do Descobrir */
 .visor-img { touch-action: none; }
+.zoom { width: 100%; height: 100%; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+.zoom-conteudo { width: 100%; height: 100%; transform-origin: center; will-change: transform; }
+.zoom-conteudo img { pointer-events: none; -webkit-user-drag: none; }
 .gesto-rotulo { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); padding: 6px 14px; border-radius: 999px; font-size: 14px; font-weight: 600; letter-spacing: .02em; background: rgba(20,18,16,.72); color: #F5F0E8; pointer-events: none; }
 .gesto-rotulo.curtir { background: var(--terracota); }
 .gesto-rotulo.salvar { background: var(--azul); }
