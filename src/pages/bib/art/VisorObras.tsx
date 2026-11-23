@@ -8,6 +8,7 @@ import { salvarObraComoReferencia } from '../../../lib/artistas'
 import { useToast } from '../../../ui/toast'
 import { ImgObra } from './ImgObra'
 import { AdicionarAColecao } from './Colecoes'
+import { Zoom } from '../../../ui/Zoom'
 
 export function fichaObra(o: Obra) {
   return ([['Ano', o.ano], ['Série', o.serie], ['Dimensões', o.dimensoes], ['Materiais', o.materiais], ['Técnica', o.tecnica], ['Esmaltação', o.esmaltacao], ['Queima', o.queima]] as const).filter(([, v]) => v) as [string, string][]
@@ -18,6 +19,7 @@ export function VisorObras({ obras, inicio, artista, onClose }: { obras: Obra[];
   const [i, setI] = useState(Math.max(0, inicio))
   const [info, setInfo] = useState(true)
   const [col, setCol] = useState(false)
+  const [ampliado, setAmpliado] = useState(false)
   const toque = useRef<number | undefined>(undefined)
   const nav = useNavigate()
   const toast = useToast()
@@ -34,13 +36,13 @@ export function VisorObras({ obras, inicio, artista, onClose }: { obras: Obra[];
   return createPortal(
     <div className="visor visor-ref" role="dialog" aria-label="Obra ampliada"
       onTouchStart={(e) => { toque.current = e.touches[0].clientX }}
-      onTouchEnd={(e) => { if (toque.current == null) return; const d = e.changedTouches[0].clientX - toque.current; toque.current = undefined; if (Math.abs(d) > 50 && n > 1) ir(d < 0 ? 1 : -1) }}>
+      onTouchEnd={(e) => { if (toque.current == null || ampliado || e.touches.length) { toque.current = undefined; return } const d = e.changedTouches[0].clientX - toque.current; toque.current = undefined; if (Math.abs(d) > 50 && n > 1) ir(d < 0 ? 1 : -1) }}>
       <div className="visor-topo">
         <span>{n > 1 ? `${i + 1} de ${n}` : ''}</span>
         <button className="visor-btn" aria-label="Fechar" onClick={onClose}><X size={20} /></button>
       </div>
-      <div className="visor-img" onClick={() => setInfo(!info)}><ImgObra o={o} style={{ objectFit: 'contain', background: 'transparent' }} /></div>
-      {info && <div className="visor-info" onClick={() => setInfo(false)}>
+      <div className="visor-img"><Zoom key={o.id} onZoom={setAmpliado} onToque={() => setInfo((v) => !v)}><ImgObra o={o} style={{ objectFit: 'contain', background: 'transparent' }} /></Zoom></div>
+      {info && !ampliado && <div className="visor-info" onClick={() => setInfo(false)}>
         <p className="meta" style={{ marginTop: 0 }}>{artista?.nome}</p>
         <h2>{o.titulo || o.serie || 'Sem título'}</h2>
         <div className="meta">{fichaObra(o).map(([k, v]) => <div key={k}>{k}: {v}</div>)}</div>
