@@ -414,6 +414,11 @@ export interface Exposicao extends Base {
   notas?: string
   origem: 'curadoria' | 'usuario'
   conferidoEm?: string
+  /** Foto da exposição: endereço da imagem de destaque do site, ou foto enviada (id em arquivos). */
+  imagem?: string
+  arquivo?: string
+  /** Já tentou ler a imagem do link da exposição (não repete). */
+  imagemLida?: boolean
 }
 
 export interface Ajuste { chave: string; valor: unknown }
