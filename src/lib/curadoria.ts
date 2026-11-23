@@ -207,7 +207,7 @@ export async function sementesDoAcervo() {
   return [...c].sort((a, b) => b[1] - a[1]).slice(0, 12)
 }
 
-export interface Pedido { q: string; universo?: string; fonte?: FonteId; soMuseus?: boolean; tema?: string; tipo: 'proximo' | 'adjacente' | 'experimental' | 'busca' | 'semelhantes'; motivo?: string }
+export interface Pedido { q: string; universo?: string; fonte?: FonteId; soMuseus?: boolean; tema?: string; /** só fica o resultado que cita este nome (busca por artista) */ nome?: string; tipo: 'proximo' | 'adjacente' | 'experimental' | 'busca' | 'semelhantes'; motivo?: string }
 
 /** Termos com peso: o aprendido + um reforço para o que foi curtido/salvo recentemente (meia-vida de 14 dias). */
 export function pesosDoGosto(perfil: Perfil) {
@@ -345,15 +345,15 @@ export async function planejar(perfil: Perfil, modo: Modo, n = 8, epoca: Epoca =
     // favoritos aparecem mais; cada artista vai aos museus e às revistas
     const escolhidos = [...estudos].sort((x, y) => Number(!!y.favorito) - Number(!!x.favorito) + Math.random() * 1.5 - .75).slice(0, Math.ceil(n / 2))
     return escolhidos.flatMap((a) => [
-      { q: a.nome, universo: 'ceramica', tipo: 'proximo' as const, motivo: `Dos seus estudos: ${a.nome}` },
-      { q: a.nome, fonte: 'rev' as const, tipo: 'proximo' as const, motivo: `Nas revistas: ${a.nome}` },
+      { q: nomesDoEstudo(a.nome)[0], nome: a.nome, universo: 'ceramica', tipo: 'proximo' as const, motivo: `Dos seus estudos: ${a.nome}` },
+      { q: nomesDoEstudo(a.nome)[0], nome: a.nome, fonte: 'rev' as const, tipo: 'proximo' as const, motivo: `Nas revistas: ${a.nome}` },
     ]).slice(0, n)
   }
   // na mesma linha: artistas parecidos com os estudados, mas que não estão nos estudos
   const { artistasNaMesmaLinha } = await import('./iaRepertorio')
   const afins = await artistasNaMesmaLinha().catch(() => [])
   if (afins.length) {
-    return embaralha(afins).slice(0, n).map((a, k) => ({ q: a.consulta, universo: 'ceramica', fonte: k % 3 === 2 ? 'rev' as const : undefined, tipo: 'proximo' as const, motivo: `Na linha de ${a.perto_de}: ${a.porque}` }))
+    return embaralha(afins).slice(0, n).map((a, k) => ({ q: a.consulta, nome: a.nome, universo: 'ceramica', fonte: k % 3 === 2 ? 'rev' as const : undefined, tipo: 'proximo' as const, motivo: `Na linha de ${a.perto_de}: ${a.porque}` }))
   }
   // sem IA: técnicas e estéticas dos estudos trazem gente que trabalha parecido
   const termos = [...new Set(estudos.flatMap((a) => [...a.tecnicas, ...a.esteticas, ...a.esmaltes]).filter((t) => /^[\x20-\x7e]+$/.test(t) && t.length < 30))]
@@ -366,6 +366,31 @@ export async function planejar(perfil: Perfil, modo: Modo, n = 8, epoca: Epoca =
  * Busca um lote nos acervos. `aoChegar` recebe os itens à medida que cada consulta responde,
  * para a tela mostrar o que já chegou sem esperar a fonte mais lenta.
  */
+const semAcento = (t: string) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+/**
+ * Nomes que servem para buscar e reconhecer um estudo. "Breve (Augusto Ribeiro)" busca pela pessoa;
+ * o nome do estúdio só vale sozinho quando não é uma palavra comum (tem mais de uma palavra, número ou ponto).
+ */
+export function nomesDoEstudo(nome: string) {
+  const m = /^(.*?)\s*\((.+)\)\s*$/.exec(nome)
+  if (!m) return [nome.trim()]
+  const fora = m[1].trim(), dentro = m[2].trim()
+  return /\s|[0-9.]/.test(fora) ? [dentro, fora] : [dentro]
+}
+
+/** O resultado fala do artista? Confere título, autor, termos e o endereço da página (que costuma levar o nome). */
+export function citaArtista(x: Pick<ItemDescoberta, 'titulo' | 'autor' | 'termos' | 'link'>, nome: string) {
+  const texto = ' ' + semAcento([x.titulo, x.autor, ...(x.termos ?? []), (x.link ?? '').replace(/[-_/.]+/g, ' ')].join(' | ')).replace(/[^a-z0-9]+/g, ' ') + ' '
+  return nomesDoEstudo(nome).some((alt) => {
+    const n = semAcento(alt).replace(/[^a-z0-9]+/g, ' ').trim()
+    if (!n) return false
+    if (texto.includes(` ${n} `)) return true
+    // nome com várias palavras: basta o sobrenome (a palavra mais longa), se não for curto
+    const sobrenome = n.split(' ').filter((w) => w.length >= 5).sort((a, b) => b.length - a.length)[0]
+    return n.includes(' ') && !!sobrenome && texto.includes(` ${sobrenome} `)
+  })
+}
+
 export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: Set<string>, porConsulta = 6, rodada = 0, epoca: Epoca = 'todas', aoChegar?: (itens: ItemDescoberta[]) => void) {
   const periodo = EPOCAS[epoca].periodo
   const estados = new Map<FonteId, EstadoFonte>()
@@ -402,6 +427,8 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
         xs = xs.filter((x) => x.fonte === 'rev' || !ehPaginaDeLivro(x))
         // tema com tipo definido (ex.: Ilustradores só desenho/gravura): o que não é daquele tipo sai, mesmo que o nome bata
         if (exige) xs = xs.filter((x) => exige.test(x.titulo + ' | ' + x.termos.join(' | ')))
+        // busca por artista: nomes que também são palavras comuns ("Breve", "Suro") trazem qualquer coisa; só fica o que cita o artista
+        if (p.nome) xs = xs.filter((x) => citaArtista(x, p.nome!))
         // fora da época pedida sai; sem data só fica o Openverse (fotos atuais) no filtro contemporâneo
         // na Wikimedia a data é a da fotografia, não a da obra: não serve para o filtro de época
         if (periodo) xs = xs.filter((x) => { const a = x.fonte === 'wm' ? undefined : anoDe(x.data); return a == null ? epoca === 'contemporanea' && x.fonte === 'ov' : dentro(a, periodo) }).slice(0, porConsulta)
