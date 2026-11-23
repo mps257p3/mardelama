@@ -81,6 +81,23 @@ const ESQUEMAS = {
       evitar: lista('Até 8 termos curtos em inglês, minúsculas, que aparecem nas recusas e devem ser evitados.'),
     },
   },
+  afins: {
+    type: 'object', additionalProperties: false, required: ['afins'],
+    properties: {
+      afins: {
+        type: 'array', description: 'De 12 a 20 artistas que NÃO estão na lista de estudos.',
+        items: {
+          type: 'object', additionalProperties: false, required: ['nome', 'consulta', 'perto_de', 'porque'],
+          properties: {
+            nome: { type: 'string', description: 'Nome do artista como aparece em museus e revistas (grafia ocidental).' },
+            consulta: { type: 'string', description: 'Consulta curta em inglês para achar obras dele: em geral só o nome; nome + material se o nome for comum.' },
+            perto_de: { type: 'string', description: 'Qual artista dos estudos ele lembra (um nome da lista).' },
+            porque: { type: 'string', description: 'Motivo em português, até 8 palavras, concreto (superfície, forma, tema).' },
+          },
+        },
+      },
+    },
+  },
   explicar: {
     type: 'object', additionalProperties: false, required: ['oque', 'tecnica', 'origem', 'olhar', 'ideias'],
     properties: {
@@ -191,6 +208,15 @@ A partir disso, proponha consultas para um feed de descoberta que traga coisas n
       ],
     }
   }
+  if (acao === 'afins') {
+    return {
+      esforco: 'low', max: 5000,
+      conteudo: [{ type: 'text', text: `Artistas que um ceramista brasileiro estuda (nome, país, técnicas e estética):
+${JSON.stringify(d.estudos ?? []).slice(0, 20000)}
+Outros nomes que ele já conhece (não repita): ${(d.conhecidos ?? []).slice(0, 200).join(', ') || 'nenhum'}.
+Sugira artistas reais na mesma linha desses estudos, mas que não estão na lista: parentes de linguagem, superfície, forma ou tema, de qualquer país e época, com preferência por quem está produzindo hoje e tem obra publicada em museus, galerias ou revistas. Varie: não sugira só ceramistas japoneses nem só os mais famosos. Nunca invente nomes; se não tiver certeza de que o artista existe, não inclua.` }],
+    }
+  }
   if (acao === 'agrupar') {
     return {
       esforco: 'low', max: 5000,
@@ -245,7 +271,7 @@ Descreva o repertório estético dela a partir desses dados.` }],
   }
 }
 
-const LIMITES = { evitar: 8, olhar: 4, ideias: 4, consultas: 16, tags: 10, grupos: 4, paleta: 8, aplicacoes: 4, temas: 8, linguagens: 8, formas: 8, texturas: 8, artistas: 10, tendencias: 6, proximos: 6 }
+const LIMITES = { evitar: 8, olhar: 4, ideias: 4, consultas: 16, tags: 10, grupos: 4, paleta: 8, aplicacoes: 4, temas: 8, linguagens: 8, formas: 8, texturas: 8, artistas: 10, tendencias: 6, proximos: 6, afins: 20 }
 const HEX = /^#[0-9a-f]{6}$/i
 function aparar(o) {
   for (const [k, n] of Object.entries(LIMITES)) if (Array.isArray(o[k])) o[k] = o[k].slice(0, n)
