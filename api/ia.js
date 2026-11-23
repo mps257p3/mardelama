@@ -5,6 +5,9 @@ import Anthropic from '@anthropic-ai/sdk'
 import { exigirLogin } from './_login.js'
 
 const MODELO = 'claude-opus-5-5'
+// Só para entender uma busca (traduzir o pedido em termos de museu): rápida e barata, escolha do Marcelo em 23/11/2026.
+const MODELO_RAPIDO = 'claude-haiku-5-5'
+const RAPIDAS = new Set(['buscar'])
 const BETAS = ['server-side-fallback-2026-07-01']
 const json = (dados, status = 200) => new Response(JSON.stringify(dados), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } })
 
@@ -357,17 +360,25 @@ export async function POST(req) {
   if ((acao === 'catalogar' || acao === 'explicar') && !d.imagem?.base64 && !/^https:\/\//.test(d.imagem?.url ?? '')) return json({ erro: 'Sem imagem' }, 400)
 
   const client = new Anthropic()
+  const base = {
+    max_tokens: p.max,
+    thinking: { type: 'adaptive' },
+    output_config: { effort: p.esforco, format: { type: 'json_schema', schema: ESQUEMAS[acao] } },
+    system: SISTEMA,
+    messages: [{ role: 'user', content: p.conteudo }],
+  }
+  const forte = () => client.beta.messages.create({ ...base, model: MODELO, betas: BETAS, fallbacks: 'default' })
   try {
-    const r = await client.beta.messages.create({
-      model: MODELO,
-      max_tokens: p.max,
-      betas: BETAS,
-      fallbacks: 'default',
-      thinking: { type: 'adaptive' },
-      output_config: { effort: p.esforco, format: { type: 'json_schema', schema: ESQUEMAS[acao] } },
-      system: SISTEMA,
-      messages: [{ role: 'user', content: p.conteudo }],
-    })
+    let r
+    if (RAPIDAS.has(acao)) {
+      // a IA rápida não tem reserva automática: se ela recusar ou falhar, a mais forte responde
+      try { r = await client.messages.create({ ...base, model: MODELO_RAPIDO }) } catch (e) {
+        if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) throw e
+        console.warn('IA rápida falhou, usando a mais forte:', e instanceof Error ? e.message : e)
+        r = undefined
+      }
+      if (!r || r.stop_reason === 'refusal' || r.stop_reason === 'max_tokens') r = await forte()
+    } else r = await forte()
     if (r.stop_reason === 'refusal') return json({ erro: 'A IA não quis responder a este pedido.' }, 422)
     if (r.stop_reason === 'max_tokens') return json({ erro: 'A resposta ficou longa demais. Tente de novo.' }, 502)
     const texto = r.content.find((b) => b.type === 'text')?.text
