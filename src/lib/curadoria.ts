@@ -321,7 +321,11 @@ const pausar = (id: FonteId, erro: string) => { try { localStorage.setItem(chave
 const recusaDura = (msg: string) => /HTTP (403|404|410|429)/.test(msg)
 
 /** Executa as consultas nas fontes ligadas, remove repetidos, vistos e recusados. Se uma fonte falha, a consulta tenta a próxima. */
-export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: Set<string>, porConsulta = 6, rodada = 0, epoca: Epoca = 'todas') {
+/**
+ * Busca um lote nos acervos. `aoChegar` recebe os itens à medida que cada consulta responde,
+ * para a tela mostrar o que já chegou sem esperar a fonte mais lenta.
+ */
+export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: Set<string>, porConsulta = 6, rodada = 0, epoca: Epoca = 'todas', aoChegar?: (itens: ItemDescoberta[]) => void) {
   const periodo = EPOCAS[epoca].periodo
   const estados = new Map<FonteId, EstadoFonte>()
   const ligadas = FONTES.filter((f) => {
@@ -335,6 +339,13 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
   const falhou = new Set<FonteId>()
   // o lote não espera fonte lenta: o que chegar em 15 s aparece; o resto termina em segundo plano e fica no cache da ponte
   const prazo = new Promise<ItemDescoberta[]>((r) => setTimeout(() => r([]), 15000))
+  const vistosP = new Set<string>()
+  const avisar = (xs: ItemDescoberta[]) => {
+    if (!aoChegar) return
+    const novos = xs.filter((x) => !vistosP.has(x.id) && !rec.has(x.id) && !conhecidos.has(x.id))
+    novos.forEach((x) => vistosP.add(x.id))
+    if (novos.length) aoChegar(novos)
+  }
   const res = await Promise.all(pedidos.map((p, i) => Promise.race([prazo, (async () => {
     const inicio = i + Math.floor(Math.random() * ligadas.length)
     // no feed, cada atualização sorteia páginas mais fundas dos acervos (material novo); busca segue em ordem
@@ -355,7 +366,9 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
         // acervo pequeno para essa consulta: a página sorteada veio vazia, volta para uma das primeiras
         if (!xs.length && pagina > 1 && !periodo) xs = await f.buscar(p.q, porConsulta, 1 + Math.floor(Math.random() * Math.min(2, pagina - 1)))
         estados.set(f.id, { id: f.id, ok: true, quando: Date.now() })
-        return xs.map((x) => ({ ...x, universo: p.universo, consulta: p.q, motivo: p.motivo }))
+        const prontos = xs.map((x) => ({ ...x, universo: p.universo, consulta: p.q, motivo: p.motivo }))
+        avisar(prontos)
+        return prontos
       } catch (e) {
         const erro = (e as Error).name === 'AbortError' ? 'Demorou demais para responder' : (e as Error).message
         falhou.add(f.id)

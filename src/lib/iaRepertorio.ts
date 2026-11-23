@@ -49,6 +49,11 @@ const ACERVO_DA_LINGUA: Record<string, FonteId[]> = { nl: ['rijks', 'eu'], da: [
 
 /** Busca em qualquer idioma: vira consultas em inglês para todos os acervos e traduções para os acervos europeus.
  *  Guardada no aparelho para não pagar a mesma busca duas vezes. */
+/** Leitura de uma busca já feita antes (sem chamar a IA de novo). */
+export async function leituraEmCache(pedido: string): Promise<LeituraBusca | undefined> {
+  return (await db.ajustes.get('ia.busca2.' + pedido.trim().toLowerCase()))?.valor as LeituraBusca | undefined
+}
+
 export async function interpretarBusca(pedido: string): Promise<LeituraBusca> {
   const k = 'ia.busca2.' + pedido.trim().toLowerCase()
   const ja = await db.ajustes.get(k)
