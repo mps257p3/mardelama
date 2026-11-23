@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Home, FlaskConical, Images, BookOpen, Plus, RefreshCw } from 'lucide-react'
 import { LATERAL, RODAPE } from './nav'
@@ -11,7 +11,7 @@ import { trocouDeTela } from '../lib/atualizacao'
 const AREA_DA_ROTA: [RegExp, string][] = [
   [/^\/(superficies|esmaltes|receitas|testes|testoteca|laboratorio|queimas|bancada|familias|curvas|engenharia-reversa|compras)/, 'esmaltes'],
   [/^\/materiais/, 'materiais'], [/^\/(referencias|paineis|compartilhar|cores)/, 'referencias'],
-  [/^\/biblioteca/, 'biblioteca'], [/^\/(caderno|projetos|entrada)/, 'caderno'], [/^\/calculadoras/, 'calculadoras'],
+  [/^\/obras/, 'obras'], [/^\/biblioteca/, 'biblioteca'], [/^\/(caderno|projetos|entrada)/, 'caderno'], [/^\/calculadoras/, 'calculadoras'],
 ]
 
 export function Layout() {
@@ -47,13 +47,29 @@ export function Layout() {
       <nav className="bottom" aria-label="Navegação principal">
         <NavLink to="/" end><Home size={22} strokeWidth={1.4} />Início</NavLink>
         <NavLink to="/laboratorio" className={({ isActive }) => (isActive || area === 'esmaltes' || area === 'materiais' || area === 'calculadoras') ? 'active' : ''}><FlaskConical size={22} strokeWidth={1.4} />Laboratório</NavLink>
-        <button className="plus" aria-label="Novo" onClick={() => setAdd(true)}><Plus size={24} strokeWidth={1.6} /></button>
+        <BotaoObras onSegurar={() => setAdd(true)} />
         <NavLink to="/referencias/descobrir" className={({ isActive }) => (isActive || area === 'referencias') ? 'active' : ''}><Images size={22} strokeWidth={1.4} />Referências</NavLink>
         <NavLink to="/biblioteca"><BookOpen size={22} strokeWidth={1.4} />Biblioteca</NavLink>
       </nav>
 
       {add && <QuickAdd onClose={() => setAdd(false)} />}
     </div>
+  )
+}
+
+/** Botão central: toque leva a Minhas obras; segurar abre o "Adicionar" rápido. */
+function BotaoObras({ onSegurar }: { onSegurar: () => void }) {
+  const t = useRef<number | undefined>(undefined)
+  const segurou = useRef(false)
+  const parar = () => { clearTimeout(t.current); t.current = undefined }
+  return (
+    <NavLink to="/obras" className={({ isActive }) => 'plus obras-btn' + (isActive ? ' on' : '')} aria-label="Minhas obras (segure para adicionar)"
+      onTouchStart={() => { segurou.current = false; parar(); t.current = window.setTimeout(() => { segurou.current = true; navigator.vibrate?.(10); onSegurar() }, 500) }}
+      onTouchMove={parar} onTouchEnd={(e) => { parar(); if (segurou.current) e.preventDefault() }} onTouchCancel={parar}
+      onContextMenu={(e) => { e.preventDefault(); onSegurar() }}
+      onClick={(e) => { if (segurou.current) { e.preventDefault(); segurou.current = false } }}>
+      <img src="/brand/botao-obras.png" alt="" width={56} height={56} draggable={false} />
+    </NavLink>
   )
 }
 

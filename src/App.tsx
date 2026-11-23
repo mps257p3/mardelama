@@ -59,6 +59,9 @@ const ColecoesLista = carregar(() => import('./pages/bib/art/Colecoes').then((m)
 const Glossario = carregar(() => import('./pages/bib/Glossario'))
 const Agenda = carregar(() => import('./pages/bib/Agenda'))
 const Caderno = carregar(() => import('./pages/cad/Caderno'))
+const MinhasObras = carregar(() => import('./pages/obras/MinhasObras'))
+const PecaDetalhe = carregar(() => import('./pages/obras/PecaDetalhe'))
+const SerieDetalhe = carregar(() => import('./pages/obras/SerieDetalhe'))
 const NotaEditor = carregar(() => import('./pages/cad/NotaEditor'))
 const NotaNova = carregar(() => import('./pages/cad/NotaNova'))
 const Calculadoras = carregar(() => import('./pages/calc/Calculadoras'))
@@ -143,6 +146,9 @@ export default function App() {
           {SECOES.filter((x) => !SECOES_PROPRIAS.has(x.slug)).map((x) => <Route key={x.slug} path={`biblioteca/${x.slug}`} element={<SecaoBiblioteca key={x.slug} slug={x.slug} />} />)}
           <Route path="biblioteca/:id" element={<ConteudoDetalhe />} />
           <Route path="biblioteca/:id/editar" element={<ConteudoForm />} />
+          <Route path="obras" element={<MinhasObras />} />
+          <Route path="obras/peca/:id" element={<PecaDetalhe />} />
+          <Route path="obras/serie/:id" element={<SerieDetalhe />} />
           <Route path="caderno" element={<Caderno />} />
           <Route path="caderno/nova" element={<NotaNova />} />
           <Route path="caderno/:id" element={<NotaEditor />} />

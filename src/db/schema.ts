@@ -421,6 +421,54 @@ export interface Exposicao extends Base {
   imagemLida?: boolean
 }
 
+/* ——— Minhas obras: o trabalho autoral do ateliê ——— */
+
+/** Etapas de uma peça, na ordem do ateliê. */
+export const ETAPAS = [
+  { id: 'ideia', nome: 'Ideia' },
+  { id: 'modelagem', nome: 'Modelagem' },
+  { id: 'secagem', nome: 'Secagem' },
+  { id: 'biscoito', nome: 'Biscoito' },
+  { id: 'esmaltacao', nome: 'Esmaltação' },
+  { id: 'queima', nome: 'Queima final' },
+  { id: 'pronta', nome: 'Pronta' },
+] as const
+export type Etapa = (typeof ETAPAS)[number]['id']
+
+/** Registro datado do processo (o que mudou, o que observei), com fotos opcionais. */
+export interface Observacao { id: string; data: number; texto: string; fotos?: string[] }
+
+/** Série / corpo de trabalho. Guardada na tabela `projetos` (já existente no Supabase). */
+export interface Serie extends Base {
+  nome: string
+  intencao?: string            // o que a série investiga
+  descricao?: string
+  ano?: string
+  status: 'ativa' | 'pausada' | 'concluida'
+  capa?: string                // id de Arquivo
+  observacoes: Observacao[]
+  tags: string[]
+}
+
+/** Peça do Marcelo: obra ou estudo. Guardada na tabela `entrada` (já existente no Supabase). */
+export interface Peca extends Base {
+  titulo: string
+  tipo: 'obra' | 'estudo'
+  serieId?: string
+  etapa: Etapa
+  fotos: string[]              // ids de Arquivo
+  ano?: string
+  dimensoes?: string
+  argila?: string
+  tecnica?: string
+  superficie?: string          // esmaltes, engobes, óxidos usados
+  queima?: string
+  descricao?: string
+  destino?: string             // exposição, venda, acervo pessoal…
+  observacoes: Observacao[]
+  tags: string[]
+}
+
 export interface Ajuste { chave: string; valor: unknown }
 
 export class AtelieDB extends Dexie {
@@ -448,6 +496,8 @@ export class AtelieDB extends Dexie {
   obras!: EntityTable<Obra, 'id'>
   colecoes!: EntityTable<Colecao, 'id'>
   exposicoes!: EntityTable<Exposicao, 'id'>
+  projetos!: EntityTable<Serie, 'id'>
+  entrada!: EntityTable<Peca, 'id'>
 
   constructor() {
     super('atelie-mp')
@@ -482,6 +532,11 @@ export class AtelieDB extends Dexie {
       obras: 'id, artistaId, favorito, atualizadoEm',
       colecoes: 'id, nome, atualizadoEm',
       exposicoes: 'id, fim, favorito, atualizadoEm',
+    })
+    // Minhas obras: séries (projetos) e peças (entrada), nomes das tabelas já criadas no Supabase
+    this.version(4).stores({
+      projetos: 'id, nome, status, atualizadoEm',
+      entrada: 'id, serieId, tipo, etapa, favorito, atualizadoEm',
     })
   }
 }

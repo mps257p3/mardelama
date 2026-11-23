@@ -27,7 +27,7 @@
   --nav-h: 62px;
   --area: var(--marrom);
   --c-esmaltes: #3D5965; --c-materiais: #B46E4B; --c-referencias: #858D70;
-  --c-biblioteca: #B49B70; --c-caderno: #987C79; --c-calculadoras: #594334;
+  --c-biblioteca: #B49B70; --c-caderno: #987C79; --c-obras: #1E1C19; --c-calculadoras: #594334;
   --side-w: 232px;
 
   color-scheme: light;
@@ -116,6 +116,40 @@ img { display: block; max-width: 100%; }
   transition: transform .2s var(--ease);
 }
 .bottom .plus:active { transform: scale(.94); }
+.bottom .obras-btn { width: 56px; height: 56px; background: none; margin-top: -14px; -webkit-touch-callout: none; user-select: none; }
+.bottom .obras-btn img { width: 56px; height: 56px; display: block; filter: drop-shadow(0 3px 6px rgba(30, 28, 25, .25)); pointer-events: none; }
+.bottom .obras-btn.on img { outline: 2px solid var(--terracota); outline-offset: 2px; border-radius: 50%; }
+
+/* ---------- minhas obras ---------- */
+.mo-topo h1 { font: 500 44px/1.05 var(--serif); margin: 4px 0 0; }
+.mo-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 6px; }
+.mo-abas { margin: 18px 0 8px; position: sticky; top: 0; z-index: 3; background: var(--bg); padding: 8px 0; }
+.mo-etapa h2 { font: 500 24px/1.2 var(--serif); margin: 22px 0 10px; }
+.mo-etapa h2 .faint { font: 400 14px var(--sans); margin-left: 6px; }
+.mo-vazio { padding: 28px 0; display: grid; gap: 14px; justify-items: start; max-width: 520px; }
+.mo-vazio p { margin: 0; color: var(--ink-2); }
+.mo-series { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; margin-top: 8px; }
+.mo-serie { display: flex; flex-direction: column; gap: 6px; }
+.mo-serie .ph { display: block; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; background: var(--surface-2); }
+.mo-serie .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mo-serie .t { font: 500 24px/1.1 var(--serif); }
+.mo-serie .s { font-size: 13px; color: var(--ink-3); }
+.campo-titulo { width: 100%; font: inherit; color: inherit; background: transparent; border: 0; border-bottom: 1px dashed transparent; padding: 0; outline: none; }
+.campo-titulo:focus, .campo-titulo:placeholder-shown { border-bottom-color: var(--line-strong); }
+.campo-titulo::placeholder { color: var(--ink-3); }
+.etapas { display: flex; flex-wrap: wrap; gap: 6px; }
+.etapa { padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; font-size: 13px; color: var(--ink-2); }
+.etapa.feita { background: color-mix(in srgb, var(--argila) 30%, transparent); border-color: transparent; }
+.etapa.on { background: var(--carvao); color: var(--marfim); border-color: var(--carvao); }
+.diario { display: grid; gap: 12px; }
+.diario-novo { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.diario-item { display: block; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.diario-item p { margin: 4px 0 0; white-space: pre-wrap; }
+.diario-data { display: flex; align-items: center; justify-content: space-between; gap: 8px; font: 500 11px/1.3 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--terracota); }
+.diario-fotos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.diario-foto { position: relative; width: 76px; height: 76px; border-radius: 8px; overflow: hidden; padding: 0; border: 0; background: var(--surface-2); display: block; }
+.diario-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.diario-foto button { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; border: 0; background: rgba(0,0,0,.55); color: #fff; display: grid; place-items: center; padding: 0; }
 
 /* ---------- components ---------- */
 .btn {
