@@ -14,10 +14,10 @@ export function useMapaMateriais() {
 }
 
 /** Exclusão suave: mantém o registro para sincronização e permite desfazer pelo backup. */
-export async function excluir(tabela: 'esmaltes' | 'receitas' | 'testes' | 'materiais' | 'familias' | 'referencias' | 'grupos' | 'paineis' | 'conteudos' | 'notas' | 'artistas' | 'obras' | 'colecoes' | 'exposicoes', id: string) {
+export async function excluir(tabela: 'esmaltes' | 'receitas' | 'testes' | 'materiais' | 'familias' | 'referencias' | 'grupos' | 'paineis' | 'conteudos' | 'notas' | 'artistas' | 'obras' | 'colecoes' | 'exposicoes' | 'projetos' | 'entrada', id: string) {
   await db.table(tabela).update(id, { excluido: 1, atualizadoEm: Date.now() })
 }
-export async function alternarFavorito(tabela: 'esmaltes' | 'materiais' | 'referencias' | 'conteudos' | 'testes' | 'artistas' | 'obras' | 'exposicoes', id: string, atual?: 0 | 1) {
+export async function alternarFavorito(tabela: 'esmaltes' | 'materiais' | 'referencias' | 'conteudos' | 'testes' | 'artistas' | 'obras' | 'exposicoes' | 'entrada' | 'projetos', id: string, atual?: 0 | 1) {
   await db.table(tabela).update(id, { favorito: atual ? 0 : 1, atualizadoEm: Date.now() })
 }
 
