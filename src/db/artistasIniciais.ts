@@ -1131,17 +1131,99 @@ const ARTISTAS: [string, A][] = [
     esteticas: ['Colaborativa', 'Colorida'], tiposObra: ['Louça', 'Azulejos', 'Murais', 'Luminárias'],
     tags: ['méxico', 'azulejos', 'murais', 'colaboração'],
   }],
+  ['art-pizarro', {
+    ...vazio,
+    nome: 'María Pizarro Azulejos', pais: ['México'], atuacao: 'Cidade do México (showroom) e Guanajuato (artesãos)',
+    especialidade: 'Azulejos feitos à mão com artesãos de Guanajuato',
+    linguagem: 'Coleções curtas de azulejos artesanais, pensadas a partir de histórias de cor, texturas e padrões, para projetos residenciais.',
+    bio: 'Estúdio de azulejos fundado em 2013, com showroom no bairro Nápoles, na Cidade do México, e peças feitas com artesãos da região de Guanajuato. O site fala em "processos artesanais de alta qualidade", coleções limitadas e "nunca produção em massa", e diz que a curadoria vem do "olhar treinado de uma decoradora de interiores".\n\nO site não traz biografia pessoal de María Pizarro, nem nomes de coleções, técnica de pintura, argila, esmaltes ou queima. O catálogo é enviado por e-mail.',
+    caracteristicas: ['Azulejos artesanais', 'Coleções limitadas', 'Cor e textura', 'Guanajuato'],
+    afinidade: 'Referência de cartela de cor e de padrão em azulejo artesanal mexicano.',
+    analise: { formas: 'Azulejos.', reconhecivel: 'Azulejos artesanais organizados por histórias de cor.' },
+    estudar: ['Cartela de cor pensada como coleção.', 'Variação natural do feito à mão em revestimento.'],
+    falas: [
+      { texto: 'Não vendemos só azulejos. Fazemos a curadoria de coleções com personalidade.', original: 'No solo vendemos azulejos. Curamos colecciones con personalidad.', fonte: 'https://www.mariapizarrotiles.com/about-1', veiculo: 'Site do estúdio' },
+    ],
+    fontes: [f('Site oficial', 'https://www.mariapizarrotiles.com', 'Site oficial'), f('Sobre o estúdio', 'https://www.mariapizarrotiles.com/about', 'Site oficial')],
+    site: 'https://www.mariapizarrotiles.com', instagram: 'mariapizarro_azulejos',
+    tiposObra: ['Azulejos'], esteticas: ['Artesanal', 'Colorida'],
+    tags: ['azulejos', 'méxico'],
+  }],
+  ['art-ceudebarro', {
+    ...vazio,
+    nome: 'Céu de Barro', pais: ['Brasil'], atuacao: 'Joinville (SC)',
+    especialidade: 'Cerâmica utilitária feita à mão (Camila Mieko)',
+    linguagem: 'Xícaras, copos, pratos e vasos modelados à mão, peça por peça, explorando volume, textura, ritmo e grafismo, entre referências japonesas e nordestinas.',
+    bio: 'Estúdio de cerâmica artesanal de Camila Mieko, paulista que vive em Joinville, Santa Catarina. O site diz que os traços e as técnicas "transitam entre Japão (origem materna) e Nordeste brasileiro (origem paterna)" e que a produção é manual, peça por peça.\n\nPeças e séries citadas no site: série "maru 丸", "xícara bola" (com edição limitada azul bebê), "pingado" (copo para cafezinho), pratos, "vaso jardins", "terrosos", "argilas naturais" e a coleção "timtim". O estúdio também oferece workshops presenciais. Formação, ano de início, argila, esmaltes e queima não aparecem nas fontes.',
+    caracteristicas: ['Utilitários', 'Modelagem manual', 'Japão e Nordeste', 'Argila aparente'],
+    afinidade: 'Utilitário de mesa com gesto de mão visível e mistura de referências de origem.',
+    analise: { formas: 'Xícaras bola, copos pequenos, pratos e vasos.', texturas: 'Argila aparente em parte das peças.', reconhecivel: 'Utilitários arredondados, feitos à mão, com argila à mostra.' },
+    processos: [v('Modelagem', 'Produção manual, peça por peça; peças moldadas à mão.', 'https://ceudebarro.com.br/sobre')],
+    estudar: ['Série de utilitários com uma forma-base (maru, bola).', 'Argila aparente combinada com esmalte.', 'Referências de origem familiar no desenho.'],
+    falas: [
+      { texto: 'Queremos ajudar a construir cotidianos interessantes, cheios de intenção.', original: 'queremos ajudar a construir cotidianos interessantes, cheios de intenção.', fonte: 'https://ceudebarro.com.br/sobre', veiculo: 'Site do estúdio (Camila Mieko)' },
+      { texto: 'Nossas peças são bonitas explorações sobre volumes, texturas, ritmos e grafismos.', original: 'nossas peças são bonitas explorações sobre volumes, texturas, ritmos e grafismos.', fonte: 'https://ceudebarro.com.br/sobre', veiculo: 'Site do estúdio' },
+    ],
+    series: [{ nome: 'maru', original: '丸' }, { nome: 'timtim' }],
+    fontes: [f('Site oficial', 'https://ceudebarro.com.br/', 'Site oficial'), f('Sobre', 'https://ceudebarro.com.br/sobre', 'Site oficial')],
+    site: 'https://ceudebarro.com.br/', instagram: 'ceudebarro_',
+    tecnicas: ['Modelagem manual'], tiposObra: ['Utilitários', 'Xícaras e copos', 'Pratos', 'Vasos'], esteticas: ['Artesanal', 'Nipo-brasileira'],
+    tags: ['brasil', 'utilitários', 'santa catarina'],
+  }],
+  ['art-andreetta', {
+    ...vazio,
+    nome: 'Natália Andreetta', pais: ['Brasil'], atuacao: 'Londrina (PR)',
+    especialidade: 'Cerâmica de alta temperatura feita no torno',
+    linguagem: 'Vasos e utilitários torneados, de formas redondas e cheias, em coleções de cor (Algodão, Canela, Coral, Gris, Sálvia, Zênite).',
+    bio: 'Ceramista com ateliê e loja em Londrina, Paraná. Segundo o site, o projeto nasceu do encontro dela com o torno, e ela trabalha só com cerâmica de alta temperatura. As peças são feitas no torno, esmaltadas à mão e passam por biscoito e queima final.\n\nO site organiza o trabalho em coleções: Algodão, Bolas, Canela, Coral, Gris, Listras, Sálvia e Zênite. Peças citadas: vaso mushroom, vaso seis, vaso elo, vaso oito, vaso marshmallow, matcha sálvia, prato raso zênite e copo de água arco. Formação, ano de início e exposições não aparecem nas fontes.',
+    caracteristicas: ['Torno', 'Alta temperatura', 'Esmaltação à mão', 'Coleções por cor'],
+    afinidade: 'Coleções organizadas por cor sobre formas simples de torno: um jeito de pensar cartela.',
+    analise: { formas: 'Vasos bojudos (mushroom, bola, marshmallow, oito), pratos, copos e tigelas.', paleta: 'Brancos, castanhos, açafrão, sálvia, coral e cinzas.', reconhecivel: 'Vasos redondos e macios, em cores lisas.' },
+    processos: [
+      v('Torneamento', 'As peças são feitas no torno.', 'https://www.nataliaandreetta.com/vasos/vaso-mushroom-p'),
+      v('Esmaltes', 'Esmaltadas à mão.', 'https://www.nataliaandreetta.com/vasos/vaso-mushroom-p'),
+      v('Queima', 'Biscoito e queima final em alta temperatura. Temperaturas não são informadas.', 'https://www.nataliaandreetta.com/vasos/vaso-mushroom-p'),
+    ],
+    estudar: ['Cartela de esmaltes organizada em coleções.', 'Família de vasos a partir de uma forma de torno.', 'Utilitário de alta temperatura.'],
+    falas: [
+      { texto: 'Nossas peças são feitas no torno, esmaltadas à mão e queimadas em alta temperatura.', original: 'Nossas peças são feitas no torno, esmaltadas à mão e queimadas em alta temperatura.', fonte: 'https://www.nataliaandreetta.com/vasos/vaso-mushroom-p', veiculo: 'Site da ceramista' },
+    ],
+    series: ['Algodão', 'Bolas', 'Canela', 'Coral', 'Gris', 'Listras', 'Sálvia', 'Zênite'].map((nome) => ({ nome })),
+    fontes: [f('Site oficial', 'https://www.nataliaandreetta.com/', 'Site oficial'), f('Cerâmicas para a vida', 'https://www.nataliaandreetta.com/ceramicas-para-a-vida', 'Site oficial')],
+    site: 'https://www.nataliaandreetta.com/', instagram: 'natalia.andreetta',
+    tecnicas: ['Torno', 'Esmaltação à mão'], queimas: ['Alta temperatura'], tiposObra: ['Vasos', 'Utilitários'], esteticas: ['Formas arredondadas', 'Cores lisas'],
+    tags: ['brasil', 'torno', 'paraná'],
+  }],
+  ['art-isabelsanchez', {
+    ...vazio,
+    nome: 'Isabel Sánchez', nomeOriginal: 'María Isabel Sánchez Salgado', pais: ['México'], atuacao: 'Oaxaca', nascimento: '1982, Villa de Etla (Oaxaca)',
+    especialidade: 'Cerâmica de alta temperatura, instalação e desenho',
+    linguagem: 'Instalações e peças de cerâmica de alta temperatura que tratam de memória, infância, máscaras e monstros, junto com desenho, gravura e têxtil.',
+    bio: 'Artista nascida em 1982 em Villa de Etla, Oaxaca. Estudou na Escola Nacional de Pintura, Escultura e Gravura "La Esmeralda", na Cidade do México, passando pela gravura, pela pintura e por uma oficina de escultura monumental. De volta a Oaxaca, trabalhou no Taller Canela, em San Agustín Etla, e dá aulas na Escola de Artes Plásticas e Visuais da Universidade Autônoma Benito Juárez de Oaxaca. Trabalha no torno e alterna a cerâmica com desenho, gravura e têxtil.\n\nMostrou "La muerte chiquita" no festival Noviembre en Bellas Artes (2016) e "Fragilidad de monstruo" no Museu de Arte Contemporânea de Oaxaca (MACO, 2018), dez instalações de cerâmica de alta temperatura. Também fez "¿Quieres jugar conmigo?" e os móbiles "Los migrantes". Em 2026 expôs "Pido perdón y pido permiso" na CuatroSie7e Galería, com curadoria de Inari Reséndiz. O perfil no Instagram se apresenta como Isabel Sanchez Salgado.',
+    caracteristicas: ['Alta temperatura', 'Instalação', 'Máscaras e monstros', 'Memória e infância'],
+    afinidade: 'Cerâmica como narrativa: peças que juntam festa, proteção e medo.',
+    analise: { formas: 'Instalações, máscaras, figuras e móbiles.', reconhecivel: 'Máscaras e figuras de cerâmica em instalações.' },
+    processos: [
+      v('Torneamento', 'Trabalha no torno, alternando com desenho, gravura e têxtil.', 'https://pagina3.mx/isabel-sanchez-la-artista-que-moldea-la-memoria/'),
+      v('Queima', 'Instalações de cerâmica de alta temperatura. Temperaturas não são informadas.', 'https://imparcialoaxaca.mx/arte-y-cultura/isabel-sanchez-recrea-la-fragilidad-del-monstruo/'),
+    ],
+    estudar: ['Cerâmica em instalação (conjunto de peças).', 'Máscara como tema: festa e ocultamento.', 'Diálogo entre desenho, gravura e barro.'],
+    falas: [
+      { texto: 'Isso me parece uma coisa muito festiva, mas também ligada à proteção ou ao ocultamento.', original: 'Eso me parece una cosa muy festiva, pero también como con una cosa que tiene que ver con protección o con ocultamiento', fonte: 'https://imparcialoaxaca.mx/arte-y-cultura/isabel-sanchez-recrea-la-fragilidad-del-monstruo/', veiculo: 'El Imparcial de Oaxaca (sobre as máscaras)' },
+    ],
+    series: [{ nome: 'Fragilidad de monstruo' }, { nome: 'La muerte chiquita' }, { nome: 'Pido perdón y pido permiso' }],
+    publicacoes: [f('Isabel Sánchez recrea la fragilidad del monstruo — El Imparcial', 'https://imparcialoaxaca.mx/arte-y-cultura/isabel-sanchez-recrea-la-fragilidad-del-monstruo/', 'Reportagens', '2018'), f('Isabel Sánchez, la artista que moldea la memoria — Página 3', 'https://pagina3.mx/isabel-sanchez-la-artista-que-moldea-la-memoria/', 'Reportagens', '2016'), f('Isabel Sánchez Salgado — Daniel Benoit', 'https://danielbenoit.art/isabel-sanchez-salgado/', 'Crítica', '2026')],
+    instagram: 'isabel_sanchez_s_ceramica',
+    tecnicas: ['Torno', 'Instalação'], queimas: ['Alta temperatura'], tiposObra: ['Instalações', 'Esculturas'], esteticas: ['Narrativa', 'Popular'],
+    tags: ['méxico', 'oaxaca', 'instalação'],
+  }],
   ...([
-    ['art-pizarro', 'María Pizarro Azulejos', '', 'Azulejos'],
-    ['art-ceudebarro', 'Céu de Barro', 'ceudebarro_', 'Cerâmica'],
     ['art-taticouto', 'Tati Couto', 'ceramica_tati_couto', 'Cerâmica'],
-    ['art-andreetta', 'Natália Andreetta', 'natalia.andreetta', 'Cerâmica'],
     ['art-carnesalvaje', 'Carne Salvaje', 'carnesalvaje', 'Cerâmica'],
-    ['art-isabelsanchez', 'Isabel Sánchez', 'isabel_sanchez_s_ceramica', 'Cerâmica'],
     ['art-clayzz', 'Kamana Gupta (Clayzz)', 'clayzzofficial', 'Cerâmica'],
   ] as const).map(([id, nome, ig, esp]): [string, A] => [id, {
     ...vazio, nome, pais: [], instagram: ig || undefined, especialidade: esp,
-    bio: `Estudo em aberto. Não encontramos fontes públicas confiáveis sobre ${nome} além ${ig ? `do perfil no Instagram (@${ig})` : 'do perfil no Instagram'}, então nada foi preenchido para não inventar dados. Use "Trocar capa" para pôr uma foto e complete o estudo com o que você souber.`,
+    bio: `Estudo em aberto. Em 23/11/2026 procuramos site, loja, entrevistas e matérias e não encontramos fontes públicas confiáveis sobre ${nome} além ${ig ? `do perfil no Instagram (@${ig})` : 'do perfil no Instagram'}, então nada foi preenchido para não inventar dados. Use "Trocar capa" para pôr uma foto e complete o estudo com o que você souber.`,
     estudar: [], tags: ['a completar'],
   }]),
 ]
@@ -1300,6 +1382,21 @@ const OBRAS: [string, O][] = [
   ['obra-manson-blue-admiral', { artistaId: "art-manson", titulo: "Blue Admiral Wing", imagem: "https://www.thisiscolossal.com/wp-content/uploads/2025/12/manson-4.jpg", fonte: "https://www.thisiscolossal.com/2025/12/rebecca-manson-porcelain-butterfly-sculptures/", credito: "Lance Brewer, cortesia da artista, Josh Lilley e Jessica Silverman, via Colossal", ano: "2025", materiais: "Porcelana, esmalte, adesivos, tela, ferragens, vidro", dimensoes: "246 × 142 × 5 cm" }],
   ['obra-manson-emerging-monarch', { artistaId: "art-manson", titulo: "Emerging Monarch", imagem: "https://www.thisiscolossal.com/wp-content/uploads/2025/12/manson-2.jpg", fonte: "https://www.thisiscolossal.com/2025/12/rebecca-manson-porcelain-butterfly-sculptures/", credito: "Lance Brewer, cortesia da artista, Josh Lilley e Jessica Silverman, via Colossal", ano: "2025", materiais: "Porcelana, esmalte, adesivos, tela, ferragens", dimensoes: "109 × 61 × 8 cm" }],
   ['obra-renard-purple', { artistaId: "art-renard", titulo: "Exposição na Purple Gallery", imagem: "https://static.wixstatic.com/media/cc4e87_1dd1a4992b024e7db987a05ddcf7c85a~mv2.jpg/v1/fill/w_278,h_417,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/La_Purple_Gallery_2024_IMG39987_-Limagerie_-%20Lansy_Siessie_instagram_-limagerie.jpg", fonte: "https://www.lea-renard.com/about-1", credito: "© Limagerie / Lansy Siessie, via site da artista", ano: "2024" }],
+  ['obra-pizarro-1', { artistaId: 'art-pizarro', titulo: 'Azulejos', imagem: 'https://images.squarespace-cdn.com/content/v1/6994a4215b823912be193a1d/c29c8cdc-274c-4e90-b2b7-62bc10de627f/mariapizarro7.png', fonte: 'https://www.mariapizarrotiles.com/', credito: 'María Pizarro Tiles (site oficial)', notas: 'O site não informa coleção nem ano.' }],
+  ['obra-pizarro-2', { artistaId: 'art-pizarro', titulo: 'Azulejos', imagem: 'https://images.squarespace-cdn.com/content/v1/6994a4215b823912be193a1d/d2f5ff3b-8ceb-4c57-b7d1-a0ec83ef9640/mariapizarro32.jpg', fonte: 'https://www.mariapizarrotiles.com/', credito: 'María Pizarro Tiles (site oficial)', notas: 'O site não informa coleção nem ano.' }],
+  ['obra-pizarro-3', { artistaId: 'art-pizarro', titulo: 'Azulejos', imagem: 'https://images.squarespace-cdn.com/content/v1/6994a4215b823912be193a1d/d9f2fd35-11ea-40a9-8c33-19e201b2a1ac/mariapizarro61.jpg', fonte: 'https://www.mariapizarrotiles.com/gallery', credito: 'María Pizarro Tiles (site oficial)', notas: 'O site não informa coleção nem ano.' }],
+  ['obra-pizarro-4', { artistaId: 'art-pizarro', titulo: 'Azulejos', imagem: 'https://images.squarespace-cdn.com/content/v1/6994a4215b823912be193a1d/bc9b97ff-35e0-473b-bca4-fb0f9b54d6e7/mariapizarro50.jpg', fonte: 'https://www.mariapizarrotiles.com/gallery', credito: 'María Pizarro Tiles (site oficial)', notas: 'O site não informa coleção nem ano.' }],
+  ['obra-pizarro-5', { artistaId: 'art-pizarro', titulo: 'Azulejos', imagem: 'https://images.squarespace-cdn.com/content/v1/6994a4215b823912be193a1d/1c668a67-3736-4b85-b88c-02754ce17f9a/mariapizarro8.png', fonte: 'https://www.mariapizarrotiles.com/', credito: 'María Pizarro Tiles (site oficial)', notas: 'O site não informa coleção nem ano.' }],
+  ['obra-pizarro-6', { artistaId: 'art-pizarro', titulo: 'Azulejos', imagem: 'https://images.squarespace-cdn.com/content/v1/6994a4215b823912be193a1d/70b46a2c-4a1b-41e0-8d92-43ac2b9f8caf/mariapizarro26.jpg', fonte: 'https://www.mariapizarrotiles.com/', credito: 'María Pizarro Tiles (site oficial)', notas: 'O site não informa coleção nem ano.' }],
+  ['obra-ceudebarro-1', { artistaId: 'art-ceudebarro', titulo: 'Peças do estúdio', imagem: 'https://prapyxjkadyjjsgukkqy.supabase.co/storage/v1/render/image/public/produtos/site/hero-1782078856626.jpg?width=1080&quality=75', fonte: 'https://ceudebarro.com.br/', credito: 'Estúdio Céu de Barro (site oficial)' }],
+  ['obra-ceudebarro-2', { artistaId: 'art-ceudebarro', titulo: 'Peças do estúdio', imagem: 'https://prapyxjkadyjjsgukkqy.supabase.co/storage/v1/object/public/produtos/site/editorial-1782049349260.jpg', fonte: 'https://ceudebarro.com.br/', credito: 'Estúdio Céu de Barro (site oficial)' }],
+  ['obra-ceudebarro-3', { artistaId: 'art-ceudebarro', titulo: 'Barro e céu, misturados à mão', imagem: 'https://prapyxjkadyjjsgukkqy.supabase.co/storage/v1/object/public/produtos/site/about-1-1782099225517.jpg', fonte: 'https://ceudebarro.com.br/sobre', credito: 'Estúdio Céu de Barro (site oficial)' }],
+  ['obra-andreetta-mushroom', { artistaId: 'art-andreetta', titulo: 'Vaso mushroom branco pequeno', dimensoes: '23 × 14,5 cm', imagem: 'https://images.tcdn.com.br/img/img_prod/1273355/vaso_mushroom_p_205_1_e036638c929e7845d5eb0b6c6928b558.jpg', fonte: 'https://www.nataliaandreetta.com/vasos/vaso-mushroom-p', credito: 'Natália Andreetta (site oficial)' }],
+  ['obra-andreetta-mushroom-2', { artistaId: 'art-andreetta', titulo: 'Vaso mushroom branco pequeno (detalhe)', imagem: 'https://images.tcdn.com.br/img/img_prod/1273355/vaso_mushroom_p_205_2_548169eec984529d1bc2233ebed34d78.jpg', fonte: 'https://www.nataliaandreetta.com/vasos/vaso-mushroom-p', credito: 'Natália Andreetta (site oficial)' }],
+  ['obra-andreetta-home', { artistaId: 'art-andreetta', titulo: 'Peças do ateliê', imagem: 'https://images.tcdn.com.br/files/1273355/themes/219/img/NA23_276-full-hd.png', fonte: 'https://www.nataliaandreetta.com/', credito: 'Natália Andreetta (site oficial)' }],
+  ['obra-andreetta-sobre', { artistaId: 'art-andreetta', titulo: 'Cerâmicas para a vida', imagem: 'https://images.tcdn.com.br/img/editor/up/1273355/sobre_desktop.jpg', fonte: 'https://www.nataliaandreetta.com/ceramicas-para-a-vida', credito: 'Natália Andreetta (site oficial)' }],
+  ['obra-isabelsanchez-monstruo', { artistaId: 'art-isabelsanchez', titulo: 'Fragilidad de monstruo', ano: '2018', materiais: 'Cerâmica de alta temperatura', imagem: 'https://imparcialoaxaca.mx/wp-content/uploads/2018/08/Isabel-Sánchez-recrea-la-fragilidad-del-monstruo-1.jpg', fonte: 'https://imparcialoaxaca.mx/arte-y-cultura/isabel-sanchez-recrea-la-fragilidad-del-monstruo/', credito: 'El Imparcial de Oaxaca', serie: 'Fragilidad de monstruo' }],
+  ['obra-isabelsanchez-perdon', { artistaId: 'art-isabelsanchez', titulo: 'Pido perdón y pido permiso', ano: '2026', imagem: 'https://danielbenoit.art/wp-content/uploads/2026/11/IMG_5249-scaled.jpeg', fonte: 'https://danielbenoit.art/isabel-sanchez-salgado/', credito: 'Daniel Benoit Cassou', notas: 'Exposição na CuatroSie7e Galería, Oaxaca.', serie: 'Pido perdón y pido permiso' }],
 ]
 
 /** Falas dos próprios artistas, traduzidas livremente para o português, com o original e a fonte (conferidas em 23/11/2026). */
@@ -1369,22 +1466,30 @@ const CAPAS: Record<string, string> = {
   'art-brennand': 'obra-brennand-ovo', 'art-breve': 'obra-breve-chanfro', 'art-aterra': 'obra-aterra-empilhavel', 'art-mourao': 'obra-mourao-amago', 'art-englund': 'obra-englund-jaca', 'art-renard': 'obra-renard-subtle', 'art-manson': 'obra-manson-grafted', 'art-kurihara': 'obra-kurihara-clown', 'art-huotari': 'obra-huotari-ananas',
   'art-westerlund': 'obra-westerlund-hf-1', 'art-poswa': 'obra-poswa-umthwalo-1', 'art-rudolph': 'obra-rudolph-doux', 'art-peck': 'obra-peck-stretch', 'art-ziperstein': 'obra-ziperstein-fawns',
   'art-41zero42': 'obra-41zero42-futura', 'art-bussoga': 'obra-bussoga-nts', 'art-mutina': 'obra-mutina-grcic', 'art-suro': 'obra-suro-colecao',
+  'art-pizarro': 'obra-pizarro-1', 'art-ceudebarro': 'obra-ceudebarro-1', 'art-andreetta': 'obra-andreetta-mushroom', 'art-isabelsanchez': 'obra-isabelsanchez-monstruo',
 }
 
 /** Semeia o catálogo uma vez por aparelho, com ids fixos (não duplica entre aparelhos nem apaga o que já foi editado). */
 export async function semearArtistas() {
-  if (await db.ajustes.get('seed-artistas-v7')) return
+  if (await db.ajustes.get('seed-artistas-v8')) return
   const existentesA = new Set((await db.artistas.toArray()).map((x) => x.id))
   const existentesO = new Set((await db.obras.toArray()).map((x) => x.id))
   const as: Artista[] = ARTISTAS.filter(([id]) => !existentesA.has(id)).map(([id, a], i) => ({
     ...base(id, i), ...a, falas: a.falas ?? FALAS[id], relacionados: a.relacionados ?? [], capa: a.capa ?? CAPAS[id], origem: 'curadoria', revisadoEm: REV,
   }))
   const os: Obra[] = OBRAS.filter(([id]) => !existentesO.has(id)).map(([id, o], i) => ({ ...base(id, i), tags: [], ...o }))
+  // Estudos que entraram "em aberto" e agora têm fontes: substitui só se o usuário não mexeu no texto.
+  const completados = ARTISTAS.filter(([id, a]) => existentesA.has(id) && !a.tags.includes('a completar'))
+  const abertos = (await db.artistas.bulkGet(completados.map(([id]) => id))).filter((x): x is Artista => !!x && x.tags.includes('a completar') && (x.bio ?? '').startsWith('Estudo em aberto'))
   // Falas traduzidas: só preenche estudos que ainda não têm nenhuma (não sobrescreve edição do usuário).
   const semFalas = (await db.artistas.bulkGet(Object.keys(FALAS))).filter((x): x is Artista => !!x && !x.falas?.length)
   await db.transaction('rw', db.artistas, db.obras, async () => {
     await db.artistas.bulkAdd(as); await db.obras.bulkAdd(os)
+    for (const x of abertos) {
+      const a = ARTISTAS.find(([id]) => id === x.id)![1]
+      await db.artistas.update(x.id, { ...a, falas: a.falas ?? FALAS[x.id], relacionados: a.relacionados ?? x.relacionados, capa: x.capa ?? a.capa ?? CAPAS[x.id], tags: [...new Set([...a.tags, ...x.tags.filter((t) => t !== 'a completar')])], notas: x.notas, fotos: x.fotos, links: x.links, revisadoEm: '23/11/2026', atualizadoEm: Date.now() })
+    }
     for (const x of semFalas) await db.artistas.update(x.id, { falas: FALAS[x.id], atualizadoEm: Date.now() })
   })
-  await db.ajustes.put({ chave: 'seed-artistas-v7', valor: true })
+  await db.ajustes.put({ chave: 'seed-artistas-v8', valor: true })
 }
