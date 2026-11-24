@@ -10,6 +10,7 @@ import { Foto, Tags } from '../../ui/form'
 import { Menu } from '../../ui/Menu'
 import { Relacoes } from '../../ui/Relacoes'
 import { TextoEditavel } from '../../ui/editavel'
+import { ArtistasParecidos } from './ArtistasParecidos'
 import { CampoTitulo, CartaoPeca, Diario, STATUS_SERIE, normPeca, normSerie, novaPeca } from './comum'
 
 /** Página de uma série: intenção, peças (obras e estudos), diário e conexões. */
@@ -95,6 +96,8 @@ export default function SerieDetalhe() {
         <Relacoes tipo="projeto" id={s.id} />
         <p className="faint" style={{ fontSize: 12.5 }}>Conecte referências, artistas, esmaltes e anotações que alimentam esta série.</p>
       </section>
+
+      <ArtistasParecidos key={s.id} ctx={'serie:' + s.id} fotos={[...new Set([...(s.capa ? [s.capa] : []), ...obras.flatMap((p) => p.fotos.slice(0, 1)), ...estudos.flatMap((p) => p.fotos.slice(0, 1))])]} titulo="Artistas parecidos com esta série" />
     </div>
   )
 }

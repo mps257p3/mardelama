@@ -1026,3 +1026,11 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
 .parecidas-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; margin-top: 10px; }
 .parecidas-grade a { aspect-ratio: 1; overflow: hidden; border-radius: 6px; background: var(--surface-2); display: block; }
 .parecidas-grade img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Artistas parecidos (Minhas obras) */
+.art-parecidos-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 14px 10px; margin-top: 10px; }
+.art-parecido { display: flex; flex-direction: column; gap: 3px; color: inherit; text-decoration: none; min-width: 0; }
+.art-parecido .ph { aspect-ratio: 1; border-radius: 8px; overflow: hidden; background: var(--surface-2); display: block; }
+.art-parecido .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.art-parecido .t { font-size: 14px; font-weight: 500; line-height: 1.25; margin-top: 4px; }
+.art-parecido .s { font-size: 12px; color: var(--ink-3); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
