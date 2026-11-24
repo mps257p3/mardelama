@@ -6,6 +6,7 @@
 export const SECOES = [
   { id: 'ceramica', nome: 'Revistas de cerâmica' },
   { id: 'ilustracao', nome: 'Ilustração e design' },
+  { id: 'design', nome: 'Design, embalagem e paisagismo' },
   { id: 'internacional', nome: 'Arte contemporânea internacional' },
   { id: 'brasil', nome: 'Revistas brasileiras' },
   { id: 'japao', nome: 'Revistas japonesas' },
@@ -29,6 +30,9 @@ export const SITES = {
   hifructose: { nome: 'Hi-Fructose', base: 'https://hifructose.com', grupo: 'illustration', secao: 'ilustracao', tipo: 'ilustracao' },
   beautifulbizarre: { nome: 'Beautiful Bizarre', base: 'https://beautifulbizarre.net', grupo: 'illustration', secao: 'ilustracao', tipo: 'ilustracao' },
   rawvision: { nome: 'Raw Vision', base: 'https://rawvision.com', grupo: 'outsider art', secao: 'ilustracao', tipo: 'ilustracao' },
+  // design, embalagem e paisagismo
+  dieline: { nome: 'Dieline (embalagem)', base: 'https://thedieline.com', grupo: 'packaging design', secao: 'design', tipo: 'ilustracao' },
+  landezine: { nome: 'Landezine (paisagismo)', base: 'https://landezine.com', grupo: 'landscape architecture', secao: 'design', tipo: 'arte' },
   // arte contemporânea internacional
   elephant: { nome: 'Elephant', base: 'https://elephant.art', grupo: 'contemporary art', secao: 'internacional', tipo: 'arte' },
   bomb: { nome: 'BOMB', base: 'https://bombmagazine.org', grupo: 'contemporary art', secao: 'internacional', tipo: 'arte' },

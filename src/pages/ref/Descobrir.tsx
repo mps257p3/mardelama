@@ -509,8 +509,9 @@ function LeituraPastas() {
 }
 
 const GRUPOS_FONTES: { nome: string; desc: string; ids: FonteId[] }[] = [
-  { nome: 'Museus e bibliotecas', desc: 'Acervos públicos pelas APIs oficiais. Obra com autoria, data e licença.', ids: ['aic', 'met', 'cma', 'vam', 'smk', 'rijks', 'mia', 'si', 'loc', 'eu'] },
+  { nome: 'Museus e bibliotecas', desc: 'Acervos públicos pelas APIs oficiais. Obra com autoria, data e licença.', ids: ['aic', 'met', 'cma', 'vam', 'smk', 'rijks', 'mia', 'si', 'loc', 'nga', 'eu'] },
   { nome: 'Imagens abertas', desc: 'Fotos com licença livre (Wikimedia, Openverse). Mais variadas e mais atuais.', ids: ['wm', 'ov'] },
+  { nome: 'Moodboards', desc: 'Canais públicos do Are.na: referências reunidas por artistas e designers. Material atual, sem data.', ids: ['arena'] },
 ]
 
 /** Uma linha de fonte: nome, estado e o botão de ligar/desligar. */

@@ -46,6 +46,10 @@
     },
     "api/revistas.js": {
       "maxDuration": 30
+    },
+    "api/nga.js": {
+      "maxDuration": 20,
+      "includeFiles": "api/_dados/**"
     }
   }
 }
