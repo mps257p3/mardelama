@@ -5,6 +5,7 @@ import { FolderPlus, Plus, Sparkles } from 'lucide-react'
 import { db, ETAPAS, type Observacao, type Peca, type Serie } from '../../db/schema'
 import { vivos } from '../../lib/artistas'
 import { Foto } from '../../ui/form'
+import { ArtistasParecidos } from './ArtistasParecidos'
 import { CartaoPeca, STATUS_SERIE, nomeEtapa, normPeca, normSerie, novaPeca, novaSerie } from './comum'
 
 const ABAS = [
@@ -108,6 +109,8 @@ export default function MinhasObras() {
             {!!o.fotos?.length && <div className="diario-fotos">{o.fotos.slice(0, 4).map((f) => <span key={f} className="diario-foto"><Foto id={f} /></span>)}</div>}
           </Link>
         ))}</div>)}
+
+      <ArtistasParecidos ctx="minhas-obras" fotos={[...prontas, ...processo].flatMap((p) => p.fotos.slice(0, 1))} titulo="Artistas parecidos com o seu trabalho" />
     </div>
   )
 }

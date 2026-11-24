@@ -10,6 +10,7 @@ import { Relacoes } from '../../ui/Relacoes'
 import { Menu } from '../../ui/Menu'
 import { Tags } from '../../ui/form'
 import { TextoEditavel } from '../../ui/editavel'
+import { ArtistasParecidos } from './ArtistasParecidos'
 import { CampoTitulo, Diario, nomeEtapa, normPeca, normSerie } from './comum'
 
 const CAMPOS: [keyof Peca, string, string][] = [
@@ -101,6 +102,8 @@ export default function PecaDetalhe() {
         <Relacoes tipo="entrada" id={p.id} />
         <p className="faint" style={{ fontSize: 12.5 }}>Conecte os esmaltes, testes, queimas, referências e artistas que entraram nesta peça.</p>
       </section>
+
+      <ArtistasParecidos key={p.id} ctx={'peca:' + p.id} fotos={p.fotos} />
     </div>
   )
 }
