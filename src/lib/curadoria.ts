@@ -35,7 +35,7 @@ export interface GostoIA { resumo: string; consultas: { q: string; universo: str
 export const PESOS_PADRAO: Record<Interacao, number> = { curtir: 1, salvar: 2, painel: 3, semelhantes: 1.5, pesquisar: 0.6, recusar: -2 }
 export const PERFIL_VAZIO: Perfil = {
   termos: {}, universos: {}, artistas: {}, temporario: {}, pesos: PESOS_PADRAO,
-  mistura: { proximo: 60, adjacente: 25, experimental: 15 }, fontes: { aic: true, met: true, wm: true, cma: true, vam: true, smk: true, rijks: true, eu: true, mia: true, si: true, ov: true, loc: true, rev: true },
+  mistura: { proximo: 60, adjacente: 25, experimental: 15 }, fontes: { aic: true, met: true, wm: true, cma: true, vam: true, smk: true, rijks: true, eu: true, mia: true, si: true, ov: true, loc: true, rev: true, nga: true, arena: true },
   vistos: [], recusados: [], curtidos: [], historico: [], curtidasItens: [],
 }
 const CHAVE = 'descobrir.perfil'
@@ -143,7 +143,7 @@ function variar(xs: ItemDescoberta[], tetoAntigas = false) {
   return [...topo, ...fim]
 }
 /** Peso da data quando a época é "todas": o recente sobe e o acervo antigo de museu desce, para o feed não ficar no passado. */
-const bonusRecente = (x: ItemDescoberta) => { const a = x.fonte === 'wm' ? undefined : anoDe(x.data); return a == null ? (x.fonte === 'ov' || x.fonte === 'rev' ? 3 : 0) : a >= 1960 ? 4 : a >= 1880 ? 2 : a >= 1600 ? -2 : -4 }
+const bonusRecente = (x: ItemDescoberta) => { const a = x.fonte === 'wm' ? undefined : anoDe(x.data); return a == null ? (x.fonte === 'ov' || x.fonte === 'rev' || x.fonte === 'arena' ? 3 : 0) : a >= 1960 ? 4 : a >= 1880 ? 2 : a >= 1600 ? -2 : -4 }
 /** Consultas que o feed manda às revistas de arte (Colossal, Artaxis, Illustration Age…): produção atual. */
 const REVISTAS_FEED = ['ceramics', 'ceramic sculpture', 'clay', 'porcelain', 'illustration', 'drawing', 'sculpture', 'painting', 'installation', 'textile', 'printmaking', 'animal sculpture']
 
@@ -418,7 +418,7 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
     const pagina = p.tipo === 'busca' || p.tipo === 'semelhantes' ? 1 + rodada * 2 + Math.floor(i / ligadas.length) : 1 + Math.floor(Math.random() * 8)
     // consulta num idioma específico vai só para o acervo daquele idioma
     const exige = p.tema ? TEMAS.find((t) => t.id === p.tema)?.exige : undefined
-    const daqui = p.soMuseus ? ligadas.filter((f) => f.id !== 'rev') : ligadas
+    const daqui = p.soMuseus ? ligadas.filter((f) => f.id !== 'rev' && f.id !== 'arena') : ligadas
     const ordem = p.fonte ? ligadas.filter((f) => f.id === p.fonte) : daqui.map((_, k) => daqui[(inicio + k) % daqui.length])
     for (const f of ordem) {
       if (falhou.has(f.id)) continue
@@ -431,7 +431,7 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
         if (p.nome) xs = xs.filter((x) => citaArtista(x, p.nome!))
         // fora da época pedida sai; sem data só fica o Openverse (fotos atuais) no filtro contemporâneo
         // na Wikimedia a data é a da fotografia, não a da obra: não serve para o filtro de época
-        if (periodo) xs = xs.filter((x) => { const a = x.fonte === 'wm' ? undefined : anoDe(x.data); return a == null ? epoca === 'contemporanea' && x.fonte === 'ov' : dentro(a, periodo) }).slice(0, porConsulta)
+        if (periodo) xs = xs.filter((x) => { const a = x.fonte === 'wm' ? undefined : anoDe(x.data); return a == null ? epoca === 'contemporanea' && (x.fonte === 'ov' || x.fonte === 'arena') : dentro(a, periodo) }).slice(0, porConsulta)
         // acervo pequeno para essa consulta: a página sorteada veio vazia, volta para uma das primeiras
         if (!xs.length && pagina > 1 && !periodo) xs = await f.buscar(p.q, porConsulta, 1 + Math.floor(Math.random() * Math.min(2, pagina - 1)))
         estados.set(f.id, { id: f.id, ok: true, quando: Date.now() })

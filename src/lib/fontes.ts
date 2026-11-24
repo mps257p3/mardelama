@@ -24,7 +24,7 @@ export interface ItemDescoberta {
   artista?: string          // busca por um artista (Seus artistas, Na mesma linha): o nome pedido
 }
 
-export type FonteId = 'aic' | 'met' | 'wm' | 'cma' | 'vam' | 'smk' | 'rijks' | 'eu' | 'mia' | 'si' | 'ov' | 'loc' | 'rev'
+export type FonteId = 'aic' | 'met' | 'wm' | 'cma' | 'vam' | 'smk' | 'rijks' | 'eu' | 'mia' | 'si' | 'ov' | 'loc' | 'rev' | 'nga' | 'arena'
 /** Faixa de anos pedida pelo filtro de época. As fontes que aceitam filtram na origem; as outras são filtradas depois. */
 export interface Periodo { de?: number; ate?: number }
 export interface Fonte { id: FonteId; nome: string; site: string; buscar: (q: string, n: number, pagina: number, periodo?: Periodo, universo?: string) => Promise<ItemDescoberta[]> }
@@ -352,12 +352,58 @@ const rev: Fonte = {
   },
 }
 
-export const FONTES: Fonte[] = [aic, met, wm, cma, vam, smk, rijks, eu, mia, si, ov, loc, rev]
-export const FONTE: Record<FonteId, Fonte> = { aic, met, wm, cma, vam, smk, rijks, eu, mia, si, ov, loc, rev }
+/**
+ * National Gallery of Art (Washington) — acesso aberto (CC0). Sem API de busca: o app guarda um índice dos dados abertos
+ * da NGA e busca nele pelo servidor (api/nga.js). Imagens pelo IIIF oficial (api.nga.gov). Forte em gravura, desenho
+ * (Index of American Design: aquarelas de cerâmica e arte popular americana), escultura e porcelana chinesa.
+ */
+const nga: Fonte = {
+  id: 'nga', nome: 'National Gallery of Art (Washington)', site: 'https://www.nga.gov/artworks/free-images-and-open-access',
+  async buscar(q, n, pagina, periodo) {
+    const faixa = (periodo?.de != null ? `&de=${periodo.de}` : '') + (periodo?.ate != null ? `&ate=${periodo.ate}` : '')
+    const j = await comTempo(`/api/nga?q=${encodeURIComponent(q)}&n=${n}&p=${pagina}${faixa}`)
+    return (j.itens ?? []).map((x: Record<string, any>) => ({
+      id: 'nga:' + x.id, fonte: 'nga' as const, titulo: limpa(x.titulo) || 'Sem título', autor: x.autor || undefined, data: x.data || (x.ano ? String(x.ano) : undefined),
+      imagem: x.imagem, imagemGrande: x.imagemGrande, link: x.link, licenca: 'Domínio público (NGA Open Access, CC0)', termos: palavras(...(x.termos ?? [])),
+    }))
+  },
+}
+
+/**
+ * Are.na — blocos de imagem dos canais públicos (moodboards de artistas, designers e pesquisadores).
+ * API oficial v2, busca pública sem login; responde direto ao navegador. Sem data: entra como material atual.
+ */
+const arena: Fonte = {
+  id: 'arena', nome: 'Are.na', site: 'https://www.are.na',
+  async buscar(q, n, pagina, periodo) {
+    if (periodo?.ate != null && periodo.ate < 1990) return []
+    const j = await comTempo(`https://api.are.na/v2/search?q=${encodeURIComponent(q)}&per=${Math.min(40, n * 2)}&page=${pagina}`)
+    return (j.blocks ?? []).filter((b: Record<string, any>) => b.class === 'Image' && b.image?.display?.url).slice(0, n).map((b: Record<string, any>) => {
+      // muitos blocos têm só o nome do arquivo como título: tira extensão; código ou número vira "Sem título"
+      const bruto = limpa(b.title || b.generated_title).replace(/\.(jpe?g|png|webp|gif)(\?.*)?$/i, '')
+      const titulo = /\s/.test(bruto) ? bruto : /\d{3}|^[a-f0-9-]{16,}$/i.test(bruto) ? '' : bruto.replace(/[-_]+/g, ' ')
+      const prov = String(b.source?.provider?.name ?? '')
+      const fonteOrig = /^https?:/.test(prov) ? (/instagram|fbcdn/.test(prov) ? 'Instagram' : /twimg/.test(prov) ? 'X' : /pinimg|pinterest/.test(prov) ? 'Pinterest' : '') : prov
+      return {
+        id: 'arena:' + b.id, fonte: 'arena' as const, titulo: titulo.slice(0, 140) || 'Sem título',
+        imagem: b.image.display.url, imagemGrande: b.image.large?.url || b.image.original?.url || b.image.display.url,
+        link: `https://www.are.na/block/${b.id}`,
+        licenca: `© do autor · uso pessoal (via Are.na${b.user?.full_name ? ', salvo por ' + String(b.user.full_name).slice(0, 40) : ''}${fonteOrig ? ', origem ' + fonteOrig : ''})`,
+        termos: palavras(...q.split(/\s+/), limpa(b.description).slice(0, 120)),
+      }
+    })
+  },
+}
+
+export const FONTES: Fonte[] = [aic, met, wm, cma, vam, smk, rijks, eu, mia, si, ov, loc, nga, rev, arena]
+export const FONTE: Record<FonteId, Fonte> = { aic, met, wm, cma, vam, smk, rijks, eu, mia, si, ov, loc, rev, nga, arena }
 
 /** Fontes que dependem de configuração: mostradas com o estado real, nunca simuladas. */
 export const FONTES_PENDENTES = [
   { nome: 'Artsy, Glazy, Digitalfire', estado: 'Artsy não tem API aberta para buscar obras. Glazy (receitas de esmalte) e Digitalfire (técnica) são texto e receitas, não um feed de imagens.' },
   { nome: 'Behance, Dribbble, ArtStation, Carbonmade', estado: 'Sem API aberta para buscar trabalhos de outras pessoas. Salve o que gostar pelo Recortes ou pelo Pinterest.' },
+  { nome: 'Cosmos (cosmos.so)', estado: 'Sem API pública nem RSS, e o site proíbe leitura automática do /api. Salve o que gostar pelo Recortes.' },
+  { nome: 'Savee (savee.com)', estado: 'Sem API pública nem RSS; o feed e a API são fechados para leitura automática. Salve o que gostar pelo Recortes.' },
+  { nome: 'Archello', estado: 'Sem API nem RSS, e o site barra qualquer leitura automática (Cloudflare). Fica de fora para não fazer scraping.' },
   { nome: 'Pinterest', estado: 'Não conectado. A API oficial só dá acesso às suas pastas e pins salvos (etapa 4).' },
 ]
