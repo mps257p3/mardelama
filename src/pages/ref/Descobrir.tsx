@@ -49,6 +49,8 @@ export default function Descobrir() {
   const [params, setParams] = useSearchParams()
   const fim = useRef<HTMLDivElement>(null)
   const ocupado = useRef(0)
+  // rodadas seguidas que não trouxeram nada novo: depois de 4, a rolagem para de pedir mais
+  const [vazias, setVazias] = useState(0)
   const salvos = useLiveQuery(async () => new Map((await db.referencias.filter((r) => !!r.origem?.startsWith('descobrir:') && !r.excluido).toArray()).map((r) => [r.origem!.slice(10), r.id])), [], new Map<string, string>())
 
   useEffect(() => { lerPerfil().then((p) => setCurtidos(new Set(p.curtidos))) }, [])
@@ -104,6 +106,7 @@ export default function Descobrir() {
       setEstados(es)
       // no fim, o que ainda não apareceu entra depois, na ordem do gosto (o que já está na tela não se mexe)
       somar(novos, trocar, true)
+      setVazias((v) => (novos.length ? 0 : v + 1))
       if (c.tipo === 'feed' && novos.length) { perfil.vistos = [...perfil.vistos.slice(-1500), ...novos.map((x) => x.id)]; await salvarPerfil(perfil) }
       if (!novos.length && es.length && es.every((e) => !e.ok)) toast('As fontes não responderam agora. Tente de novo em instantes.')
     } finally { ocupado.current--; if (!ocupado.current) setCarregando(false) }
@@ -124,9 +127,11 @@ export default function Descobrir() {
 
   useEffect(() => {
     const el = fim.current; if (!el) return
-    const io = new IntersectionObserver((es) => { if (es[0].isIntersecting && itens.length) carregar(false) }, { rootMargin: '900px' })
+    // o observador é refeito a cada rodada: se a rodada não trouxe nada (ex.: Seus artistas, que só guarda o que cita o artista),
+    // ele tenta de novo com outros artistas e outras páginas, até 4 vezes seguidas
+    const io = new IntersectionObserver((es) => { if (es[0].isIntersecting && itens.length && vazias < 4) carregar(false) }, { rootMargin: '900px' })
     io.observe(el); return () => io.disconnect()
-  }, [carregar, itens.length])
+  }, [carregar, itens.length, vazias])
 
   /** Obras parecidas com uma referência do acervo: a IA lê título, autor, tags e descrição e monta as buscas. */
   async function semelhantesDaRef(id: string) {
@@ -295,7 +300,7 @@ export default function Descobrir() {
 
       {visual && ctx.tipo !== 'curtidas' && (estV.fase === 'baixando' || estV.fase === 'erro' || lendo > 0 || escondidos.size > 0) && (
         <p className="filtro-visual faint">
-          {estV.fase === 'baixando' ? <>Preparando o olhar do app (só na primeira vez){estV.progresso ? ` · ${Math.round(estV.progresso * 100)}%` : '…'}</>
+          {estV.fase === 'baixando' ? (estV.progresso ?? 0) >= 0.99 ? <>Iniciando o olhar do app…</> : <>Baixando o olhar do app (só na primeira vez){estV.progresso ? ` · ${Math.round(estV.progresso * 100)}%` : '…'}</>
             : estV.fase === 'erro' ? <>O filtro visual não carregou agora. As imagens aparecem sem ele.</>
             : lendo > 0 ? <>Comparando as imagens com {ctx.tipo === 'feed' ? (modo === 'seus-artistas' ? 'as obras dos seus estudos' : 'o seu acervo') : 'a imagem de partida'}…</> : null}
           {escondidos.size > 0 && <>{estV.fase === 'pronto' && lendo === 0 ? '' : ' · '}{escondidos.size} {escondidos.size === 1 ? 'imagem não parecia' : 'imagens não pareciam'} com {modo === 'seus-artistas' ? 'o artista' : 'o que você guarda'}. <button className="link" onClick={() => setVerTodas((v) => !v)}>{verTodas ? 'Esconder' : 'Mostrar'}</button></>}
