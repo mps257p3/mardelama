@@ -29,6 +29,7 @@ const ReceitaEditor = carregar(() => import('./pages/lab/ReceitaEditor'))
 const ReceitaComparar = carregar(() => import('./pages/lab/ReceitaComparar'))
 const TesteForm = carregar(() => import('./pages/lab/TesteForm'))
 const TesteDetalhe = carregar(() => import('./pages/lab/TesteDetalhe'))
+const IdeiaDetalhe = carregar(() => import('./pages/lab/IdeiaDetalhe'))
 const TesteComparar = carregar(() => import('./pages/lab/TesteComparar'))
 const Planejar = carregar(() => import('./pages/lab/Planejar'))
 const Referencias = carregar(() => import('./pages/ref/Referencias'))
@@ -114,6 +115,8 @@ export default function App() {
           <Route path="testes/comparar" element={<TesteComparar />} />
           <Route path="testes/:id" element={<TesteDetalhe />} />
           <Route path="testes/:id/editar" element={<TesteForm />} />
+          <Route path="ideias" element={<Superficies aba="ideias" />} />
+          <Route path="ideias/:id" element={<IdeiaDetalhe />} />
           {/* Referências abre no Descobrir; links antigos com ?grupo= etc. continuam caindo no Acervo */}
           <Route path="referencias" element={<EntradaReferencias />} />
           <Route path="referencias/acervo" element={<Referencias />} />
