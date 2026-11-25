@@ -21,7 +21,7 @@ export default function Ideias({ familia }: { familia?: string }) {
   // só os efeitos que já aparecem nas ideias, na ordem da lista
   const usados = EFEITOS.filter((e) => daFamilia.some((i) => i.efeitos.includes(e)))
   const lista = daFamilia.filter((i) => (!efeito || i.efeitos.includes(efeito)) &&
-    (!q || textoBusca(i.titulo, i.esmaltes, i.queima, i.argila, i.autor, i.notas, ...i.efeitos, ...i.tags).includes(normaliza(q))))
+    (!q || textoBusca(i.titulo, i.materiais, i.esmaltes, i.queima, i.argila, i.autor, i.notas, ...i.efeitos, ...i.tags).includes(normaliza(q))))
 
   if (!ideias) return null
   if (!ideias.length) return (

@@ -25,6 +25,17 @@ const NOTAS = [
   'Primeiro teste: 3 plaquinhas de biscoito com 3 bolinhas de vinil cada; pulverizar vermelho→amarelo, amarelo→turquesa e as três cores; metade de cada com fixação a 900 °C antes do transparente, metade sem; queimar na temperatura de sempre.',
 ].join('\n\n')
 
+const MATERIAIS = [
+  'Underglaze ou engobe vermelho: pigmento vermelho encapsulado em zircônio, certificado para 1260 °C',
+  'Underglaze ou engobe amarelo: pigmento amarelo de praseodímio (zircônio-praseodímio)',
+  'Underglaze ou engobe turquesa: pigmento de vanádio-zircônio',
+  'Laranja e verde: nascem da sobreposição; se não der, laranja encapsulado e verde industrial',
+  'Transparente brilhante de alta temperatura, sem zinco: cobre a peça toda',
+  'Para comparar: underglazes comerciais Amaco Velvet (o rótulo indica até cone 10; vermelhos podem enfraquecer)',
+  'Bolinhas de vinil adesivo (ou cera líquida): máscara das bolinhas',
+  'Grês claro pontilhado: base da peça',
+].join('\n')
+
 const IDEIAS: { id: string; imagens: string[]; dados: Omit<IdeiaEsmalte, 'id' | 'criadoEm' | 'atualizadoEm' | 'imagens'> }[] = [
   {
     id: 'ideia-cmw-rainbow-polkadot',
@@ -33,6 +44,7 @@ const IDEIAS: { id: string; imagens: string[]; dados: Omit<IdeiaEsmalte, 'id' | 
       titulo: 'Bolinhas sobre degradê arco-íris',
       efeitos: ['Gradiente', 'Pintado / pincelado', 'Brilhante'],
       familias: [],
+      materiais: MATERIAIS,
       esmaltes: 'Hipótese: bolinhas de vinil adesivo (ou cera) como máscara sobre o biscoito; engobe ou underglaze pulverizado com aerógrafo em degradê (vermelho, laranja, amarelo, verde, turquesa); retirar as máscaras; transparente brilhante por cima.',
       queima: 'Na peça original, provavelmente cone 5/6 em oxidação. No ateliê: 1200 a 1260 °C, forno elétrico, com pigmentos próprios para alta temperatura.',
       argila: 'Grês claro pontilhado (speckled); as bolinhas mostram a própria argila.',
@@ -71,8 +83,11 @@ export async function semearIdeias() {
 
 /** 25/11: anotações mais diretas (sem a nota sobre as IAs, sem "O que se vê" e sem "Possibilidade autoral"; degradê e pigmentos primeiro), se o usuário não mexeu. */
 export async function ajustarIdeias() {
-  if (await db.ajustes.get('fix-ideias-v2')) return
+  if (await db.ajustes.get('fix-ideias-v3')) return
   const x = await db.ideias.get('ideia-cmw-rainbow-polkadot')
   if (x && (x.notas === NOTAS_V1 || x.notas === NOTAS_V2)) await db.ideias.update(x.id, { notas: NOTAS, atualizadoEm: Date.now() })
-  await db.ajustes.put({ chave: 'fix-ideias-v2', valor: true })
+  // novo bloco "Esmaltes e materiais": só preenche se ainda estiver vazio
+  const y = await db.ideias.get('ideia-cmw-rainbow-polkadot')
+  if (y && !y.materiais) await db.ideias.update(y.id, { materiais: MATERIAIS, atualizadoEm: Date.now() })
+  await db.ajustes.put({ chave: 'fix-ideias-v3', valor: true })
 }
