@@ -21,6 +21,8 @@ export async function seedIfEmpty() {
   await semearArtistas()
   const { semearAgenda } = await import('./agendaInicial')
   await semearAgenda()
+  const { semearIdeias } = await import('./ideiasIniciais')
+  await semearIdeias()
 }
 
 const curva = (titulo: string, linhas: [string, string, string][], patamar: string) => `<p>${titulo}</p><table><thead><tr><th>Faixa</th><th>Tempo</th><th>Taxa</th></tr></thead><tbody>${linhas.map(([a, b, c]) => `<tr><td>${a}</td><td>${b}</td><td>${c}</td></tr>`).join('')}</tbody></table><p>${patamar}</p><blockquote>Não existe programação perfeita, existe a que é mais adequada para você.</blockquote>`
