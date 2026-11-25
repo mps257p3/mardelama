@@ -9,8 +9,7 @@ import { useAjuste } from '../db/settings'
 import { AREAS } from '../ui/nav'
 import { Monograma } from '../ui/Monograma'
 import { Foto } from '../ui/form'
-import { LinhaItem, LinhaVazia, Miniatura } from '../ui/itens'
-import { atividadeRecente } from '../lib/atividade'
+import { LinhaItem, Miniatura } from '../ui/itens'
 import { useDestaqueCfg, useSecoesInicio, type SecaoId } from '../lib/inicio'
 
 const vivos = <T extends { excluido?: 0 | 1 }>(xs: T[]) => xs.filter((x) => !x.excluido)
@@ -75,17 +74,6 @@ function Trilho({ itens, tipo }: { itens: Peca[]; tipo: 'esmalte' | 'teste' | 'r
         </Link>
       ))}
     </div>
-  )
-}
-
-function SecAtividade() {
-  const itens = useLiveQuery(() => atividadeRecente(4), [])
-  if (!itens) return null
-  return (
-    <Secao titulo="Atividade recente" link={itens.length ? { to: '/atividade', label: 'Ver tudo' } : undefined}>
-      {itens.length ? <div className="linhas">{itens.map((r) => <LinhaItem key={r.tipo + r.id} to={r.to} tipo={r.tipo} titulo={r.titulo} sub={r.rotulo + (r.sub ? ' · ' + r.sub : '')} foto={r.foto} />)}</div>
-        : <LinhaVazia texto="Nada registrado ainda." acao="Primeira anotação" to="/caderno/nova" />}
-    </Secao>
   )
 }
 
@@ -168,7 +156,7 @@ function SecAgenda() {
 
 const SECOES: Record<SecaoId, () => React.ReactElement | null> = {
   agenda: SecAgenda,
-  atividade: SecAtividade, esmaltes: SecEsmaltes, testes: SecTestes, favoritas: SecFavoritas, notas: SecNotas,
+  esmaltes: SecEsmaltes, testes: SecTestes, favoritas: SecFavoritas, notas: SecNotas,
 }
 
 export default function Home() {
