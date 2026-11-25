@@ -3,7 +3,8 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, Check, ExternalLink, FlaskConical, Heart, Pencil, Trash2 } from 'lucide-react'
 import { db, type IdeiaEsmalte } from '../../db/schema'
-import { alternarFavorito, excluir, useFamilias } from '../../db/hooks'
+import { alternarFavorito, excluir, useEsmaltes, useFamilias } from '../../db/hooks'
+import { normaliza } from '../../lib/filtros'
 import { EFEITOS, testarIdeia } from '../../lib/ideias'
 import { CapaFotos } from '../../ui/GaleriaFotos'
 import { Relacoes } from '../../ui/Relacoes'
@@ -14,6 +15,7 @@ import { CampoTitulo } from '../obras/comum'
 import { ImgRef } from '../ref/ImgRef'
 
 const CAMPOS: [keyof IdeiaEsmalte, string, string][] = [
+  ['materiais', 'Esmaltes e materiais', 'Um por linha. Ex.: Transparente brilhante: cobre tudo'],
   ['esmaltes', 'Como foi feito', 'Esmaltes, camadas, máscaras, ordem de aplicação…'],
   ['queima', 'Queima', 'Ex.: 1260 °C, cone 10, redução'],
   ['argila', 'Argila', 'Ex.: grês escuro com ferro'],
@@ -56,6 +58,7 @@ export default function IdeiaDetalhe() {
   const nav = useNavigate()
   const i = useLiveQuery(() => db.ideias.get(id!), [id])
   const familias = useFamilias()
+  const meusEsmaltes = useEsmaltes()
   const testes = useLiveQuery(async () => (await db.testes.where('ideiaId').equals(id!).toArray()).filter((t) => !t.excluido).sort((a, b) => b.criadoEm - a.criadoEm), [id], [])
   const [criando, setCriando] = useState(false)
   const recem = sp.get('novo') === '1'
@@ -83,6 +86,14 @@ export default function IdeiaDetalhe() {
   const hipotese = /^hip[oó]tese:\s*/i.test(i.esmaltes ?? '')
   const comoFeito = (i.esmaltes ?? '').replace(/^hip[oó]tese:\s*/i, '')
   const origem = [i.autor, i.fonte].filter(Boolean).join(' · ')
+  // "Nome: para que serve", um por linha; se o nome bate com um esmalte seu, vira link
+  const materiais = (i.materiais ?? '').split('\n').map((l) => l.replace(/^[-•*]\s*/, '').trim()).filter(Boolean).map((l) => {
+    const k = l.indexOf(':')
+    const nome = k > 0 ? l.slice(0, k).trim() : l, uso = k > 0 ? l.slice(k + 1).trim() : undefined
+    const n = normaliza(nome)
+    const meu = (meusEsmaltes ?? []).find((e) => (e.nome && n.includes(normaliza(e.nome))) || (e.codigo && n.split(/\s+/).includes(normaliza(e.codigo))))
+    return { nome, uso, meu }
+  })
 
   return (
     <div className="page ideia">
@@ -116,7 +127,7 @@ export default function IdeiaDetalhe() {
               <div className="chips">{familias.map((f) => <button key={f.id} className={'chip' + (i.familias.includes(f.id) ? ' on' : '')} onClick={() => alternar('familias', f.id)}>{f.nome}</button>)}</div>
             </>}
             <dl className="art-ficha" style={{ marginTop: 18 }}>
-              {CAMPOS.map(([k, l, ph]) => <div key={k} style={{ display: 'contents' }}><dt>{l}</dt><dd><TextoEditavel valor={i[k] as string | undefined} multilinha={k === 'esmaltes'} rotulo={l.toLowerCase()} vazio={ph} onSalvar={(v) => salvar({ [k]: v || undefined })} /></dd></div>)}
+              {CAMPOS.map(([k, l, ph]) => <div key={k} style={{ display: 'contents' }}><dt>{l}</dt><dd><TextoEditavel valor={i[k] as string | undefined} multilinha={k === 'esmaltes' || k === 'materiais'} rotulo={l.toLowerCase()} vazio={ph} onSalvar={(v) => salvar({ [k]: v || undefined })} /></dd></div>)}
             </dl>
             <h4>Anotações</h4>
             <TextoEditavel valor={i.notas} multilinha rotulo="anotações" vazio="O que chama atenção, como você acha que foi feito, o que quer tentar…" onSalvar={(v) => salvar({ notas: v || undefined })} />
@@ -134,6 +145,16 @@ export default function IdeiaDetalhe() {
               <button className="btn" onClick={() => setEditando(true)}><Pencil size={14} />Editar</button>
             </div>
 
+            {materiais.length > 0 && <section className="ideia-bloco">
+              <h3>Esmaltes e materiais</h3>
+              <ul className="ideia-mat">{materiais.map((m, k) => (
+                <li key={k}>
+                  <span className="n">{m.meu ? <Link to={`/esmaltes/${m.meu.id}`}>{m.nome}</Link> : m.nome}{m.meu && <span className="meu">no seu laboratório</span>}</span>
+                  {m.uso && <span className="u">{m.uso}</span>}
+                </li>
+              ))}</ul>
+            </section>}
+
             {comoFeito && <section className="ideia-bloco">
               <h3>Como foi feito {hipotese && <span className="ideia-hip">hipótese</span>}</h3>
               <Leitura texto={comoFeito} numerada />
@@ -146,7 +167,7 @@ export default function IdeiaDetalhe() {
             </div>}
 
 
-            {!comoFeito && !marcas.length && !i.queima && !i.argila && !i.notas && <p className="faint" style={{ marginTop: 18 }}>Toque em Editar para contar o que se sabe desta esmaltação.</p>}
+            {!comoFeito && !materiais.length && !marcas.length && !i.queima && !i.argila && !i.notas && <p className="faint" style={{ marginTop: 18 }}>Toque em Editar para contar o que se sabe desta esmaltação.</p>}
           </div>
         )}
       </div>

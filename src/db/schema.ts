@@ -179,7 +179,8 @@ export interface IdeiaEsmalte extends Base {
   imagemExterna?: string     // imagem na fonte, quando não deu para baixar
   efeitos: string[]          // escorrido, crawl, cristais…
   familias: string[]         // ids de família de esmalte
-  esmaltes?: string          // esmaltes e camadas, em texto livre
+  materiais?: string         // esmaltes e materiais, um por linha: "Nome: para que serve"
+  esmaltes?: string          // como foi feito: passos, camadas, máscaras
   queima?: string            // temperatura, cone, atmosfera
   argila?: string
   autor?: string

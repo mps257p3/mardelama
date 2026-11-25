@@ -1073,3 +1073,9 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
 .ideia-tags { display: flex; flex-wrap: wrap; gap: 6px 12px; margin: 22px 0 0; font-size: 13px; color: var(--ink-3); }
 .ideia-credito { border-top: 1px solid var(--line); padding-top: 18px; margin-top: 32px !important; }
 .ideia-credito .eyebrow { color: var(--ink-3); }
+.ideia-mat { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.ideia-mat li { display: grid; gap: 2px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.ideia-mat .n { font-size: 16px; font-weight: 500; line-height: 1.35; }
+.ideia-mat .n a { color: inherit; text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
+.ideia-mat .meu { margin-left: 8px; font: 500 10.5px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.ideia-mat .u { font-size: 14px; line-height: 1.5; color: var(--ink-2); }
