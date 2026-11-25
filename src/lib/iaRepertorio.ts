@@ -94,7 +94,7 @@ export async function agruparCurtidas(forcar = false): Promise<TemasCurtidas> {
 }
 
 /** Reduz a imagem a 1024 px em JPEG e devolve em base64 (cabe no limite do servidor e custa menos). */
-async function paraBase64(b: Blob) {
+export async function paraBase64(b: Blob) {
   const bmp = await createImageBitmap(b)
   const k = Math.min(1, 1024 / Math.max(bmp.width, bmp.height))
   const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k)

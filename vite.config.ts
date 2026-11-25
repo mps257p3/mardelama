@@ -22,9 +22,14 @@ export default defineConfig({
           { src: '/brand/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/brand/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
-        share_target: { action: '/compartilhar', method: 'GET', params: { title: 'title', text: 'text', url: 'url' } },
+        // fotos, links e textos de outros apps: o service worker guarda e abre a tela "Recebido"
+        share_target: {
+          action: '/compartilhar', method: 'POST', enctype: 'multipart/form-data',
+          params: { title: 'title', text: 'text', url: 'url', files: [{ name: 'arquivos', accept: ['image/*'] }] },
+        },
       },
       workbox: {
+        importScripts: ['compartilhar-sw.js'],
         globPatterns: ['**/*.{js,css,html,png,jpg,svg,woff2}'],
         // o modelo de visão só carrega quando é usado; não entra na instalação do app
         globIgnores: ['**/transformers*.js', '**/ort-*'],
