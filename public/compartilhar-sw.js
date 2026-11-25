@@ -18,3 +18,11 @@ self.addEventListener('fetch', (event) => {
     }
   })())
 })
+
+// O manifesto vem sempre da rede (com o guardado só se estiver sem internet). Assim, ao instalar o app,
+// o Chrome lê a versão atual, com o Compartilhar de imagens, e não uma cópia antiga.
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url)
+  if (event.request.method !== 'GET' || url.origin !== self.location.origin || url.pathname !== '/manifest.webmanifest') return
+  event.respondWith(fetch(event.request, { cache: 'no-store' }).catch(() => caches.match(event.request, { ignoreSearch: true }).then((r) => r || Response.error())))
+})
