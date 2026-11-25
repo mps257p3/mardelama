@@ -36,9 +36,30 @@ const MATERIAIS = [
   'Grês claro pontilhado: base da peça',
 ].join('\n')
 
-const IDEIAS: { id: string; imagens: string[]; dados: Omit<IdeiaEsmalte, 'id' | 'criadoEm' | 'atualizadoEm' | 'imagens'> }[] = [
+const MATERIAIS_MOSCA = [
+  'Esmalte base branco acetinado de alta temperatura (opacificado com zircônio): fundo das peças de mancha',
+  'Esmalte transparente brilhante de alta, sem zinco: base para tingir as cores dos degradês e dos interiores',
+  'Pigmento vermelho encapsulado em zircônio (inclusão), certificado para 1260 °C: mancha e degradê vermelhos, interior vermelho',
+  'Pigmento laranja encapsulado em zircônio: mancha e degradê laranja',
+  'Pigmento azul de cobalto (ou carbonato de cobalto): mancha e degradê azuis; pouca quantidade já dá cor forte',
+  'Pigmento verde de cromo (ou cromo-cobalto para o verde mais escuro): mancha e peças verdes',
+  'Óxido de ferro vermelho bem diluído (opcional): a borda marrom tostada de algumas peças',
+  'Grês branco ou creme: corpo, com a base sem esmalte e três pezinhos',
+  'Cera ou látex de reserva: protege a base da esmaltação',
+].join('\n')
+
+const NOTAS_MOSCA = [
+  'Duas famílias na mesma coleção: peças brancas com uma mancha de cor pulverizada (bordas granuladas, típicas de aerógrafo) e peças com degradê da boca para baixo, mais carregado na borda e clareando até o branco.',
+  'Diferença para as bolinhas da CMW: aqui a cor parece estar no próprio esmalte (pigmento misturado ao esmalte), e não num underglaze sob transparente. Assim não precisa de queima de fixação, e uma única queima de esmalte resolve.',
+  'Quanto pigmento (ponto de partida): vermelho e laranja encapsulados 8 a 12% no esmalte; verde de cromo 4 a 8%; cobalto 1 a 3% (é muito forte). Testar em plaquinhas antes, porque cada esmalte base responde diferente.',
+  'Cuidados: pigmentos encapsulados aguentam alta temperatura, mas desbotam se o esmalte base tiver muito zinco; verdes de cromo ficam marrons com zinco e podem dar rosa perto de estanho. Pulverizar sempre em cabine com exaustão e máscara PFF3.',
+  'Primeiro teste: plaquinhas com o esmalte branco; pulverizar uma mancha de cada cor, de 10 cm e de 20 cm de distância, para ver o tamanho e o granulado da borda; em outras, pulverizar o esmalte colorido só no terço de cima para testar o degradê; queimar na temperatura de sempre.',
+].join('\n\n')
+
+const IDEIAS: { id: string; em: number; imagens: string[]; dados: Omit<IdeiaEsmalte, 'id' | 'criadoEm' | 'atualizadoEm' | 'imagens'> }[] = [
   {
     id: 'ideia-cmw-rainbow-polkadot',
+    em: T,
     imagens: ['/seed/ideias/cmw-rainbow-loja.jpg', '/seed/ideias/cmw-rainbow-reel.jpg'],
     dados: {
       titulo: 'Bolinhas sobre degradê arco-íris',
@@ -56,6 +77,25 @@ const IDEIAS: { id: string; imagens: string[]; dados: Omit<IdeiaEsmalte, 'id' | 
       notas: NOTAS,
     },
   },
+  {
+    id: 'ideia-oda-mosca',
+    em: Date.UTC(2026, 10, 25, 19, 30),
+    imagens: [1, 2, 3, 4, 5, 6].map((n) => `/seed/ideias/oda-mosca-${n}.jpg`),
+    dados: {
+      titulo: 'Manchas pulverizadas e degradês',
+      efeitos: ['Gradiente', 'Manchado', 'Brilhante', 'Acetinado'],
+      familias: [],
+      materiais: MATERIAIS_MOSCA,
+      esmaltes: 'Hipótese: tornear a peça cônica com base arredondada e três pezinhos; biscoito; reservar a base com cera; para as manchas, mergulhar no esmalte branco e pulverizar com aerógrafo o esmalte colorido num só ponto, de perto, para a borda esfumada; para os degradês, esmaltar o interior com a cor e pulverizar o esmalte colorido mais carregado na boca, diminuindo para baixo; queima única de esmalte em alta.',
+      queima: 'Não informada na publicação. Pelo grês e pelos pigmentos, provavelmente alta temperatura (1200 a 1260 °C) em oxidação, forno elétrico.',
+      argila: 'Grês branco ou creme; a base fica sem esmalte e mostra a argila.',
+      autor: 'Mosca Cerâmica',
+      fonte: 'Coleção Mosca, Colecionáveis ÔDA 2026 (Instagram @odadesignbr)',
+      origem: 'semente:oda-mosca',
+      tags: ['aerógrafo', 'mancha', 'degradê', 'pigmento no esmalte'],
+      notas: NOTAS_MOSCA,
+    },
+  },
 ]
 
 async function arquivoDe(url: string, dono: string) {
@@ -68,17 +108,24 @@ async function arquivoDe(url: string, dono: string) {
   } catch { return undefined }
 }
 
-/** Semeia as ideias uma vez por aparelho, com ids fixos (não duplica nem mexe no que o usuário editou ou excluiu). */
+/**
+ * Semeia cada ideia uma vez por aparelho, com ids fixos (não duplica nem mexe no que o usuário editou ou excluiu).
+ * Cada ideia tem a sua marca; a primeira usava 'seed-ideias-v1'.
+ */
 export async function semearIdeias() {
-  if (await db.ajustes.get('seed-ideias-v1')) return ajustarIdeias()
+  const antiga = !!(await db.ajustes.get('seed-ideias-v1'))
   for (const x of IDEIAS) {
-    if (await db.ideias.get(x.id)) continue
-    const imagens = (await Promise.all(x.imagens.map((u) => arquivoDe(u, x.id)))).filter((a): a is string => !!a)
-    // sem conseguir baixar (offline): tenta de novo na próxima abertura
-    if (!imagens.length) return
-    await db.ideias.add({ id: x.id, criadoEm: T, atualizadoEm: Date.now(), excluido: 0, favorito: 0, ...x.dados, imagens })
+    const chave = 'seed-ideia:' + x.id
+    if (await db.ajustes.get(chave)) continue
+    if (!(antiga && x.id === 'ideia-cmw-rainbow-polkadot') && !(await db.ideias.get(x.id))) {
+      const imagens = (await Promise.all(x.imagens.map((u) => arquivoDe(u, x.id)))).filter((a): a is string => !!a)
+      // sem conseguir baixar (offline): tenta de novo na próxima abertura
+      if (!imagens.length) continue
+      await db.ideias.add({ id: x.id, criadoEm: x.em, atualizadoEm: Date.now(), excluido: 0, favorito: 0, ...x.dados, imagens })
+    }
+    await db.ajustes.put({ chave, valor: true })
   }
-  await db.ajustes.put({ chave: 'seed-ideias-v1', valor: true })
+  await ajustarIdeias()
 }
 
 /** 25/11: anotações mais diretas (sem a nota sobre as IAs, sem "O que se vê" e sem "Possibilidade autoral"; degradê e pigmentos primeiro), se o usuário não mexeu. */
