@@ -127,9 +127,8 @@ export default function IdeiaDetalhe() {
           </div>
         ) : (
           <div className="ideia-ver">
-            <p className="eyebrow">Ideia de esmaltação{i.autor ? ` · ${i.autor}` : ''}</p>
+            <p className="eyebrow">Ideia de esmaltação</p>
             <h1>{i.titulo || 'Ideia sem nome'}</h1>
-            {marcas.length > 0 && <p className="ideia-marcas">{marcas.join(' · ')}</p>}
             <div className="ideia-acoes">
               <button className="btn primary" disabled={criando} onClick={testar}><FlaskConical size={15} />Testar esta ideia</button>
               <button className="btn" onClick={() => setEditando(true)}><Pencil size={14} />Editar</button>
@@ -140,17 +139,14 @@ export default function IdeiaDetalhe() {
               <Leitura texto={comoFeito} numerada />
             </section>}
 
-            {(i.queima || i.argila) && <div className="ideia-fatos">
+            {(marcas.length > 0 || i.queima || i.argila) && <div className="ideia-fatos">
+              {marcas.length > 0 && <Fato rotulo="Superfície">{marcas.join(', ')}</Fato>}
               {i.queima && <Fato rotulo="Queima">{i.queima}</Fato>}
               {i.argila && <Fato rotulo="Argila">{i.argila}</Fato>}
             </div>}
 
-            {(origem || i.url) && <p className="ideia-origem">
-              {origem && <span>{origem}</span>}
-              {i.url && <a href={i.url} target="_blank" rel="noreferrer"><ExternalLink size={13} />Ver a fonte</a>}
-            </p>}
 
-            {!comoFeito && !i.queima && !i.argila && !i.notas && <p className="faint" style={{ marginTop: 18 }}>Toque em Editar para contar o que se sabe desta esmaltação.</p>}
+            {!comoFeito && !marcas.length && !i.queima && !i.argila && !i.notas && <p className="faint" style={{ marginTop: 18 }}>Toque em Editar para contar o que se sabe desta esmaltação.</p>}
           </div>
         )}
       </div>
@@ -177,6 +173,12 @@ export default function IdeiaDetalhe() {
       <section className="secao">
         <Relacoes tipo="ideia" id={i.id} />
       </section>
+
+      {!editando && (origem || i.url) && <p className="ideia-origem ideia-credito">
+        <span className="eyebrow">Fonte</span>
+        {origem && <span>{origem}</span>}
+        {i.url && <a href={i.url} target="_blank" rel="noreferrer"><ExternalLink size={13} />Ver a fonte</a>}
+      </p>}
     </div>
   )
 }
