@@ -48,7 +48,6 @@ export default function Ideias({ familia }: { familia?: string }) {
             {testadas.has(i.id) && <span className="ideia-testada">Com teste</span>}
           </div>
           {i.titulo && <div className="t">{i.titulo}</div>}
-          {(i.efeitos.length > 0 || i.queima) && <div className="s">{[i.efeitos.slice(0, 3).join(', '), i.queima].filter(Boolean).join(' · ')}</div>}
         </Link>
       ))}</div>
     </div>
