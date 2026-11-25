@@ -1079,3 +1079,28 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
 .ideia-mat .n a { color: inherit; text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
 .ideia-mat .meu { margin-left: 8px; font: 500 10.5px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
 .ideia-mat .u { font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+
+/* Recebido (compartilhar de outros apps) */
+.recebido-colar { display: grid; gap: 12px; }
+.recebido-colar textarea { width: 100%; resize: vertical; }
+.recebido-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+.recebido-fotos { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-bottom: 12px; }
+.recebido-fotos img { height: 240px; max-width: 80%; object-fit: cover; border-radius: 10px; flex: none; background: var(--surface-2); }
+.recebido-fotos img:only-child { height: auto; max-height: 420px; max-width: 100%; object-fit: contain; }
+.recebido-link { margin: 0 0 8px; font-size: 13.5px; overflow-wrap: anywhere; }
+.recebido-aviso { font-size: 13px; }
+.recebido-leitura { display: grid; gap: 8px; margin: 8px 0 6px; }
+.recebido-leitura p { margin: 0; }
+.recebido-texto { white-space: pre-wrap; overflow-wrap: anywhere; }
+.recebido-transcricao summary { cursor: pointer; font: 500 11.5px/1.3 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.recebido-transcricao p { margin-top: 6px; white-space: pre-wrap; font-size: 14px; color: var(--ink-2); overflow-wrap: anywhere; }
+.recebido-pergunta { font-size: 24px; margin: 22px 0 10px; }
+.recebido-destinos { display: grid; gap: 8px; }
+.recebido-destino { display: grid; grid-template-columns: 28px 1fr; column-gap: 10px; row-gap: 2px; align-items: center; text-align: left; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; }
+.recebido-destino svg { grid-row: span 2; color: var(--ink-2); }
+.recebido-destino .t { font-weight: 600; display: flex; gap: 8px; align-items: center; }
+.recebido-destino .t em { font-style: normal; font: 500 10.5px/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; padding: 3px 7px; border-radius: 99px; background: var(--terracota, #B46E4B); color: var(--marfim); }
+.recebido-destino .s { font-size: 13px; color: var(--ink-2); }
+.recebido-destino.on { border-color: var(--carvao); box-shadow: 0 0 0 1px var(--carvao); }
+.recebido-destino:disabled { opacity: .6; }
+.recebido-descartar { margin-top: 16px; }

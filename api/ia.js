@@ -12,6 +12,8 @@ const BETAS = ['server-side-fallback-2026-07-01']
 const json = (dados, status = 200) => new Response(JSON.stringify(dados), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } })
 
 const TIPOS = ['Fotografia', 'Ilustração', 'Escultura', 'Pintura', 'Artista', 'Obra de arte', 'Textura', 'Objeto', 'Forma', 'Paleta cromática', 'Link', 'Vídeo']
+// mesma lista de src/lib/ideias.ts
+const EFEITOS = ['Escorrido', 'Camadas sobrepostas', 'Crawl (retraído)', 'Cristais', 'Craquelê', 'Variegado', 'Manchado', 'Gotas', 'Fosco', 'Acetinado', 'Brilhante', 'Texturizado', 'Lunar / crateras', 'Breaking (borda clara)', 'Gradiente', 'Pintado / pincelado', 'Engobe', 'Óxidos', 'Cinzas', 'Redução', 'Lustre / metálico']
 // Limites de tamanho ficam na descrição (o formato estruturado não aceita minItems/maxItems) e são aplicados ao final.
 const lista = (desc) => ({ type: 'array', items: { type: 'string' }, description: desc })
 
@@ -165,6 +167,32 @@ ESQUEMAS.agrupar = {
   },
 }
 
+// o que foi compartilhado de outro app: transcreve, resume e sugere para onde vai
+ESQUEMAS.receber = {
+  type: 'object', additionalProperties: false, required: ['titulo', 'transcricao', 'resumo', 'autor', 'destino', 'porque', 'tags', 'esmalte'],
+  properties: {
+    titulo: { type: 'string', description: 'Título curto e descritivo em português (até 8 palavras).' },
+    transcricao: { type: 'string', description: 'Todo o texto legível nas imagens (legendas, nomes, @perfis, preços, títulos), copiado como está, sem os botões e menus do aplicativo. Vazio se não houver texto.' },
+    resumo: { type: 'string', description: 'Uma ou duas frases dizendo o que é o conteúdo.' },
+    autor: { type: 'string', description: 'Artista, ateliê ou perfil, só se aparecer no conteúdo (ex.: @perfil). Senão, vazio.' },
+    destino: { type: 'string', enum: ['ideia', 'referencia', 'nota'], description: 'ideia = esmaltação ou superfície cerâmica que dá vontade de testar; referencia = imagem de inspiração visual (forma, obra, objeto, natureza); nota = texto, aula, receita, informação ou lembrete.' },
+    porque: { type: 'string', description: 'Motivo do destino, até 12 palavras.' },
+    tags: lista('Até 6 tags em português, minúsculas.'),
+    esmalte: {
+      type: 'object', additionalProperties: false, required: ['materiais', 'como', 'efeitos', 'queima', 'argila', 'notas'],
+      description: 'Só quando o destino é ideia; senão, tudo vazio.',
+      properties: {
+        materiais: lista('Esmaltes, pigmentos e materiais prováveis, um por item, no formato "Nome: para que serve". Concretos: tipo de esmalte, óxidos ou pigmentos, base, argila.'),
+        como: { type: 'string', description: 'Passo a passo provável, começando com "Hipótese:" e com os passos separados por ponto e vírgula.' },
+        efeitos: { type: 'array', items: { type: 'string', enum: EFEITOS }, description: 'Efeitos de superfície que aparecem.' },
+        queima: { type: 'string', description: 'Queima provável (temperatura, atmosfera). Diga que é provável quando não estiver escrito.' },
+        argila: { type: 'string', description: 'Argila aparente.' },
+        notas: { type: 'string', description: 'Parágrafos curtos separados por linha em branco, cada um começando com um rótulo curto e dois-pontos (ex.: "Cuidados: ...", "Primeiro teste: ..."). Prático, sem falar de IA e sem descrever a imagem.' },
+      },
+    },
+  },
+}
+
 const SISTEMA = `Você ajuda um ceramista brasileiro a organizar e ampliar seu repertório de referências visuais.
 Escreva em português do Brasil, num tom editorial, sóbrio e preciso.
 Nunca invente autoria, data, coleção ou procedência: só repita o que veio nos dados. Se não houver, diga que é desconhecido.
@@ -205,6 +233,18 @@ ${imgs.length ? 'As imagens acima são amostras das pastas (uma por pasta, na or
 ${JSON.stringify(d.pastas ?? []).slice(0, 24000)}
 Consultas que já foram feitas recentemente (evite repetir): ${(d.recentes ?? []).slice(0, 40).join(', ') || 'nenhuma'}.
 A partir disso, proponha consultas para um feed de descoberta que traga coisas novas e interessantes, ligadas a essas pastas. Prefira nomes de artistas, movimentos, técnicas e formas específicas a termos genéricos.` },
+      ],
+    }
+  }
+  if (acao === 'receber') {
+    const imgs = (d.imagens ?? []).filter((x) => x?.base64).slice(0, 4)
+    return {
+      esforco: 'low', max: 6000,
+      conteudo: [
+        ...imgs.map((x) => ({ type: 'image', source: { type: 'base64', media_type: x.tipo || 'image/jpeg', data: x.base64 } })),
+        { type: 'text', text: `Um ceramista compartilhou isto para o app do ateliê, vindo de outro aplicativo (Instagram, site, galeria de fotos, WhatsApp).
+${d.titulo ? 'Título recebido: "' + String(d.titulo).slice(0, 300) + '"\n' : ''}${d.texto ? 'Texto recebido: "' + String(d.texto).slice(0, 3000) + '"\n' : ''}${d.url ? 'Link: ' + String(d.url).slice(0, 500) + '\n' : ''}${d.previa ? 'Prévia do link: ' + JSON.stringify(d.previa).slice(0, 600) + '\n' : ''}${imgs.length ? 'As imagens acima são o que foi compartilhado (muitas vezes prints de tela).\n' : ''}
+Transcreva o texto que aparece, diga o que é e sugira para onde vai no app. Se for uma esmaltação ou superfície cerâmica, preencha "esmalte" começando pelos esmaltes e materiais prováveis: é a informação mais útil para ele.` },
       ],
     }
   }
@@ -383,6 +423,7 @@ export async function POST(req) {
   const p = ESQUEMAS[acao] && pedidoDe(acao, d)
   if (!p) return json({ erro: 'Ação desconhecida' }, 400)
   if (acao === 'foto' && !d.imagem?.base64) return json({ erro: 'Sem imagem' }, 400)
+  if (acao === 'receber' && !(d.imagens ?? []).some((x) => x?.base64) && !d.texto && !d.url) return json({ erro: 'Nada para ler' }, 400)
   if ((acao === 'catalogar' || acao === 'explicar') && !d.imagem?.base64 && !/^https:\/\//.test(d.imagem?.url ?? '')) return json({ erro: 'Sem imagem' }, 400)
 
   const client = new Anthropic()

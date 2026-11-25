@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Amphora, Camera, Link2, FlaskConical, Layers, Feather, TestTube, BookOpen, type LucideIcon } from 'lucide-react'
+import { Amphora, Camera, Link2, ScanText, FlaskConical, Layers, Feather, TestTube, BookOpen, type LucideIcon } from 'lucide-react'
 import { Sheet } from './Sheet'
 import { salvarArquivo } from '../db/files'
 import { contextoDaRota, definirContexto } from '../lib/contexto'
@@ -10,6 +10,7 @@ interface Opcao { id: string; nome: string; icon: LucideIcon; cor: string; to?: 
 /** Opções do "+". Cada uma abre um cadastro real; o contexto da página atual vira conexão automática. */
 export const OPCOES_ADICIONAR: Opcao[] = [
   { id: 'peca', nome: 'Peça minha', icon: Amphora, cor: 'var(--c-obras)', to: '/obras?nova=peca' },
+  { id: 'ler', nome: 'Ler print ou site', icon: ScanText, cor: 'var(--c-referencias)', to: '/compartilhar' },
   { id: 'foto', nome: 'Fotografia', icon: Camera, cor: 'var(--c-referencias)' },
   { id: 'link', nome: 'Link', icon: Link2, cor: 'var(--c-referencias)', to: '/referencias/nova?link=1' },
   { id: 'esmalte', nome: 'Esmalte', icon: FlaskConical, cor: 'var(--c-esmaltes)', to: '/esmaltes/novo' },
