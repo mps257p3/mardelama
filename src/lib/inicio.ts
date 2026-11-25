@@ -6,7 +6,6 @@ export const SECOES_INICIO = [
   { id: 'esmaltes', nome: 'Últimos esmaltes' },
   { id: 'testes', nome: 'Últimos testes' },
   { id: 'favoritas', nome: 'Referências favoritas' },
-  { id: 'notas', nome: 'Anotações recentes' },
 ] as const
 export type SecaoId = (typeof SECOES_INICIO)[number]['id']
 export interface SecaoCfg { id: SecaoId; on: boolean }
