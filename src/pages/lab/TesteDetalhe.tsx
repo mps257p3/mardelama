@@ -7,11 +7,13 @@ import { alternarFavorito, excluir, useEsmaltes } from '../../db/hooks'
 import { fmt } from '../../lib/opcoes'
 import { Estrelas, Foto } from '../../ui/form'
 import { Relacoes } from '../../ui/Relacoes'
+import { ImgRef, temImagem } from '../ref/ImgRef'
 
 export default function TesteDetalhe() {
   const { id } = useParams()
   const nav = useNavigate()
   const t = useLiveQuery(() => db.testes.get(id!), [id])
+  const ideia = useLiveQuery(async () => (t?.ideiaId ? db.ideias.get(t.ideiaId) : undefined), [t?.ideiaId])
   const esmaltes = useEsmaltes()
   const receita = useLiveQuery(async () => (t?.receitaId ? db.receitas.get(t.receitaId) : undefined), [t?.receitaId])
   const [foto, setFoto] = useState(0)
@@ -38,6 +40,7 @@ export default function TesteDetalhe() {
         <div>
           <p className="eyebrow">Teste{t.planejado ? ' planejado' : ''}</p>
           <h1 style={{ marginTop: 8 }}>{t.codigo}</h1>
+          {ideia && !ideia.excluido && <Link to={`/ideias/${ideia.id}`} className="teste-ideia">{temImagem(ideia) && <span className="ph"><ImgRef r={ideia} /></span>}<span><span className="eyebrow">Da ideia</span><br />{ideia.titulo || 'Ideia de esmaltação'}</span></Link>}
           {!!t.avaliacao && <div style={{ marginTop: 12 }}><Estrelas value={t.avaliacao} /></div>}
           <div style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
             <Link className="btn sm primary" to={`/testes/${t.id}/editar`}><Pencil size={14} />Editar</Link>

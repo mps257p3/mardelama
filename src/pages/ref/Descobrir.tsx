@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { BookOpen, Bookmark, BookmarkCheck, Camera, Columns2, Compass, ExternalLink, EyeOff, Heart, LayoutDashboard, RefreshCw, Search, SlidersHorizontal, Sparkles, Plug, X, ScanSearch, ChevronDown } from 'lucide-react'
+import { BookOpen, Bookmark, BookmarkCheck, Camera, Columns2, Compass, ExternalLink, EyeOff, Heart, LayoutDashboard, RefreshCw, Search, SlidersHorizontal, Sparkles, Plug, X, ScanSearch, ChevronDown, FlaskConical } from 'lucide-react'
+import { ideiaDeDescobrir } from '../../lib/ideias'
 import { db } from '../../db/schema'
 import { CHAVE_REVISTAS_OFF, FONTES, FONTES_PENDENTES, FONTE, retomarSite, sitePausado, type FonteId, type ItemDescoberta } from '../../lib/fontes'
 import { SECOES, SEM_CAMINHO, SITES } from '../../lib/revistasSites.js'
@@ -410,6 +411,7 @@ function VisorDescobrir({ itens, inicio, curtidos, salvos, onClose, onAgir }: { 
       </div>
       <div className="visor-links">
         <button onClick={() => levar('painel')}><LayoutDashboard size={13} />Levar a um painel</button>
+        <button onClick={async () => { await ideiaDeDescobrir(x); toast('Guardada em Superfícies › Ideias') }}><FlaskConical size={13} />Ideia de esmalte</button>
         <a href={x.link} target="_blank" rel="noreferrer"><ExternalLink size={13} />Ver no museu</a>
       </div>
       {extra === 'explicar' && <ExplicarObra x={x} onClose={() => setExtra(undefined)} />}

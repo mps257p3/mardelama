@@ -17,7 +17,7 @@ export type Tipo =
   | 'esmalte' | 'receita' | 'teste' | 'material' | 'referencia'
   | 'painel' | 'conteudo' | 'nota' | 'grupo' | 'familia'
   | 'curva' | 'queima' | 'comercial' | 'lote' | 'fornecedor' | 'projeto' | 'entrada' | 'paleta' | 'compra'
-  | 'artista' | 'obra' | 'colecao' | 'exposicao'
+  | 'artista' | 'obra' | 'colecao' | 'exposicao' | 'ideia'
 
 export interface Arquivo extends Base {
   nome: string
@@ -138,6 +138,7 @@ export interface Teste extends Base {
   planoId?: string
   descricaoPlano?: string   // ex.: "70% A + 30% B"
   planejado?: 0 | 1         // ainda não queimado
+  ideiaId?: string          // ideia de esmaltação que originou o teste
 }
 
 export interface Material extends Base {
@@ -169,6 +170,24 @@ export interface Material extends Base {
   fichaSeguranca?: string
   linkCompra?: string
   observacoes?: string
+}
+
+/** Ideia de esmaltação: uma imagem de superfície que dá vontade de testar, com o que se sabe dela. */
+export interface IdeiaEsmalte extends Base {
+  titulo: string
+  imagens: string[]          // ids de Arquivo
+  imagemExterna?: string     // imagem na fonte, quando não deu para baixar
+  efeitos: string[]          // escorrido, crawl, cristais…
+  familias: string[]         // ids de família de esmalte
+  esmaltes?: string          // esmaltes e camadas, em texto livre
+  queima?: string            // temperatura, cone, atmosfera
+  argila?: string
+  autor?: string
+  fonte?: string
+  url?: string
+  notas?: string
+  origem?: string            // 'descobrir:<id>' ou 'referencia:<id>' (evita duplicar)
+  tags: string[]
 }
 
 export interface Referencia extends Base {
@@ -498,6 +517,7 @@ export class AtelieDB extends Dexie {
   exposicoes!: EntityTable<Exposicao, 'id'>
   projetos!: EntityTable<Serie, 'id'>
   entrada!: EntityTable<Peca, 'id'>
+  ideias!: EntityTable<IdeiaEsmalte, 'id'>
 
   constructor() {
     super('atelie-mp')
@@ -537,6 +557,11 @@ export class AtelieDB extends Dexie {
     this.version(4).stores({
       projetos: 'id, nome, status, atualizadoEm',
       entrada: 'id, serieId, tipo, etapa, favorito, atualizadoEm',
+    })
+    // Ideias de esmaltação (Superfícies > Ideias)
+    this.version(5).stores({
+      ideias: 'id, origem, *familias, *efeitos, favorito, atualizadoEm, criadoEm',
+      testes: 'id, codigo, esmalteId, receitaId, ideiaId, data, atualizadoEm, criadoEm',
     })
   }
 }

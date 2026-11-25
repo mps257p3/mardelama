@@ -6,7 +6,7 @@ export const ROTULO: Partial<Record<Tipo, string>> = {
   esmalte: 'Esmalte', receita: 'Receita', teste: 'Teste', material: 'Material',
   referencia: 'Referência', conteudo: 'Biblioteca', nota: 'Caderno', painel: 'Painel',
   familia: 'Família', curva: 'Curva de queima', comercial: 'Engenharia reversa',
-  artista: 'Artista', obra: 'Obra', projeto: 'Série', entrada: 'Minha obra', colecao: 'Coleção', exposicao: 'Exposição',
+  artista: 'Artista', obra: 'Obra', projeto: 'Série', entrada: 'Minha obra', colecao: 'Coleção', exposicao: 'Exposição', ideia: 'Ideia de esmaltação',
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -26,6 +26,7 @@ export const DEF: Partial<Record<Tipo, { tabela: string; r: (x: any) => Omit<Res
   exposicao: { tabela: 'exposicoes', r: (x) => ({ titulo: x.titulo, sub: [x.local, x.fim ? 'até ' + x.fim.split('-').reverse().join('/') : x.fimAprox].filter(Boolean).join(' · '), to: `/biblioteca/agenda#${x.id}` }) },
   projeto: { tabela: 'projetos', r: (x) => ({ titulo: x.nome, sub: ['Série', x.ano].filter(Boolean).join(' · '), foto: x.capa, to: `/obras/serie/${x.id}` }) },
   entrada: { tabela: 'entrada', r: (x) => ({ titulo: x.titulo || 'Sem título', sub: x.tipo === 'estudo' ? 'Estudo' : 'Minha obra', foto: x.fotos?.[0], to: `/obras/peca/${x.id}` }) },
+  ideia: { tabela: 'ideias', r: (x) => ({ titulo: x.titulo || 'Ideia de esmaltação', sub: (x.efeitos ?? []).join(', ') || 'Ideia de esmaltação', foto: x.imagens?.[0], fotoUrl: x.imagemExterna, to: `/ideias/${x.id}` }) },
   nota: { tabela: 'notas', r: (x) => ({ titulo: x.titulo || 'Anotação', sub: new Date(x.criadoEm).toLocaleDateString('pt-BR'), foto: x.imagens?.[0], to: `/caderno/${x.id}` }) },
 }
 
