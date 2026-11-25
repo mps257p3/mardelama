@@ -277,3 +277,47 @@ export function termosNoTexto(texto: string): Termo[] {
 }
 
 export const termoPorId = (id: string) => GLOSSARIO.find((t) => t.id === id)
+
+/**
+ * Grafias extras usadas só dentro do próprio glossário (os links entre definições).
+ * Termos que aparecem em quase toda definição (argila, esmalte, massa) ficam de fora para não virar ruído.
+ */
+const EXTRAS: Record<string, string[]> = {
+  sovar: ['sovar', 'sovada'], osso: ['ponto de osso', 'cru seco'], 'retracao-argila': ['retração'], modelagem: ['modelagem manual'],
+  torno: ['torno'], centralizar: ['centralizar', 'centralizada', 'centralização'], 'tornear-pe': ['tornear o pé', 'retornear'],
+  'riscar-colar': ['riscar e colar'], cera: ['reserva com cera', 'cera'], opaco: ['esmalte opaco', 'opaco'],
+  vitrificacao: ['vitrificação', 'vitrifica', 'vitrificada', 'vitrificado'], curva: ['curva de queima'], quartzo: ['inversão do quartzo'],
+  'baixa-alta': ['baixa temperatura', 'alta temperatura'], opacificante: ['opacificante'], lascamento: ['lascamento', 'shivering'], trinca: ['trincas de secagem'],
+}
+/** Mesmo comprimento do original (letra a letra), para achar a posição do termo no texto com acento. */
+const plano = (s: string) => s.split('').map((c) => { const x = tirarAcento(c); return x.length === 1 ? x : c.toLowerCase() }).join('')
+const LIGAR = GLOSSARIO.map((t) => {
+  const ks = [...new Set([...(t.chaves ?? []), ...(EXTRAS[t.id] ?? [])].map(plano))].sort((a, b) => b.length - a.length)
+  return { t, re: ks.length ? new RegExp(`(^|[^a-z0-9])(${ks.map(escapar).join('|')})(?:s|es)?(?=[^a-z0-9]|$)`, 'g') : undefined }
+})
+
+export type Trecho = string | { t: Termo; texto: string }
+
+/** Divide um texto em pedaços, marcando a primeira menção de cada termo do glossário (menos `semId`) para virar link. */
+export function comLinks(texto: string, semId?: string): Trecho[] {
+  const s = plano(texto)
+  const achados: { t: Termo; ini: number; fim: number }[] = []
+  for (const { t, re } of LIGAR) {
+    if (!re || t.id === semId) continue
+    re.lastIndex = 0
+    const m = re.exec(s)
+    if (m) { const ini = m.index + m[1].length; achados.push({ t, ini, fim: m.index + m[0].length }) }
+  }
+  // o mais cedo primeiro; no empate, o mais longo ("esmalte opaco" ganha de "opaco")
+  achados.sort((a, b) => a.ini - b.ini || b.fim - a.fim)
+  const out: Trecho[] = []
+  let pos = 0
+  for (const a of achados) {
+    if (a.ini < pos) continue
+    if (a.ini > pos) out.push(texto.slice(pos, a.ini))
+    out.push({ t: a.t, texto: texto.slice(a.ini, a.fim) })
+    pos = a.fim
+  }
+  if (pos < texto.length) out.push(texto.slice(pos))
+  return out
+}

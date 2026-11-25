@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Search } from 'lucide-react'
 import { db } from '../../db/schema'
-import { CATS_GLOSSARIO, GLOSSARIO, termoPorId, termosNoTexto, type CatGlossario } from '../../lib/glossario'
+import { CATS_GLOSSARIO, GLOSSARIO, comLinks, termoPorId, termosNoTexto, type CatGlossario } from '../../lib/glossario'
 import { secaoPorSlug } from '../../lib/biblioteca'
 import { normaliza } from '../../lib/filtros'
 import { vivos } from '../../lib/artistas'
@@ -53,7 +53,7 @@ export default function Glossario() {
             <details key={t.id + (alvo === t.id ? '-alvo' : '') + (q ? '-q' : '')} id={t.id} className={'glo-termo' + (alvo === t.id ? ' alvo' : '')} open={alvo === t.id || (!!q.trim() && lista.length <= 6)}>
               <summary><h3>{t.termo}{t.original && <span className="orig">{t.original}</span>}</h3></summary>
               <div className="glo-def">
-                <p>{t.def}</p>
+                <p>{comLinks(t.def, t.id).map((x, i) => typeof x === 'string' ? x : <Link key={i} to={`#${x.t.id}`} className="glo-link" title={x.t.termo} onClick={() => { setQ(''); setCat(undefined) }}>{x.texto}</Link>)}</p>
                 {(aparece.get(t.id)?.length ?? 0) > 0 && <p className="glo-mais">Aparece em: {aparece.get(t.id)!.map((a, i) => <span key={a.id}>{i ? ', ' : ''}<Link to={`/biblioteca/artistas/${a.id}`}>{a.nome}</Link></span>)}</p>}
                 {t.ver && <p className="glo-mais">Ver também: {t.ver.map((v, i) => { const x = termoPorId(v); return x && <span key={v}>{i ? ', ' : ''}<Link to={`#${v}`} onClick={() => { setQ(''); setCat(undefined) }}>{x.termo}</Link></span> })}</p>}
               </div>
