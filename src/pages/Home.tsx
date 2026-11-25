@@ -9,7 +9,7 @@ import { useAjuste } from '../db/settings'
 import { AREAS } from '../ui/nav'
 import { Monograma } from '../ui/Monograma'
 import { Foto } from '../ui/form'
-import { LinhaItem, Miniatura } from '../ui/itens'
+import { Miniatura } from '../ui/itens'
 import { useDestaqueCfg, useSecoesInicio, type SecaoId } from '../lib/inicio'
 
 const vivos = <T extends { excluido?: 0 | 1 }>(xs: T[]) => xs.filter((x) => !x.excluido)
@@ -111,24 +111,6 @@ function SecFavoritas() {
   )
 }
 
-function SecNotas() {
-  const itens = useLiveQuery(async () => {
-    const ns = vivos(await db.notas.orderBy('atualizadoEm').reverse().limit(20).toArray())
-      .filter((n) => n.titulo?.trim() || n.corpo.replace(/<[^>]+>|&nbsp;/g, '').trim() || n.imagens.length)
-    return ns.slice(0, 4)
-  }, [])
-  if (!itens?.length) return null
-  const resumo = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80)
-  return (
-    <Secao titulo="Anotações recentes" link={itens.length ? { to: '/caderno', label: 'Abrir caderno' } : undefined}>
-      {itens.length ? <div className="linhas">{itens.map((n) => (
-        <LinhaItem key={n.id} to={`/caderno/${n.id}`} tipo="nota" titulo={n.titulo?.trim() || resumo(n.corpo) || 'Anotação'}
-          sub={new Date(n.criadoEm).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }) + (n.tema ? ' · ' + n.tema : '')} foto={n.imagens[0]} />
-      ))}</div> : null}
-    </Secao>
-  )
-}
-
 function SecAgenda() {
   const itens = useLiveQuery(async () => {
     const hoje = new Date(); const h = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`
@@ -156,7 +138,7 @@ function SecAgenda() {
 
 const SECOES: Record<SecaoId, () => React.ReactElement | null> = {
   agenda: SecAgenda,
-  esmaltes: SecEsmaltes, testes: SecTestes, favoritas: SecFavoritas, notas: SecNotas,
+  esmaltes: SecEsmaltes, testes: SecTestes, favoritas: SecFavoritas,
 }
 
 export default function Home() {
