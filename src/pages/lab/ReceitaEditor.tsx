@@ -183,7 +183,7 @@ export default function ReceitaEditor() {
             <Campo label="Água para este lote"><div className="input" style={{ display: 'flex', alignItems: 'center' }}>{r.aguaMlPor100g ? fmt(r.aguaMlPor100g * pesoBase / 100, 0) + ' ml' : '–'}</div></Campo>
             {(r.liquidos ?? []).map((l, k) => (
               <div key={k} style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 80px 90px 36px', gap: 8 }}>
-                <Texto value={l.nome} placeholder="Aditivo líquido" onChange={(v) => mudar({ liquidos: r.liquidos!.map((x, j) => (j === k ? { ...x, nome: v } : x)) })} />
+                <Texto value={l.nome} placeholder="Ex.: vinagre branco" list="aditivos-liquidos" onChange={(v) => mudar({ liquidos: r.liquidos!.map((x, j) => (j === k ? { ...x, nome: v } : x)) })} />
                 <Numero value={l.quantidade} onChange={(v) => mudar({ liquidos: r.liquidos!.map((x, j) => (j === k ? { ...x, quantidade: v ?? 0 } : x)) })} />
                 <select className="input" value={l.unidade} onChange={(e) => mudar({ liquidos: r.liquidos!.map((x, j) => (j === k ? { ...x, unidade: e.target.value } : x)) })}>
                   <option value="ml/100g">ml/100 g</option><option value="gotas/100g">gotas/100 g</option><option value="ml/lote">ml/lote</option>
@@ -191,7 +191,11 @@ export default function ReceitaEditor() {
                 <button className="iconbtn" aria-label="Remover" onClick={() => mudar({ liquidos: r.liquidos!.filter((_, j) => j !== k) })}><X size={14} /></button>
               </div>
             ))}
-            <div style={{ gridColumn: '1 / -1' }}><button className="btn sm ghost" onClick={() => mudar({ liquidos: [...(r.liquidos ?? []), { nome: '', quantidade: 0, unidade: 'ml/100g' }] })}><Plus size={14} />Aditivo líquido</button></div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <button className="btn sm ghost" onClick={() => mudar({ liquidos: [...(r.liquidos ?? []), { nome: '', quantidade: 0, unidade: 'gotas/100g' }] })}><Plus size={14} />Aditivo líquido</button>
+              <Link to="/biblioteca/glossario#floculacao" className="faint" style={{ fontSize: 12.5, marginLeft: 8 }}>Vinagre, sal de Epsom: quando usar</Link>
+              <datalist id="aditivos-liquidos">{['Vinagre branco', 'Sal de Epsom (solução saturada)', 'Cloreto de cálcio (solução)', 'Defloculante (silicato de sódio)', 'Darvan 7', 'Goma CMC (solução)', 'Conservante'].map((x) => <option key={x} value={x} />)}</datalist>
+            </div>
             <div style={{ gridColumn: '1 / -1' }}><Campo label="Variações e queima"><AreaTexto value={r.parametros} onChange={(v) => mudar({ parametros: v })} rows={linhasDe(r.parametros)} /></Campo></div>
             <div style={{ gridColumn: '1 / -1' }}><Campo label="Curva de queima">
               <select className="input" value={r.curvaId ?? ''} onChange={(e) => mudar({ curvaId: e.target.value || undefined })}>
