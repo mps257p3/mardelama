@@ -283,11 +283,12 @@ export async function semearIdeias() {
   const { semearComerciais, completarEstudosAntigos } = await import('./comerciaisIniciais')
   await semearComerciais().catch(() => undefined)
   await completarEstudosAntigos().catch(() => undefined)
-  const { reescreverTextos, reescreverFormulas, receitaNoEstudo, receitasQueFaltam } = await import('./comerciaisIniciais')
+  const { reescreverTextos, reescreverFormulas, receitaNoEstudo, receitasQueFaltam, tirarPrints } = await import('./comerciaisIniciais')
   await reescreverTextos().catch(() => undefined)
   await reescreverFormulas().catch(() => undefined)
   await receitaNoEstudo().catch(() => undefined)
   await receitasQueFaltam().catch(() => undefined)
+  await tirarPrints().catch(() => undefined)
 }
 
 /** 25/11: anotações mais diretas (sem a nota sobre as IAs, sem "O que se vê" e sem "Possibilidade autoral"; degradê e pigmentos primeiro), se o usuário não mexeu. */

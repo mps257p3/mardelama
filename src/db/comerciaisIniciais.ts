@@ -412,3 +412,18 @@ export async function reescreverTextos() {
   }
   await db.ajustes.put({ chave: 'fix-comercial-textos-v2', valor: true })
 }
+
+/**
+ * 26/11: o print do reel só servia para identificar o esmalte. Quando o estudo já tem as fotos da marca,
+ * tira o print das fotos e do aparelho. Roda a cada abertura (são poucos estudos) até as fotos da marca chegarem.
+ */
+export async function tirarPrints() {
+  for (const c of await db.comerciais.toArray()) {
+    if (c.excluido || c.fotos.length < 2) continue
+    const prints: string[] = []
+    for (const f of c.fotos) if (/-reel\.(jpe?g|png|webp)$/i.test((await db.arquivos.get(f))?.nome ?? '')) prints.push(f)
+    if (!prints.length || prints.length === c.fotos.length) continue
+    await db.comerciais.update(c.id, { fotos: c.fotos.filter((f) => !prints.includes(f)), atualizadoEm: Date.now() })
+    for (const f of prints) await db.arquivos.update(f, { excluido: 1, atualizadoEm: Date.now() })
+  }
+}

@@ -10,12 +10,14 @@ const juntar = (a: string[], b: string[]) => [...new Set([...a, ...b].filter(Boo
 /**
  * Pesquisa um estudo de engenharia reversa com a IA (busca na web): usa as fotos do estudo (até 4)
  * e o que já está escrito (fabricante, nome, código). Preenche só o que a pesquisa trouxe; listas são somadas.
+ * `prints` são imagens usadas só para identificar o esmalte: vão para a IA e não ficam guardadas.
  */
-export async function pesquisarEstudo(id: string) {
+export async function pesquisarEstudo(id: string, prints: Blob[] = []) {
   const c = await db.comerciais.get(id)
   if (!c) throw new Error('Estudo não encontrado')
   if (!(await iaConfigurada())) throw new Error('A IA não está ligada')
-  const blobs = (await Promise.all(c.fotos.slice(0, 4).map((f) => db.arquivos.get(f)))).map((a) => a?.blob).filter((b): b is Blob => !!b)
+  const guardadas = (await Promise.all(c.fotos.slice(0, 4).map((f) => db.arquivos.get(f)))).map((a) => a?.blob).filter((b): b is Blob => !!b)
+  const blobs = [...prints, ...guardadas].slice(0, 4)
   const imagens = await Promise.all(blobs.map(async (b) => ({ base64: await paraBase64(b), tipo: 'image/jpeg' })))
   const texto = [c.fabricante, c.nome, c.codigo, c.serie].filter((x) => x && !PADRAO.includes(x)).join(' · ')
   if (!imagens.length && !texto) throw new Error('Coloque uma foto ou escreva o nome do esmalte')
@@ -42,6 +44,7 @@ export async function pesquisarEstudo(id: string) {
   const novas = await fotosDoFabricante(id, p.imagens ?? [])
   if (novas.length) d.fotos = [...c.fotos, ...novas]
   await db.comerciais.update(id, d)
+  return !!p.nome // false: a IA não identificou o esmalte
 }
 
 /**
