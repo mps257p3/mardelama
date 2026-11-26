@@ -15,12 +15,12 @@ const ITENS = [
   { to: '/calculadoras', nome: 'Calculadoras', desc: 'Ferramentas de bancada', icon: Calculator },
 ] as const
 
-/** Laboratório: as capas de Superfícies no topo e as outras áreas de bancada numa lista embaixo. */
+/** Esmaltaria: as capas de Superfícies no topo e as outras áreas de bancada numa lista embaixo. */
 export default function Laboratorio() {
   const n = useLiveQuery(async () => Object.fromEntries(await Promise.all(ITENS.filter((i) => 't' in i).map(async (i) => [i.to, await vivos((i as { t: string }).t)]))), [], {} as Record<string, number>)
   return (
     <div className="page">
-      <h1 className="sup-titulo">Laboratório</h1>
+      <h1 className="sup-titulo">Esmaltaria</h1>
       <CapasSuperficies />
       <nav className="lab-lista">
         {ITENS.map(({ to, nome, desc, icon: I }) => (

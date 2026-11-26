@@ -22,7 +22,7 @@ export default function Familias() {
 
   return (
     <div className="page" style={{ maxWidth: 720 }}>
-      <Link to="/laboratorio" className="back"><ArrowLeft size={15} />Laboratório</Link>
+      <Link to="/laboratorio" className="back"><ArrowLeft size={15} />Esmaltaria</Link>
       <h1>Famílias de esmaltes</h1>
       <p className="muted" style={{ marginTop: 10 }}>Bases organizadas por comportamento. Um esmalte ou fórmula pode pertencer a várias famílias.</p>
       <form style={{ display: 'flex', gap: 8, margin: '24px 0' }} onSubmit={async (ev) => {

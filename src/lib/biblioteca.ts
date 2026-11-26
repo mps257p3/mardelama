@@ -34,7 +34,7 @@ export const SECOES: SecaoBib[] = [
     slug: 'esmaltes', span: 2, nome: 'Esmaltes', desc: 'Formulações, acabamentos, testes e pesquisas de superfície.',
     cats: ['Esmaltes', 'Técnicas de aplicação'], capa: commons('Ceramics glaze crazing.jpg'), reserva: '/areas/esmaltes.jpg', credito: 'Wikimedia Commons',
     atalhos: [
-      { to: '/esmaltes', nome: 'Superfícies', desc: 'Esmaltes, fórmulas e testes' },
+      { to: '/esmaltes', nome: 'Esmaltaria', desc: 'Esmaltes, fórmulas e testes' },
       { to: '/familias', nome: 'Famílias', desc: 'Classificação do laboratório' },
       { to: '/engenharia-reversa', nome: 'Engenharia reversa', desc: 'Esmaltes comerciais' },
     ],

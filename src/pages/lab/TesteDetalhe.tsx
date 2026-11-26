@@ -31,7 +31,7 @@ export default function TesteDetalhe() {
   ]
   return (
     <div className="page">
-      <Link to="/testes" className="back"><ArrowLeft size={15} />Superfícies</Link>
+      <Link to="/testes" className="back"><ArrowLeft size={15} />Esmaltaria</Link>
       <div className="detalhe">
         <div>
           <div className="capa">{t.fotos[foto] ? <Foto id={t.fotos[foto]} /> : <TestTube size={44} strokeWidth={1} />}</div>
