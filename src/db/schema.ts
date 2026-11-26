@@ -72,8 +72,12 @@ export interface Esmalte extends Base {
   fonteReceita?: string
   status?: string
   avaliacao?: number         // 0..5
+  louca?: Louca              // pode ir à louça (pratos, canecas)?
   tags: string[]
 }
+
+/** Uso em louça: sim (declarado/testado), nao (decorativo), testar (só com teste de lixiviação). */
+export type Louca = 'sim' | 'nao' | 'testar'
 
 export type ClasseIngrediente = 'base' | 'corante' | 'opacificante' | 'aditivo'
 export interface Ingrediente {
@@ -88,6 +92,8 @@ export interface Receita extends Base {
   codigo?: string
   familias?: string[]        // ids de Familia (uma fórmula pode ter várias)
   status?: string            // ex.: 'Experimental — ainda não testada'
+  temperatura?: string       // ex.: '1220 °C, cone 6, oxidação'
+  louca?: Louca
   objetivo?: string
   referencia?: string        // referência estética (não é reprodução confirmada)
   fonte?: string
@@ -310,6 +316,7 @@ export interface Comercial extends Base {
   curvaId?: string
   fontes: string[]
   observacoes?: string
+  louca?: Louca
   receita?: ReceitaTeste      // receita de teste: fica só no estudo até ser aprovada (aí vira uma Fórmula)
 }
 

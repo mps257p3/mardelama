@@ -1,7 +1,7 @@
-import { db, type Comercial, type Ingrediente } from '../db/schema'
+import { db, type Comercial, type Ingrediente, type Louca } from '../db/schema'
 import { chamar, iaConfigurada, paraBase64 } from './iaRepertorio'
 
-interface Pesquisa { fabricante: string; nome: string; codigo: string; serie: string; cone: string; temperatura: string; instrucoes: string; declarados: string[]; usos?: string[]; documentacao: string; hipoteses: string[]; fontes: string[]; observacoes: string; avisos: string[]; imagens?: string[]
+interface Pesquisa { fabricante: string; nome: string; codigo: string; serie: string; cone: string; temperatura: string; louca?: Louca; instrucoes: string; declarados: string[]; usos?: string[]; documentacao: string; hipoteses: string[]; fontes: string[]; observacoes: string; avisos: string[]; imagens?: string[]
   receita?: { ingredientes: Ingrediente[]; parametros?: string; preparo?: string } }
 
 const PADRAO = ['Fabricante', 'Novo esmalte estudado', 'Estudo de print', 'Esmalte não identificado']
@@ -30,6 +30,7 @@ export async function pesquisarEstudo(id: string, prints: Blob[] = []) {
   if (p.nome) d.nome = p.nome
   else if (PADRAO.includes(c.nome)) d.nome = 'Esmalte não identificado'
   for (const k of ['codigo', 'serie', 'cone', 'temperatura', 'instrucoes', 'documentacao'] as const) if (p[k]) d[k] = p[k]
+  if (p.louca && (!c.louca || p.louca !== 'testar')) d.louca = p.louca
   if (obs) d.observacoes = c.observacoes && !c.observacoes.includes(obs) ? c.observacoes + '\n\n' + obs : obs
   // receita de teste (hipótese em 100 g): só entra se o estudo ainda não tem uma
   if (!c.receita && p.receita?.ingredientes.length) {

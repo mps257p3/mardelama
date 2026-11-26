@@ -1145,3 +1145,34 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
 .lab-lista .s { font: 400 12.5px/1.4 var(--sans); color: var(--ink-3); margin-top: 2px; }
 .lab-lista .n { font: 500 12px/1 var(--sans); color: var(--ink-3); }
 .lab-lista .seta { color: var(--ink-3); }
+
+/* Uso em louça: selo ao lado da temperatura (estudos, esmaltes e fórmulas) */
+.menu-c.esq .menu-pop { left: 0; right: auto; }
+.linha-queima { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin-top: 8px; }
+.linha-queima > .t { color: var(--ink-2); font-size: 15px; }
+.selo-louca { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px 5px 10px; border-radius: 999px; font-size: 12.5px; line-height: 1.25; border: 1px solid transparent; }
+.selo-louca b { font-weight: 600; }
+.selo-louca span { opacity: .8; }
+.selo-louca span::before { content: '·'; margin-right: 6px; }
+.selo-louca.sim { background: color-mix(in srgb, var(--azul) 13%, var(--marfim)); color: #2C4550; }
+.selo-louca.nao { background: #F2E3D9; color: #7A4A2E; }
+.selo-louca.testar { background: var(--surface-2); color: var(--ink-2); border-color: var(--line); }
+.detalhe > * { min-width: 0; }
+
+/* Perfil da fórmula */
+.formula .formula-nome { font-size: clamp(32px, 4vw, 44px); border: 0; background: none; width: 100%; padding: 0; margin-top: 6px; outline: none; color: var(--ink); }
+.formula .formula-temp { resize: none; width: 100%; line-height: 1.45; border: 0; border-bottom: 1px dashed var(--line-strong); background: none; padding: 2px 0; font: inherit; font-size: 15px; color: var(--ink-2); outline: none; max-width: 100%; }
+.formula .formula-temp:focus { border-bottom-color: var(--ink-2); }
+.formula .formula-objetivo { margin-top: 14px; color: var(--ink-2); font-size: 15px; line-height: 1.55; max-width: 62ch; }
+.formula-acoes { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.formula-sec { margin-top: 30px; }
+.detalhe > div > .formula-sec:first-child { margin-top: 0; }
+.formula-tabela td { padding-left: 4px; padding-right: 4px; }
+.formula-tabela .input { min-width: 0; width: 100%; }
+.formula-lote { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-top: 18px; font-size: 14px; }
+.formula-lote .input { width: 92px; }
+.formula-dobra { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 4px; }
+.formula-dobra summary, .formula-ficha summary { cursor: pointer; min-height: 40px; display: flex; flex-direction: column; justify-content: center; font-size: 14px; color: var(--ink-2); }
+.formula-ficha { padding: 16px 20px; }
+.formula-ficha summary h3 { margin: 0; color: var(--ink); }
+.formula-ficha summary .faint { font-size: 12.5px; margin-top: 2px; }

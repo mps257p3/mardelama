@@ -13,6 +13,7 @@ import { Estrelas, Foto } from '../../ui/form'
 import { Relacoes } from '../../ui/Relacoes'
 import { useToast } from '../../ui/toast'
 import { CapaFotos, GaleriaPecas } from '../../ui/GaleriaFotos'
+import { SeloLouca, loucaDoTexto } from '../../ui/Louca'
 
 const maiusc = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
@@ -63,8 +64,13 @@ export default function EsmalteDetalhe() {
           <p className="eyebrow">{e.codigo}{fam.length ? ' · ' + fam.join(', ') : ''}</p>
           <h1 style={{ marginTop: 8 }}>{e.nome}</h1>
           <p className="faint" style={{ fontSize: 13, marginTop: 4 }}>{maiusc(incluidoEm(e.criadoEm))}</p>
-          <div className="pills" style={{ marginTop: 14 }}>
-            {[e.temperatura && fmt(e.temperatura, 0) + ' °C', e.cone && 'Cone ' + e.cone, e.acabamento, e.textura, e.status].filter(Boolean).map((p) => <span className="pill" key={String(p)}>{p}</span>)}
+          <div className="linha-queima">
+            {(e.temperatura || e.cone) && <span className="t">{[e.temperatura && fmt(e.temperatura, 0) + ' °C', e.cone && 'cone ' + e.cone, e.atmosfera].filter(Boolean).join(', ')}</span>}
+            <SeloLouca origem={e.origem === 'comercial' ? 'fabricante' : 'proprio'} valor={e.louca ?? (e.origem === 'comercial' ? loucaDoTexto([e.observacoes, ...e.tags]) : undefined)}
+              onChange={(v) => db.esmaltes.update(e.id, { louca: v, atualizadoEm: Date.now() })} />
+          </div>
+          <div className="pills" style={{ marginTop: 12 }}>
+            {[e.acabamento, e.textura, e.status].filter(Boolean).map((p) => <span className="pill" key={String(p)}>{p}</span>)}
           </div>
           {!!e.avaliacao && <div style={{ marginTop: 14 }}><Estrelas value={e.avaliacao} /></div>}
           <div className="esm-botoes">
