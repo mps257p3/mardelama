@@ -1,7 +1,7 @@
 import { db, type Comercial } from '../db/schema'
 import { chamar, iaConfigurada, paraBase64 } from './iaRepertorio'
 
-interface Pesquisa { fabricante: string; nome: string; codigo: string; serie: string; cone: string; temperatura: string; instrucoes: string; declarados: string[]; documentacao: string; hipoteses: string[]; fontes: string[]; observacoes: string; avisos: string[]; imagens?: string[] }
+interface Pesquisa { fabricante: string; nome: string; codigo: string; serie: string; cone: string; temperatura: string; instrucoes: string; declarados: string[]; usos?: string[]; documentacao: string; hipoteses: string[]; fontes: string[]; observacoes: string; avisos: string[]; imagens?: string[] }
 
 const PADRAO = ['Fabricante', 'Novo esmalte estudado', 'Estudo de print', 'Esmalte não identificado']
 const juntar = (a: string[], b: string[]) => [...new Set([...a, ...b].filter(Boolean))]
@@ -21,7 +21,7 @@ export async function pesquisarEstudo(id: string) {
   const p = await chamar<Pesquisa>({ acao: 'comercial', imagens, texto }, 175000)
   const obs = [p.observacoes, p.avisos.length ? 'Incertezas: ' + p.avisos.join(' ') : ''].filter(Boolean).join('\n\n')
   const d: Partial<Comercial> = {
-    declarados: juntar(c.declarados, p.declarados), hipoteses: juntar(c.hipoteses, p.hipoteses), fontes: juntar(c.fontes, p.fontes), atualizadoEm: Date.now(),
+    declarados: juntar(c.declarados, p.declarados), usos: juntar(c.usos ?? [], p.usos ?? []), hipoteses: juntar(c.hipoteses, p.hipoteses), fontes: juntar(c.fontes, p.fontes), atualizadoEm: Date.now(),
   }
   if (p.fabricante) d.fabricante = p.fabricante
   if (p.nome) d.nome = p.nome

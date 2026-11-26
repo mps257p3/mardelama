@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { incluidoEm } from '../../lib/data'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, Sparkles, Trash2 } from 'lucide-react'
@@ -9,6 +10,8 @@ import { useFamilias } from '../../db/hooks'
 import { TextoEditavel, ListaEditavel } from '../../ui/editavel'
 import { Fotos, Multi } from '../../ui/form'
 import { Relacoes } from '../../ui/Relacoes'
+
+const maiusc = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export default function ComercialDetalhe() {
   const { id } = useParams()
@@ -29,6 +32,7 @@ export default function ComercialDetalhe() {
       <Link to="/engenharia-reversa" className="back"><ArrowLeft size={15} />Engenharia reversa</Link>
       <p className="eyebrow">{[c.fabricante, c.codigo, c.serie].filter(Boolean).join(' · ')}</p>
       <h1 style={{ marginTop: 8 }}>{c.nome}</h1>
+      <p className="faint" style={{ fontSize: 13, marginTop: 4 }}>{maiusc(incluidoEm(c.criadoEm))}</p>
       {c.temperatura && <p className="muted" style={{ marginTop: 6 }}>{c.temperatura}</p>}
       <div style={{ marginTop: 14 }}>
         <button className="btn" disabled={pesquisando} onClick={async () => {
@@ -38,6 +42,12 @@ export default function ComercialDetalhe() {
         {pesquisando && <p className="recebido-lendo" style={{ marginTop: 10 }}><Sparkles size={15} />Identificando o esmalte e procurando a ficha do fabricante… fique nesta tela, leva 1 ou 2 minutos.</p>}
       </div>
       <p className="aviso" style={{ marginTop: 16 }}>Estudo de referência. Hipóteses não são componentes confirmados, e nenhum resultado aqui indica segurança para contato com alimentos.</p>
+
+      <section className="card" style={{ padding: 18, marginTop: 16 }}>
+        <h3>Melhores usos e condições</h3>
+        <p className="faint" style={{ fontSize: 13, margin: '4px 0 12px' }}>Em que peças, superfícies, queima e combinações o esmalte rende mais.</p>
+        <ListaEditavel rotulo="uso ou condição" itens={c.usos ?? []} onSalvar={(v) => salvar({ usos: v })} vazio="Nada registrado. A pesquisa com IA preenche." />
+      </section>
 
       <Bloco n="1" titulo="Declarado pelo fabricante" sub="Somente o que está no rótulo ou na embalagem.">
         <ListaEditavel rotulo="item declarado" itens={c.declarados} onSalvar={(v) => salvar({ declarados: v })} vazio="Nada declarado registrado." />

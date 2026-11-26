@@ -1,4 +1,5 @@
 import { ArtistasAfins } from '../bib/art/ArtistasAfins'
+import { incluidoEm } from '../../lib/data'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -12,6 +13,8 @@ import { Estrelas, Foto } from '../../ui/form'
 import { Relacoes } from '../../ui/Relacoes'
 import { useToast } from '../../ui/toast'
 import { CapaFotos, GaleriaPecas } from '../../ui/GaleriaFotos'
+
+const maiusc = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export default function EsmalteDetalhe() {
   const { id } = useParams()
@@ -59,6 +62,7 @@ export default function EsmalteDetalhe() {
         <div>
           <p className="eyebrow">{e.codigo}{fam.length ? ' · ' + fam.join(', ') : ''}</p>
           <h1 style={{ marginTop: 8 }}>{e.nome}</h1>
+          <p className="faint" style={{ fontSize: 13, marginTop: 4 }}>{maiusc(incluidoEm(e.criadoEm))}</p>
           <div className="pills" style={{ marginTop: 14 }}>
             {[e.temperatura && fmt(e.temperatura, 0) + ' °C', e.cone && 'Cone ' + e.cone, e.acabamento, e.textura, e.status].filter(Boolean).map((p) => <span className="pill" key={String(p)}>{p}</span>)}
           </div>

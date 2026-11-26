@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { incluidoEm } from '../../lib/data'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, ImagePlus, Plus, Sparkles } from 'lucide-react'
@@ -51,7 +52,7 @@ export default function Comerciais() {
         {itens.map((c) => (
           <Link key={c.id} to={`/engenharia-reversa/${c.id}`}>
             <span className="mini">{c.fotos[0] ? <Foto id={c.fotos[0]} /> : <span style={{ fontSize: 11 }}>{(c.observacoes?.match(/ER-\d+/) ?? [''])[0]}</span>}</span>
-            <span><span className="t">{c.fabricante} {c.nome}</span><br /><span className="s">{[c.codigo, c.serie].filter(Boolean).join(' · ')}</span></span>
+            <span><span className="t">{c.fabricante} {c.nome}</span><br /><span className="s">{[c.codigo, c.serie, incluidoEm(c.criadoEm)].filter(Boolean).join(' · ')}</span></span>
             <span className="r">{c.confirmado ? 'com teste' : 'em estudo'}</span>
           </Link>
         ))}

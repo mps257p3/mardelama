@@ -97,6 +97,16 @@ const NOTAS_KATIEB = [
   'Cuidado: nunca esfregue esmalte seco com a esponja, por causa da poeira.',
 ].join('\n\n')
 
+const USOS_IRON_LUSTRE = [
+  'Superfícies com relevo, carimbo ou entalhe: afina nas partes altas (marrom) e acumula nos fundos, onde aparece o azul-acinzentado',
+  'Aplicação grossa, 2 a 3 demãos: fina, fica chapada e sem flutuação (Bath Potters, The Ceramic Shop)',
+  'Peças verticais e bordas: o esmalte se move, então deixe uma folga sem esmalte no pé',
+  'Cone 5 a 6 em oxidação, forno elétrico: é para onde foi feito (efeito de redução sem redução)',
+  'Resfriamento lento entre 1100 e 900 °C costuma realçar as flutuações (prática comum com rutilo; testar)',
+  'Por cima de outros Potter\'s Choice: a Amaco mostra PC-33 sobre Sage (PC-44), Blue Stone (PC-22), June Bug (PC-10), Iron Yellow (PC-38) e Glacier (C-19)',
+  'Uso utilitário: a Amaco classifica a linha como própria para louça; mesmo assim, teste a sua queima antes de vender',
+]
+
 const IRON_LUSTRE: Omit<Comercial, 'id' | 'criadoEm' | 'atualizadoEm' | 'fotos'> = {
   fabricante: 'Amaco',
   nome: 'Iron Lustre',
@@ -106,6 +116,7 @@ const IRON_LUSTRE: Omit<Comercial, 'id' | 'criadoEm' | 'atualizadoEm' | 'fotos'>
   cone: '5 a 6',
   temperatura: '1186 a 1222 °C, oxidação',
   instrucoes: 'Pincel, 2 a 3 demãos grossas (aplicação fina fica sem graça, sem a flutuação). Deixe uma folga no pé: o esmalte se move. A Amaco mostra combinações com ele por cima de outros PC, como PC-21 Oatmeal.',
+  usos: USOS_IRON_LUSTRE,
   declarados: [
     'Marrom onde fica fino; flutuações azul-acinzentadas onde fica grosso',
     'Efeitos de redução em queima de oxidação (característica da linha Potter\'s Choice)',
@@ -135,6 +146,13 @@ const IRON_LUSTRE: Omit<Comercial, 'id' | 'criadoEm' | 'atualizadoEm' | 'fotos'>
 const FOTOS_IRON_LUSTRE = [6361, 4264, 2686, 8977].map((n) => `https://www.bathpotters.co.uk/images/products/large/2201_${n}.jpg`)
 
 /** Junta as fotos da marca ao estudo (precisa estar logado e com internet; tenta de novo na próxima abertura). */
+async function usosIronLustre() {
+  if (await db.ajustes.get('fix-comercial-usos-v1')) return
+  const c = await db.comerciais.get('comercial-amaco-pc33-iron-lustre')
+  if (c && !c.usos?.length) await db.comerciais.update(c.id, { usos: USOS_IRON_LUSTRE, atualizadoEm: Date.now() })
+  await db.ajustes.put({ chave: 'fix-comercial-usos-v1', valor: true })
+}
+
 async function fotosIronLustre() {
   const id = 'comercial-amaco-pc33-iron-lustre'
   if (await db.ajustes.get('seed-comercial-fotos:' + id)) return
@@ -260,7 +278,11 @@ export async function semearIdeias() {
   await ajustarIdeias()
   await ajustarKatieb()
   await semearIronLustre()
+  await usosIronLustre()
   await fotosIronLustre().catch(() => undefined)
+  const { semearComerciais, completarEstudosAntigos } = await import('./comerciaisIniciais')
+  await semearComerciais().catch(() => undefined)
+  await completarEstudosAntigos().catch(() => undefined)
 }
 
 /** 25/11: anotações mais diretas (sem a nota sobre as IAs, sem "O que se vê" e sem "Possibilidade autoral"; degradê e pigmentos primeiro), se o usuário não mexeu. */

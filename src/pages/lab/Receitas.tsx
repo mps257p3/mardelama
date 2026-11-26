@@ -1,4 +1,5 @@
 import { LinkSegurar } from '../../ui/Segurar'
+import { incluidoEm } from '../../lib/data'
 import { useMemo, useState } from 'react'
 import { Columns2, Download, GitBranch, Grid2x2, Layers, List, ScrollText, Search } from 'lucide-react'
 import { Menu } from '../../ui/Menu'
@@ -74,7 +75,7 @@ export default function Receitas({ embutido, familia }: { embutido?: boolean; fa
                 </div>
                 <div>
                   <div className="t">{r.nome}</div>
-                  <div className="s">{[r.status, r.ehBase ? 'Base reutilizável' : '', 'v' + r.versaoAtual].filter(Boolean).join(' · ')}</div>
+                  <div className="s">{[r.status, r.ehBase ? 'Base reutilizável' : '', 'v' + r.versaoAtual, incluidoEm(r.criadoEm)].filter(Boolean).join(' · ')}</div>
                 </div>
               </LinkSegurar>
             )
@@ -87,7 +88,7 @@ export default function Receitas({ embutido, familia }: { embutido?: boolean; fa
               <div className="mini">{(r.fotos?.[0] ?? (r.esmalteId && fotoEsm.get(r.esmalteId))) ? <Foto id={r.fotos?.[0] ?? fotoEsm.get(r.esmalteId!)} /> : r.origemId ? <GitBranch size={20} strokeWidth={1.2} /> : <ScrollText size={20} strokeWidth={1.2} />}</div>
               <div>
                 <div className="t">{r.codigo && <span className="codigo" style={{ marginRight: 8, color: 'var(--area)' }}>{r.codigo}</span>}{r.nome}</div>
-                <div className="s">{[r.status, (r.familias ?? []).map((f) => codFam.get(f)).filter(Boolean).join(' ') , r.ehBase ? 'Base reutilizável' : '', r.esmalteId && nomeEsm.get(r.esmalteId), r.origemId && 'variação de ' + (nomeRec.get(r.origemId) ?? '…'), r.ingredientes.length + ' ingredientes'].filter(Boolean).join(' · ')}</div>
+                <div className="s">{[r.status, (r.familias ?? []).map((f) => codFam.get(f)).filter(Boolean).join(' ') , r.ehBase ? 'Base reutilizável' : '', r.esmalteId && nomeEsm.get(r.esmalteId), r.origemId && 'variação de ' + (nomeRec.get(r.origemId) ?? '…'), r.ingredientes.length + ' ingredientes', incluidoEm(r.criadoEm)].filter(Boolean).join(' · ')}</div>
               </div>
               <div className="r">v{r.versaoAtual}<br /><span className="faint">base {fmt(somaBase(r.ingredientes), 1)}%</span></div>
             </LinkSegurar>

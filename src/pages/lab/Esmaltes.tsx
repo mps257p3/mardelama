@@ -1,4 +1,5 @@
 import { LinkSegurar } from '../../ui/Segurar'
+import { incluidoEm } from '../../lib/data'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FlaskConical, Grid2x2, List, Plus, Search, SlidersHorizontal, Heart } from 'lucide-react'
@@ -82,7 +83,7 @@ export default function Esmaltes({ embutido, familia }: { embutido?: boolean; fa
               </div>
               <div>
                 <div className="t">{e.nome}</div>
-                <div className="s">{[e.acabamento, e.temperatura ? fmt(e.temperatura, 0) + ' °C' : e.cone && 'cone ' + e.cone].filter(Boolean).join(' · ')}</div>
+                <div className="s">{[e.acabamento, e.temperatura ? fmt(e.temperatura, 0) + ' °C' : e.cone && 'cone ' + e.cone, incluidoEm(e.criadoEm)].filter(Boolean).join(' · ')}</div>
               </div>
             </LinkSegurar>
           ))}
@@ -94,7 +95,7 @@ export default function Esmaltes({ embutido, familia }: { embutido?: boolean; fa
               <div className="mini">{e.fotos[0] ? <Foto id={e.fotos[0]} /> : e.corHex ? <div className="swatch" style={{ background: e.corHex }} /> : <FlaskConical size={20} strokeWidth={1.2} />}</div>
               <div>
                 <div className="t">{e.nome}</div>
-                <div className="s">{[e.codigo, e.familias.map((id) => famNome.get(id)).filter(Boolean).join(', '), e.acabamento, e.textura].filter(Boolean).join(' · ')}</div>
+                <div className="s">{[e.codigo, e.familias.map((id) => famNome.get(id)).filter(Boolean).join(', '), e.acabamento, e.textura, incluidoEm(e.criadoEm)].filter(Boolean).join(' · ')}</div>
               </div>
               <div className="r">
                 {e.temperatura ? fmt(e.temperatura, 0) + ' °C' : e.cone ? 'cone ' + e.cone : ''}
