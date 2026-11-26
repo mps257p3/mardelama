@@ -1112,3 +1112,30 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
 .recebido-perguntas > .btn { justify-self: start; }
 .recebido-lendo { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); font-size: 14px; animation: recebido-pulso 1.6s ease-in-out infinite; }
 @keyframes recebido-pulso { 50% { opacity: .55; } }
+
+/* Superfícies: capas com fotos do ateliê */
+.sup-titulo { font-size: 44px; margin: 6px 0 22px; }
+.sup-capas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sup-capa { position: relative; overflow: hidden; display: block; aspect-ratio: 4 / 5; border-radius: var(--r-lg); color: #FBF6EE; isolation: isolate; }
+.sup-capa.larga { grid-column: 1 / -1; aspect-ratio: 16 / 9; }
+.sup-capa > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; transition: transform .6s ease; }
+.sup-capa:hover > img { transform: scale(1.04); }
+.sup-capa::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(30,22,16,0) 35%, rgba(30,22,16,.7) 100%); }
+.sup-capa.esm { background: radial-gradient(circle at 75% 20%, #6E8C97, var(--c-esmaltes, #3D5965) 70%); }
+.sup-capa.rec { background: radial-gradient(circle at 70% 25%, #C9A27E, var(--argila) 75%); }
+.sup-capa.tes { background: radial-gradient(circle at 70% 25%, #C57A5C, var(--terracota) 75%); }
+.sup-capa.ide { background: radial-gradient(circle at 75% 20%, #8A6A52, var(--marrom) 75%); }
+.sup-icone { position: absolute; right: -14px; top: -8px; z-index: -2; opacity: .28; }
+.sup-texto { position: absolute; left: 16px; right: 40px; bottom: 14px; display: flex; flex-direction: column; }
+.sup-n { font: 500 11px/1.2 var(--sans); letter-spacing: .14em; text-transform: uppercase; opacity: .85; }
+.sup-nome { font: 500 30px/1 var(--serif); letter-spacing: -0.01em; }
+.sup-capa.larga .sup-nome { font-size: 38px; }
+.sup-seta { position: absolute; right: 14px; bottom: 16px; opacity: .85; }
+.sup-familias { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 14px 16px; border-radius: var(--r-lg); border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); }
+.sup-familias .t { font: 500 20px/1 var(--serif); color: var(--carvao, inherit); }
+.sup-familias .cods { display: flex; flex-wrap: wrap; gap: 4px; margin-left: auto; justify-content: flex-end; }
+.sup-familias .cod { font: 500 10.5px/1 var(--sans); letter-spacing: .06em; padding: 4px 6px; border-radius: 999px; background: var(--surface-2); color: var(--ink-3); }
+@media (min-width: 760px) {
+  .sup-capas { grid-template-columns: repeat(3, 1fr); }
+  .sup-capa.larga { grid-column: span 2; aspect-ratio: auto; }
+}
