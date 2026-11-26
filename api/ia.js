@@ -4,10 +4,14 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { exigirLogin } from './_login.js'
 
-const MODELO = 'claude-opus-5-5'
-// Só para entender uma busca (traduzir o pedido em termos de museu): rápida e barata, escolha do Marcelo em 23/11/2026.
+// Modelos (escolha do Marcelo em 26/11/2026, para gastar menos):
+// - Sonnet 5.5 nas tarefas que pedem mais (pesquisa na web, ler o que ele compartilha, sínteses);
+// - Haiku 5.5 nas simples (busca, catalogar, explicar obra, gosto, temas, busca por foto);
+// - Opus 5.5 só de reserva, quando o outro recusa, corta a resposta ou falha.
+const MODELO_FORTE = 'claude-opus-5-5'
+const MODELO_MEDIO = 'claude-sonnet-5-5'
 const MODELO_RAPIDO = 'claude-haiku-5-5'
-const RAPIDAS = new Set(['buscar'])
+const RAPIDAS = new Set(['buscar', 'catalogar', 'explicar', 'gosto', 'agrupar', 'foto'])
 const BETAS = ['server-side-fallback-2026-07-01']
 const json = (dados, status = 200) => new Response(JSON.stringify(dados), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } })
 
@@ -27,6 +31,24 @@ const TIPOS = ['Fotografia', 'Ilustração', 'Escultura', 'Pintura', 'Artista', 
 const EFEITOS = ['Escorrido', 'Camadas sobrepostas', 'Crawl (retraído)', 'Cristais', 'Craquelê', 'Variegado', 'Manchado', 'Gotas', 'Fosco', 'Acetinado', 'Brilhante', 'Texturizado', 'Lunar / crateras', 'Breaking (borda clara)', 'Gradiente', 'Pintado / pincelado', 'Engobe', 'Óxidos', 'Cinzas', 'Redução', 'Lustre / metálico']
 // Limites de tamanho ficam na descrição (o formato estruturado não aceita minItems/maxItems) e são aplicados ao final.
 const lista = (desc) => ({ type: 'array', items: { type: 'string' }, description: desc })
+
+
+const naoAdiantaRepetir = (e) => e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError || e instanceof Anthropic.RateLimitError || (e instanceof Anthropic.BadRequestError && /credit balance/i.test(e.message))
+
+/** Pede ao modelo escolhido; se ele recusar, cortar a resposta ou falhar, a mesma volta é refeita no Opus (com a reserva automática dele). */
+async function pedir(client, params, modelo, uso) {
+  let r
+  try { r = await client.beta.messages.create({ ...params, model: modelo }) } catch (e) {
+    if (naoAdiantaRepetir(e)) throw e
+    console.warn(`${modelo} falhou, usando ${MODELO_FORTE}:`, e instanceof Error ? e.message : e)
+  }
+  if (r) uso = somarUso(uso, r)
+  if (!r || r.stop_reason === 'refusal' || r.stop_reason === 'max_tokens') {
+    r = await client.beta.messages.create({ ...params, model: MODELO_FORTE, betas: BETAS, fallbacks: 'default' })
+    uso = somarUso(uso, r)
+  }
+  return { r, uso }
+}
 
 const ESQUEMAS = {
   buscar: {
@@ -409,13 +431,12 @@ Pesquise na web (site do artista, loja, Instagram público, entrevistas, fornece
   try {
     let r
     for (let i = 0; i < 3; i++) {
-      r = await client.beta.messages.create({
-        model: MODELO, max_tokens: 4000, betas: BETAS, fallbacks: 'default',
+      ;({ r, uso: d.uso } = await pedir(client, {
+        max_tokens: 4000,
         thinking: { type: 'adaptive' }, output_config: { effort: 'low' },
         tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 4 }, { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 3 }],
         messages: mensagens,
-      })
-      d.uso = somarUso(d.uso, r)
+      }, MODELO_MEDIO, d.uso))
       if (r.stop_reason !== 'pause_turn') break
       mensagens.push({ role: 'assistant', content: r.content })
     }
@@ -439,14 +460,13 @@ async function pesquisarArtista(d) {
     let r
     // a busca roda no servidor da Anthropic; se ela pausar no meio, continuamos a mesma conversa (até 3 vezes)
     for (let i = 0; i < 3; i++) {
-      r = await client.beta.messages.create({
-        model: MODELO, max_tokens: 12000, betas: BETAS, fallbacks: 'default',
+      ;({ r, uso } = await pedir(client, {
+        max_tokens: 12000,
         thinking: { type: 'adaptive' }, output_config: { effort: 'medium' },
         system: SISTEMA_ARTISTA,
         tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 6 }, { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 5 }],
         messages: mensagens,
-      })
-      uso = somarUso(uso, r)
+      }, MODELO_MEDIO, uso))
       if (r.stop_reason !== 'pause_turn') break
       mensagens.push({ role: 'assistant', content: r.content })
     }
@@ -512,14 +532,13 @@ ${FORMATO_COMERCIAL}` },
   try {
     let r
     for (let i = 0; i < 3; i++) {
-      r = await client.beta.messages.create({
-        model: MODELO, max_tokens: 10000, betas: BETAS, fallbacks: 'default',
+      ;({ r, uso } = await pedir(client, {
+        max_tokens: 10000,
         thinking: { type: 'adaptive' }, output_config: { effort: 'medium' },
         system: SISTEMA_COMERCIAL,
         tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 6 }, { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 5 }],
         messages: mensagens,
-      })
-      uso = somarUso(uso, r)
+      }, MODELO_MEDIO, uso))
       if (r.stop_reason !== 'pause_turn') break
       mensagens.push({ role: 'assistant', content: r.content })
     }
@@ -572,18 +591,9 @@ export async function POST(req) {
     system: SISTEMA,
     messages: [{ role: 'user', content: p.conteudo }],
   }
-  const forte = () => client.beta.messages.create({ ...base, model: MODELO, betas: BETAS, fallbacks: 'default' })
   try {
     let r
-    if (RAPIDAS.has(acao)) {
-      // a IA rápida não tem reserva automática: se ela recusar ou falhar, a mais forte responde
-      try { r = await client.messages.create({ ...base, model: MODELO_RAPIDO }); d.uso = somarUso(d.uso, r) } catch (e) {
-        if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) throw e
-        console.warn('IA rápida falhou, usando a mais forte:', e instanceof Error ? e.message : e)
-        r = undefined
-      }
-      if (!r || r.stop_reason === 'refusal' || r.stop_reason === 'max_tokens') { r = await forte(); d.uso = somarUso(d.uso, r) }
-    } else { r = await forte(); d.uso = somarUso(d.uso, r) }
+    ;({ r, uso: d.uso } = await pedir(client, base, RAPIDAS.has(acao) ? MODELO_RAPIDO : MODELO_MEDIO, d.uso))
     if (r.stop_reason === 'refusal') return json({ erro: 'A IA não quis responder a este pedido.', uso: d.uso }, 422)
     if (r.stop_reason === 'max_tokens') return json({ erro: 'A resposta ficou longa demais. Tente de novo.', uso: d.uso }, 502)
     const texto = r.content.find((b) => b.type === 'text')?.text
