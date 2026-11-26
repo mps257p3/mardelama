@@ -73,6 +73,16 @@ export function EscolherObra({ ids, onClose }: { ids: string[]; onClose: () => v
   const pecas = useLiveQuery(async () => (await db.entrada.toArray())
     .filter((p) => !p.excluido && p.etapa !== 'pronta')
     .sort((a, b) => (a.etapa === 'ideia' ? 0 : 1) - (b.etapa === 'ideia' ? 0 : 1) || b.atualizadoEm - a.atualizadoEm), [], [])
+  const ideias = useLiveQuery(async () => (await db.ideias.toArray()).filter((i) => !i.excluido).sort((a, b) => b.atualizadoEm - a.atualizadoEm), [], [])
+  async function levarIdeia(iid: string, titulo: string) {
+    const ja = await db.relacoes.where('[bTipo+bId]').equals(['ideia', iid]).toArray()
+    const novos = ids.filter((rid) => !ja.some((x) => !x.excluido && x.aTipo === 'referencia' && x.aId === rid))
+    const agora = Date.now()
+    await db.relacoes.bulkAdd(novos.map((rid) => ({ id: uid(), aTipo: 'referencia' as const, aId: rid, bTipo: 'ideia' as const, bId: iid, criadoEm: agora, atualizadoEm: agora, excluido: 0 as const })))
+    await db.ideias.update(iid, { atualizadoEm: agora })
+    toast(`Levada à ideia "${titulo || 'sem título'}". Está em Esmaltaria › Ideias.`)
+    onClose()
+  }
   async function levar(pid: string, titulo: string) {
     const ja = await db.relacoes.where('[bTipo+bId]').equals(['entrada', pid]).toArray()
     const novos = ids.filter((rid) => !ja.some((x) => !x.excluido && x.aTipo === 'referencia' && x.aId === rid))
@@ -87,9 +97,9 @@ export function EscolherObra({ ids, onClose }: { ids: string[]; onClose: () => v
     const { novaPeca } = await import('../obras/comum')
     await levar(await novaPeca({ titulo }), titulo)
   }
-  return <Sheet label="Levar a uma obra" alto onClose={onClose}>
-    <h3>Levar a uma obra</h3>
-    <p className="faint" style={{ fontSize: 13.5, marginTop: 4 }}>Junte referências para uma peça que ainda vai acontecer. Uma obra pode ter várias.</p>
+  return <Sheet label="Levar a uma obra ou ideia" alto onClose={onClose}>
+    <h3>Levar a uma obra ou ideia</h3>
+    <p className="faint" style={{ fontSize: 13.5, marginTop: 4 }}>Junte referências para uma peça que ainda vai acontecer ou para uma ideia de esmalte. Cada uma pode ter várias.</p>
     <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
       <input className="input" placeholder="Nova obra (ex.: Vaso de muitas bocas)" value={nome} onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void criar() }} />
       <button className="btn primary" disabled={!nome.trim()} onClick={criar}><Plus size={15} />Criar</button>
@@ -98,7 +108,15 @@ export function EscolherObra({ ids, onClose }: { ids: string[]; onClose: () => v
     <div className="lista" style={{ marginTop: 6 }}>
       {pecas.map((p) => (
         <button key={p.id} className="row" style={{ gridTemplateColumns: '1fr auto', background: 'none', border: 0, borderBottom: '1px solid var(--line)', width: '100%', textAlign: 'left' }} onClick={() => levar(p.id, p.titulo)}>
-          <span className="t" style={{ fontSize: 17 }}>{p.titulo || 'Sem título'}</span><span className="faint">{p.etapa === 'ideia' ? 'Ideia' : 'Em processo'}</span>
+          <span className="t" style={{ fontSize: 17 }}>{p.titulo?.trim() || 'Sem título'}</span><span className="faint">{p.etapa === 'ideia' ? 'Ideia' : 'Em processo'}</span>
+        </button>
+      ))}
+    </div>
+    {ideias.length > 0 && <p className="eyebrow" style={{ marginTop: 18 }}>Ideias em andamento</p>}
+    <div className="lista" style={{ marginTop: 6 }}>
+      {ideias.map((i) => (
+        <button key={i.id} className="row" style={{ gridTemplateColumns: '1fr auto', background: 'none', border: 0, borderBottom: '1px solid var(--line)', width: '100%', textAlign: 'left' }} onClick={() => levarIdeia(i.id, i.titulo)}>
+          <span className="t" style={{ fontSize: 17 }}>{i.titulo?.trim() || 'Sem título'}</span><span className="faint">Ideia de esmalte</span>
         </button>
       ))}
     </div>
