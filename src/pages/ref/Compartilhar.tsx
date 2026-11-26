@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, BookOpen, FlaskConical, ImagePlus, Image as ImageIcon, Sparkles, Trash2 } from 'lucide-react'
-import { NAO_SEI, ehInstagram, guardar, temNaoSei, lerComIA, lerRecebido, limparRecebido, previaDoLink, type Destino, type Leitura, type Previa, type Recebido, type Resposta } from '../../lib/recebidos'
+import { ArrowLeft, BookOpen, FlaskConical, ImagePlus, Image as ImageIcon, Palette, Sparkles, Trash2 } from 'lucide-react'
+import { MAX_LEITURA, NAO_SEI, ehInstagram, guardar, temNaoSei, lerComIA, lerRecebido, limparRecebido, previaDoLink, type Destino, type Leitura, type Previa, type Recebido, type Resposta } from '../../lib/recebidos'
 import { useToast } from '../../ui/toast'
 
 const DESTINOS: { id: Destino; nome: string; desc: string; icone: typeof FlaskConical }[] = [
   { id: 'ideia', nome: 'Ideia de esmaltação', desc: 'Esmaltaria > Ideias, com esmaltes e passo a passo', icone: FlaskConical },
   { id: 'referencia', nome: 'Referência', desc: 'Acervo de imagens de inspiração', icone: ImageIcon },
+  { id: 'artista', nome: 'Artista', desc: 'Biblioteca > Artistas: as fotos viram obras dele', icone: Palette },
   { id: 'nota', nome: 'Anotação no caderno', desc: 'Texto, aula, receita ou lembrete', icone: BookOpen },
 ]
 
@@ -81,7 +82,7 @@ export default function Compartilhar() {
     setSalvando(true)
     try {
       const caminho = await guardar(d, r, leitura, previa)
-      toast(d === 'ideia' ? 'Ideia guardada' : d === 'referencia' ? 'Referência guardada' : 'Anotação guardada')
+      toast(d === 'ideia' ? 'Ideia guardada' : d === 'referencia' ? 'Referência guardada' : d === 'artista' ? 'Guardado no artista' : 'Anotação guardada')
       nav(caminho, { replace: true })
     } catch (e) { toast('Não deu para guardar: ' + (e as Error).message); setSalvando(false) }
   }
@@ -131,6 +132,7 @@ export default function Compartilhar() {
             {urls.length ? urls.map((u) => <img key={u} src={u} alt="" />) : <img src={previa!.imagem} alt="" />}
           </div>
         )}
+        {r.imagens.length > 1 && <p className="faint recebido-aviso">{r.imagens.length} fotos, que vão juntas para a mesma ficha.{r.imagens.length > MAX_LEITURA ? ` A leitura olha as ${MAX_LEITURA} primeiras.` : ''}</p>}
         {r.url && <p className="recebido-link"><a href={r.url} target="_blank" rel="noreferrer">{previa?.site || r.url}</a></p>}
         {r.url && ehInstagram(r.url) && !r.imagens.length && <p className="faint recebido-aviso">O Instagram não deixa abrir o post por link. Para ler a imagem e a legenda, compartilhe um print.</p>}
 
