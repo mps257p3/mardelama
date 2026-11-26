@@ -14,6 +14,8 @@ import { Sheet } from '../../ui/Sheet'
 import { Relacoes } from '../../ui/Relacoes'
 import { useToast } from '../../ui/toast'
 import { CapaFotos, GaleriaPecas } from '../../ui/GaleriaFotos'
+import { Menu } from '../../ui/Menu'
+import { SeloLouca, loucaDoTexto } from '../../ui/Louca'
 
 type R = Omit<Receita, 'criadoEm' | 'atualizadoEm'>
 
@@ -76,72 +78,110 @@ export default function ReceitaEditor() {
 
   const linhas = (classe: ClasseIngrediente) => comPeso.map((i, k) => ({ i, k })).filter(({ i }) => i.classe === classe)
 
+  const louca = r.louca ?? (loucaDoTexto([r.parametros, r.observacoes]) === 'nao' ? 'nao' : 'testar')
+  const linhasDe = (s?: string, min = 3) => Math.min(14, Math.max(min, Math.ceil((s ?? '').length / 42) + (s ?? '').split('\n').length))
+  const resumoFicha = [r.codigo, r.status, (r.familias ?? []).map((f) => familias.find((x) => x.id === f)?.nome).filter(Boolean).join(', ')].filter(Boolean).join(' · ')
+
   return (
-    <div className="page">
+    <div className="page formula">
       <Link to="/receitas" className="back"><ArrowLeft size={15} />Esmaltaria</Link>
       <div className="receita-capa">
         <CapaFotos fotos={r.fotos ?? []} alt={r.nome} rotuloAdd="Adicionar foto do esmalte" onChange={(v) => mudar({ fotos: v })}
           vazio={<ScrollText size={36} strokeWidth={1} />} />
       </div>
-      <div className="head">
-        <div style={{ flex: 1, minWidth: 260 }}>
-          <p className="eyebrow">{r.codigo ? r.codigo + ' · ' : 'Fórmula · '}versão {r.versaoAtual}{original?.criadoEm ? ' · ' + incluidoEm(original.criadoEm) : ''}</p>
-          <input className="serif" value={r.nome} onChange={(e) => mudar({ nome: e.target.value })}
-            style={{ fontSize: 'clamp(32px,4vw,44px)', border: 0, background: 'none', width: '100%', padding: 0, marginTop: 6, outline: 'none', color: 'var(--ink)' }} />
-          {r.status && <p style={{ marginTop: 4 }}><span className={'pill' + (/Experimental|Modelo/.test(r.status) ? ' alerta' : '')}>{r.status}</span></p>}
-          {origem && <p className="faint" style={{ fontSize: 13 }}><GitBranch size={13} style={{ verticalAlign: -2 }} /> Variação de <Link to={`/receitas/${origem.id}`} style={{ textDecoration: 'underline' }}>{origem.nome}</Link></p>}
-        </div>
-        <div className="acts">
-          <span className="faint" style={{ fontSize: 12.5, alignSelf: 'center' }}>{sujo ? 'Salvando…' : 'Salvo automaticamente'}</span>
-          <button className="btn primary" onClick={() => { setNotaVersao(''); setPainel('versao') }}>Registrar versão</button>
-        </div>
+
+      <p className="eyebrow">{r.codigo ? r.codigo + ' · ' : 'Fórmula · '}versão {r.versaoAtual}{original?.criadoEm ? ' · ' + incluidoEm(original.criadoEm) : ''}</p>
+      <input className="serif formula-nome" value={r.nome} onChange={(e) => mudar({ nome: e.target.value })} aria-label="Nome da fórmula" />
+      <div className="linha-queima">
+        <textarea className="formula-temp" value={r.temperatura ?? ''} placeholder="Temperatura e cone" aria-label="Temperatura de queima"
+          rows={Math.max(1, Math.ceil((r.temperatura ?? '').length / 40))} onChange={(e) => mudar({ temperatura: e.target.value.replace(/\n/g, ' ') || undefined })} />
+        <SeloLouca origem="proprio" valor={louca} onChange={(v) => mudar({ louca: v })} />
+      </div>
+      {(r.status || origem) && <div className="pills" style={{ marginTop: 10 }}>
+        {r.status && <span className={'pill' + (/Experimental|Modelo/.test(r.status) ? ' alerta' : '')}>{r.status}</span>}
+        {origem && <Link className="pill" to={`/receitas/${origem.id}`}><GitBranch size={11} style={{ verticalAlign: -1 }} /> Variação de {origem.nome}</Link>}
+      </div>}
+      {r.objetivo && <p className="formula-objetivo">{r.objetivo}</p>}
+
+      <div className="formula-acoes">
+        <button className="btn primary sm" onClick={() => { setNotaVersao(''); setPainel('versao') }}>Registrar versão</button>
+        <span className="faint" style={{ fontSize: 12.5 }}>{sujo ? 'Salvando…' : 'Salvo automaticamente'}</span>
+        <span style={{ flex: 1 }} />
+        <Menu itens={[
+          { l: 'Criar variação', icon: <GitBranch size={16} />, onClick: () => derivar('variacao') },
+          { l: 'Duplicar', icon: <Copy size={16} />, onClick: () => derivar('duplicar') },
+          { l: `Histórico de versões (${versoes?.length ?? 0})`, icon: <History size={16} />, onClick: () => setPainel('versoes') },
+          { l: 'Comparar com outra', icon: <Columns2 size={16} />, to: `/receitas/comparar?a=${r.id}` },
+          { l: 'Usar uma base', icon: <Plus size={16} />, onClick: () => setPainel('base') },
+          { sep: true, l: '' },
+          { l: 'Exportar texto', icon: <Download size={16} />, onClick: () => baixar(new Blob([receitaComoTexto(`${r.nome} (v${r.versaoAtual})`, r.ingredientes, pesoBase, r.aguaMlPor100g)], { type: 'text/plain' }), `${r.nome}.txt`) },
+          { l: 'Imprimir', icon: <Printer size={16} />, onClick: () => window.print() },
+          { l: 'Excluir', icon: <Trash2 size={16} />, onClick: async () => { if (confirm('Excluir esta receita?')) { await excluir('receitas', r.id); nav('/receitas') } } },
+        ]} />
       </div>
 
-      <div className="detalhe" style={{ marginTop: 28 }}>
+      <div className="detalhe" style={{ marginTop: 24 }}>
         <div>
+          <h3 className="formula-sec">Receita</h3>
           <div className="tabela-wrap">
-            <table className="tabela">
-              <thead><tr><th>Ingrediente</th><th className="n" style={{ width: 96 }}>%</th><th className="n" style={{ width: 92 }}>Peso (g)</th><th style={{ width: 36 }} /></tr></thead>
+            <table className="tabela formula-tabela">
+              <thead><tr><th>Ingrediente</th><th className="n" style={{ width: 76 }}>%</th><th className="n" style={{ width: 70 }}>{lote.g >= 1000 ? fmt(lote.g / 1000, 1) + ' kg' : lote.g + ' g'}</th><th style={{ width: 32 }} /></tr></thead>
               <tbody>
-                {CLASSES.map((cl) => [
-                  <tr key={cl.v} className="classe-titulo"><td colSpan={3}>{cl.l}{cl.v !== 'base' && <span className="faint" style={{ textTransform: 'none', letterSpacing: 0, marginLeft: 8 }}>% sobre a base</span>}</td>
-                    <td><button className="iconbtn" style={{ width: 30, height: 30 }} aria-label={`Adicionar em ${cl.l}`} onClick={() => addIng(cl.v)}><Plus size={15} /></button></td></tr>,
-                  ...linhas(cl.v).map(({ i, k }) => (
-                    <tr key={cl.v + k}>
-                      <td>
-                        <input className="input" list="materiais-lista" value={i.nome} placeholder="Material" onChange={(e) => {
-                          const m = (materiais ?? []).find((x) => x.nome === e.target.value)
-                          setIng(k, { nome: e.target.value, materialId: m?.id })
-                        }} />
-                        {i.materialId && <Link to={`/materiais/${i.materialId}`} className="faint" style={{ fontSize: 11 }}>no catálogo{mapa.get(i.materialId)?.precoKg != null ? ' · ' + brl(mapa.get(i.materialId)!.precoKg) + '/kg' : ''}</Link>}
-                      </td>
-                      <td><Numero value={i.percentual} onChange={(v) => setIng(k, { percentual: v ?? 0 })} style={{ textAlign: 'right' }} /></td>
-                      <td className="n">{fmt(i.peso, 1)}</td>
-                      <td><button className="iconbtn" style={{ width: 30, height: 30 }} aria-label="Remover" onClick={() => mudar({ ingredientes: r.ingredientes.filter((_, j) => j !== k) })}><X size={14} /></button></td>
-                    </tr>
-                  )),
-                ])}
+                {CLASSES.map((cl) => {
+                  const ls = linhas(cl.v)
+                  return [
+                    <tr key={cl.v} className="classe-titulo"><td colSpan={3}>{cl.l}{cl.v !== 'base' && ls.length > 0 && <span className="faint" style={{ textTransform: 'none', letterSpacing: 0, marginLeft: 8 }}>sobre a base</span>}</td>
+                      <td><button className="iconbtn" style={{ width: 30, height: 30 }} aria-label={`Adicionar em ${cl.l}`} onClick={() => addIng(cl.v)}><Plus size={15} /></button></td></tr>,
+                    ...ls.map(({ i, k }) => (
+                      <tr key={cl.v + k}>
+                        <td>
+                          <input className="input" list="materiais-lista" value={i.nome} placeholder="Material" onChange={(e) => {
+                            const m = (materiais ?? []).find((x) => x.nome === e.target.value)
+                            setIng(k, { nome: e.target.value, materialId: m?.id })
+                          }} />
+                          {i.materialId && <Link to={`/materiais/${i.materialId}`} className="faint" style={{ fontSize: 11 }}>no catálogo{mapa.get(i.materialId)?.precoKg != null ? ' · ' + brl(mapa.get(i.materialId)!.precoKg) + '/kg' : ''}</Link>}
+                        </td>
+                        <td><Numero value={i.percentual} onChange={(v) => setIng(k, { percentual: v ?? 0 })} style={{ textAlign: 'right' }} /></td>
+                        <td className="n">{fmt(i.peso, 1)}</td>
+                        <td><button className="iconbtn" style={{ width: 30, height: 30 }} aria-label="Remover" onClick={() => mudar({ ingredientes: r.ingredientes.filter((_, j) => j !== k) })}><X size={14} /></button></td>
+                      </tr>
+                    )),
+                  ]
+                })}
               </tbody>
               <tfoot>
-                <tr><td>Base</td><td className="n" style={{ color: Math.abs(sb - 100) > 0.05 ? 'var(--terracota)' : undefined }}>{fmt(sb, 2)} %</td><td className="n">{fmt(pesoBase, 1)}</td><td /></tr>
-                <tr><td className="faint" style={{ fontWeight: 400 }}>+ extras</td><td className="n faint" style={{ fontWeight: 400 }}>{fmt(somaExtras(r.ingredientes), 2)} %</td><td className="n faint" style={{ fontWeight: 400 }}>{fmt(pesoBase * somaExtras(r.ingredientes) / 100, 1)}</td><td /></tr>
+                <tr><td>Base</td><td className="n" style={{ color: Math.abs(sb - 100) > 0.05 ? 'var(--terracota)' : undefined }}>{fmt(sb, 1)}</td><td className="n">{fmt(pesoBase, 1)}</td><td /></tr>
+                {somaExtras(r.ingredientes) > 0 && <tr><td className="faint" style={{ fontWeight: 400 }}>+ extras</td><td className="n faint" style={{ fontWeight: 400 }}>{fmt(somaExtras(r.ingredientes), 1)}</td><td className="n faint" style={{ fontWeight: 400 }}>{fmt(pesoBase * somaExtras(r.ingredientes) / 100, 1)}</td><td /></tr>}
                 <tr><td>Total seco</td><td /><td className="n">{fmt(pesoBase * (1 + somaExtras(r.ingredientes) / 100), 1)}</td><td /></tr>
               </tfoot>
             </table>
             <datalist id="materiais-lista">{(materiais ?? []).map((m) => <option key={m.id} value={m.nome}>{m.categoria}</option>)}</datalist>
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
-            <button className="btn sm" disabled={!sb || Math.abs(sb - 100) < 0.005} onClick={() => mudar({ ingredientes: normalizar(r.ingredientes) })}><Scale size={14} />Normalizar base para 100%</button>
-            <button className="btn sm" onClick={() => setPainel('base')}><Plus size={14} />Usar uma base</button>
-          </div>
-          {Math.abs(sb - 100) > 0.05 && sb > 0 && <p className="aviso" style={{ marginTop: 14 }}>A receita base soma {fmt(sb, 2)}%. Os pesos já são calculados proporcionalmente; normalize para registrar em 100%.</p>}
+          {Math.abs(sb - 100) > 0.05 && sb > 0 && <div className="aviso" style={{ marginTop: 14 }}>
+            A base soma {fmt(sb, 2)}%. Os pesos já saem proporcionais; normalize para registrar em 100%.
+            <div style={{ marginTop: 10 }}><button className="btn sm" onClick={() => mudar({ ingredientes: normalizar(r.ingredientes) })}><Scale size={14} />Normalizar base para 100%</button></div>
+          </div>}
 
-          <h3 style={{ marginTop: 32 }}>Líquidos</h3>
-          <div className="form" style={{ marginTop: 14 }}>
-            <Campo label="Água (ml por 100 g de base seca)"><Numero value={r.aguaMlPor100g} onChange={(v) => mudar({ aguaMlPor100g: v })} /></Campo>
+          <div className="formula-lote">
+            <span className="faint">Calcular para</span>
+            <div className="seg">
+              <button className={lote.modo === 'base' ? 'on' : ''} onClick={() => setLote({ ...lote, modo: 'base' })}>base</button>
+              <button className={lote.modo === 'total' ? 'on' : ''} onClick={() => setLote({ ...lote, modo: 'total' })}>total seco</button>
+            </div>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}><Numero value={lote.g} onChange={(v) => setLote({ ...lote, g: v ?? 0 })} /><span>g</span></div>
+            <div className="chips" style={{ width: '100%' }}>{[100, 250, 500, 1000, 2000].map((g) => <button key={g} className={'chip' + (lote.g === g ? ' on' : '')} onClick={() => setLote({ ...lote, g })}>{g >= 1000 ? g / 1000 + ' kg' : g + ' g'}</button>)}</div>
+          </div>
+          <details className="formula-dobra">
+            <summary>Água, volume e custo deste lote</summary>
+            <div style={{ paddingTop: 8 }}><Resumo r={r} pesoBase={pesoBase} comPeso={comPeso} mapa={mapa} custoTotal={c.total} faltando={c.faltando} /></div>
+          </details>
+
+          <h3 className="formula-sec">Preparo e queima</h3>
+          <div className="form" style={{ marginTop: 12 }}>
+            <Campo label="Água (ml por 100 g de base)"><Numero value={r.aguaMlPor100g} onChange={(v) => mudar({ aguaMlPor100g: v })} /></Campo>
             <Campo label="Água para este lote"><div className="input" style={{ display: 'flex', alignItems: 'center' }}>{r.aguaMlPor100g ? fmt(r.aguaMlPor100g * pesoBase / 100, 0) + ' ml' : '–'}</div></Campo>
             {(r.liquidos ?? []).map((l, k) => (
-              <div key={k} style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 100px 90px 36px', gap: 8 }}>
+              <div key={k} style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 80px 90px 36px', gap: 8 }}>
                 <Texto value={l.nome} placeholder="Aditivo líquido" onChange={(v) => mudar({ liquidos: r.liquidos!.map((x, j) => (j === k ? { ...x, nome: v } : x)) })} />
                 <Numero value={l.quantidade} onChange={(v) => mudar({ liquidos: r.liquidos!.map((x, j) => (j === k ? { ...x, quantidade: v ?? 0 } : x)) })} />
                 <select className="input" value={l.unidade} onChange={(e) => mudar({ liquidos: r.liquidos!.map((x, j) => (j === k ? { ...x, unidade: e.target.value } : x)) })}>
@@ -150,70 +190,48 @@ export default function ReceitaEditor() {
                 <button className="iconbtn" aria-label="Remover" onClick={() => mudar({ liquidos: r.liquidos!.filter((_, j) => j !== k) })}><X size={14} /></button>
               </div>
             ))}
-            <div style={{ gridColumn: '1 / -1' }}><button className="btn sm" onClick={() => mudar({ liquidos: [...(r.liquidos ?? []), { nome: '', quantidade: 0, unidade: 'ml/100g' }] })}><Plus size={14} />Aditivo líquido</button></div>
-          </div>
-
-          <h3 style={{ marginTop: 32 }}>Observações</h3>
-          <div style={{ marginTop: 12 }}><AreaTexto value={r.observacoes} onChange={(v) => mudar({ observacoes: v })} rows={4} /></div>
-        </div>
-
-        <aside style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-          <div className="card" style={{ padding: 20 }}>
-            <h3>Lote</h3>
-            <div className="seg" style={{ marginTop: 12 }}>
-              <button className={lote.modo === 'base' ? 'on' : ''} onClick={() => setLote({ ...lote, modo: 'base' })}>Peso da base</button>
-              <button className={lote.modo === 'total' ? 'on' : ''} onClick={() => setLote({ ...lote, modo: 'total' })}>Peso total seco</button>
-            </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12 }}>
-              <Numero value={lote.g} onChange={(v) => setLote({ ...lote, g: v ?? 0 })} /><span>g</span>
-            </div>
-            <div className="chips" style={{ marginTop: 10 }}>{[25, 50, 100, 250, 500, 1000, 2000].map((g) => <button key={g} className={'chip' + (lote.g === g ? ' on' : '')} onClick={() => setLote({ ...lote, g })}>{g >= 1000 ? g / 1000 + ' kg' : g + ' g'}</button>)}</div>
-            <hr className="divider" style={{ margin: '18px 0' }} />
-            <Resumo r={r} pesoBase={pesoBase} comPeso={comPeso} mapa={mapa} custoTotal={c.total} faltando={c.faltando} />
-          </div>
-
-          <div className="card" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <h3>Ficha da fórmula</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <Campo label="Código"><Texto value={r.codigo} onChange={(v) => mudar({ codigo: v.toUpperCase() || undefined })} placeholder="ex.: RET-006" /></Campo>
-              <Campo label="Status">
-                <select className="input" value={r.status ?? ''} onChange={(e) => mudar({ status: e.target.value || undefined })}>
-                  <option value="">—</option>{STATUS_RECEITA.map((x) => <option key={x}>{x}</option>)}
-                </select>
-              </Campo>
-            </div>
-            <Campo label="Famílias (quantas quiser)"><Multi value={r.familias ?? []} onChange={(v) => mudar({ familias: v })} opcoes={familias.map((f) => ({ v: f.id, l: (f.codigo ? f.codigo + ' ' : '') + f.nome }))} /></Campo>
-            <Campo label="Curva de queima">
+            <div style={{ gridColumn: '1 / -1' }}><button className="btn sm ghost" onClick={() => mudar({ liquidos: [...(r.liquidos ?? []), { nome: '', quantidade: 0, unidade: 'ml/100g' }] })}><Plus size={14} />Aditivo líquido</button></div>
+            <div style={{ gridColumn: '1 / -1' }}><Campo label="Variações e queima"><AreaTexto value={r.parametros} onChange={(v) => mudar({ parametros: v })} rows={linhasDe(r.parametros)} /></Campo></div>
+            <div style={{ gridColumn: '1 / -1' }}><Campo label="Curva de queima">
               <select className="input" value={r.curvaId ?? ''} onChange={(e) => mudar({ curvaId: e.target.value || undefined })}>
                 <option value="">Nenhuma</option>{curvas.map((x) => <option key={x.id} value={x.id}>{x.codigo} · {x.nome}</option>)}
               </select>
             </Campo>
-            {r.curvaId && <Link to={`/curvas/${r.curvaId}`} className="faint" style={{ fontSize: 12.5, marginTop: -8 }}>Abrir curva</Link>}
-            <Campo label="Densidade medida da suspensão (g/ml)"><Numero value={r.densidade} onChange={(v) => mudar({ densidade: v })} placeholder="opcional" /></Campo>
-            <Campo label="Objetivo"><AreaTexto value={r.objetivo} onChange={(v) => mudar({ objetivo: v })} rows={3} /></Campo>
-            <Campo label="Referência estética"><Texto value={r.referencia} onChange={(v) => mudar({ referencia: v })} /></Campo>
-            <Campo label="Fonte"><Texto value={r.fonte} onChange={(v) => mudar({ fonte: v })} /></Campo>
-            <Campo label="Parâmetros de teste"><AreaTexto value={r.parametros} onChange={(v) => mudar({ parametros: v })} rows={3} /></Campo>
-            <Campo label="Texturas e tags"><Tags value={r.tags ?? []} onChange={(v) => mudar({ tags: v })} sugestoes={TEXTURAS_AUTORAIS} /></Campo>
-            <Campo label="Esmalte vinculado">
-              <select className="input" value={r.esmalteId ?? ''} onChange={(e) => mudar({ esmalteId: e.target.value || undefined })}>
-                <option value="">Nenhum</option>{(esmaltes ?? []).map((e) => <option key={e.id} value={e.id}>{e.codigo} · {e.nome}</option>)}
-              </select>
-            </Campo>
-            <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 14 }}>
-              <input type="checkbox" checked={!!r.ehBase} onChange={(e) => mudar({ ehBase: e.target.checked ? 1 : 0 })} /> Base reutilizável
-            </label>
+            {r.curvaId && <Link to={`/curvas/${r.curvaId}`} className="faint" style={{ fontSize: 12.5 }}>Abrir curva</Link>}</div>
           </div>
 
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button className="btn sm" onClick={() => derivar('variacao')}><GitBranch size={14} />Criar variação</button>
-            <button className="btn sm" onClick={() => derivar('duplicar')}><Copy size={14} />Duplicar</button>
-            <button className="btn sm" onClick={() => setPainel('versoes')}><History size={14} />Histórico ({versoes?.length ?? 0})</button>
-            <Link className="btn sm" to={`/receitas/comparar?a=${r.id}`}><Columns2 size={14} />Comparar</Link>
-            <button className="btn sm" onClick={() => baixar(new Blob([receitaComoTexto(`${r.nome} (v${r.versaoAtual})`, r.ingredientes, pesoBase, r.aguaMlPor100g)], { type: 'text/plain' }), `${r.nome}.txt`)}><Download size={14} />Exportar</button>
-            <button className="btn sm" onClick={() => window.print()}><Printer size={14} />Imprimir</button>
-            <button className="btn sm ghost" onClick={async () => { if (confirm('Excluir esta receita?')) { await excluir('receitas', r.id); nav('/receitas') } }}><Trash2 size={14} />Excluir</button>
-          </div>
+          <h3 className="formula-sec">Observações</h3>
+          <div style={{ marginTop: 12 }}><AreaTexto value={r.observacoes} onChange={(v) => mudar({ observacoes: v })} rows={linhasDe(r.observacoes, 4)} /></div>
+        </div>
+
+        <aside style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+          <details className="card formula-ficha">
+            <summary><h3>Ficha da fórmula</h3>{resumoFicha && <span className="faint">{resumoFicha}</span>}</summary>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <Campo label="Código"><Texto value={r.codigo} onChange={(v) => mudar({ codigo: v.toUpperCase() || undefined })} placeholder="ex.: RET-006" /></Campo>
+                <Campo label="Status">
+                  <select className="input" value={r.status ?? ''} onChange={(e) => mudar({ status: e.target.value || undefined })}>
+                    <option value="">—</option>{STATUS_RECEITA.map((x) => <option key={x}>{x}</option>)}
+                  </select>
+                </Campo>
+              </div>
+              <Campo label="Famílias (quantas quiser)"><Multi value={r.familias ?? []} onChange={(v) => mudar({ familias: v })} opcoes={familias.map((f) => ({ v: f.id, l: (f.codigo ? f.codigo + ' ' : '') + f.nome }))} /></Campo>
+              <Campo label="Objetivo"><AreaTexto value={r.objetivo} onChange={(v) => mudar({ objetivo: v })} rows={linhasDe(r.objetivo)} /></Campo>
+              <Campo label="Referência estética"><AreaTexto value={r.referencia} onChange={(v) => mudar({ referencia: v })} rows={linhasDe(r.referencia, 2)} /></Campo>
+              <Campo label="Fonte"><Texto value={r.fonte} onChange={(v) => mudar({ fonte: v })} /></Campo>
+              <Campo label="Densidade medida da suspensão (g/ml)"><Numero value={r.densidade} onChange={(v) => mudar({ densidade: v })} placeholder="opcional" /></Campo>
+              <Campo label="Texturas e tags"><Tags value={r.tags ?? []} onChange={(v) => mudar({ tags: v })} sugestoes={TEXTURAS_AUTORAIS} /></Campo>
+              <Campo label="Esmalte vinculado">
+                <select className="input" value={r.esmalteId ?? ''} onChange={(e) => mudar({ esmalteId: e.target.value || undefined })}>
+                  <option value="">Nenhum</option>{(esmaltes ?? []).map((e) => <option key={e.id} value={e.id}>{e.codigo} · {e.nome}</option>)}
+                </select>
+              </Campo>
+              <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 14 }}>
+                <input type="checkbox" checked={!!r.ehBase} onChange={(e) => mudar({ ehBase: e.target.checked ? 1 : 0 })} /> Base reutilizável
+              </label>
+            </div>
+          </details>
 
           {variacoes.length > 0 && <div>
             <p className="eyebrow" style={{ marginBottom: 8 }}>Variações desta receita</p>

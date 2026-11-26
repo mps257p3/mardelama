@@ -5,7 +5,7 @@ import { MoreHorizontal, Check } from 'lucide-react'
 export interface ItemMenu { l: string; icon?: ReactNode; to?: string; onClick?: () => unknown; on?: boolean; sep?: boolean; disabled?: boolean }
 
 /** Menu discreto de três pontos: guarda as ações secundárias fora da tela. */
-export function Menu({ itens, rotulo = 'Mais opções', botao }: { itens: ItemMenu[]; rotulo?: string; botao?: ReactNode }) {
+export function Menu({ itens, rotulo = 'Mais opções', botao, esquerda }: { itens: ItemMenu[]; rotulo?: string; botao?: ReactNode; esquerda?: boolean }) {
   const [aberto, setAberto] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const nav = useNavigate()
@@ -17,7 +17,7 @@ export function Menu({ itens, rotulo = 'Mais opções', botao }: { itens: ItemMe
     return () => { document.removeEventListener('pointerdown', f); window.removeEventListener('keydown', k) }
   }, [aberto])
   return (
-    <div className="menu-c" ref={ref}>
+    <div className={'menu-c' + (esquerda ? ' esq' : '')} ref={ref}>
       {botao
         ? <button className="menu-botao" aria-label={rotulo} aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{botao}</button>
         : <button className={'iconbtn' + (aberto ? ' on' : '')} aria-label={rotulo} aria-expanded={aberto} onClick={() => setAberto(!aberto)}><MoreHorizontal size={20} /></button>}

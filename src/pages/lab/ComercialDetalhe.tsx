@@ -11,6 +11,7 @@ import { TextoEditavel, ListaEditavel } from '../../ui/editavel'
 import { Multi } from '../../ui/form'
 import { CapaFotos } from '../../ui/GaleriaFotos'
 import { Relacoes } from '../../ui/Relacoes'
+import { SeloLouca, loucaDoTexto } from '../../ui/Louca'
 
 const maiusc = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
@@ -35,7 +36,10 @@ export default function ComercialDetalhe() {
       <p className="eyebrow">{[c.fabricante, c.codigo, c.serie].filter(Boolean).join(' · ')}</p>
       <h1 style={{ marginTop: 8 }}>{c.nome}</h1>
       <p className="faint" style={{ fontSize: 13, marginTop: 4 }}>{maiusc(incluidoEm(c.criadoEm))}</p>
-      {c.temperatura && <p className="muted" style={{ marginTop: 6 }}>{c.temperatura}</p>}
+      <div className="linha-queima">
+        {c.temperatura && <span className="t">{c.temperatura}</span>}
+        <SeloLouca origem="fabricante" valor={c.louca ?? loucaDoTexto([...(c.usos ?? []), ...c.declarados, c.instrucoes, c.observacoes])} onChange={(v) => salvar({ louca: v })} />
+      </div>
       <div style={{ marginTop: 14 }}>
         <button className="btn" disabled={pesquisando} onClick={async () => {
           setPesquisando(true)
@@ -122,6 +126,7 @@ function ReceitaDeTeste({ c }: { c: Comercial }) {
       fonte: c.fontes?.[0], parametros: r.parametros, curvaId: c.curvaId, tags: ['engenharia reversa'], versaoAtual: 1,
       ingredientes: r.ingredientes.map((i) => ({ ...i })), aguaMlPor100g: r.aguaMlPor100g,
       observacoes: [r.observacoes, usos, c.observacoes].filter(Boolean).join('\n\n'),
+      temperatura: c.temperatura, louca: 'testar',
     }
     const { id: _i, ...snapshot } = receita
     await db.transaction('rw', db.receitas, db.versoes, db.relacoes, db.comerciais, async () => {

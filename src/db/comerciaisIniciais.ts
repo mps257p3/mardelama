@@ -427,3 +427,26 @@ export async function tirarPrints() {
     for (const f of prints) await db.arquivos.update(f, { excluido: 1, atualizadoEm: Date.now() })
   }
 }
+
+/** Tira de um texto de parâmetros a temperatura e o cone de queima (ex.: "1220 °C, cone 6"). */
+export function temperaturaDoTexto(s?: string) {
+  if (!s) return undefined
+  const graus = [...s.matchAll(/(\d{3,4})\s*°C/g)].map((m) => Number(m[1])).filter((n) => n >= 900 && n <= 1400)
+  const cone = s.match(/cone\s+(0?\d{1,2}(?:\s*(?:a|e|-)\s*0?\d{1,2})?)/i)?.[1]
+  const t = [graus.length ? Math.max(...graus) + ' °C' : '', cone ? 'cone ' + cone : ''].filter(Boolean).join(', ')
+  return t || undefined
+}
+
+/** 26/11: fórmulas ganham o campo temperatura (cabeçalho). Vem do estudo aprovado ou dos parâmetros. */
+export async function temperaturaNasFormulas() {
+  if (await db.ajustes.get('fix-temperatura-formulas-v1')) return
+  const rs = await db.receitas.toArray()
+  if (!rs.length) return
+  const deEstudo = new Map((await db.comerciais.toArray()).filter((c) => c.receita?.aprovadaId).map((c) => [c.receita!.aprovadaId!, c.temperatura]))
+  for (const r of rs) {
+    if (r.excluido || r.temperatura) continue
+    const t = deEstudo.get(r.id) || temperaturaDoTexto(r.parametros)
+    if (t) await db.receitas.update(r.id, { temperatura: t, atualizadoEm: Date.now() })
+  }
+  await db.ajustes.put({ chave: 'fix-temperatura-formulas-v1', valor: true })
+}
