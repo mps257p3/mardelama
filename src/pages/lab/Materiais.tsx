@@ -1,3 +1,4 @@
+import { LinkSegurar } from '../../ui/Segurar'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Layers, Plus, Search } from 'lucide-react'
@@ -35,11 +36,11 @@ export default function Materiais() {
           <p className="eyebrow" style={{ marginBottom: 6 }}>{g.c}</p>
           <div className="lista">
             {g.xs.map((m) => (
-              <Link key={m.id} to={`/materiais/${m.id}`}>
+              <LinkSegurar key={m.id} to={`/materiais/${m.id}`} opcoes={{ tabela: 'materiais', id: m.id, titulo: m.nome, favorito: m.favorito, nome: 'material' }}>
                 <div className="mini">{m.fotos[0] ? <Foto id={m.fotos[0]} /> : <Layers size={20} strokeWidth={1.2} />}</div>
                 <div><div className="t">{m.nome}</div><div className="s">{[m.fabricante, m.funcao].filter(Boolean).join(' · ')}</div></div>
                 <div className="r">{m.precoKg != null ? brl(m.precoKg) + '/kg' : ''}{m.estoqueKg != null && <div className="faint">{fmt(m.estoqueKg, 2)} kg</div>}</div>
-              </Link>
+              </LinkSegurar>
             ))}
           </div>
         </section>

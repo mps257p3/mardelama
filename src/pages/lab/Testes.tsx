@@ -1,5 +1,6 @@
+import { LinkSegurar } from '../../ui/Segurar'
 import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Menu } from '../../ui/Menu'
 import { Columns2, Search, TestTube, Grid3x3, Check } from 'lucide-react'
 import { useEsmaltes, useReceitas, useTestes } from '../../db/hooks'
@@ -57,7 +58,7 @@ export default function Testes({ embutido, familia }: { embutido?: boolean; fami
             </>
             return sel ? <button key={t.id} className="peca" style={{ background: 'none', border: 0, padding: 0, textAlign: 'left' }}
               onClick={() => setSel(on ? sel.filter((x) => x !== t.id) : sel.length < 6 ? [...sel, t.id] : sel)}>{corpo}</button>
-              : <Link key={t.id} to={`/testes/${t.id}`} className="peca">{corpo}</Link>
+              : <LinkSegurar key={t.id} to={`/testes/${t.id}`} className="peca" opcoes={{ tabela: 'testes', id: t.id, titulo: t.codigo, favorito: t.favorito, nome: 'teste' }}>{corpo}</LinkSegurar>
           })}
         </div>
       )}

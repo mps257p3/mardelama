@@ -1,3 +1,4 @@
+import { LinkSegurar } from '../../ui/Segurar'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FlaskConical, Grid2x2, List, Plus, Search, SlidersHorizontal, Heart } from 'lucide-react'
@@ -74,7 +75,7 @@ export default function Esmaltes({ embutido, familia }: { embutido?: boolean; fa
       ) : modo === 'grade' ? (
         <div className="galeria galeria-grande">
           {lista.map((e) => (
-            <Link key={e.id} to={`/esmaltes/${e.id}`} className="peca">
+            <LinkSegurar key={e.id} to={`/esmaltes/${e.id}`} className="peca" opcoes={{ tabela: 'esmaltes', id: e.id, titulo: e.nome, favorito: e.favorito, nome: 'esmalte' }}>
               <div className="ph">
                 {e.fotos[0] ? <Foto id={e.fotos[0]} alt={e.nome} /> : e.corHex ? <div className="swatch" style={{ background: e.corHex }} /> : <FlaskConical size={30} strokeWidth={1.1} />}
                 <span className="cod">{e.codigo}</span>
@@ -83,13 +84,13 @@ export default function Esmaltes({ embutido, familia }: { embutido?: boolean; fa
                 <div className="t">{e.nome}</div>
                 <div className="s">{[e.acabamento, e.temperatura ? fmt(e.temperatura, 0) + ' °C' : e.cone && 'cone ' + e.cone].filter(Boolean).join(' · ')}</div>
               </div>
-            </Link>
+            </LinkSegurar>
           ))}
         </div>
       ) : (
         <div className="lista">
           {lista.map((e) => (
-            <Link key={e.id} to={`/esmaltes/${e.id}`}>
+            <LinkSegurar key={e.id} to={`/esmaltes/${e.id}`} opcoes={{ tabela: 'esmaltes', id: e.id, titulo: e.nome, favorito: e.favorito, nome: 'esmalte' }}>
               <div className="mini">{e.fotos[0] ? <Foto id={e.fotos[0]} /> : e.corHex ? <div className="swatch" style={{ background: e.corHex }} /> : <FlaskConical size={20} strokeWidth={1.2} />}</div>
               <div>
                 <div className="t">{e.nome}</div>
@@ -99,7 +100,7 @@ export default function Esmaltes({ embutido, familia }: { embutido?: boolean; fa
                 {e.temperatura ? fmt(e.temperatura, 0) + ' °C' : e.cone ? 'cone ' + e.cone : ''}
                 {!!e.avaliacao && <Estrelas value={e.avaliacao} tamanho={12} />}
               </div>
-            </Link>
+            </LinkSegurar>
           ))}
         </div>
       )}
