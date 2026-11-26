@@ -38,7 +38,7 @@ export default function ComercialDetalhe() {
       <p className="faint" style={{ fontSize: 13, marginTop: 4 }}>{maiusc(incluidoEm(c.criadoEm))}</p>
       <div className="linha-queima">
         {c.temperatura && <span className="t">{c.temperatura}</span>}
-        <SeloLouca origem="fabricante" valor={c.louca ?? loucaDoTexto([...(c.usos ?? []), ...c.declarados, c.instrucoes, c.observacoes])} onChange={(v) => salvar({ louca: v })} />
+        <SeloLouca origem="fabricante" original valor={c.louca ?? loucaDoTexto([...(c.usos ?? []), ...c.declarados, c.instrucoes, c.observacoes])} onChange={(v) => salvar({ louca: v })} />
       </div>
       <div style={{ marginTop: 14 }}>
         <button className="btn" disabled={pesquisando} onClick={async () => {
@@ -153,6 +153,7 @@ function ReceitaDeTeste({ c }: { c: Comercial }) {
           ? <Link to={`/receitas/${aprovada.id}`} className="btn"><Check size={15} />Aprovada · abrir em Fórmulas</Link>
           : <button className="btn primary" onClick={aprovar}><Check size={15} />Aprovar</button>}
       </div>
+      <p className="aviso" style={{ marginTop: 14, fontSize: 13 }}><b>Sua receita não herda o selo da marca.</b> Ela não é a fórmula do fabricante, então só pode ir à louça depois de um teste de lixiviação na sua queima.</p>
       {!(aprovada && !aprovada.excluido) && <p className="faint" style={{ fontSize: 13, marginTop: 8 }}>Aprovar copia a receita, o preparo, os melhores usos e as observações para Fórmulas.</p>}
     </section>
   )
