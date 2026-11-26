@@ -1,7 +1,8 @@
-import { db, type Comercial } from '../db/schema'
+import { db, type Comercial, type Ingrediente } from '../db/schema'
 import { chamar, iaConfigurada, paraBase64 } from './iaRepertorio'
 
-interface Pesquisa { fabricante: string; nome: string; codigo: string; serie: string; cone: string; temperatura: string; instrucoes: string; declarados: string[]; usos?: string[]; documentacao: string; hipoteses: string[]; fontes: string[]; observacoes: string; avisos: string[]; imagens?: string[] }
+interface Pesquisa { fabricante: string; nome: string; codigo: string; serie: string; cone: string; temperatura: string; instrucoes: string; declarados: string[]; usos?: string[]; documentacao: string; hipoteses: string[]; fontes: string[]; observacoes: string; avisos: string[]; imagens?: string[]
+  receita?: { ingredientes: Ingrediente[]; parametros?: string; preparo?: string } }
 
 const PADRAO = ['Fabricante', 'Novo esmalte estudado', 'Estudo de print', 'Esmalte não identificado']
 const juntar = (a: string[], b: string[]) => [...new Set([...a, ...b].filter(Boolean))]
@@ -28,6 +29,16 @@ export async function pesquisarEstudo(id: string) {
   else if (PADRAO.includes(c.nome)) d.nome = 'Esmalte não identificado'
   for (const k of ['codigo', 'serie', 'cone', 'temperatura', 'instrucoes', 'documentacao'] as const) if (p[k]) d[k] = p[k]
   if (obs) d.observacoes = c.observacoes && !c.observacoes.includes(obs) ? c.observacoes + '\n\n' + obs : obs
+  // receita de teste (hipótese em 100 g): só entra se o estudo ainda não tem uma
+  if (!c.receita && p.receita?.ingredientes.length) {
+    const mats = await db.materiais.toArray()
+    const achar = (nome: string) => mats.find((m) => !m.excluido && m.nome.toLowerCase() === nome.toLowerCase())?.id
+    d.receita = {
+      codigo: c.observacoes?.match(/ER-\d+/)?.[0], aguaMlPor100g: 85,
+      ingredientes: p.receita.ingredientes.map((i) => ({ ...i, materialId: achar(i.nome) })),
+      parametros: p.receita.parametros || undefined, observacoes: p.receita.preparo || undefined,
+    }
+  }
   const novas = await fotosDoFabricante(id, p.imagens ?? [])
   if (novas.length) d.fotos = [...c.fotos, ...novas]
   await db.comerciais.update(id, d)
