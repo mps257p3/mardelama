@@ -15,6 +15,7 @@ import { useToast } from '../../ui/toast'
 import { TopoRef } from './Topo'
 import { EscolherGrupos, EscolherPainel } from './acoesRefs'
 import { atualizarGostoIA, buscarPorFoto, CHAVE_INSPIRA, inspirarDoAcervo, type InspiracaoAcervo, iaConfigurada, interpretarBusca, leituraEmCache, artistasNaMesmaLinha, type Consulta, type TemaCurtidas } from '../../lib/iaRepertorio'
+import { CHAVE_AUTO } from '../../lib/gastoIA'
 import { CompararObra, ExplicarObra, TemasDasCurtidas } from './descobrirExtras'
 import { ordenarPorNota, useEstadoVisao, useFiltroVisual, type Alvo } from './filtroVisual'
 import { imagemDaRef, imagemDeUrl, imagensDoArtista, imagensDoGosto } from '../../lib/visao'
@@ -55,8 +56,7 @@ export default function Descobrir() {
   const salvos = useLiveQuery(async () => new Map((await db.referencias.filter((r) => !!r.origem?.startsWith('descobrir:') && !r.excluido).toArray()).map((r) => [r.origem!.slice(10), r.id])), [], new Map<string, string>())
 
   useEffect(() => { lerPerfil().then((p) => setCurtidos(new Set(p.curtidos))) }, [])
-  // a leitura do gosto pela IA se renova sozinha quando há curtidas novas (no máximo a cada 12 horas)
-  // "Na mesma linha" já fica pronta em segundo plano (a lista de artistas parecidos vale por 7 dias)
+  // só rodam sozinhas se as tarefas automáticas estiverem ligadas (Ajustes › Gasto da IA); senão, só pelos botões
   useEffect(() => { atualizarGostoIA().catch(() => undefined); inspirarDoAcervo().catch(() => undefined); artistasNaMesmaLinha().catch(() => undefined) }, [])
 
   const itensRef = useRef(itens)
@@ -448,8 +448,10 @@ function AjustesCuradoria({ onClose }: { onClose: () => void }) {
       <button className="btn sm ghost" onClick={() => mudar({ ...p, pesos: PESOS_PADRAO })}>Pesos padrão</button>
     </div>
     <FiltroVisualAjuste />
+    <AutoIA />
     <LeituraIA p={p} onNova={(g) => setP({ ...p, gostoIA: g })} />
     <LeituraPastas />
+    <LeituraAfins />
     <div className="filtro-sec"><div className="filtro-tit"><span>O que o app aprendeu</span></div>
       {top.length ? <div className="chips wrap">{top.map(([t]) => <button key={t} className="chip" onClick={() => { const termos = { ...p.termos }; delete termos[t]; mudar({ ...p, termos }) }}>{t}<X size={12} /></button>)}</div> : <p className="faint" style={{ fontSize: 13 }}>Ainda nada. Curta, salve e recuse imagens no feed.</p>}
       {univ.length > 0 && <p className="faint" style={{ fontSize: 12.5, marginTop: 10 }}>Universos: {univ.slice(0, 6).map(([u]) => UNIVERSOS[u]?.nome ?? u).join(', ')}</p>}
@@ -487,7 +489,7 @@ function LeituraIA({ p, onNova }: { p: Perfil; onNova: (g: Perfil['gostoIA']) =>
       <p style={{ fontSize: 14, lineHeight: 1.5, margin: '0 0 8px' }}>{g.resumo}</p>
       <p className="faint" style={{ fontSize: 12.5 }}>Buscas que a IA sugeriu: {g.consultas.slice(0, 8).map((c) => c.q).join(', ')}{g.consultas.length > 8 ? '…' : ''}</p>
       {g.evitar.length > 0 && <p className="faint" style={{ fontSize: 12.5 }}>Evitando: {g.evitar.join(', ')}</p>}
-      <p className="faint" style={{ fontSize: 12, marginTop: 6 }}>Atualizada em {new Date(g.quando).toLocaleDateString('pt-BR')}. Renova sozinha quando há curtidas novas, no máximo a cada 12 horas.</p>
+      <p className="faint" style={{ fontSize: 12, marginTop: 6 }}>Atualizada em {new Date(g.quando).toLocaleDateString('pt-BR')}.</p>
     </> : <p className="faint" style={{ fontSize: 13 }}>Depois de algumas curtidas, a IA lê o seu gosto e sugere buscas novas para o feed.</p>}
     <button className="btn sm ghost" style={{ marginTop: 6 }} disabled={rodando} onClick={agora}><Sparkles size={14} className={rodando ? 'gira' : ''} />{rodando ? 'Lendo o seu gosto…' : 'Atualizar leitura agora'}</button>
   </div>
@@ -509,9 +511,41 @@ function LeituraPastas() {
     {l ? <>
       <p style={{ fontSize: 14, lineHeight: 1.5, margin: '0 0 8px' }}>{l.leitura}</p>
       <p className="faint" style={{ fontSize: 12.5 }}>Buscas tiradas das pastas: {l.consultas.slice(0, 10).map((c) => c.q).join(', ')}{l.consultas.length > 10 ? '…' : ''}</p>
-      <p className="faint" style={{ fontSize: 12, marginTop: 6 }}>Lidas em {new Date(l.quando).toLocaleDateString('pt-BR')} ({l.n} referências e estudos). Renova sozinha a cada um ou três dias, conforme o acervo cresce.</p>
+      <p className="faint" style={{ fontSize: 12, marginTop: 6 }}>Lidas em {new Date(l.quando).toLocaleDateString('pt-BR')} ({l.n} referências e estudos).</p>
     </> : <p className="faint" style={{ fontSize: 13 }}>A IA lê suas pastas (Pinterest, Instagram, grupos) e os estudos de artistas da Biblioteca e tira deles buscas novas para o feed.</p>}
     <button className="btn sm ghost" style={{ marginTop: 6 }} disabled={rodando} onClick={agora}><Sparkles size={14} className={rodando ? 'gira' : ''} />{rodando ? 'Lendo as pastas…' : 'Reler minhas pastas agora'}</button>
+  </div>
+}
+
+/** Liga ou desliga as leituras da IA que rodavam sozinhas ao abrir o Descobrir (cada uma gasta crédito). */
+function AutoIA() {
+  const ligada = useAjuste<boolean>(CHAVE_AUTO, false)
+  return <div className="filtro-sec"><div className="filtro-tit"><span>IA em segundo plano</span></div>
+    <div className="seg" style={{ alignSelf: 'flex-start' }}>
+      <button className={!ligada ? 'on' : ''} onClick={() => definirAjuste(CHAVE_AUTO, false)}>Só pelos botões</button>
+      <button className={ligada ? 'on' : ''} onClick={() => definirAjuste(CHAVE_AUTO, true)}>Automática</button>
+    </div>
+    <p className="faint" style={{ fontSize: 12, marginTop: 6 }}>{ligada
+      ? 'Ao abrir o Descobrir, a IA relê o seu gosto (até a cada 12 horas), as suas pastas (a cada 1 a 3 dias) e os artistas na mesma linha (a cada 7 dias). Gasta crédito sem você tocar em nada.'
+      : 'Nada roda sozinho. O feed usa a última leitura guardada; para renovar, toque nos botões abaixo.'}</p>
+  </div>
+}
+
+/** Artistas parecidos com os seus estudos, usados no modo "Na mesma linha". */
+function LeituraAfins() {
+  const [n, setN] = useState<number>()
+  const [rodando, setRodando] = useState(false)
+  const toast = useToast()
+  useEffect(() => { db.ajustes.get('ia.afins').then((a) => setN((a?.valor as { afins?: unknown[] } | undefined)?.afins?.length)) }, [])
+  async function agora() {
+    setRodando(true)
+    try { const xs = await artistasNaMesmaLinha(true); setN(xs.length); toast(xs.length ? `${xs.length} artistas na mesma linha` : 'Precisa da IA configurada e de artistas na Biblioteca.') }
+    catch (e) { toast('A IA não respondeu: ' + (e as Error).message) }
+    finally { setRodando(false) }
+  }
+  return <div className="filtro-sec"><div className="filtro-tit"><span>Artistas na mesma linha (IA)</span></div>
+    <p className="faint" style={{ fontSize: 13 }}>{n ? `${n} artistas parecidos com os seus estudos, usados no modo Na mesma linha.` : 'A IA sugere artistas parecidos com os que você estuda na Biblioteca. Sem isso, o modo Na mesma linha busca pelas técnicas dos seus estudos.'}</p>
+    <button className="btn sm ghost" style={{ marginTop: 6 }} disabled={rodando} onClick={agora}><Sparkles size={14} className={rodando ? 'gira' : ''} />{rodando ? 'Procurando…' : 'Procurar artistas agora'}</button>
   </div>
 }
 

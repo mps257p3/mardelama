@@ -1,5 +1,6 @@
 import { db, type Referencia } from '../db/schema'
 import { cabecalhoLogin } from './login'
+import { iaAutomaticaLigada, registrarGasto } from './gastoIA'
 import { lerPerfil, salvarPerfil, UNIVERSOS, type GostoIA } from './curadoria'
 import type { FonteId, ItemDescoberta } from './fontes'
 import { FONTE, viaPonte } from './fontes'
@@ -34,6 +35,7 @@ export async function chamar<T>(corpo: Record<string, unknown>, ms = 90000): Pro
   try {
     const r = await fetch('/api/ia', { method: 'POST', headers: { 'content-type': 'application/json', ...(await cabecalhoLogin()) }, body: JSON.stringify(corpo), signal: c.signal })
     const j = await r.json().catch(() => ({ erro: `A IA não respondeu (HTTP ${r.status})` }))
+    registrarGasto(String(corpo.acao ?? ''), j.uso, !r.ok || !j.resultado).catch(() => undefined)
     if (!r.ok || !j.resultado) throw new Error(j.erro ?? `HTTP ${r.status}`)
     return j.resultado as T
   } catch (e) {
@@ -179,6 +181,7 @@ export async function atualizarGostoIA(forcar = false): Promise<GostoIA | undefi
   const base = perfil.historico.length
   const novos = perfil.historico.filter((h) => h.quando > (g?.quando ?? 0)).length
   if (!forcar && (novos < 3 || (g && Date.now() - g.quando < 12 * 3600000))) return g
+  if (!forcar && !(await iaAutomaticaLigada())) return g
   if (!(await iaConfigurada())) return g
   const curta = (x: { titulo: string; autor?: string; termos: string[]; data?: string }) => ({ t: x.titulo.slice(0, 80), a: x.autor, d: x.data, termos: x.termos.slice(0, 6) })
   const salvasRefs = (await db.referencias.filter((r) => !r.excluido && !!r.origem?.startsWith('descobrir:')).toArray()).slice(-40)
@@ -212,6 +215,7 @@ export async function inspirarDoAcervo(forcar = false): Promise<InspiracaoAcervo
   const idade = ja ? Date.now() - ja.quando : Infinity
   const nArt = await db.artistas.count()
   if (!forcar && ja && (idade < 24 * 3600000 || (idade < 72 * 3600000 && Math.abs(refs.length + nArt - ja.n) < 10))) return ja
+  if (!forcar && !(await iaAutomaticaLigada())) return ja
   if (!(await iaConfigurada())) return ja
   const grupos = (await db.grupos.toArray()).filter((g) => !g.excluido)
   const porGrupo = new Map<string, Referencia[]>()
@@ -244,6 +248,7 @@ export async function artistasNaMesmaLinha(forcar = false): Promise<Afim[]> {
   const base = estudos.map((a) => a.id).sort().join(',')
   const ja = (await db.ajustes.get(CHAVE_AFINS))?.valor as AfinsSalvos | undefined
   if (!forcar && ja && ja.base === base && Date.now() - ja.quando < 7 * 24 * 3600000) return ja.afins
+  if (!forcar && !(await iaAutomaticaLigada())) return ja?.afins ?? []
   if (!estudos.length || !(await iaConfigurada())) return ja?.afins ?? []
   const conhecidos = [...new Set([...estudos.map((a) => a.nome), ...(await db.referencias.toArray()).map((r) => r.autor).filter(Boolean) as string[]])]
   const r = await chamar<{ afins: Afim[] }>({
