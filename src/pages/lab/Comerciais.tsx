@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { incluidoEm } from '../../lib/data'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, ImagePlus, Plus, Sparkles } from 'lucide-react'
+import { ArrowLeft, FlaskConical, ImagePlus, Plus, Sparkles } from 'lucide-react'
 import { db, novo, type Comercial } from '../../db/schema'
 import { Foto } from '../../ui/form'
 import { useToast } from '../../ui/toast'
@@ -59,14 +59,22 @@ export default function Comerciais() {
       </div>
       {pesquisando && <p className="recebido-lendo" style={{ marginTop: 14 }}><Sparkles size={15} />Identificando o esmalte e procurando a ficha do fabricante… fique nesta tela, leva 1 ou 2 minutos.</p>}
       <p className="muted" style={{ marginTop: 10 }}>Esmaltes comerciais estudados como referência. Cada ficha separa o que o fabricante declara, o que vem da documentação, as hipóteses e o que já foi confirmado em teste.</p>
-      <div className="lista" style={{ marginTop: 20 }}>
-        {itens.map((c) => (
-          <Link key={c.id} to={`/engenharia-reversa/${c.id}`}>
-            <span className="mini">{c.fotos[0] ? <Foto id={c.fotos[0]} /> : <span style={{ fontSize: 11 }}>{(c.observacoes?.match(/ER-\d+/) ?? [''])[0]}</span>}</span>
-            <span><span className="t">{c.fabricante} {c.nome}</span><br /><span className="s">{[c.codigo, c.serie, incluidoEm(c.criadoEm)].filter(Boolean).join(' · ')}</span></span>
-            <span className="r">{c.confirmado ? 'com teste' : 'em estudo'}</span>
-          </Link>
-        ))}
+      <div className="galeria galeria-grande" style={{ marginTop: 20 }}>
+        {itens.map((c) => {
+          const cod = (c.observacoes?.match(/ER-\d+/) ?? [''])[0]
+          return (
+            <Link key={c.id} to={`/engenharia-reversa/${c.id}`} className="peca">
+              <div className="ph">
+                {c.fotos[0] ? <Foto id={c.fotos[0]} alt={c.nome} /> : <FlaskConical size={30} strokeWidth={1.1} />}
+                {cod && <span className="cod">{cod}</span>}
+              </div>
+              <div>
+                <div className="t">{c.fabricante} {c.nome}</div>
+                <div className="s">{[c.codigo, c.confirmado ? 'com teste' : 'em estudo', incluidoEm(c.criadoEm)].filter(Boolean).join(' · ')}</div>
+              </div>
+            </Link>
+          )
+        })}
       </div>
     </div>
   )
