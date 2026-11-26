@@ -8,8 +8,6 @@ import { useArquivoUrl } from '../db/files'
 import { useAjuste } from '../db/settings'
 import { AREAS } from '../ui/nav'
 import { Monograma } from '../ui/Monograma'
-import { Foto } from '../ui/form'
-import { Miniatura } from '../ui/itens'
 import { useDestaqueCfg, useSecoesInicio, type SecaoId } from '../lib/inicio'
 
 const vivos = <T extends { excluido?: 0 | 1 }>(xs: T[]) => xs.filter((x) => !x.excluido)
@@ -62,55 +60,6 @@ function Secao({ titulo, link, children }: { titulo: string; link?: { to: string
   )
 }
 
-interface Peca { id: string; to: string; titulo: string; sub?: string; foto?: string; cor?: string }
-function Trilho({ itens, tipo }: { itens: Peca[]; tipo: 'esmalte' | 'teste' | 'referencia' }) {
-  return (
-    <div className="trilho">
-      {itens.map((p) => (
-        <Link key={p.id} to={p.to} className="peca-mini">
-          <span className="ph">{p.foto ? <Foto id={p.foto} /> : <Miniatura tipo={tipo} cor={p.cor} tam={112} />}</span>
-          <span className="t">{p.titulo}</span>
-          {p.sub && <span className="s">{p.sub}</span>}
-        </Link>
-      ))}
-    </div>
-  )
-}
-
-function SecEsmaltes() {
-  const itens = useLiveQuery(async () => vivos(await db.esmaltes.orderBy('criadoEm').reverse().limit(16).toArray()).slice(0, 10)
-    .map<Peca>((e) => ({ id: e.id, to: `/esmaltes/${e.id}`, titulo: e.nome, sub: e.codigo, foto: e.fotos[0], cor: e.corHex })), [])
-  if (!itens?.length) return null
-  return (
-    <Secao titulo="Últimos esmaltes" link={itens.length ? { to: '/esmaltes', label: 'Ver todos' } : undefined}>
-      {itens.length ? <Trilho itens={itens} tipo="esmalte" /> : null}
-    </Secao>
-  )
-}
-
-function SecTestes() {
-  const itens = useLiveQuery(async () => vivos(await db.testes.orderBy('criadoEm').reverse().limit(16).toArray()).slice(0, 10)
-    .map<Peca>((t) => ({ id: t.id, to: `/testes/${t.id}`, titulo: t.codigo, sub: t.data ? new Date(t.data + 'T12:00').toLocaleDateString('pt-BR') : undefined, foto: t.fotos[0] })), [])
-  if (!itens?.length) return null
-  return (
-    <Secao titulo="Últimos testes" link={itens.length ? { to: '/testes', label: 'Ver todos' } : undefined}>
-      {itens.length ? <Trilho itens={itens} tipo="teste" /> : null}
-    </Secao>
-  )
-}
-
-function SecFavoritas() {
-  const itens = useLiveQuery(async () => vivos(await db.referencias.where('favorito').equals(1).toArray())
-    .sort((a, b) => b.atualizadoEm - a.atualizadoEm).slice(0, 10)
-    .map<Peca>((r) => ({ id: r.id, to: `/referencias/${r.id}`, titulo: r.titulo, sub: r.autor, foto: r.imagens[0] })), [])
-  if (!itens?.length) return null
-  return (
-    <Secao titulo="Referências favoritas" link={itens.length ? { to: '/referencias/acervo', label: 'Ver referências' } : undefined}>
-      {itens.length ? <Trilho itens={itens} tipo="referencia" /> : null}
-    </Secao>
-  )
-}
-
 function SecAgenda() {
   const itens = useLiveQuery(async () => {
     const hoje = new Date(); const h = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`
@@ -138,7 +87,6 @@ function SecAgenda() {
 
 const SECOES: Record<SecaoId, () => React.ReactElement | null> = {
   agenda: SecAgenda,
-  esmaltes: SecEsmaltes, testes: SecTestes, favoritas: SecFavoritas,
 }
 
 export default function Home() {
