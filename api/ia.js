@@ -490,12 +490,25 @@ async function pesquisarArtista(d) {
 
 // Engenharia reversa a partir de um print (rótulo, pote, catálogo, post com a peça): identifica o esmalte
 // comercial e pesquisa na web a ficha do fabricante e a ficha de segurança. Mesmo esquema da pesquisa de artista.
+/* ——— Fluidez do esmalte fundido durante a queima ——— */
+const REGRAS_FLUIDEZ = `"fluidez": como o esmalte FUNDIDO se move e escorre na queima. Não confunda com a viscosidade/consistência do esmalte líquido no pote (antes de aplicar): isso não entra aqui.
+- Fontes, nesta ordem: página do produto no site do fabricante, ficha técnica, catálogo oficial, instruções de aplicação e queima, testes de fluidez publicados pela marca, bases de dados da marca. Lojas só para confirmar o que a marca publica.
+- "situacao": "oficial" se o fabricante dá uma classificação formal de fluidez (termo, escala, número, ícone); "descritiva" se só descreve o comportamento (ex.: "pode escorrer em superfícies verticais"); "nao-informada" se não publica nada.
+- "resultados": um item por cone ou temperatura testada pelo fabricante. Nunca estenda o que vale para um cone a outro. Cada item: "cone", "temperatura" (com °C; converta °F e mostre os dois), "classificacao" (o termo EXATO do fabricante, no idioma original, ex.: "Runny when thick", "Moving glaze", "Stable"; nunca troque por uma escala sua), "traducao" (tradução fiel para o português), "escala" (se a marca usa escala numérica, gráfica ou de ícones, explique como ela funciona e onde este esmalte fica; senão vazio), "comportamento" (o que o fabricante diz do movimento e escorrimento), "escorrimentoMm" (só se a marca publica a distância em mm; senão vazio).
+- "espessura", "sobreposicao", "curva", "recomendacoes": o que o fabricante diz sobre o efeito da espessura, a interação com outros esmaltes, o patamar/temperatura máxima/resfriamento, e os cuidados de aplicação (folga no pé, placa por baixo…). Vazio se não disser.
+- "imagens": até 3 links https diretos (.jpg, .png, .webp) de fotos OFICIAIS de testes de fluidez/escorrimento (placa inclinada, tile vertical). Vazio se não houver.
+- "fontes": links https que você abriu de onde veio cada informação.
+- "estimativaIA": só se houver base (descrição, fotos, química típica da linha), uma interpretação curta sua do comportamento provável, dizendo em que se baseia. É estimativa, nunca dado oficial. Vazio se não houver base.
+Não invente classificações, índices, viscosidades nem distâncias. O que não achar fica vazio.`
+
+const FORMATO_FLUIDEZ = `{"situacao":"","resultados":[{"cone":"","temperatura":"","classificacao":"","traducao":"","escala":"","comportamento":"","escorrimentoMm":""}],"espessura":"","sobreposicao":"","curva":"","recomendacoes":"","imagens":[],"fontes":[],"estimativaIA":""}`
+
 const SISTEMA_COMERCIAL = `Você ajuda um ceramista brasileiro a estudar esmaltes comerciais (engenharia reversa), em português do Brasil, sóbrio e preciso.
 Use a busca na web. Prefira, nesta ordem: página do produto no site do fabricante, ficha técnica, ficha de segurança (FISPQ/SDS), lojas e distribuidores, fóruns e artigos técnicos (Glazy, Digitalfire, Ceramic Arts Network).
 Regras: separe sempre o que é declarado pelo fabricante, o que vem de documentação técnica e o que é hipótese sua. Nunca apresente hipótese como fato. Não invente códigos, temperaturas nem composições. Se não achar, deixe vazio.`
 
 const FORMATO_COMERCIAL = `Responda no fim com um único bloco JSON, sem texto depois, neste formato:
-{"fabricante":"","nome":"","codigo":"","serie":"","cone":"","temperatura":"","louca":"","instrucoes":"","declarados":[],"documentacao":"","hipoteses":[],"fontes":[],"usos":[],"observacoes":"","avisos":[],"imagens":[],"receita":{"ingredientes":[{"nome":"","gramas":0,"classe":"base"}],"parametros":"","preparo":""}}
+{"fabricante":"","nome":"","codigo":"","serie":"","cone":"","temperatura":"","louca":"","instrucoes":"","declarados":[],"documentacao":"","hipoteses":[],"fontes":[],"usos":[],"observacoes":"","avisos":[],"imagens":[],"fluidez":${FORMATO_FLUIDEZ},"receita":{"ingredientes":[{"nome":"","gramas":0,"classe":"base"}],"parametros":"","preparo":""}}
 "usos": melhores usos e condições, até 8 frases curtas: em que peças e superfícies rende mais (relevo, borda, vertical, interior), espessura e número de camadas, queima e resfriamento, combinações com outros esmaltes que o fabricante mostra. Diga a fonte quando for do fabricante; o que for prática comum, diga que é.
 "imagens": até 4 links https diretos de foto do produto (placa de teste, amostra ou pote) que apareceram nas páginas do fabricante ou de lojas que você abriu: o endereço do arquivo de imagem (.jpg, .png, .webp), nunca o da página. Prefira a placa de teste do próprio esmalte, sem sobreposição. Se não achar, deixe vazio.
 "louca": "sim" se o fabricante declara o esmalte próprio para louça de mesa (food safe, dinnerware safe); "nao" se diz que é só decorativo ou não recomenda para louça; "testar" se não diz nada. Nunca deduza segurança pela composição.
@@ -510,7 +523,58 @@ const FORMATO_COMERCIAL = `Responda no fim com um único bloco JSON, sem texto d
 - "ingredientes": a base com classe "base", somando exatamente 100 g; corantes ("corante"), opacificantes ("opacificante") e goma CMC 0,5 a 1 g ("aditivo") vêm somados à parte. Use nomes de materiais vendidos no Brasil, em português. Sem Gerstley Borate (use frita borácica) e, no lugar da Ferro 3110, frita alcalina.
 - "parametros": em frases corridas, de onde vem a base, quais variações testar (por exemplo 2 ou 3 quantidades do ingrediente-chave) e como queimar (cone, temperatura em °C, curva e resfriamento quando importam).
 - "preparo": em frases corridas, como preparar e aplicar (demãos, espessura, onde não passar, prato por baixo quando escorre).
-Se não houver base confiável para montar a receita, deixe "ingredientes" vazio.`
+Se não houver base confiável para montar a receita, deixe "ingredientes" vazio.
+${REGRAS_FLUIDEZ}`
+
+function limparFluidez(o) {
+  if (!o || typeof o !== 'object') return undefined
+  const resultados = (Array.isArray(o.resultados) ? o.resultados : []).map((x) => ({
+    cone: so(x?.cone, 40), temperatura: so(x?.temperatura, 80), classificacao: so(x?.classificacao, 120), traducao: so(x?.traducao, 120),
+    escala: so(x?.escala, 600), comportamento: so(x?.comportamento, 800), escorrimentoMm: so(x?.escorrimentoMm, 40),
+  })).filter((x) => x.classificacao || x.comportamento || x.escorrimentoMm).slice(0, 6)
+  const r = {
+    situacao: ['oficial', 'descritiva', 'nao-informada'].includes(o.situacao) ? o.situacao : (resultados.some((x) => x.classificacao) ? 'oficial' : resultados.length ? 'descritiva' : 'nao-informada'),
+    resultados, espessura: so(o.espessura, 800), sobreposicao: so(o.sobreposicao, 800), curva: so(o.curva, 800), recomendacoes: so(o.recomendacoes, 1000),
+    imagens: (Array.isArray(o.imagens) ? o.imagens : []).map(url).filter(Boolean).slice(0, 3),
+    fontes: (Array.isArray(o.fontes) ? o.fontes : []).map(url).filter(Boolean).slice(0, 8),
+    estimativaIA: so(o.estimativaIA, 1000),
+  }
+  // "oficial" sem nenhum termo do fabricante vira "descritiva"; nada publicado vira "nao-informada"
+  if (r.situacao === 'oficial' && !resultados.some((x) => x.classificacao)) r.situacao = resultados.length ? 'descritiva' : 'nao-informada'
+  if (r.situacao !== 'nao-informada' && !resultados.length && !r.espessura && !r.curva && !r.recomendacoes && !r.sobreposicao) r.situacao = 'nao-informada'
+  return r
+}
+
+async function pesquisarFluidez(d) {
+  const produto = [so(d.fabricante, 120) && 'Fabricante: ' + so(d.fabricante, 120), so(d.linha, 120) && 'Linha: ' + so(d.linha, 120), so(d.nome, 160) && 'Nome comercial: ' + so(d.nome, 160), so(d.codigo, 60) && 'Código: ' + so(d.codigo, 60)].filter(Boolean).join('\n')
+  if (!so(d.nome, 160) && !so(d.codigo, 60)) return json({ erro: 'Falta o nome ou o código do esmalte' }, 400)
+  const client = new Anthropic()
+  const mensagens = [{ role: 'user', content: `Esmalte industrial:\n${produto}\n\nPesquise a fluidez deste esmalte durante a queima, considerando fabricante, linha, nome e código.\n\n${REGRAS_FLUIDEZ}\n\nResponda no fim com um único bloco JSON, sem texto depois, neste formato:\n${FORMATO_FLUIDEZ}` }]
+  let uso
+  try {
+    let r
+    for (let i = 0; i < 3; i++) {
+      ;({ r, uso } = await pedir(client, {
+        max_tokens: 8000,
+        thinking: { type: 'adaptive' }, output_config: { effort: 'medium' },
+        system: SISTEMA_COMERCIAL,
+        tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 5 }, { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 5 }],
+        messages: mensagens,
+      }, MODELO_MEDIO, uso))
+      if (r.stop_reason !== 'pause_turn') break
+      mensagens.push({ role: 'assistant', content: r.content })
+    }
+    if (r.stop_reason === 'refusal') return json({ erro: 'A IA não quis responder a este pedido.' }, 422)
+    const texto = r.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n')
+    const ini = texto.indexOf('{'), fim = texto.lastIndexOf('}')
+    if (ini < 0 || fim <= ini) return json({ erro: 'A pesquisa não trouxe um resultado legível. Tente de novo.' }, 502)
+    let o
+    try { o = JSON.parse(texto.slice(ini, fim + 1)) } catch { return json({ erro: 'A pesquisa veio incompleta. Tente de novo.' }, 502) }
+    return json({ resultado: limparFluidez(o), uso })
+  } catch (e) {
+    return erroDaIA(e)
+  }
+}
 
 const CLASSES = ['base', 'corante', 'opacificante', 'aditivo']
 function limparReceita(x) {
@@ -531,7 +595,7 @@ function limparComercial(o) {
     fontes: (Array.isArray(o.fontes) ? o.fontes : []).map(url).filter(Boolean).slice(0, 8),
     observacoes: so(o.observacoes, 2500), avisos: textos(o.avisos, 6),
     imagens: (Array.isArray(o.imagens) ? o.imagens : []).map(url).filter(Boolean).slice(0, 4),
-    receita: limparReceita(o.receita),
+    receita: limparReceita(o.receita), fluidez: limparFluidez(o.fluidez),
   }
 }
 
@@ -619,6 +683,7 @@ async function responder(d) {
   const acao = d?.acao
   if (acao === 'artista') return pesquisarArtista(d)
   if (acao === 'comercial') return pesquisarComercial(d)
+  if (acao === 'fluidez') return pesquisarFluidez(d)
   if (acao === 'receber' && d.pesquisar) d.pesquisa = await pesquisarDuvidas(d)
   const p = ESQUEMAS[acao] && pedidoDe(acao, d)
   if (!p) return json({ erro: 'Ação desconhecida' }, 400)

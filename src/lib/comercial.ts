@@ -2,7 +2,8 @@ import { db, novo, uid, type Comercial, type Esmalte, type Ingrediente, type Lou
 import { chamar, iaConfigurada, paraBase64 } from './iaRepertorio'
 
 interface Pesquisa { fabricante: string; nome: string; codigo: string; serie: string; cone: string; temperatura: string; louca?: Louca; instrucoes: string; declarados: string[]; usos?: string[]; documentacao: string; hipoteses: string[]; fontes: string[]; observacoes: string; avisos: string[]; imagens?: string[]
-  receita?: { ingredientes: Ingrediente[]; parametros?: string; preparo?: string } }
+  receita?: { ingredientes: Ingrediente[]; parametros?: string; preparo?: string }
+  fluidez?: import('./fluidez').PesquisaFluidez }
 
 const PADRAO = ['Fabricante', 'Novo esmalte estudado', 'Estudo de print', 'Esmalte não identificado']
 const juntar = (a: string[], b: string[]) => [...new Set([...a, ...b].filter(Boolean))]
@@ -101,6 +102,7 @@ export async function catalogarEsmalte(fotos: Blob[], familias: string[] = []) {
   const e: Esmalte = {
     ...novo({ nome: p.nome, codigo: await proximoCodigo('E', 'esmaltes', 3), origem: 'comercial' as const, autoria: p.fabricante || undefined, familias, fotos: ids, tags: [] as string[] }),
     id, cone: p.cone || undefined, temperatura: grausDoTexto(p.temperatura), louca: p.louca, observacoes: observacoes || undefined,
+    fluidezQueima: await (await import('./fluidez')).fluidezDaPesquisa(id, p.fluidez),
   }
   await db.esmaltes.add(e)
   return id

@@ -65,7 +65,10 @@ export interface Esmalte extends Base {
   temperatura?: number       // °C
   cone?: string
   atmosfera?: string
-  fluidez?: string
+  fluidez?: string           // classificação pessoal (Estável… Muito fluido); a do fabricante fica em fluidezQueima
+  viscosidade?: string       // consistência do esmalte LÍQUIDO antes de aplicar (não é a fluidez na queima)
+  fluidezQueima?: FluidezQueima
+  testesFluidez?: TesteFluidez[]
   aplicacao?: string
   receitaId?: string
   observacoes?: string
@@ -74,6 +77,48 @@ export interface Esmalte extends Base {
   avaliacao?: number         // 0..5
   louca?: Louca              // pode ir à louça (pratos, canecas)?
   tags: string[]
+}
+
+/**
+ * Fluidez do esmalte FUNDIDO durante a queima, como o fabricante publica (termo e escala dele, sem converter).
+ * Separada em três origens que nunca se misturam: fabricante (oficial ou descritiva), estimativa da IA e testes do usuário.
+ */
+export interface ResultadoFluidez {
+  cone?: string
+  temperatura?: string
+  classificacao?: string     // termo original do fabricante (ex.: "Runny when thick")
+  traducao?: string          // tradução para o português
+  escala?: string            // como funciona a escala do fabricante (numérica, gráfica…), quando houver
+  comportamento?: string     // movimento e escorrimento descritos pelo fabricante
+  escorrimentoMm?: string    // distância publicada, em mm
+}
+export interface FluidezQueima {
+  situacao: 'oficial' | 'descritiva' | 'nao-informada'   // classificação formal, só descrição, ou nada publicado
+  resultados: ResultadoFluidez[]   // um por cone/temperatura; nunca extrapolar de um para outro
+  espessura?: string
+  sobreposicao?: string
+  curva?: string
+  recomendacoes?: string
+  imagens: string[]          // ids de Arquivo: fotos oficiais de testes de fluidez
+  fontes: string[]
+  consultadoEm?: string      // AAAA-MM-DD da última consulta
+  estimativaIA?: string      // interpretação da IA, sempre separada da informação oficial
+}
+export interface TesteFluidez {
+  id: string
+  data: string               // AAAA-MM-DD
+  temperatura?: number
+  cone?: string
+  curva?: string
+  atmosfera?: string
+  massa?: string
+  quantidade?: string
+  camadas?: number
+  inclinacao?: string
+  escorrimentoMm?: number
+  sobreposicao?: string
+  fotos: string[]
+  observacoes?: string
 }
 
 /** Uso em louça: sim (declarado/testado), nao (decorativo), testar (só com teste de lixiviação). */

@@ -34,7 +34,9 @@ export default function EsmalteForm() {
   async function salvar() {
     if (!e.nome.trim()) { toast('Dê um nome ao esmalte'); return }
     if (e.id) {
-      await db.esmaltes.put({ ...(e as Esmalte), atualizadoEm: Date.now() })
+      // fluidez do fabricante e testes de fluidez são editados na ficha (e a consulta pode terminar enquanto este formulário está aberto)
+      const atual = await db.esmaltes.get(e.id)
+      await db.esmaltes.put({ ...(e as Esmalte), fluidezQueima: atual?.fluidezQueima, testesFluidez: atual?.testesFluidez, atualizadoEm: Date.now() })
       nav(`/esmaltes/${e.id}`, { replace: true })
     } else {
       const x = novo({ ...e, nome: e.nome.trim() })
@@ -83,7 +85,8 @@ export default function EsmalteForm() {
           </select>
         </Campo>
         <Campo label="Atmosfera" wide><Escolha value={e.atmosfera} onChange={set('atmosfera')} opcoes={ATMOSFERAS.map((v) => ({ v, l: v }))} /></Campo>
-        <Campo label="Fluidez" wide><Escolha value={e.fluidez} onChange={set('fluidez')} opcoes={FLUIDEZ.map((v) => ({ v, l: v }))} /></Campo>
+        <Campo label={e.origem === 'comercial' ? 'Fluidez na queima (sua avaliação; a do fabricante fica na ficha)' : 'Fluidez na queima'} wide><Escolha value={e.fluidez} onChange={set('fluidez')} opcoes={FLUIDEZ.map((v) => ({ v, l: v }))} /></Campo>
+        <Campo label="Consistência do esmalte líquido (antes de aplicar)" wide><Texto value={e.viscosidade} onChange={set('viscosidade')} placeholder="Ex.: cremoso, ralo; densidade 1,45 g/ml" /></Campo>
         <Campo label="Método de aplicação" wide><Escolha value={e.aplicacao} onChange={set('aplicacao')} opcoes={APLICACOES.map((v) => ({ v, l: v }))} /></Campo>
 
         <h3>Receita e desenvolvimento</h3>

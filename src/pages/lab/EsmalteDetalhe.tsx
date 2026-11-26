@@ -15,6 +15,7 @@ import { Relacoes } from '../../ui/Relacoes'
 import { useToast } from '../../ui/toast'
 import { CapaFotos, GaleriaPecas } from '../../ui/GaleriaFotos'
 import { SeloLouca, loucaDoTexto } from '../../ui/Louca'
+import { FluidezQueima } from './FluidezQueima'
 
 const maiusc = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
@@ -40,7 +41,7 @@ export default function EsmalteDetalhe() {
     [e.origem === 'comercial' ? 'Fabricante' : 'Autoria', e.autoria], ['Famílias', fam.join(', ')],
     ['Cor', e.cor], ['Acabamento', e.acabamento], ['Textura', e.textura], ['Transparência', e.transparencia],
     ['Temperatura', e.temperatura ? fmt(e.temperatura, 0) + ' °C' : undefined], ['Cone', e.cone],
-    ['Atmosfera', e.atmosfera], ['Fluidez', e.fluidez], ['Aplicação', e.aplicacao], ['Status', e.status],
+    ['Atmosfera', e.atmosfera], [e.origem === 'comercial' ? 'Fluidez (sua avaliação)' : 'Fluidez na queima', e.fluidez], ['Consistência do líquido', e.viscosidade], ['Aplicação', e.aplicacao], ['Status', e.status],
     ['Fonte da receita', e.fonteReceita],
   ]
 
@@ -120,6 +121,7 @@ export default function EsmalteDetalhe() {
           <dl className="ficha" style={{ margin: '24px 0 0' }}>{ficha.filter(([, v]) => v).map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
           {e.tags.length > 0 && <div className="pills" style={{ marginTop: 16 }}>{e.tags.map((t) => <span key={t} className="chip">#{t}</span>)}</div>}
           {e.observacoes && <p style={{ marginTop: 20, whiteSpace: 'pre-wrap' }} className="muted">{e.observacoes}</p>}
+          {e.origem === 'comercial' && <FluidezQueima e={e} />}
 
           <div style={{ marginTop: 28 }} />
           <Relacoes tipo="esmalte" id={e.id} extras={[
