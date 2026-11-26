@@ -163,7 +163,7 @@ export default function Home() {
       )}
 
       <nav className="areas-fotos" aria-label="Áreas">
-        {AREAS.map((a) => <CardArea key={a.slug} a={a} />)}
+        {AREAS.filter((a) => a.slug !== 'materiais' && a.slug !== 'calculadoras').map((a) => <CardArea key={a.slug} a={a} />)}
       </nav>
 
       {secoes.filter((s) => s.on).map((s) => { const C = SECOES[s.id]; return <C key={s.id} /> })}
