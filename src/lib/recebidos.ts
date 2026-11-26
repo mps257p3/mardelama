@@ -10,6 +10,7 @@ export interface Recebido {
   texto: string
   url?: string
   imagens: Blob[]
+  pdfs?: File[]               // PDFs originais (o texto já foi para `texto` e as figuras para `imagens`)
 }
 
 export interface Previa { imagem?: string; titulo?: string; site?: string; erro?: string }
@@ -41,8 +42,29 @@ export async function lerRecebido(id: string): Promise<Recebido | undefined> {
   if (!meta) return undefined
   const m = await meta.json() as { titulo: string; texto: string; url: string; n: number }
   const imagens: Blob[] = []
-  for (let i = 0; i < m.n; i++) { const r = await cache.match(`/__recebido/${id}/${i}`); if (r) imagens.push(await r.blob()) }
+  for (let i = 0; i < m.n; i++) {
+    const r = await cache.match(`/__recebido/${id}/${i}`)
+    if (r) { const b = await r.blob(); imagens.push(new File([b], decodeURIComponent(r.headers.get('x-nome') ?? '') || `arquivo-${i + 1}`, { type: b.type })) }
+  }
   return { id, titulo: m.titulo, texto: m.texto, url: m.url || linkDe(m.texto), imagens }
+}
+
+export const ehPdf = (b: Blob) => b.type === 'application/pdf' || (b instanceof File && /\.pdf$/i.test(b.name))
+
+/** Abre os PDFs que vieram junto: o texto entra no texto recebido e as figuras recortadas viram as fotos. */
+export async function abrirPdfs(r: Recebido): Promise<Recebido> {
+  const pdfs = r.imagens.filter(ehPdf) as File[]
+  if (!pdfs.length) return r
+  const { lerPdf } = await import('./pdf')
+  const lidos = await Promise.all(pdfs.map((p) => lerPdf(p)))
+  const nome = (p: File) => (p.name || '').replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ').trim()
+  return {
+    ...r,
+    titulo: r.titulo || lidos[0].titulo || nome(pdfs[0]),
+    texto: [r.texto, ...lidos.map((l) => l.texto)].filter((t) => t.trim()).join('\n\n'),
+    imagens: [...r.imagens.filter((b) => !ehPdf(b)), ...lidos.flatMap((l) => l.figuras)],
+    pdfs: [...(r.pdfs ?? []), ...pdfs.map((p) => p instanceof File ? p : new File([p], 'documento.pdf', { type: 'application/pdf' }))],
+  }
 }
 
 /** Apaga do aparelho o que já foi guardado no app (ou descartado). */
@@ -75,7 +97,7 @@ export const temNaoSei = (rs: Resposta[]) => rs.some((x) => x.resposta === NAO_S
 export async function lerComIA(r: Recebido, previa?: Previa, respostas: Resposta[] = [], anterior?: Leitura, pesquisar = false): Promise<Leitura | undefined> {
   if (!(await iaConfigurada())) return undefined
   const imagens = await Promise.all(r.imagens.slice(0, MAX_LEITURA).map(async (b) => ({ base64: await paraBase64(b), tipo: 'image/jpeg' })))
-  return chamar<Leitura>({ acao: 'receber', imagens, total: r.imagens.length, titulo: r.titulo, texto: r.texto, url: r.url, previa: previa && !previa.erro ? previa : undefined, respostas, pesquisar,
+  return chamar<Leitura>({ acao: 'receber', imagens, total: r.imagens.length, pdf: !!r.pdfs?.length, titulo: r.titulo, texto: r.texto, url: r.url, previa: previa && !previa.erro ? previa : undefined, respostas, pesquisar,
     contexto: anterior ? { titulo: anterior.titulo, autor: anterior.autor, resumo: anterior.resumo, transcricao: anterior.transcricao } : undefined }, pesquisar ? 175000 : 90000)
 }
 
@@ -116,12 +138,13 @@ export async function guardar(destino: Destino, r: Recebido, l?: Leitura, previa
   const autor = l?.autor || undefined
   const fonte = fonteDe(r.url, previa?.site)
   const externa = !r.imagens.length && previa?.imagem ? previa.imagem : undefined
-  const transcricao = l?.transcricao?.trim()
-  const textoLivre = r.texto.replace(r.url ?? '', '').trim()
+  // num PDF a IA não transcreve (o texto já foi tirado do arquivo, inteiro)
+  const transcricao = l?.transcricao?.trim() || (r.pdfs?.length ? r.texto.trim() : undefined)
+  const textoLivre = r.pdfs?.length ? '' : r.texto.replace(r.url ?? '', '').trim()
   let caminho: string
   if (destino === 'ideia') {
     const e = l?.esmalte
-    const notas = [e?.notas?.trim(), transcricao && `Texto do post: ${transcricao.replace(/\n+/g, ' ')}`, !l && textoLivre].filter(Boolean).join('\n\n') || undefined
+    const notas = [e?.notas?.trim(), transcricao && (r.pdfs?.length ? `Texto do PDF:\n${transcricao}` : `Texto do post: ${transcricao.replace(/\n+/g, ' ')}`), !l && textoLivre].filter(Boolean).join('\n\n') || undefined
     const id = await novaIdeia({
       titulo, autor, fonte, url: r.url, imagemExterna: externa, tags: l?.tags ?? [],
       materiais: e?.materiais.length ? e.materiais.join('\n') : undefined, esmaltes: e?.como || undefined,
@@ -158,7 +181,9 @@ export async function guardar(destino: Destino, r: Recebido, l?: Leitura, previa
     })
     await db.notas.add(n)
     const imagens = await guardarImagens(r, 'nota', n.id)
-    if (imagens.length) await db.notas.update(n.id, { imagens })
+    const { salvarArquivo } = await import('../db/files')
+    const arquivos = await Promise.all((r.pdfs ?? []).map((p) => salvarArquivo(p, { tipo: 'nota', id: n.id })))
+    if (imagens.length || arquivos.length) await db.notas.update(n.id, { imagens, arquivos })
     caminho = `/caderno/${n.id}`
   }
   await limparRecebido(r.id)
