@@ -1,4 +1,6 @@
 import { db, type Artista, type Obra, type Processo, type Fonte, type FalaArtista } from './schema'
+import { ARTISTAS_NERIKOMI, OBRAS_NERIKOMI, CAPAS_NERIKOMI } from './artistasNerikomi'
+import { ARTISTAS_REFERENCIAS, OBRAS_REFERENCIAS, CAPAS_REFERENCIAS } from './artistasReferencias'
 
 /**
  * Catálogo inicial de Artistas (11 ceramistas a partir de Ryuji Iwasaki).
@@ -1592,6 +1594,8 @@ const ARTISTAS: [string, A][] = [
     tecnicas: ['Colagem de barbotina', 'Aerógrafo', 'Argila pigmentada'], tiposObra: ['Peças de parede', 'Xícaras', 'Bowls'], esteticas: ['Pop', 'Colorida', 'Bem-humorada'],
     tags: ['alemanha', 'parede', 'cor'],
   }],
+  ...ARTISTAS_NERIKOMI,
+  ...ARTISTAS_REFERENCIAS,
   ...([
     ['art-taticouto', 'Tati Couto', 'ceramica_tati_couto', 'Cerâmica'],
     ['art-carnesalvaje', 'Carne Salvaje', 'carnesalvaje', 'Cerâmica'],
@@ -1837,6 +1841,8 @@ const OBRAS: [string, O][] = [
   ...([['selma', 'Cobra de parede "Selma"', '2I9A9105.jpg?v=1765169710'], ['stevie', 'Cobra de parede "Stevie"', '2I9A9107.jpg?v=1765169703'], ['sylvia', 'Cobra de parede "Sylvia"', '2I9A9110.jpg?v=1765169698']] as const).map(([k, t, arq]): [string, O] => [`obra-carterrose-${k}`, { artistaId: 'art-carterrose', titulo: t, materiais: 'Barro do Oregon, esmalte', imagem: `https://myamericangoods.com/cdn/shop/files/${arq}&width=1500`, fonte: 'https://myamericangoods.com/products/ceramic-wall-snake', credito: 'Carter + Rose, via My American Goods' }]),
   ...([['ivory', 'Vaso de parede duplo, marfim', 'double-ivory_f01d4dde-e7b7-4cc7-ab67-9531c095bdb0.jpg'], ['speckled', 'Vaso de parede duplo, salpicado', 'double-speckled_a647d7e2-bcd2-477c-84ae-ad1f8a138d17.jpg'], ['indigo', 'Vaso de parede duplo, índigo', 'double-indigo_3d33a51c-d3a1-4638-a275-57672cf3f8de.jpg']] as const).map(([k, t, arq]): [string, O] => [`obra-carterrose-${k}`, { artistaId: 'art-carterrose', titulo: t, materiais: 'Cerâmica e madeira', imagem: `https://myamericangoods.com/cdn/shop/files/${arq}?v=1788809150&width=1500`, fonte: 'https://myamericangoods.com/products/double-ceramic-wall-planter', credito: 'Carter + Rose, via My American Goods' }]),
   ...([['wallpieces', 'Wall Pieces (conjunto de 4)', '1792932445701-MGTY0ABO9V7ATLKS2IJO/F2500318-4007-4BCB-B3FE-D8C2019B6F28.jpeg', 'https://www.lottastudio.de/shop/p/qtwprlfqivcteleftnej4g4ip9bklx'], ['basketball', 'Basketball', '1758533249856-CI2MGDKQD7QL9N0FPCR1/C3708D65-E103-4FC9-8907-D653BD7EA38D.jpeg', 'https://www.lottastudio.de/shop/p/basketball'], ['feeling', 'Feeling Bowl', 'aa080e9e-1835-4d78-bb3d-ea97518e331b/IMG_7716.jpg', 'https://www.lottastudio.de/shop/p/feeling-bowl'], ['flowerbelt', 'Flower Belt', 'c0208471-6096-415b-8234-f08383a01e28/L1001416.jpg', 'https://www.lottastudio.de/shop/p/flower-belt'], ['goodmood', 'Good Mood Cup', 'e1244f7f-a328-4d08-a395-4a933775cfea/IMG_7658.jpg', 'https://www.lottastudio.de/shop/p/good-mood-cup'], ['cloud', 'Cloud Cup', 'fd36ed58-1fc1-431c-9325-d13ae12764ce/IMG_4635.jpg', 'https://www.lottastudio.de/shop/p/cloud-cup-large']] as const).map(([k, t, arq, pag]): [string, O] => [`obra-lottastudio-${k}`, { artistaId: 'art-lottastudio', titulo: t, imagem: `https://images.squarespace-cdn.com/content/v1/67d31baa2daf95345a6d87f6/${arq}`, fonte: pag, credito: 'Lotta Studio (loja da artista)' }]),
+  ...OBRAS_NERIKOMI,
+  ...OBRAS_REFERENCIAS,
 ]
 
 /** Falas dos próprios artistas, traduzidas livremente para o português, com o original e a fonte (conferidas em 23/11/2026). */
@@ -1911,6 +1917,7 @@ const CAPAS: Record<string, string> = {
   'art-makhno': 'obra-makhno-sadok', 'art-rasmussen': 'obra-rasmussen-blueloop', 'art-diale': 'obra-diale-potofjoy', 'art-economides': 'obra-economides-1',
   'art-velazquez': 'obra-velazquez-1', 'art-alexandridi': 'obra-alexandridi-mourmoura', 'art-crittenden': 'obra-crittenden-chromatic', 'art-browne': 'obra-browne-bathing',
   'art-claireabelle': 'obra-claireabelle-2', 'art-carterrose': 'obra-carterrose-selma', 'art-lottastudio': 'obra-lottastudio-wallpieces',
+  ...CAPAS_NERIKOMI, ...CAPAS_REFERENCIAS,
 }
 
 /** Correção 23/11: a imagem de capa da Marina Anaya saiu do ar; troca a capa e a imagem morta (se o usuário não mexeu). */
@@ -1932,7 +1939,7 @@ async function corrigirAnaya() {
 /** Semeia o catálogo uma vez por aparelho, com ids fixos (não duplica entre aparelhos nem apaga o que já foi editado). */
 export async function semearArtistas() {
   await corrigirAnaya()
-  if (await db.ajustes.get('seed-artistas-v11')) return
+  if (await db.ajustes.get('seed-artistas-v12')) return
   const existentesA = new Set((await db.artistas.toArray()).map((x) => x.id))
   const existentesO = new Set((await db.obras.toArray()).map((x) => x.id))
   const as: Artista[] = ARTISTAS.filter(([id]) => !existentesA.has(id)).map(([id, a], i) => ({
@@ -1952,5 +1959,5 @@ export async function semearArtistas() {
     }
     for (const x of semFalas) await db.artistas.update(x.id, { falas: FALAS[x.id], atualizadoEm: Date.now() })
   })
-  await db.ajustes.put({ chave: 'seed-artistas-v11', valor: true })
+  await db.ajustes.put({ chave: 'seed-artistas-v12', valor: true })
 }
