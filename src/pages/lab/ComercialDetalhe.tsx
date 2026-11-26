@@ -1,7 +1,7 @@
 import { Voltar } from '../../ui/Voltar'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { incluidoEm } from '../../lib/data'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Check, Sparkles, Trash2 } from 'lucide-react'
 import { pesquisarEstudo } from '../../lib/comercial'
@@ -24,6 +24,19 @@ export default function ComercialDetalhe() {
   const familias = useFamilias()
   const toast = useToast()
   const [pesquisando, setPesquisando] = useState(false)
+  const loc = useLocation()
+  const pesquisar = async (cid: string) => {
+    setPesquisando(true)
+    try { await pesquisarEstudo(cid); toast('Pesquisa pronta. Confira as fontes.') } catch (e) { toast('A pesquisa não deu certo: ' + (e as Error).message) } finally { setPesquisando(false) }
+  }
+  // vindo do esmalte (botão Engenharia reversa): ?pesquisar=1 começa a pesquisa; #receita rola até a receita
+  const iniciado = useRef('')
+  useEffect(() => {
+    if (!c || c.excluido || iniciado.current === c.id) return
+    iniciado.current = c.id
+    if (new URLSearchParams(loc.search).get('pesquisar')) { nav(loc.pathname, { replace: true }); pesquisar(c.id) }
+    if (loc.hash === '#receita') setTimeout(() => document.getElementById('receita')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
+  }, [c]) // eslint-disable-line react-hooks/exhaustive-deps
   if (c === undefined) return null
   if (!c || c.excluido) return <div className="page"><p>Estudo não encontrado.</p></div>
   const salvar = (d: Partial<Comercial>) => db.comerciais.update(c.id, { ...d, atualizadoEm: Date.now() })
@@ -42,10 +55,7 @@ export default function ComercialDetalhe() {
         <SeloLouca origem="fabricante" original valor={c.louca ?? loucaDoTexto([...(c.usos ?? []), ...c.declarados, c.instrucoes, c.observacoes])} onChange={(v) => salvar({ louca: v })} />
       </div>
       <div style={{ marginTop: 14 }}>
-        <button className="btn" disabled={pesquisando} onClick={async () => {
-          setPesquisando(true)
-          try { await pesquisarEstudo(c.id); toast('Pesquisa pronta. Confira as fontes.') } catch (e) { toast('A pesquisa não deu certo: ' + (e as Error).message) } finally { setPesquisando(false) }
-        }}><Sparkles size={15} />{pesquisando ? 'Pesquisando…' : 'Pesquisar com IA'}</button>
+        <button className="btn" disabled={pesquisando} onClick={() => pesquisar(c.id)}><Sparkles size={15} />{pesquisando ? 'Pesquisando…' : 'Pesquisar com IA'}</button>
         {pesquisando && <p className="recebido-lendo" style={{ marginTop: 10 }}><Sparkles size={15} />Identificando o esmalte e procurando a ficha do fabricante… leva 1 ou 2 minutos. Pode sair do app: a pesquisa continua e termina quando você voltar.</p>}
       </div>
       <p className="aviso" style={{ marginTop: 16 }}>Estudo de referência. Hipóteses não são componentes confirmados, e nenhum resultado aqui indica segurança para contato com alimentos.</p>
@@ -139,7 +149,7 @@ function ReceitaDeTeste({ c }: { c: Comercial }) {
     nav(`/receitas/${id}`)
   }
   return (
-    <section className="card" style={{ padding: 18, marginTop: 16 }}>
+    <section className="card" id="receita" style={{ padding: 18, marginTop: 16, scrollMarginTop: 16 }}>
       <h3>Receita para testar</h3>
       <p className="faint" style={{ fontSize: 13, margin: '4px 0 12px' }}>{r.codigo ? r.codigo + ' · ' : ''}Hipótese, não é a fórmula do fabricante. Fica só aqui até você aprovar.</p>
       <p className="eyebrow" style={{ marginTop: 4 }}>Base · {g(soma)}</p>
