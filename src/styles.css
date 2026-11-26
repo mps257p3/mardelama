@@ -1152,8 +1152,9 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
 .linha-queima > .t { color: var(--ink-2); font-size: 15px; }
 .selo-louca { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px 5px 10px; border-radius: 999px; font-size: 12.5px; line-height: 1.25; border: 1px solid transparent; }
 .selo-louca b { font-weight: 600; }
-.selo-louca span { opacity: .8; }
-.selo-louca span::before { content: '·'; margin-right: 6px; }
+.selo-louca svg { flex: none; }
+.selo-louca .tx > span { opacity: .8; }
+.selo-louca .tx > span::before { content: ' · '; }
 .selo-louca.sim { background: color-mix(in srgb, var(--azul) 13%, var(--marfim)); color: #2C4550; }
 .selo-louca.nao { background: #F2E3D9; color: #7A4A2E; }
 .selo-louca.testar { background: var(--surface-2); color: var(--ink-2); border-color: var(--line); }
