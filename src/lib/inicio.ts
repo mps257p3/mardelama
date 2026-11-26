@@ -3,9 +3,6 @@ import { useAjuste } from '../db/settings'
 /** Seções dinâmicas da tela inicial — podem ser reordenadas e ocultadas em Ajustes. */
 export const SECOES_INICIO = [
   { id: 'agenda', nome: 'Exposições em São Paulo' },
-  { id: 'esmaltes', nome: 'Últimos esmaltes' },
-  { id: 'testes', nome: 'Últimos testes' },
-  { id: 'favoritas', nome: 'Referências favoritas' },
 ] as const
 export type SecaoId = (typeof SECOES_INICIO)[number]['id']
 export interface SecaoCfg { id: SecaoId; on: boolean }
