@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { FlaskConical, Info, Lightbulb, Plus, ScanText, ScrollText, TestTube } from 'lucide-react'
+import { ArrowLeft, FlaskConical, Info, Lightbulb, Plus, ScanText, ScrollText, TestTube } from 'lucide-react'
 import { Menu } from '../../ui/Menu'
 import { useFamilias, useEsmaltes, useReceitas, useTestes } from '../../db/hooks'
 import Esmaltes from './Esmaltes'
@@ -40,6 +40,7 @@ export default function Superficies({ aba, entrada }: { aba: Aba; entrada?: bool
   const ABAS: [Aba, string][] = [['esmaltes', 'Esmaltes'], ['receitas', 'Fórmulas'], ['testes', 'Testes'], ['ideias', 'Ideias']]
   return (
     <div className="page">
+      <Link to="/superficies" className="back"><ArrowLeft size={15} />Superfícies</Link>
       <div className="topo-c">
         <h1>Superfícies</h1>
         <div className="icones">

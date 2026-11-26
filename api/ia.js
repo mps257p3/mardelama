@@ -253,7 +253,7 @@ A partir disso, proponha consultas para um feed de descoberta que traga coisas n
       conteudo: [
         ...imgs.map((x) => ({ type: 'image', source: { type: 'base64', media_type: x.tipo || 'image/jpeg', data: x.base64 } })),
         { type: 'text', text: `Um ceramista compartilhou isto para o app do ateliê, vindo de outro aplicativo (Instagram, site, galeria de fotos, WhatsApp).
-${d.titulo ? 'Título recebido: "' + String(d.titulo).slice(0, 300) + '"\n' : ''}${d.texto ? 'Texto recebido: "' + String(d.texto).slice(0, 3000) + '"\n' : ''}${d.url ? 'Link: ' + String(d.url).slice(0, 500) + '\n' : ''}${d.previa ? 'Prévia do link: ' + JSON.stringify(d.previa).slice(0, 600) + '\n' : ''}${imgs.length ? 'As imagens acima são o que foi compartilhado (muitas vezes prints de tela).\n' : ''}${(d.respostas ?? []).length ? 'Respostas da pessoa às suas perguntas (use para preencher e não pergunte de novo): ' + JSON.stringify(d.respostas).slice(0, 1500) + '\n' : ''}
+${d.titulo ? 'Título recebido: "' + String(d.titulo).slice(0, 300) + '"\n' : ''}${d.texto ? 'Texto recebido: "' + String(d.texto).slice(0, 3000) + '"\n' : ''}${d.url ? 'Link: ' + String(d.url).slice(0, 500) + '\n' : ''}${d.previa ? 'Prévia do link: ' + JSON.stringify(d.previa).slice(0, 600) + '\n' : ''}${imgs.length ? 'As imagens acima são o que foi compartilhado (muitas vezes prints de tela).\n' : ''}${(d.respostas ?? []).length ? 'Respostas da pessoa às suas perguntas (use para preencher e não pergunte de novo; "Não sei" quer dizer que ela não sabe): ' + JSON.stringify(d.respostas).slice(0, 1500) + '\n' : ''}${d.pesquisa ? 'Pesquisa na internet sobre o que ela não sabia (use para preencher; coloque um parágrafo "Fontes:" com os links nas notas de esmalte quando for ideia, ou no resumo nos outros casos): ' + String(d.pesquisa).slice(0, 4000) + '\n' : ''}
 Transcreva o texto que aparece, diga o que é e sugira para onde vai no app. Se for uma esmaltação ou superfície cerâmica, preencha "esmalte" com tudo o que der, começando pelos esmaltes e materiais prováveis: é a informação mais útil para ele. Se faltar algo que só ele sabe, pergunte em "perguntas".` },
       ],
     }
@@ -379,6 +379,41 @@ function limparArtista(o) {
   return r
 }
 
+// "Não sei" nas perguntas da tela Recebido: pesquisa na web o que a pessoa não sabia, antes de preencher.
+// Devolve um resumo curto com as fontes; a leitura estruturada usa isso em seguida.
+const NAO_SEI = /^n[ãa]o sei$/i
+async function pesquisarDuvidas(d) {
+  const duvidas = (d.pesquisar === true ? d.respostas ?? [] : []).filter((x) => NAO_SEI.test(String(x?.resposta ?? '').trim())).map((x) => so(x.pergunta, 200)).filter(Boolean).slice(0, 3)
+  if (!duvidas.length) return ''
+  const ctx = d.contexto ?? {}
+  const img = (d.imagens ?? []).find((x) => x?.base64)
+  const client = new Anthropic()
+  const mensagens = [{ role: 'user', content: [
+    ...(img ? [{ type: 'image', source: { type: 'base64', media_type: img.tipo || 'image/jpeg', data: img.base64 } }] : []),
+    { type: 'text', text: `Um ceramista brasileiro compartilhou isto para o app do ateliê.
+O que já se sabe: ${JSON.stringify({ titulo: so(ctx.titulo, 200), autor: so(ctx.autor, 120), resumo: so(ctx.resumo, 400), texto: so(ctx.transcricao, 1200), link: url(d.url) }).slice(0, 2500)}
+Ele não sabe responder: ${duvidas.map((q) => '"' + q + '"').join('; ')}.
+Pesquise na web (site do artista, loja, Instagram público, entrevistas, fornecedores de esmalte, artigos técnicos) e responda cada pergunta em português, em uma ou duas frases, dizendo quando é confirmado por fonte e quando é a prática mais comum. Termine com "Fontes:" e os links usados. Nunca invente.` },
+  ] }]
+  try {
+    let r
+    for (let i = 0; i < 3; i++) {
+      r = await client.beta.messages.create({
+        model: MODELO, max_tokens: 4000, betas: BETAS, fallbacks: 'default',
+        thinking: { type: 'adaptive' }, output_config: { effort: 'low' },
+        tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 4 }, { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 3 }],
+        messages: mensagens,
+      })
+      if (r.stop_reason !== 'pause_turn') break
+      mensagens.push({ role: 'assistant', content: r.content })
+    }
+    return r.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n').trim().slice(0, 4000)
+  } catch (e) {
+    console.warn('Pesquisa do Recebido falhou:', e instanceof Error ? e.message : e)
+    return ''
+  }
+}
+
 async function pesquisarArtista(d) {
   const nome = so(d?.nome, 120)
   const link = url(d?.url)
@@ -430,6 +465,7 @@ export async function POST(req) {
   try { d = await req.json() } catch { return json({ erro: 'Pedido inválido' }, 400) }
   const acao = d?.acao
   if (acao === 'artista') return pesquisarArtista(d)
+  if (acao === 'receber' && d.pesquisar) d.pesquisa = await pesquisarDuvidas(d)
   const p = ESQUEMAS[acao] && pedidoDe(acao, d)
   if (!p) return json({ erro: 'Ação desconhecida' }, 400)
   if (acao === 'foto' && !d.imagem?.base64) return json({ erro: 'Sem imagem' }, 400)

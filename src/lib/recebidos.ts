@@ -68,10 +68,15 @@ function fonteDe(url?: string, site?: string) {
 }
 
 /** Transcreve, resume e sugere o destino. Precisa da IA configurada na Vercel. */
-export async function lerComIA(r: Recebido, previa?: Previa, respostas: Resposta[] = []): Promise<Leitura | undefined> {
+export const NAO_SEI = 'Não sei'
+export const temNaoSei = (rs: Resposta[]) => rs.some((x) => x.resposta === NAO_SEI)
+
+/** Com "Não sei" em alguma resposta, o servidor pesquisa na internet antes de preencher (demora mais). */
+export async function lerComIA(r: Recebido, previa?: Previa, respostas: Resposta[] = [], anterior?: Leitura, pesquisar = false): Promise<Leitura | undefined> {
   if (!(await iaConfigurada())) return undefined
   const imagens = await Promise.all(r.imagens.slice(0, 4).map(async (b) => ({ base64: await paraBase64(b), tipo: 'image/jpeg' })))
-  return chamar<Leitura>({ acao: 'receber', imagens, titulo: r.titulo, texto: r.texto, url: r.url, previa: previa && !previa.erro ? previa : undefined, respostas }, 90000)
+  return chamar<Leitura>({ acao: 'receber', imagens, titulo: r.titulo, texto: r.texto, url: r.url, previa: previa && !previa.erro ? previa : undefined, respostas, pesquisar,
+    contexto: anterior ? { titulo: anterior.titulo, autor: anterior.autor, resumo: anterior.resumo, transcricao: anterior.transcricao } : undefined }, pesquisar ? 175000 : 90000)
 }
 
 async function guardarImagens(r: Recebido, tipo: 'ideia' | 'referencia' | 'nota', id: string) {
