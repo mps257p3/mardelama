@@ -8,10 +8,10 @@ import { ANALISE, CERTEZA, vivos } from './artistas'
  * as imagens da web vão dentro quando o site permite, senão ficam como link.
  */
 
-const esc = (s?: string) => (s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+export const esc = (s?: string) => (s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 const paraDataUrl = (b: Blob) => new Promise<string>((ok, erro) => { const r = new FileReader(); r.onload = () => ok(String(r.result)); r.onerror = erro; r.readAsDataURL(b) })
 
-async function imagemEmbutida(arquivo?: string, url?: string): Promise<string | undefined> {
+export async function imagemEmbutida(arquivo?: string, url?: string): Promise<string | undefined> {
   if (arquivo) { const a = await db.arquivos.get(arquivo); if (a?.blob?.size) return paraDataUrl(a.blob) }
   if (!url) return undefined
   try {
