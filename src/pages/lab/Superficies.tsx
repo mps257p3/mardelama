@@ -1,7 +1,8 @@
 import { Voltar } from '../../ui/Voltar'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Camera, FlaskConical, Info, Lightbulb, Plus, ScanText, ScrollText, Sparkles, TestTube } from 'lucide-react'
+import { Camera, FlaskConical, Images, Info, Lightbulb, Plus, ScanText, ScrollText, Sparkles, TestTube } from 'lucide-react'
+import { Sheet } from '../../ui/Sheet'
 import { catalogarEsmalte } from '../../lib/comercial'
 import { useToast } from '../../ui/toast'
 import { Menu } from '../../ui/Menu'
@@ -26,9 +27,12 @@ export default function Superficies({ aba, entrada }: { aba: Aba; entrada?: bool
   const ideias = useIdeias()
   const toast = useToast()
   const foto = useRef<HTMLInputElement>(null)
+  const camera = useRef<HTMLInputElement>(null)
+  const [escolher, setEscolher] = useState(false)
   const [catalogando, setCatalogando] = useState(false)
   async function catalogar(files: FileList | null) {
     if (!files?.length) return
+    setEscolher(false)
     setCatalogando(true)
     try { const id = await catalogarEsmalte([...files], fam ? [fam] : []); toast('Esmalte catalogado. Confira as informações.'); nav(`/esmaltes/${id}`) }
     catch (e) { toast((e as Error).message) }
@@ -59,7 +63,7 @@ export default function Superficies({ aba, entrada }: { aba: Aba; entrada?: bool
         <div className="icones">
           <Link className="iconbtn" to={fam ? `/familias/${fam}` : '/familias'} aria-label="Sobre as famílias" title="Sobre as famílias"><Info size={19} /></Link>
           <Menu rotulo="Adicionar" botao={<span className="iconbtn mais"><Plus size={19} /></span>} itens={[
-            { l: 'Catalogar esmalte por foto', icon: <Camera size={16} />, onClick: () => foto.current?.click() },
+            { l: 'Catalogar esmalte por foto', icon: <Camera size={16} />, onClick: () => setEscolher(true) },
             { l: 'Esmalte', icon: <FlaskConical size={16} />, to: '/esmaltes/novo' },
             { l: 'Fórmula', icon: <ScrollText size={16} />, onClick: async () => nav(`/receitas/${await criarReceita(fam ? { familias: [fam] } : {})}`) },
             { l: 'Teste', icon: <TestTube size={16} />, to: '/testes/novo' },
@@ -70,6 +74,15 @@ export default function Superficies({ aba, entrada }: { aba: Aba; entrada?: bool
         </div>
       </div>
       <input ref={foto} type="file" accept="image/*" multiple hidden onChange={(e) => { catalogar(e.target.files); e.target.value = '' }} />
+      <input ref={camera} type="file" accept="image/*" capture="environment" hidden onChange={(e) => { catalogar(e.target.files); e.target.value = '' }} />
+      {escolher && <Sheet label="Catalogar esmalte por foto" onClose={() => setEscolher(false)}>
+        <h3>Catalogar esmalte por foto</h3>
+        <p className="muted" style={{ margin: '6px 0 16px', fontSize: 14 }}>Fotografe o rótulo, o pote ou uma placa de teste. A IA identifica o esmalte e traz marca, temperatura, uso em louça e fotos do fabricante.</p>
+        <div style={{ display: 'grid', gap: 10 }}>
+          <button className="btn primary" onClick={() => camera.current?.click()}><Camera size={17} />Tirar foto</button>
+          <button className="btn" onClick={() => foto.current?.click()}><Images size={17} />Escolher da galeria</button>
+        </div>
+      </Sheet>}
       {catalogando && <p className="recebido-lendo" style={{ marginBottom: 14 }}><Sparkles size={15} />Identificando o esmalte e procurando a ficha e as fotos do fabricante… fique nesta tela, leva 1 ou 2 minutos.</p>}
       <div className="chips">
         <button className={'chip' + (!fam ? ' on' : '')} onClick={() => setSp({}, { replace: true })}>Todas</button>
