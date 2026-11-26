@@ -1,4 +1,4 @@
-import { db, type Comercial, type Ingrediente, type Louca } from '../db/schema'
+import { db, novo, uid, type Comercial, type Esmalte, type Ingrediente, type Louca } from '../db/schema'
 import { chamar, iaConfigurada, paraBase64 } from './iaRepertorio'
 
 interface Pesquisa { fabricante: string; nome: string; codigo: string; serie: string; cone: string; temperatura: string; louca?: Louca; instrucoes: string; declarados: string[]; usos?: string[]; documentacao: string; hipoteses: string[]; fontes: string[]; observacoes: string; avisos: string[]; imagens?: string[]
@@ -52,7 +52,7 @@ export async function pesquisarEstudo(id: string, prints: Blob[] = []) {
  * Baixa fotos do produto (placa de teste, pote) por link e guarda no aparelho, como as fotos do estudo.
  * Passa pela /api/imagem quando o site não deixa o navegador abrir direto. Devolve os ids que deram certo.
  */
-export async function fotosDoFabricante(id: string, urls: string[]) {
+export async function fotosDoFabricante(id: string, urls: string[], tipo: 'comercial' | 'esmalte' = 'comercial') {
   const { cabecalhoLogin } = await import('./login')
   const { salvarArquivo } = await import('../db/files')
   const ids: string[] = []
@@ -63,8 +63,48 @@ export async function fotosDoFabricante(id: string, urls: string[]) {
       const b = r.ok ? await r.blob() : undefined
       if (!b?.type.startsWith('image/') || b.size < 2000) continue
       const nome = (u.split('/').pop() || 'fabricante.jpg').split('?')[0]
-      ids.push(await salvarArquivo(new File([b], nome, { type: b.type }), { tipo: 'comercial', id }))
+      ids.push(await salvarArquivo(new File([b], nome, { type: b.type }), { tipo, id }))
     } catch { /* segue para a próxima */ }
   }
   return ids
+}
+
+/** Temperatura em °C a partir do texto da pesquisa ("1180 a 1220 °C" → 1220; só °F → converte). */
+function grausDoTexto(t?: string) {
+  if (!t) return undefined
+  const c = [...t.matchAll(/(\d{3,4})\s*°?\s*C\b/g)].map((m) => Number(m[1])).filter((n) => n >= 600 && n <= 1400)
+  if (c.length) return Math.max(...c)
+  const f = [...t.matchAll(/(\d{4})\s*°?\s*F\b/g)].map((m) => Math.round((Number(m[1]) - 32) * 5 / 9)).filter((n) => n >= 600 && n <= 1400)
+  return f.length ? Math.max(...f) : undefined
+}
+
+/**
+ * Esmaltaria › + › Catalogar por foto: a IA identifica o esmalte pela foto (pote, rótulo, placa),
+ * pesquisa o fabricante e cria a ficha em Esmaltes: marca, temperatura, cone, uso em louça e fotos do fabricante.
+ * A foto enviada só fica na ficha se não vier nenhuma foto do fabricante.
+ */
+export async function catalogarEsmalte(fotos: Blob[], familias: string[] = []) {
+  if (!(await iaConfigurada())) throw new Error('A IA não está ligada')
+  const imagens = await Promise.all(fotos.slice(0, 4).map(async (b) => ({ base64: await paraBase64(b), tipo: 'image/jpeg' })))
+  const p = await chamar<Pesquisa>({ acao: 'comercial', imagens, texto: '' }, 175000)
+  if (!p.nome) throw new Error('A IA não reconheceu o esmalte na foto. Tente uma foto do rótulo.')
+  const { proximoCodigo } = await import('../db/codigos')
+  const id = uid()
+  let ids = await fotosDoFabricante(id, p.imagens ?? [], 'esmalte')
+  if (!ids.length) {
+    const { salvarArquivo } = await import('../db/files')
+    ids = [await salvarArquivo(new File([fotos[0]], 'foto.jpg', { type: fotos[0].type || 'image/jpeg' }), { tipo: 'esmalte', id })]
+  }
+  const bloco = (t: string, xs?: string[]) => (xs?.length ? t + ':\n' + xs.map((x) => '• ' + x).join('\n') : '')
+  const observacoes = [
+    [p.codigo && 'Código do produto: ' + p.codigo, p.serie && 'Linha: ' + p.serie, p.temperatura && 'Queima: ' + p.temperatura].filter(Boolean).join('\n'),
+    p.instrucoes, bloco('Declarado pelo fabricante', p.declarados), bloco('Melhores usos', p.usos), p.observacoes,
+    p.avisos.length ? 'Incertezas: ' + p.avisos.join(' ') : '', bloco('Fontes', p.fontes),
+  ].filter(Boolean).join('\n\n')
+  const e: Esmalte = {
+    ...novo({ nome: p.nome, codigo: await proximoCodigo('E', 'esmaltes', 3), origem: 'comercial' as const, autoria: p.fabricante || undefined, familias, fotos: ids, tags: [] as string[] }),
+    id, cone: p.cone || undefined, temperatura: grausDoTexto(p.temperatura), louca: p.louca, observacoes: observacoes || undefined,
+  }
+  await db.esmaltes.add(e)
+  return id
 }
