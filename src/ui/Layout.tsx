@@ -1,4 +1,5 @@
 import { conferirRolagem } from './rolagem'
+import { useMemoriaRolagem } from './memoriaRolagem'
 import { pularEntradasOrfas } from './voltarFecha'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
@@ -22,6 +23,7 @@ export function Layout() {
   useEffect(() => { if (!emFluxoDeCadastro(pathname)) definirContexto(undefined) }, [pathname])
   useEffect(() => { trocouDeTela(); const t = window.setTimeout(conferirRolagem, 400); return () => window.clearTimeout(t) }, [pathname])
   useEffect(() => pularEntradasOrfas(), [])
+  useMemoriaRolagem()
   const area = AREA_DA_ROTA.find(([r]) => r.test(pathname))?.[1]
   return (
     <div className="app">

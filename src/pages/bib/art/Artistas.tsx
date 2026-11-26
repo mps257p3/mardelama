@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useEstadoDaTela } from '../../../ui/memoriaRolagem'
 import { BookOpen, FolderHeart, Heart, Trash2, LayoutGrid, List, Pencil, Plus, Search, SlidersHorizontal, Sparkles, X } from 'lucide-react'
 import { db, type Artista, type Obra } from '../../../db/schema'
 import { secaoPorSlug } from '../../../lib/biblioteca'
@@ -61,9 +62,9 @@ export default function Artistas() {
   const estudos = useLiveQuery(async () => (await db.conteudos.where('categoria').equals('Artistas').toArray()).filter((c) => !c.excluido).sort((a, b) => b.atualizadoEm - a.atualizadoEm), [], [])
   const lista = useAjuste<boolean>('artistas.lista', false)
   const ordem = useAjuste<Ordem>('artistas.ordem', 'curadoria')
-  const [q, setQ] = useState('')
-  const [f, setF] = useState<Filtros>({})
-  const [fav, setFav] = useState(false)
+  const [q, setQ] = useEstadoDaTela('artistas.q', '')
+  const [f, setF] = useEstadoDaTela<Filtros>('artistas.f', {})
+  const [fav, setFav] = useEstadoDaTela('artistas.fav', false)
   const [painel, setPainel] = useState(false)
   const [ia, setIa] = useState<false | true | string>(false)
   const [sugestoes, setSugestoes] = useState<SugestaoArtista[]>([])
