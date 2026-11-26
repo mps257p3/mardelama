@@ -292,6 +292,7 @@ export async function semearIdeias() {
   await temperaturaNasFormulas().catch(() => undefined)
   await esmaltesDosRotulos().catch(() => undefined)
   await formulasVaziasDeComerciais().catch(() => undefined)
+  await (await import('./guiasIniciais')).semearGuias().catch(() => undefined)
 }
 
 /** 25/11: anotações mais diretas (sem a nota sobre as IAs, sem "O que se vê" e sem "Possibilidade autoral"; degradê e pigmentos primeiro), se o usuário não mexeu. */
