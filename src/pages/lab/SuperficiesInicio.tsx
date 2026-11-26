@@ -1,30 +1,50 @@
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, FlaskConical, Lightbulb, ScrollText, Shapes, TestTube } from 'lucide-react'
-import { useEsmaltes, useReceitas, useTestes } from '../../db/hooks'
+import { ArrowUpRight, FlaskConical, Lightbulb, ScrollText, Shapes, TestTube } from 'lucide-react'
+import { useEsmaltes, useFamilias, useReceitas, useTestes } from '../../db/hooks'
+import { Foto } from '../../ui/form'
 import { useIdeias } from './Ideias'
 
-/** Entrada de Superfícies: escolher para onde ir, em vez de cair direto numa lista. */
+type Capa = { id?: string; externa?: string }
+const recente = <T extends { atualizadoEm: number }>(xs: T[] | undefined, foto: (x: T) => Capa | undefined): Capa | undefined =>
+  [...(xs ?? [])].sort((a, b) => b.atualizadoEm - a.atualizadoEm).map(foto).find((c) => c && (c.id || c.externa))
+
+/** Entrada de Superfícies: capas com fotos do próprio ateliê, em vez de cair direto numa lista. */
 export default function SuperficiesInicio() {
-  const n = { esmaltes: useEsmaltes()?.length, receitas: useReceitas()?.length, testes: useTestes()?.length, ideias: useIdeias()?.length }
-  const ITENS = [
-    { to: '/esmaltes', nome: 'Esmaltes', desc: 'Os esmaltes do ateliê', icon: FlaskConical, n: n.esmaltes },
-    { to: '/receitas', nome: 'Fórmulas', desc: 'Receitas, versões e cálculos', icon: ScrollText, n: n.receitas },
-    { to: '/testes', nome: 'Testes', desc: 'Plaquinhas, queimas e resultados', icon: TestTube, n: n.testes },
-    { to: '/ideias', nome: 'Ideias', desc: 'Esmaltações que dão vontade de testar', icon: Lightbulb, n: n.ideias },
-    { to: '/familias', nome: 'Famílias', desc: 'B01 a B10: bases e comportamentos', icon: Shapes },
+  const esmaltes = useEsmaltes(), receitas = useReceitas(), testes = useTestes(), ideias = useIdeias(), familias = useFamilias()
+  const ITENS: { to: string; nome: string; n?: number; capa?: Capa; icon: typeof FlaskConical; cor: string; classe: string }[] = [
+    { to: '/esmaltes', nome: 'Esmaltes', n: esmaltes?.length, icon: FlaskConical, cor: 'esm', classe: 'larga',
+      capa: recente(esmaltes, (e) => ({ id: e.fotos[0] ?? e.pecas?.[0] })) },
+    { to: '/receitas', nome: 'Fórmulas', n: receitas?.length, icon: ScrollText, cor: 'rec', classe: '',
+      capa: recente(receitas, (r) => ({ id: r.fotos?.[0] ?? r.pecas?.[0] })) },
+    { to: '/testes', nome: 'Testes', n: testes?.length, icon: TestTube, cor: 'tes', classe: '',
+      capa: recente(testes, (t) => ({ id: t.fotos[0] })) },
+    { to: '/ideias', nome: 'Ideias', n: ideias?.length, icon: Lightbulb, cor: 'ide', classe: 'larga',
+      capa: recente(ideias, (i) => ({ id: i.imagens[0], externa: i.imagemExterna })) },
   ]
   return (
     <div className="page">
-      <h1>Superfícies</h1>
-      <div className="areas" style={{ marginTop: 28 }}>
-        {ITENS.map(({ to, nome, desc, icon: I, n }) => (
-          <Link key={to} to={to} className="area">
-            <I className="art" size={34} strokeWidth={1.1} style={{ width: 34 }} />
-            <h3>{nome}</h3><p>{n != null ? `${n} · ` : ''}{desc}</p>
-            <ArrowRight className="arrow" size={18} strokeWidth={1.4} />
+      <p className="eyebrow">Laboratório</p>
+      <h1 className="sup-titulo">Superfícies</h1>
+      <div className="sup-capas">
+        {ITENS.map(({ to, nome, n, capa, icon: I, cor, classe }) => (
+          <Link key={to} to={to} className={`sup-capa ${cor} ${classe}`}>
+            {capa?.id ? <Foto id={capa.id} alt="" /> : capa?.externa ? <img src={capa.externa} alt="" referrerPolicy="no-referrer" loading="lazy" /> : <I className="sup-icone" size={120} strokeWidth={0.7} />}
+            <span className="sup-texto">
+              {n != null && <span className="sup-n">{n}</span>}
+              <span className="sup-nome">{nome}</span>
+            </span>
+            <ArrowUpRight className="sup-seta" size={18} strokeWidth={1.5} />
           </Link>
         ))}
       </div>
+      <Link to="/familias" className="sup-familias">
+        <Shapes size={18} strokeWidth={1.4} />
+        <span className="t">Famílias</span>
+        <span className="cods">{familias.slice(0, 10).map((f) => <Codigo key={f.id}>{f.codigo || f.nome.slice(0, 3)}</Codigo>)}</span>
+      </Link>
     </div>
   )
 }
+
+const Codigo = ({ children }: { children: ReactNode }) => <span className="cod">{children}</span>
