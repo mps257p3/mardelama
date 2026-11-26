@@ -272,7 +272,7 @@ const PREPARO = [
   'Aplique 3 demãos numa plaquinha em pé, deixando o pé sem esmalte, e queime com um prato ou um caco de biscoito por baixo.',
 ]
 
-const FORMULAS: { id: string; comercial: string; codigo: string; nome: string; ings: Ing[]; parametros: string; extra?: string }[] = [
+const FORMULAS: { id: string; comercial: string; codigo: string; nome: string; ings: Ing[]; parametros: string; extra?: string; preparo?: string[]; agua?: number }[] = [
   {
     id: 'rec-er-pc33-iron-lustre', comercial: 'comercial-amaco-pc33-iron-lustre', codigo: 'ER-PC33', nome: 'Hipótese Iron Lustre (Amaco PC-33)',
     ings: [['sienito-nefelinico', 'Sienito nefelínico', 48], ['frita-boracica', 'Frita borácica', 26], ['silica', 'Sílica (quartzo)', 20], ['caulim', 'Caulim', 6],
@@ -298,14 +298,51 @@ const FORMULAS: { id: string; comercial: string; codigo: string; nome: string; i
     parametros: 'Teste também com 10 e 14 g de zinco, e com 6 e 8 g de titânio. Queime em cone 6 duas vezes: uma esfriando naturalmente e outra parando 1 hora a 1050 °C na descida.',
     extra: 'O óxido de zinco cru encolhe muito e pode fazer o esmalte se retrair na peça. Se isso acontecer, calcine o zinco a uns 900 °C antes de pesar.',
   },
+  {
+    id: 'rec-er-164-crystal-nebula', comercial: 'com-er-001', codigo: 'ER-164', nome: 'Hipótese Crystal Nebula (Coyote MBG164)',
+    ings: [['frita-alcalina', 'Frita alcalina', 50], ['oxido-zinco', 'Óxido de zinco', 25], ['silica', 'Sílica (quartzo)', 22], ['caulim', 'Caulim', 3],
+      ['dioxido-titanio', 'Dióxido de titânio', 3, 'opacificante'], ['oxido-cobalto', 'Óxido de cobalto', 0.25, 'corante'], ['goma-cmc', 'Goma CMC', 1, 'aditivo']],
+    parametros: 'A base é a clássica de esmalte cristalino de cone 6, com frita, zinco e sílica em partes de 50, 25 e 25 (a GBCG do Digitalfire). Tirei um pouco de sílica para entrar caulim, porque a Coyote diz que o dela escorre menos que um cristalino comum. O titânio ajuda a nascer os cristais dourados e o cobalto dá o azul-claro do fundo. Teste também com 22 e 28 g de zinco, com 2 e 5 g de titânio, e uma placa sem cobalto. Quem forma os cristais é a queima: suba uns 195 °C por hora até 1093 °C e depois 83 °C por hora até 1204 °C, segurando 15 minutos. Desça até 1177 °C e segure mais 15 minutos. Então esfrie a uns 70 °C por hora até 760 °C e deixe o forno esfriar sozinho. É a curva que a Sheffield Pottery publica para esta linha da Coyote.',
+    preparo: [
+      'No lugar da Ferro 3110 (a frita das receitas americanas), use uma frita alcalina e anote o código dela. Como a receita quase não tem argila, o pó assenta rápido no pote, por isso ela leva 1 g de goma CMC. Dissolva a goma em 80 a 90 ml de água um dia antes, junte o pó aos poucos, passe duas vezes pela peneira de 80 mesh e mexa sempre antes de usar.',
+      'Aplique 2 a 3 demãos numa plaquinha em pé, deixando o pé limpo. A Coyote diz que ele dispensa bandeja, mas avisa que ainda escorre; num teste, um caco por baixo não custa nada. O Crystal Nebula não é indicado para louça.',
+    ],
+  },
+  {
+    id: 'rec-er-602-white-cascade', comercial: 'com-er-002', codigo: 'ER-602', nome: 'Hipótese White Cascade (Mayco PC-602)',
+    ings: [['frita-boracica', 'Frita borácica', 90], ['caulim', 'Caulim', 10], ['silicato-zirconio', 'Silicato de zircônio', 6, 'opacificante'], ['goma-cmc', 'Goma CMC', 0.8, 'aditivo']],
+    parametros: 'A ficha da Mayco para a linha Pottery Cascade só declara frita e um pouco de argila, então a base aqui é quase toda frita, como o FLX-001. O silicato de zircônio é a aposta para o branco que flutua; a Mayco não declara opacificante, por isso isso é hipótese. Teste também com 3 e 10 g de zircônio, e com 8 e 14 g de caulim (mais caulim, menos escorrimento). Queime em cone 06 a 05, perto de 1000 a 1030 °C, subindo uns 140 °C por hora (250 °F/h, como a Mayco recomenda).',
+    preparo: [
+      'Dissolva a goma CMC em 80 a 90 ml de água um dia antes. No dia, junte o pó aos poucos, mexendo, e passe duas vezes pela peneira de 80 mesh. A frita assenta no fundo do pote, por isso mexa sempre.',
+      'Aplique 1 a 3 demãos, com pincel ou esponja, por cima ou por baixo de outro esmalte. Não passe no terço de baixo das peças em pé, porque ele escorre. Faça uma placa só com ele e outra sobre um esmalte de baixa temperatura que você já usa, sempre com prato por baixo.',
+    ],
+  },
+  {
+    id: 'rec-er-063-cactus-crawl', comercial: 'com-er-003', codigo: 'ER-063', nome: 'Hipótese Cactus Crawl (Coyote MBG063)', agua: 100,
+    ings: [['sienito-nefelinico', 'Sienito nefelínico', 60], ['carbonato-magnesio-leve', 'Carbonato de magnésio leve', 35], ['argila-plastica', 'Argila plástica', 5],
+      ['oxido-cromo', 'Óxido de cromo', 0.5, 'corante'], ['oxido-ferro-vermelho', 'Óxido de ferro vermelho', 1.5, 'corante'], ['goma-cmc', 'Goma CMC', 0.3, 'aditivo']],
+    parametros: 'É a mesma receita do RET-004 (Cactus 01), que já está em Fórmulas. O carbonato de magnésio leve encolhe muito ao secar e faz a camada rachar e se juntar em ilhas, que viram as escamas. O cromo dá o verde e o ferro puxa para o musgo. Teste também com 25 e 45 g de magnésio (menos e mais retração), e com 0,25 e 1 g de cromo. Queime em cone 6, perto de 1220 °C, com resfriamento natural.',
+    preparo: [
+      'Dissolva a goma CMC em uns 100 ml de água um dia antes, junte o pó aos poucos e passe pela peneira de 80 mesh. A mistura fica mais rala que um esmalte comum, porque o magnésio leve ocupa muito volume.',
+      'Aplique bem grosso, até a camada rachar ao secar, antes de ir ao forno: é isso que forma as escamas. Teste três espessuras na mesma placa. A superfície fica áspera e seca, então use só em peças decorativas.',
+    ],
+  },
 ]
 
 /** Monta a receita de teste de cada estudo a partir da tabela FORMULAS. */
 function receitaDe(f: (typeof FORMULAS)[number]): ReceitaTeste {
   return {
-    codigo: f.codigo, aguaMlPor100g: 85, parametros: f.parametros,
+    codigo: f.codigo, aguaMlPor100g: f.agua ?? 85, parametros: f.parametros,
     ingredientes: f.ings.map(([s, nome, p, c]) => ({ materialId: 'mat-' + s, nome, percentual: p, classe: c ?? 'base' as const })),
-    observacoes: [...PREPARO, ...(f.extra ? [f.extra] : [])].join('\n\n'),
+    observacoes: [...(f.preparo ?? PREPARO), ...(f.extra ? [f.extra] : [])].join('\n\n'),
+  }
+}
+
+/** 26/11: põe a receita de teste nos estudos que ainda não têm (os 3 estudos antigos e os que chegarem depois). */
+export async function receitasQueFaltam() {
+  for (const f of FORMULAS) {
+    const c = await db.comerciais.get(f.comercial)
+    if (c && !c.excluido && !c.receita) await db.comerciais.update(c.id, { receita: receitaDe(f), atualizadoEm: Date.now() })
   }
 }
 

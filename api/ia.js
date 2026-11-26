@@ -494,7 +494,7 @@ Use a busca na web. Prefira, nesta ordem: página do produto no site do fabrican
 Regras: separe sempre o que é declarado pelo fabricante, o que vem de documentação técnica e o que é hipótese sua. Nunca apresente hipótese como fato. Não invente códigos, temperaturas nem composições. Se não achar, deixe vazio.`
 
 const FORMATO_COMERCIAL = `Responda no fim com um único bloco JSON, sem texto depois, neste formato:
-{"fabricante":"","nome":"","codigo":"","serie":"","cone":"","temperatura":"","instrucoes":"","declarados":[],"documentacao":"","hipoteses":[],"fontes":[],"usos":[],"observacoes":"","avisos":[],"imagens":[]}
+{"fabricante":"","nome":"","codigo":"","serie":"","cone":"","temperatura":"","instrucoes":"","declarados":[],"documentacao":"","hipoteses":[],"fontes":[],"usos":[],"observacoes":"","avisos":[],"imagens":[],"receita":{"ingredientes":[{"nome":"","gramas":0,"classe":"base"}],"parametros":"","preparo":""}}
 "usos": melhores usos e condições, até 8 frases curtas: em que peças e superfícies rende mais (relevo, borda, vertical, interior), espessura e número de camadas, queima e resfriamento, combinações com outros esmaltes que o fabricante mostra. Diga a fonte quando for do fabricante; o que for prática comum, diga que é.
 "imagens": até 4 links https diretos de foto do produto (placa de teste, amostra ou pote) que apareceram nas páginas do fabricante ou de lojas que você abriu: o endereço do arquivo de imagem (.jpg, .png, .webp), nunca o da página. Prefira a placa de teste do próprio esmalte, sem sobreposição. Se não achar, deixe vazio.
 "declarados": só o que o fabricante diz no rótulo ou na página do produto (ex.: "Sem chumbo", "Cone 5-6", "Indicado para utilitários"), até 10.
@@ -503,7 +503,23 @@ const FORMATO_COMERCIAL = `Responda no fim com um único bloco JSON, sem texto d
 "instrucoes": aplicação e queima recomendadas pelo fabricante (camadas, espessura, curva), se houver.
 "fontes": só links https que você abriu, até 8.
 "observacoes": como o efeito provavelmente se forma e o que testar primeiro, em parágrafos curtos.
-"avisos": o que ficou incerto, por exemplo se o print não mostra o nome do produto e a identificação é provável, não certa.`
+"avisos": o que ficou incerto, por exemplo se o print não mostra o nome do produto e a identificação é provável, não certa.
+"receita": uma receita de teste de 100 g que tenta chegar perto do esmalte. É hipótese, montada a partir das hipóteses acima e de receitas publicadas parecidas (Glazy, Digitalfire, Ceramic Arts Network); nunca diga que é a fórmula do fabricante.
+- "ingredientes": a base com classe "base", somando exatamente 100 g; corantes ("corante"), opacificantes ("opacificante") e goma CMC 0,5 a 1 g ("aditivo") vêm somados à parte. Use nomes de materiais vendidos no Brasil, em português. Sem Gerstley Borate (use frita borácica) e, no lugar da Ferro 3110, frita alcalina.
+- "parametros": em frases corridas, de onde vem a base, quais variações testar (por exemplo 2 ou 3 quantidades do ingrediente-chave) e como queimar (cone, temperatura em °C, curva e resfriamento quando importam).
+- "preparo": em frases corridas, como preparar e aplicar (demãos, espessura, onde não passar, prato por baixo quando escorre).
+Se não houver base confiável para montar a receita, deixe "ingredientes" vazio.`
+
+const CLASSES = ['base', 'corante', 'opacificante', 'aditivo']
+function limparReceita(x) {
+  if (!x || !Array.isArray(x.ingredientes)) return undefined
+  const ingredientes = x.ingredientes
+    .map((i) => ({ nome: so(i?.nome, 80), percentual: Number(i?.gramas), classe: CLASSES.includes(i?.classe) ? i.classe : 'base' }))
+    .filter((i) => i.nome && Number.isFinite(i.percentual) && i.percentual > 0 && i.percentual <= 100)
+    .slice(0, 14)
+  if (!ingredientes.some((i) => i.classe === 'base')) return undefined
+  return { ingredientes, parametros: so(x.parametros, 1500), preparo: so(x.preparo, 1500) }
+}
 
 function limparComercial(o) {
   return {
@@ -513,6 +529,7 @@ function limparComercial(o) {
     fontes: (Array.isArray(o.fontes) ? o.fontes : []).map(url).filter(Boolean).slice(0, 8),
     observacoes: so(o.observacoes, 2500), avisos: textos(o.avisos, 6),
     imagens: (Array.isArray(o.imagens) ? o.imagens : []).map(url).filter(Boolean).slice(0, 4),
+    receita: limparReceita(o.receita),
   }
 }
 
