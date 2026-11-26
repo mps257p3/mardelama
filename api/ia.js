@@ -453,6 +453,78 @@ async function pesquisarArtista(d) {
   }
 }
 
+// Engenharia reversa a partir de um print (rótulo, pote, catálogo, post com a peça): identifica o esmalte
+// comercial e pesquisa na web a ficha do fabricante e a ficha de segurança. Mesmo esquema da pesquisa de artista.
+const SISTEMA_COMERCIAL = `Você ajuda um ceramista brasileiro a estudar esmaltes comerciais (engenharia reversa), em português do Brasil, sóbrio e preciso.
+Use a busca na web. Prefira, nesta ordem: página do produto no site do fabricante, ficha técnica, ficha de segurança (FISPQ/SDS), lojas e distribuidores, fóruns e artigos técnicos (Glazy, Digitalfire, Ceramic Arts Network).
+Regras: separe sempre o que é declarado pelo fabricante, o que vem de documentação técnica e o que é hipótese sua. Nunca apresente hipótese como fato. Não invente códigos, temperaturas nem composições. Se não achar, deixe vazio.`
+
+const FORMATO_COMERCIAL = `Responda no fim com um único bloco JSON, sem texto depois, neste formato:
+{"fabricante":"","nome":"","codigo":"","serie":"","cone":"","temperatura":"","instrucoes":"","declarados":[],"documentacao":"","hipoteses":[],"fontes":[],"observacoes":"","avisos":[]}
+"declarados": só o que o fabricante diz no rótulo ou na página do produto (ex.: "Sem chumbo", "Cone 5-6", "Indicado para utilitários"), até 10.
+"documentacao": o que a ficha técnica ou a ficha de segurança diz (componentes e faixas de porcentagem, números CAS), com a observação "Preliminar: conferir a versão do produto" e o link.
+"hipoteses": possíveis ingredientes e o papel de cada um, no formato "Ingrediente: por que se suspeita", até 8. Sempre hipótese.
+"instrucoes": aplicação e queima recomendadas pelo fabricante (camadas, espessura, curva), se houver.
+"fontes": só links https que você abriu, até 8.
+"observacoes": como o efeito provavelmente se forma e o que testar primeiro, em parágrafos curtos.
+"avisos": o que ficou incerto, por exemplo se o print não mostra o nome do produto e a identificação é provável, não certa.`
+
+function limparComercial(o) {
+  return {
+    fabricante: so(o.fabricante, 120), nome: so(o.nome, 160), codigo: so(o.codigo, 60), serie: so(o.serie, 120),
+    cone: so(o.cone, 40), temperatura: so(o.temperatura, 80), instrucoes: so(o.instrucoes, 2000),
+    declarados: textos(o.declarados, 10), documentacao: so(o.documentacao, 3000), hipoteses: textos(o.hipoteses, 8),
+    fontes: (Array.isArray(o.fontes) ? o.fontes : []).map(url).filter(Boolean).slice(0, 8),
+    observacoes: so(o.observacoes, 2500), avisos: textos(o.avisos, 6),
+  }
+}
+
+async function pesquisarComercial(d) {
+  const imgs = (d.imagens ?? []).filter((x) => x?.base64).slice(0, 4)
+  const extra = so(d.texto, 1000)
+  if (!imgs.length && !extra) return json({ erro: 'Mande um print ou escreva o nome do esmalte' }, 400)
+  const client = new Anthropic()
+  const mensagens = [{ role: 'user', content: [
+    ...imgs.map((x) => ({ type: 'image', source: { type: 'base64', media_type: x.tipo || 'image/jpeg', data: x.base64 } })),
+    { type: 'text', text: `${imgs.length ? 'Estes prints são de um esmalte comercial (rótulo, pote, catálogo, loja ou post mostrando uma peça).' : ''}${extra ? '\nO que ele escreveu: ' + extra : ''}
+Identifique o produto (fabricante, nome, código) pelo que aparece e pesquise na web a página do fabricante, a ficha técnica e a ficha de segurança. Se o print só mostrar uma peça esmaltada, diga qual esmalte comercial é mais provável e deixe isso claro em "avisos".
+
+${FORMATO_COMERCIAL}` },
+  ] }]
+  try {
+    let r
+    for (let i = 0; i < 3; i++) {
+      r = await client.beta.messages.create({
+        model: MODELO, max_tokens: 10000, betas: BETAS, fallbacks: 'default',
+        thinking: { type: 'adaptive' }, output_config: { effort: 'medium' },
+        system: SISTEMA_COMERCIAL,
+        tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 6 }, { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 5 }],
+        messages: mensagens,
+      })
+      if (r.stop_reason !== 'pause_turn') break
+      mensagens.push({ role: 'assistant', content: r.content })
+    }
+    if (r.stop_reason === 'refusal') return json({ erro: 'A IA não quis responder a este pedido.' }, 422)
+    const texto = r.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n')
+    const ini = texto.indexOf('{'), fim = texto.lastIndexOf('}')
+    if (ini < 0 || fim <= ini) return json({ erro: 'A pesquisa não trouxe um resultado legível. Tente de novo.' }, 502)
+    let o
+    try { o = JSON.parse(texto.slice(ini, fim + 1)) } catch { return json({ erro: 'A pesquisa veio incompleta. Tente de novo.' }, 502) }
+    return json({ resultado: limparComercial(o) })
+  } catch (e) {
+    return erroDaIA(e)
+  }
+}
+
+function erroDaIA(e) {
+  if (e instanceof Anthropic.AuthenticationError) return json({ erro: 'A chave da Anthropic foi recusada. Confira a variável ANTHROPIC_API_KEY na Vercel.' }, 503)
+  if (e instanceof Anthropic.PermissionDeniedError) return json({ erro: 'A conta da Anthropic não tem permissão (crédito, limite de gasto ou busca na web desligada no Console).' }, 503)
+  if (e instanceof Anthropic.RateLimitError) return json({ erro: 'Muitos pedidos seguidos. Espere um pouco.' }, 429)
+  if (e instanceof Anthropic.BadRequestError) return json({ erro: 'Pedido recusado pela API: ' + e.message }, 400)
+  if (e instanceof Anthropic.APIError) return json({ erro: `A IA não respondeu (${e.status ?? 'rede'}).` }, 502)
+  return json({ erro: 'Erro inesperado: ' + (e instanceof Error ? e.message : String(e)) }, 500)
+}
+
 export async function GET() {
   return json({ configurada: !!process.env.ANTHROPIC_API_KEY })
 }
@@ -465,6 +537,7 @@ export async function POST(req) {
   try { d = await req.json() } catch { return json({ erro: 'Pedido inválido' }, 400) }
   const acao = d?.acao
   if (acao === 'artista') return pesquisarArtista(d)
+  if (acao === 'comercial') return pesquisarComercial(d)
   if (acao === 'receber' && d.pesquisar) d.pesquisa = await pesquisarDuvidas(d)
   const p = ESQUEMAS[acao] && pedidoDe(acao, d)
   if (!p) return json({ erro: 'Ação desconhecida' }, 400)
