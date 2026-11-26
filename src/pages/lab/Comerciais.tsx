@@ -5,9 +5,8 @@ import { ArrowLeft, ImagePlus, Plus, Sparkles } from 'lucide-react'
 import { db, novo, type Comercial } from '../../db/schema'
 import { Foto } from '../../ui/form'
 import { useToast } from '../../ui/toast'
-import { chamar, iaConfigurada, paraBase64 } from '../../lib/iaRepertorio'
+import { pesquisarEstudo } from '../../lib/comercial'
 
-interface Pesquisa { fabricante: string; nome: string; codigo: string; serie: string; cone: string; temperatura: string; instrucoes: string; declarados: string[]; documentacao: string; hipoteses: string[]; fontes: string[]; observacoes: string; avisos: string[] }
 
 export default function Comerciais() {
   const nav = useNavigate()
@@ -30,19 +29,8 @@ export default function Comerciais() {
       await db.comerciais.add(c)
       const fotos = await Promise.all(imgs.map((f) => salvarArquivo(f, { tipo: 'comercial', id: c.id })))
       await db.comerciais.update(c.id, { fotos })
-      if (!(await iaConfigurada())) { toast('A IA não está ligada. Preencha a ficha à mão.'); nav(`/engenharia-reversa/${c.id}`); return }
-      try {
-        const imagens = await Promise.all(imgs.slice(0, 4).map(async (b) => ({ base64: await paraBase64(b), tipo: 'image/jpeg' })))
-        const p = await chamar<Pesquisa>({ acao: 'comercial', imagens }, 175000)
-        const obs = [p.observacoes, p.avisos.length ? 'Incertezas: ' + p.avisos.join(' ') : ''].filter(Boolean).join('\n\n')
-        await db.comerciais.update(c.id, {
-          fabricante: p.fabricante || 'Fabricante', nome: p.nome || 'Esmalte não identificado', codigo: p.codigo || undefined, serie: p.serie || undefined,
-          cone: p.cone || undefined, temperatura: p.temperatura || undefined, instrucoes: p.instrucoes || undefined,
-          declarados: p.declarados, documentacao: p.documentacao || undefined, hipoteses: p.hipoteses, fontes: p.fontes,
-          observacoes: obs || undefined, atualizadoEm: Date.now(),
-        })
-        toast('Pesquisa pronta. Confira as fontes.')
-      } catch (e) { toast('A pesquisa não deu certo: ' + (e as Error).message + '. As fotos ficaram guardadas no estudo.') }
+      try { await pesquisarEstudo(c.id); toast('Pesquisa pronta. Confira as fontes.') }
+      catch (e) { toast('A pesquisa não deu certo: ' + (e as Error).message + '. A foto ficou no estudo; dá para tentar de novo lá dentro.') }
       nav(`/engenharia-reversa/${c.id}`)
     } finally { setPesquisando(false) }
   }
@@ -57,7 +45,7 @@ export default function Comerciais() {
           <input ref={arquivo} type="file" accept="image/*" multiple hidden onChange={(e) => { estudarPrint(e.target.files); e.target.value = '' }} />
         </div>
       </div>
-      {pesquisando && <p className="recebido-lendo" style={{ marginTop: 14 }}><Sparkles size={15} />Identificando o esmalte e procurando a ficha do fabricante… pode levar 1 ou 2 minutos.</p>}
+      {pesquisando && <p className="recebido-lendo" style={{ marginTop: 14 }}><Sparkles size={15} />Identificando o esmalte e procurando a ficha do fabricante… fique nesta tela, leva 1 ou 2 minutos.</p>}
       <p className="muted" style={{ marginTop: 10 }}>Esmaltes comerciais estudados como referência. Cada ficha separa o que o fabricante declara, o que vem da documentação, as hipóteses e o que já foi confirmado em teste.</p>
       <div className="lista" style={{ marginTop: 20 }}>
         {itens.map((c) => (

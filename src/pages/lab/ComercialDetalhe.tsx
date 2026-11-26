@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Trash2 } from 'lucide-react'
+import { ArrowLeft, Sparkles, Trash2 } from 'lucide-react'
+import { pesquisarEstudo } from '../../lib/comercial'
+import { useToast } from '../../ui/toast'
 import { db, type Comercial } from '../../db/schema'
 import { useFamilias } from '../../db/hooks'
 import { TextoEditavel, ListaEditavel } from '../../ui/editavel'
@@ -13,6 +16,8 @@ export default function ComercialDetalhe() {
   const c = useLiveQuery(() => db.comerciais.get(id!), [id])
   const curvas = useLiveQuery(async () => (await db.curvas.toArray()).filter((x) => !x.excluido).sort((a, b) => a.codigo.localeCompare(b.codigo)), [], [])
   const familias = useFamilias()
+  const toast = useToast()
+  const [pesquisando, setPesquisando] = useState(false)
   if (c === undefined) return null
   if (!c || c.excluido) return <div className="page"><p>Estudo não encontrado.</p></div>
   const salvar = (d: Partial<Comercial>) => db.comerciais.update(c.id, { ...d, atualizadoEm: Date.now() })
@@ -25,6 +30,13 @@ export default function ComercialDetalhe() {
       <p className="eyebrow">{[c.fabricante, c.codigo, c.serie].filter(Boolean).join(' · ')}</p>
       <h1 style={{ marginTop: 8 }}>{c.nome}</h1>
       {c.temperatura && <p className="muted" style={{ marginTop: 6 }}>{c.temperatura}</p>}
+      <div style={{ marginTop: 14 }}>
+        <button className="btn" disabled={pesquisando} onClick={async () => {
+          setPesquisando(true)
+          try { await pesquisarEstudo(c.id); toast('Pesquisa pronta. Confira as fontes.') } catch (e) { toast('A pesquisa não deu certo: ' + (e as Error).message) } finally { setPesquisando(false) }
+        }}><Sparkles size={15} />{pesquisando ? 'Pesquisando…' : 'Pesquisar com IA'}</button>
+        {pesquisando && <p className="recebido-lendo" style={{ marginTop: 10 }}><Sparkles size={15} />Identificando o esmalte e procurando a ficha do fabricante… fique nesta tela, leva 1 ou 2 minutos.</p>}
+      </div>
       <p className="aviso" style={{ marginTop: 16 }}>Estudo de referência. Hipóteses não são componentes confirmados, e nenhum resultado aqui indica segurança para contato com alimentos.</p>
 
       <Bloco n="1" titulo="Declarado pelo fabricante" sub="Somente o que está no rótulo ou na embalagem.">
