@@ -19,19 +19,30 @@ export default function Comerciais() {
     const c: Comercial = novo({ fabricante: 'Fabricante', nome: 'Novo esmalte estudado', familias: [], fotos: [], declarados: [], hipoteses: [], fontes: [] })
     await db.comerciais.add(c); nav(`/engenharia-reversa/${c.id}`)
   }
-  /** Print do rótulo, pote, catálogo ou post: guarda as fotos num estudo novo e a IA pesquisa o esmalte na web. */
+  /**
+   * Print do rótulo, pote, catálogo ou post: serve só para a IA identificar o esmalte e não fica guardado.
+   * As fotos do estudo passam a ser as da marca. Se a pesquisa falhar, o print fica no estudo para tentar de novo.
+   */
   async function estudarPrint(files: FileList | null) {
     const imgs = [...(files ?? [])].filter((f) => f.type.startsWith('image/'))
     if (!imgs.length) return
     setPesquisando(true)
     try {
-      const { salvarArquivo } = await import('../../db/files')
       const c: Comercial = novo({ fabricante: '', nome: 'Estudo de print', familias: [], fotos: [], declarados: [], hipoteses: [], fontes: [] })
       await db.comerciais.add(c)
-      const fotos = await Promise.all(imgs.map((f) => salvarArquivo(f, { tipo: 'comercial', id: c.id })))
-      await db.comerciais.update(c.id, { fotos })
-      try { await pesquisarEstudo(c.id); toast('Pesquisa pronta. Confira as fontes.') }
-      catch (e) { toast('A pesquisa não deu certo: ' + (e as Error).message + '. A foto ficou no estudo; dá para tentar de novo lá dentro.') }
+      const guardarPrint = async () => {
+        const { salvarArquivo } = await import('../../db/files')
+        const novas = await Promise.all(imgs.map((f) => salvarArquivo(f, { tipo: 'comercial', id: c.id })))
+        const atual = await db.comerciais.get(c.id)
+        await db.comerciais.update(c.id, { fotos: [...(atual?.fotos ?? []), ...novas] })
+      }
+      try {
+        if (await pesquisarEstudo(c.id, imgs.slice(0, 4))) toast('Pesquisa pronta. Confira as fontes.')
+        else { await guardarPrint(); toast('A IA não identificou o esmalte. O print ficou no estudo para você conferir.') }
+      } catch (e) {
+        await guardarPrint()
+        toast('A pesquisa não deu certo: ' + (e as Error).message + '. O print ficou no estudo; dá para tentar de novo lá dentro.')
+      }
       nav(`/engenharia-reversa/${c.id}`)
     } finally { setPesquisando(false) }
   }
