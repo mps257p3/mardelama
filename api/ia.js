@@ -2,6 +2,7 @@
 // Três tarefas: interpretar uma busca em linguagem natural, sugerir a catalogação de uma imagem
 // e sintetizar o repertório estético a partir do acervo. Nada é gravado aqui: o app mostra para revisão.
 import Anthropic from '@anthropic-ai/sdk'
+import { waitUntil } from '@vercel/functions'
 import { exigirLogin } from './_login.js'
 
 // Modelos (escolha do Marcelo em 26/11/2026, para gastar menos):
@@ -591,6 +592,30 @@ export async function POST(req) {
   const login = await exigirLogin(req); if (login.erro) return login.erro
   let d
   try { d = await req.json() } catch { return json({ erro: 'Pedido inválido' }, 400) }
+  // Pesquisa em segundo plano: responde na hora e segue trabalhando mesmo se o celular sair do app.
+  // O resultado fica na conta da pessoa (tabela integracoes, linha "ia:<id>") até o app voltar e buscar.
+  const fundo = typeof d?.fundo === 'string' && /^[a-z0-9-]{8,64}$/i.test(d.fundo) ? d.fundo : ''
+  if (fundo) {
+    delete d.fundo
+    const jwt = req.headers.get('authorization')
+    waitUntil(responder(d).catch(erroDaIA).then((r) => guardarResultado(jwt, fundo, r)))
+    return json({ trabalho: fundo }, 202)
+  }
+  return responder(d)
+}
+
+async function guardarResultado(jwt, id, resposta) {
+  const corpo = await resposta.json().catch(() => ({ erro: 'Resposta ilegível' }))
+  const SB_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://ekhffvrlldqmastjktlf.supabase.co'
+  const SB_CHAVE = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_vSf1bdhfaw7X_Q__iNka3w_J4SBLoRC'
+  await fetch(`${SB_URL}/rest/v1/integracoes`, {
+    method: 'POST',
+    headers: { apikey: SB_CHAVE, authorization: jwt, 'content-type': 'application/json', prefer: 'return=minimal' },
+    body: JSON.stringify({ provedor: 'ia:' + id, config: { status: resposta.status, corpo }, atualizado_em: Date.now() }),
+  }).catch(() => undefined)
+}
+
+async function responder(d) {
   const acao = d?.acao
   if (acao === 'artista') return pesquisarArtista(d)
   if (acao === 'comercial') return pesquisarComercial(d)

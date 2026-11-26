@@ -46,7 +46,7 @@ export default function ComercialDetalhe() {
           setPesquisando(true)
           try { await pesquisarEstudo(c.id); toast('Pesquisa pronta. Confira as fontes.') } catch (e) { toast('A pesquisa não deu certo: ' + (e as Error).message) } finally { setPesquisando(false) }
         }}><Sparkles size={15} />{pesquisando ? 'Pesquisando…' : 'Pesquisar com IA'}</button>
-        {pesquisando && <p className="recebido-lendo" style={{ marginTop: 10 }}><Sparkles size={15} />Identificando o esmalte e procurando a ficha do fabricante… fique nesta tela, leva 1 ou 2 minutos.</p>}
+        {pesquisando && <p className="recebido-lendo" style={{ marginTop: 10 }}><Sparkles size={15} />Identificando o esmalte e procurando a ficha do fabricante… leva 1 ou 2 minutos. Pode sair do app: a pesquisa continua e termina quando você voltar.</p>}
       </div>
       <p className="aviso" style={{ marginTop: 16 }}>Estudo de referência. Hipóteses não são componentes confirmados, e nenhum resultado aqui indica segurança para contato com alimentos.</p>
 

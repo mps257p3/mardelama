@@ -1,6 +1,6 @@
 import { db, type Referencia } from '../db/schema'
 import { cabecalhoLogin } from './login'
-import { iaAutomaticaLigada, registrarGasto } from './gastoIA'
+import { iaAutomaticaLigada, registrarGasto, type UsoIA } from './gastoIA'
 import { lerPerfil, salvarPerfil, UNIVERSOS, type GostoIA } from './curadoria'
 import type { FonteId, ItemDescoberta } from './fontes'
 import { FONTE, viaPonte } from './fontes'
@@ -31,27 +31,60 @@ export function iaConfigurada(): Promise<boolean> {
 }
 
 export async function chamar<T>(corpo: Record<string, unknown>, ms = 90000): Promise<T> {
-  // No celular, se o app sai da tela (trocou de app, apagou a tela) no meio da pesquisa, o Android
-  // corta a conexão ("Failed to fetch"). Mantém a tela acesa e, se caiu por isso, tenta de novo uma vez ao voltar.
+  // No celular, sair do app (trocar de app, apagar a tela) corta a conexão no meio da pesquisa.
+  // Com login, a pesquisa vai em segundo plano: o servidor continua sozinho e guarda o resultado na sua conta;
+  // o app busca quando volta para a tela. A tela fica acesa enquanto o app está aberto, para ser mais rápido.
   const tela = await manterTelaAcesa()
-  let saiuDaTela = document.visibilityState === 'hidden'
-  const marcar = () => { if (document.visibilityState === 'hidden') saiuDaTela = true }
-  document.addEventListener('visibilitychange', marcar)
   try {
-    try { return await chamarUmaVez<T>(corpo, ms) }
-    catch (e) {
-      if (!(e instanceof TypeError) || !saiuDaTela) throw e
-      await quandoVisivel()
-      return await chamarUmaVez<T>(corpo, ms)
+    const cab = await cabecalhoLogin()
+    if (cab.authorization) {
+      const r = await emSegundoPlano<T>(corpo, cab, ms)
+      if (r !== SEM_FUNDO) return r as T
     }
+    return await chamarUmaVez<T>(corpo, ms)
   } catch (e) {
-    if (e instanceof TypeError) throw new Error('A conexão caiu no meio da pesquisa. Deixe o app aberto na tela até terminar e tente de novo.')
+    if (e instanceof TypeError) throw new Error('A conexão caiu antes de a pesquisa começar. Confira a internet e tente de novo.')
     throw e
   } finally {
-    document.removeEventListener('visibilitychange', marcar)
     tela?.release().catch(() => undefined)
   }
 }
+
+const SEM_FUNDO = Symbol('sem-fundo')
+
+async function emSegundoPlano<T>(corpo: Record<string, unknown>, cab: Record<string, string>, ms: number): Promise<T | typeof SEM_FUNDO> {
+  const id = crypto.randomUUID()
+  const r = await fetch('/api/ia', { method: 'POST', headers: { 'content-type': 'application/json', ...cab }, body: JSON.stringify({ ...corpo, fundo: id }) })
+  const j = await r.json().catch(() => ({ erro: `A IA não respondeu (HTTP ${r.status})` }))
+  if (r.status !== 202) {
+    // servidor antigo (sem segundo plano) ou erro antes de começar (login, crédito): resposta normal
+    registrarGasto(String(corpo.acao ?? ''), j.uso, !r.ok || !j.resultado).catch(() => undefined)
+    if (!r.ok || !j.resultado) throw new Error(j.erro ?? `HTTP ${r.status}`)
+    return j.resultado as T
+  }
+  const { cliente_ } = await import('../db/sync')
+  const sb = await cliente_()
+  if (!sb) return SEM_FUNDO
+  // Conta só o tempo com o app na tela: fora dela o servidor segue, e o app confere assim que você volta.
+  let restante = ms + 60000
+  for (;;) {
+    await quandoVisivel()
+    const antes = Date.now()
+    await esperar(3000)
+    const { data } = await sb.from('integracoes').select('config').eq('provedor', 'ia:' + id).maybeSingle()
+    if (data) {
+      await sb.from('integracoes').delete().eq('provedor', 'ia:' + id)
+      const { status, corpo: c } = (data.config ?? {}) as { status?: number; corpo?: { resultado?: T; erro?: string; uso?: UsoIA } }
+      registrarGasto(String(corpo.acao ?? ''), c?.uso, !c?.resultado).catch(() => undefined)
+      if (!c?.resultado) throw new Error(c?.erro ?? `HTTP ${status}`)
+      return c.resultado
+    }
+    if (document.visibilityState === 'visible') restante -= Date.now() - antes
+    if (restante <= 0) throw new Error('A IA demorou demais para responder. Tente de novo.')
+  }
+}
+
+const esperar = (ms: number) => new Promise((ok) => setTimeout(ok, ms))
 
 async function chamarUmaVez<T>(corpo: Record<string, unknown>, ms: number): Promise<T> {
   const c = new AbortController(); const t = setTimeout(() => c.abort(), ms)

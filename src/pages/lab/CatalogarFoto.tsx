@@ -34,7 +34,7 @@ export function CatalogarFoto({ familia, onClose }: { familia?: string; onClose:
       <h3>Catalogar esmalte por foto</h3>
       <input ref={galeria} type="file" accept="image/*" multiple hidden onChange={(e) => { juntar(e.target.files); e.target.value = '' }} />
       <input ref={camera} type="file" accept="image/*" capture="environment" hidden onChange={(e) => { juntar(e.target.files); e.target.value = '' }} />
-      {lendo ? <p className="recebido-lendo" style={{ marginTop: 14 }}><Sparkles size={15} />Identificando o esmalte e procurando a ficha e as fotos do fabricante… deixe o app aberto na tela, leva 1 ou 2 minutos.</p> : <>
+      {lendo ? <p className="recebido-lendo" style={{ marginTop: 14 }}><Sparkles size={15} />Identificando o esmalte e procurando a ficha e as fotos do fabricante… leva 1 ou 2 minutos. Pode sair do app: a pesquisa continua e termina quando você voltar.</p> : <>
         <p className="muted" style={{ margin: '6px 0 14px', fontSize: 14 }}>Até {MAX} fotos do mesmo esmalte: a frente do rótulo (marca, nome, código), o verso (cone, temperatura, avisos de louça) e, se tiver, uma placa queimada.</p>
         {fotos.length > 0 && <div className="cat-fotos">
           {urls.map((u, i) => <div key={u} className="cat-foto"><img src={u} alt={`Foto ${i + 1}`} /><button aria-label="Tirar esta foto" onClick={() => setFotos(fotos.filter((_, j) => j !== i))}><X size={14} /></button></div>)}
