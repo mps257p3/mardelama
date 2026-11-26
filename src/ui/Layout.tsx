@@ -28,7 +28,7 @@ export function Layout() {
           <span>Mar de<br />Lama</span>
         </NavLink>
         {LATERAL.map((x) => { const { to, nome, icon: I } = x; return (
-          <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => (isActive || (to === '/superficies' && /^\/(esmaltes|receitas|testes)(\/|$)/.test(pathname))) ? 'active' : ''}><I size={18} strokeWidth={1.4} />{nome}</NavLink>
+          <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => (isActive || (to === '/esmaltes' && /^\/(esmaltes|receitas|testes)(\/|$)/.test(pathname))) ? 'active' : ''}><I size={18} strokeWidth={1.4} />{nome}</NavLink>
         ) })}
         <div className="sep" />
         <button className="navbtn" onClick={() => setAdd(true)}><Plus size={18} strokeWidth={1.4} />Novo</button>

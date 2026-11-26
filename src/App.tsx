@@ -78,7 +78,6 @@ const Comerciais = carregar(() => import('./pages/lab/Comerciais'))
 const ComercialDetalhe = carregar(() => import('./pages/lab/ComercialDetalhe'))
 const Compras = carregar(() => import('./pages/lab/Compras'))
 const Superficies = carregar(() => import('./pages/lab/Superficies'))
-const SuperficiesInicio = carregar(() => import('./pages/lab/SuperficiesInicio'))
 /** /referencias sozinho vai para o Descobrir; com parâmetros (ex.: ?grupo=) é um link antigo do Acervo. */
 function EntradaReferencias() {
   const { search } = useLocation()
@@ -94,7 +93,7 @@ export default function App() {
           <Route path="laboratorio" element={<Laboratorio />} />
           <Route path="ajustes" element={<Ajustes />} />
           <Route path="esmaltes" element={<Superficies aba="esmaltes" />} />
-          <Route path="superficies" element={<SuperficiesInicio />} />
+          <Route path="superficies" element={<Navigate to="/laboratorio" replace />} />
           <Route path="esmaltes/novo" element={<EsmalteForm key="novo" />} />
           <Route path="esmaltes/familias" element={<Familias />} />
           <Route path="familias" element={<Familias />} />

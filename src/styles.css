@@ -1139,3 +1139,9 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
   .sup-capas { grid-template-columns: repeat(3, 1fr); }
   .sup-capa.larga { grid-column: span 2; aspect-ratio: auto; }
 }
+.lab-lista { display: flex; flex-direction: column; margin-top: 18px; border-top: 1px solid var(--line); }
+.lab-lista a { display: flex; align-items: center; gap: 14px; padding: 14px 4px; border-bottom: 1px solid var(--line); color: var(--ink-2); }
+.lab-lista .t { flex: 1; display: flex; flex-direction: column; font: 500 20px/1.1 var(--serif); color: var(--carvao, inherit); }
+.lab-lista .s { font: 400 12.5px/1.4 var(--sans); color: var(--ink-3); margin-top: 2px; }
+.lab-lista .n { font: 500 12px/1 var(--sans); color: var(--ink-3); }
+.lab-lista .seta { color: var(--ink-3); }
