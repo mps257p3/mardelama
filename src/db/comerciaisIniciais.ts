@@ -533,3 +533,17 @@ export async function esmaltesDosRotulos() {
     await db.ajustes.put({ chave: chaveFotos, valor: true })
   }
 }
+
+/** 26/11: em esmalte comercial, o botão Fórmula virou Engenharia reversa. Some a fórmula vazia que o botão antigo criava. */
+export async function formulasVaziasDeComerciais() {
+  if (await db.ajustes.get('fix-formula-vazia-comercial-v1')) return
+  for (const e of await db.esmaltes.toArray()) {
+    if (e.excluido || e.origem !== 'comercial' || !e.receitaId) continue
+    const r = await db.receitas.get(e.receitaId)
+    if (r && !r.excluido && !r.ingredientes?.length && r.versaoAtual === 1 && r.esmalteId === e.id) {
+      await db.receitas.update(r.id, { excluido: 1, atualizadoEm: Date.now() })
+      await db.esmaltes.update(e.id, { receitaId: undefined, atualizadoEm: Date.now() })
+    }
+  }
+  await db.ajustes.put({ chave: 'fix-formula-vazia-comercial-v1', valor: true })
+}

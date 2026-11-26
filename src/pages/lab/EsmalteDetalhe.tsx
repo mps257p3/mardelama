@@ -27,6 +27,9 @@ export default function EsmalteDetalhe() {
   const receita = useLiveQuery(async () => (e?.receitaId ? db.receitas.get(e.receitaId) : undefined), [e?.receitaId])
   const testes = useLiveQuery(async () => (await db.testes.where('esmalteId').equals(id!).toArray()).filter((t) => !t.excluido).sort((a, b) => b.data.localeCompare(a.data)), [id])
   const [verTestes, setVerTestes] = useState(false)
+  // esmalte comercial: o botão vira Engenharia reversa e leva ao estudo (ou cria um)
+  const estudo = useLiveQuery(async () => (e?.origem === 'comercial' ? (await import('../../lib/comercial')).estudoDoEsmalte(e) : undefined), [e])
+  const aprovada = useLiveQuery(async () => (estudo?.receita?.aprovadaId ? db.receitas.get(estudo.receita.aprovadaId) : undefined), [estudo?.receita?.aprovadaId])
 
   if (e === undefined) return null
   if (!e || e.excluido) return <div className="page"><p>Esmalte não encontrado.</p></div>
@@ -45,6 +48,12 @@ export default function EsmalteDetalhe() {
     const rid = await criarReceitaNova({ nome: e!.nome, esmalteId: e!.id })
     await db.esmaltes.update(e!.id, { receitaId: rid, atualizadoEm: Date.now() })
     nav(`/receitas/${rid}`)
+  }
+  async function engenhariaReversa() {
+    if (aprovada && !aprovada.excluido) return nav(`/receitas/${aprovada.id}`)
+    if (estudo) return nav(`/engenharia-reversa/${estudo.id}` + (estudo.receita ? '#receita' : '?pesquisar=1'))
+    const { criarEstudoDoEsmalte } = await import('../../lib/comercial')
+    nav(`/engenharia-reversa/${await criarEstudoDoEsmalte(e!)}?pesquisar=1`)
   }
   async function duplicar() {
     const { id: _i, criadoEm: _c, atualizadoEm: _a, ...resto } = e!
@@ -75,9 +84,14 @@ export default function EsmalteDetalhe() {
           </div>
           {!!e.avaliacao && <div style={{ marginTop: 14 }}><Estrelas value={e.avaliacao} /></div>}
           <div className="esm-botoes">
-            {receita && !receita.excluido
+            {e.origem === 'comercial'
+              ? <button className="esm-botao" onClick={engenhariaReversa}><ScrollText size={20} strokeWidth={1.3} /><b>Engenharia reversa</b><span>{
+                  aprovada && !aprovada.excluido ? (aprovada.codigo ? aprovada.codigo + ' · ' : '') + 'receita aprovada'
+                    : estudo?.receita ? (estudo.receita.codigo ? estudo.receita.codigo + ' · ' : '') + 'receita reconstruída'
+                      : estudo ? 'Estudo sem receita · pesquisar' : 'Criar receita'}</span></button>
+              : receita && !receita.excluido
               ? <Link className="esm-botao" to={`/receitas/${receita.id}`}><ScrollText size={20} strokeWidth={1.3} /><b>Fórmula</b><span>{receita.codigo ? receita.codigo + ' · ' : ''}versão {receita.versaoAtual}</span></Link>
-              : <button className="esm-botao" onClick={criarReceita}><ScrollText size={20} strokeWidth={1.3} /><b>Fórmula</b><span>{e.origem === 'comercial' ? 'Comercial · criar estudo' : 'Criar fórmula'}</span></button>}
+              : <button className="esm-botao" onClick={criarReceita}><ScrollText size={20} strokeWidth={1.3} /><b>Fórmula</b><span>Criar fórmula</span></button>}
             <button className={'esm-botao' + (verTestes ? ' on' : '')} onClick={() => setVerTestes(!verTestes)}><TestTube size={20} strokeWidth={1.3} /><b>Testes</b><span>{testes?.length ? `${testes.length} ${testes.length === 1 ? 'registrado' : 'registrados'}` : 'Nenhum ainda'}</span></button>
           </div>
 

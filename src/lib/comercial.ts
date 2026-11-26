@@ -105,3 +105,39 @@ export async function catalogarEsmalte(fotos: Blob[], familias: string[] = []) {
   await db.esmaltes.add(e)
   return id
 }
+
+const normal = (s?: string) => (s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+
+/** Código do produto que ficou nas observações do esmalte (ex.: "Código do produto: PC-602"). */
+export const codigoDoProduto = (e: Esmalte) => e.observacoes?.match(/C[óo]digo do produto:\s*([A-Z0-9][\w-]*)/i)?.[1]
+
+/**
+ * Estudo de engenharia reversa de um esmalte comercial: o ligado a ele em Conexões ou,
+ * se não houver, o de mesmo código ou nome (e mesma marca, quando as duas têm marca).
+ */
+export async function estudoDoEsmalte(e: Esmalte): Promise<Comercial | undefined> {
+  const rels = (await db.relacoes.toArray()).filter((r) => !r.excluido && (
+    (r.aTipo === 'esmalte' && r.aId === e.id && r.bTipo === 'comercial') || (r.bTipo === 'esmalte' && r.bId === e.id && r.aTipo === 'comercial')))
+  for (const r of rels) {
+    const c = await db.comerciais.get(r.aTipo === 'comercial' ? r.aId : r.bId)
+    if (c && !c.excluido) return c
+  }
+  const todos = (await db.comerciais.toArray()).filter((c) => !c.excluido)
+  const cod = normal(codigoDoProduto(e))
+  const marca = normal(e.autoria).split(' ')[0]
+  const mesmaMarca = (c: Comercial) => !marca || !c.fabricante || normal(c.fabricante).includes(marca) || marca.includes(normal(c.fabricante).split(' ')[0])
+  return todos.find((c) => cod && normal(c.codigo) === cod) ?? todos.find((c) => normal(c.nome) === normal(e.nome) && mesmaMarca(c))
+}
+
+/** Cria o estudo de engenharia reversa a partir da ficha do esmalte e liga os dois em Conexões. */
+export async function criarEstudoDoEsmalte(e: Esmalte) {
+  const c: Comercial = novo({
+    fabricante: e.autoria ?? '', nome: e.nome, codigo: codigoDoProduto(e), familias: e.familias, cone: e.cone,
+    temperatura: e.temperatura ? e.temperatura + ' °C' : undefined, louca: e.louca,
+    fotos: [], declarados: [], hipoteses: [], fontes: [],
+  })
+  await db.comerciais.add(c)
+  const t = Date.now()
+  await db.relacoes.add({ id: uid(), aTipo: 'esmalte', aId: e.id, bTipo: 'comercial', bId: c.id, criadoEm: t, atualizadoEm: t, excluido: 0 })
+  return c.id
+}
