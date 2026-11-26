@@ -81,7 +81,7 @@ function grausDoTexto(t?: string) {
 /**
  * Esmaltaria › + › Catalogar por foto: a IA identifica o esmalte pela foto (pote, rótulo, placa),
  * pesquisa o fabricante e cria a ficha em Esmaltes: marca, temperatura, cone, uso em louça e fotos do fabricante.
- * A foto enviada só fica na ficha se não vier nenhuma foto do fabricante.
+ * As fotos enviadas servem só de base para a pesquisa e não ficam guardadas: na ficha entram as fotos do fabricante.
  */
 export async function catalogarEsmalte(fotos: Blob[], familias: string[] = []) {
   if (!(await iaConfigurada())) throw new Error('A IA não está ligada')
@@ -90,11 +90,8 @@ export async function catalogarEsmalte(fotos: Blob[], familias: string[] = []) {
   if (!p.nome) throw new Error('A IA não reconheceu o esmalte na foto. Tente uma foto do rótulo.')
   const { proximoCodigo } = await import('../db/codigos')
   const id = uid()
-  let ids = await fotosDoFabricante(id, p.imagens ?? [], 'esmalte')
-  if (!ids.length) {
-    const { salvarArquivo } = await import('../db/files')
-    ids = [await salvarArquivo(new File([fotos[0]], 'foto.jpg', { type: fotos[0].type || 'image/jpeg' }), { tipo: 'esmalte', id })]
-  }
+  // as fotos enviadas servem só para a pesquisa; na ficha ficam as fotos do fabricante
+  const ids = await fotosDoFabricante(id, p.imagens ?? [], 'esmalte')
   const bloco = (t: string, xs?: string[]) => (xs?.length ? t + ':\n' + xs.map((x) => '• ' + x).join('\n') : '')
   const observacoes = [
     [p.codigo && 'Código do produto: ' + p.codigo, p.serie && 'Linha: ' + p.serie, p.temperatura && 'Queima: ' + p.temperatura].filter(Boolean).join('\n'),
