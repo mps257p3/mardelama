@@ -107,7 +107,7 @@ const USOS_IRON_LUSTRE = [
   'Uso utilitário: a Amaco classifica a linha como própria para louça; mesmo assim, teste a sua queima antes de vender',
 ]
 
-const IRON_LUSTRE: Omit<Comercial, 'id' | 'criadoEm' | 'atualizadoEm' | 'fotos'> = {
+export const IRON_LUSTRE: Omit<Comercial, 'id' | 'criadoEm' | 'atualizadoEm' | 'fotos'> = {
   fabricante: 'Amaco',
   nome: 'Iron Lustre',
   codigo: 'PC-33',
@@ -285,6 +285,8 @@ export async function semearIdeias() {
   await completarEstudosAntigos().catch(() => undefined)
   const { semearFormulasDeTeste } = await import('./comerciaisIniciais')
   await semearFormulasDeTeste().catch(() => undefined)
+  const { reescreverTextos } = await import('./comerciaisIniciais')
+  await reescreverTextos().catch(() => undefined)
 }
 
 /** 25/11: anotações mais diretas (sem a nota sobre as IAs, sem "O que se vê" e sem "Possibilidade autoral"; degradê e pigmentos primeiro), se o usuário não mexeu. */
