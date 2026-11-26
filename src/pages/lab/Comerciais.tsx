@@ -1,23 +1,63 @@
+import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Plus } from 'lucide-react'
+import { ArrowLeft, ImagePlus, Plus, Sparkles } from 'lucide-react'
 import { db, novo, type Comercial } from '../../db/schema'
 import { Foto } from '../../ui/form'
+import { useToast } from '../../ui/toast'
+import { chamar, iaConfigurada, paraBase64 } from '../../lib/iaRepertorio'
+
+interface Pesquisa { fabricante: string; nome: string; codigo: string; serie: string; cone: string; temperatura: string; instrucoes: string; declarados: string[]; documentacao: string; hipoteses: string[]; fontes: string[]; observacoes: string; avisos: string[] }
 
 export default function Comerciais() {
   const nav = useNavigate()
+  const toast = useToast()
+  const arquivo = useRef<HTMLInputElement>(null)
+  const [pesquisando, setPesquisando] = useState(false)
   const itens = useLiveQuery(async () => (await db.comerciais.toArray()).filter((c) => !c.excluido).sort((a, b) => (a.observacoes ?? '').localeCompare(b.observacoes ?? '') || a.nome.localeCompare(b.nome)), [], [])
   async function novoItem() {
     const c: Comercial = novo({ fabricante: 'Fabricante', nome: 'Novo esmalte estudado', familias: [], fotos: [], declarados: [], hipoteses: [], fontes: [] })
     await db.comerciais.add(c); nav(`/engenharia-reversa/${c.id}`)
+  }
+  /** Print do rótulo, pote, catálogo ou post: guarda as fotos num estudo novo e a IA pesquisa o esmalte na web. */
+  async function estudarPrint(files: FileList | null) {
+    const imgs = [...(files ?? [])].filter((f) => f.type.startsWith('image/'))
+    if (!imgs.length) return
+    setPesquisando(true)
+    try {
+      const { salvarArquivo } = await import('../../db/files')
+      const c: Comercial = novo({ fabricante: '', nome: 'Estudo de print', familias: [], fotos: [], declarados: [], hipoteses: [], fontes: [] })
+      await db.comerciais.add(c)
+      const fotos = await Promise.all(imgs.map((f) => salvarArquivo(f, { tipo: 'comercial', id: c.id })))
+      await db.comerciais.update(c.id, { fotos })
+      if (!(await iaConfigurada())) { toast('A IA não está ligada. Preencha a ficha à mão.'); nav(`/engenharia-reversa/${c.id}`); return }
+      try {
+        const imagens = await Promise.all(imgs.slice(0, 4).map(async (b) => ({ base64: await paraBase64(b), tipo: 'image/jpeg' })))
+        const p = await chamar<Pesquisa>({ acao: 'comercial', imagens }, 175000)
+        const obs = [p.observacoes, p.avisos.length ? 'Incertezas: ' + p.avisos.join(' ') : ''].filter(Boolean).join('\n\n')
+        await db.comerciais.update(c.id, {
+          fabricante: p.fabricante || 'Fabricante', nome: p.nome || 'Esmalte não identificado', codigo: p.codigo || undefined, serie: p.serie || undefined,
+          cone: p.cone || undefined, temperatura: p.temperatura || undefined, instrucoes: p.instrucoes || undefined,
+          declarados: p.declarados, documentacao: p.documentacao || undefined, hipoteses: p.hipoteses, fontes: p.fontes,
+          observacoes: obs || undefined, atualizadoEm: Date.now(),
+        })
+        toast('Pesquisa pronta. Confira as fontes.')
+      } catch (e) { toast('A pesquisa não deu certo: ' + (e as Error).message + '. As fotos ficaram guardadas no estudo.') }
+      nav(`/engenharia-reversa/${c.id}`)
+    } finally { setPesquisando(false) }
   }
   return (
     <div className="page" style={{ maxWidth: 860 }}>
       <Link to="/laboratorio" className="back"><ArrowLeft size={15} />Esmaltaria</Link>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
         <h1>Engenharia reversa</h1>
-        <button className="btn primary" onClick={novoItem}><Plus size={16} />Novo estudo</button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button className="btn primary" disabled={pesquisando} onClick={() => arquivo.current?.click()}><ImagePlus size={16} />Estudar print</button>
+          <button className="btn" disabled={pesquisando} onClick={novoItem}><Plus size={16} />Novo estudo</button>
+          <input ref={arquivo} type="file" accept="image/*" multiple hidden onChange={(e) => { estudarPrint(e.target.files); e.target.value = '' }} />
+        </div>
       </div>
+      {pesquisando && <p className="recebido-lendo" style={{ marginTop: 14 }}><Sparkles size={15} />Identificando o esmalte e procurando a ficha do fabricante… pode levar 1 ou 2 minutos.</p>}
       <p className="muted" style={{ marginTop: 10 }}>Esmaltes comerciais estudados como referência. Cada ficha separa o que o fabricante declara, o que vem da documentação, as hipóteses e o que já foi confirmado em teste.</p>
       <div className="lista" style={{ marginTop: 20 }}>
         {itens.map((c) => (
