@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, Heart, Trash2 } from 'lucide-react'
-import { db, ETAPAS, uid, type Etapa, type Peca } from '../../db/schema'
+import { db, ETAPAS, uid, type Etapa, type Peca, type Referencia } from '../../db/schema'
 import { alternarFavorito, excluir } from '../../db/hooks'
 import { vivos } from '../../lib/artistas'
 import { CapaFotos } from '../../ui/GaleriaFotos'
@@ -11,6 +11,8 @@ import { Menu } from '../../ui/Menu'
 import { Tags } from '../../ui/form'
 import { TextoEditavel } from '../../ui/editavel'
 import { ArtistasParecidos } from './ArtistasParecidos'
+import { ImgRef } from '../ref/ImgRef'
+import { VisorRefs } from '../ref/VisorRefs'
 import { CampoTitulo, Diario, nomeEtapa, normPeca, normSerie } from './comum'
 
 const CAMPOS: [keyof Peca, string, string][] = [
@@ -93,6 +95,8 @@ export default function PecaDetalhe() {
         </div>
       </div>
 
+      <RefsDaObra id={p.id} />
+
       <section className="secao">
         <div className="secao-head"><h2>Diário do processo</h2></div>
         <Diario itens={p.observacoes} onChange={(v) => salvar({ observacoes: v })} vazio="Registre o que acontece com a peça: rachaduras, como o esmalte correu, o que mudaria na próxima." />
@@ -105,5 +109,32 @@ export default function PecaDetalhe() {
 
       <ArtistasParecidos key={p.id} ctx={'peca:' + p.id} fotos={p.fotos} />
     </div>
+  )
+}
+
+/** Referências levadas para esta obra (pelo botão do visor do Acervo ou por Conexões), em grade. */
+function RefsDaObra({ id }: { id: string }) {
+  const [visor, setVisor] = useState<number>()
+  const refs = useLiveQuery(async () => {
+    const [a, b] = await Promise.all([
+      db.relacoes.where('[bTipo+bId]').equals(['entrada', id]).toArray(),
+      db.relacoes.where('[aTipo+aId]').equals(['entrada', id]).toArray(),
+    ])
+    const ids = [...a.filter((r) => !r.excluido && r.aTipo === 'referencia').map((r) => r.aId), ...b.filter((r) => !r.excluido && r.bTipo === 'referencia').map((r) => r.bId)]
+    return (await db.referencias.bulkGet([...new Set(ids)])).filter((r): r is Referencia => !!r && !r.excluido)
+  }, [id], [] as Referencia[])
+  if (!refs.length) return null
+  return (
+    <section className="secao">
+      <div className="secao-head"><h2>Referências</h2><span className="faint">{refs.length}</span></div>
+      <div className="galeria">
+        {refs.map((r, i) => (
+          <button key={r.id} className="peca" style={{ background: 'none', border: 0, padding: 0, textAlign: 'left' }} onClick={() => setVisor(i)}>
+            <div className="ph"><ImgRef r={r} /></div>
+          </button>
+        ))}
+      </div>
+      {visor != null && <VisorRefs lista={refs} inicio={visor} onClose={() => setVisor(undefined)} />}
+    </section>
   )
 }
