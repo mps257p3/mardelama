@@ -10,7 +10,7 @@ interface Semente { id: string; em: number; reel: string; marca: string[]; dados
 
 const REEL = 'Reel de @katiebceramics, "these are my 3 favourite mobile glazes"'
 
-const SEMENTES: Semente[] = [
+export const SEMENTES: Semente[] = [
   {
     id: 'comercial-spectrum-1431-pearl-white',
     em: Date.UTC(2026, 10, 26, 1, 50),
@@ -187,7 +187,7 @@ export async function semearComerciais() {
 }
 
 /** Estudos que já vinham no app (ER-001 a ER-003): melhores usos e fotos da marca, só se o campo estiver vazio. */
-const EXTRAS: { id: string; usos: string[]; marca: string[] }[] = [
+export const EXTRAS: { id: string; usos: string[]; marca: string[] }[] = [
   {
     id: 'com-er-001',
     usos: [
@@ -317,4 +317,25 @@ export async function semearFormulasDeTeste() {
     await db.relacoes.add({ id: 'rel-' + f.id, aTipo: 'comercial', aId: f.comercial, bTipo: 'receita', bId: f.id, criadoEm: T })
   }
   await db.ajustes.put({ chave: 'seed-formulas-er-v1', valor: true })
+}
+
+/** 26/11: troca os textos semeados pelos reescritos (TEXTOS_V2), só onde o campo ainda está igual ao semeado. */
+export async function reescreverTextos() {
+  if (await db.ajustes.get('fix-comercial-textos-v2')) return
+  const { TEXTOS_V2 } = await import('./comerciaisTextos')
+  const { IRON_LUSTRE } = await import('./ideiasIniciais')
+  const antigos: Record<string, Partial<Comercial>> = { 'comercial-amaco-pc33-iron-lustre': IRON_LUSTRE }
+  for (const s of SEMENTES) antigos[s.id] = s.dados
+  for (const x of EXTRAS) antigos[x.id] = { usos: x.usos }
+  const igual = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
+  for (const [id, novos] of Object.entries(TEXTOS_V2)) {
+    const c = await db.comerciais.get(id)
+    if (!c) continue
+    const d: Partial<Comercial> = {}
+    for (const k of Object.keys(novos) as (keyof typeof novos)[]) {
+      if (igual(c[k], antigos[id]?.[k])) (d as Record<string, unknown>)[k] = novos[k]
+    }
+    if (Object.keys(d).length) await db.comerciais.update(id, { ...d, atualizadoEm: Date.now() })
+  }
+  await db.ajustes.put({ chave: 'fix-comercial-textos-v2', valor: true })
 }

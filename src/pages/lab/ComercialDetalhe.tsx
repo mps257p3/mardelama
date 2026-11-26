@@ -30,6 +30,7 @@ export default function ComercialDetalhe() {
   return (
     <div className="page" style={{ maxWidth: 860 }}>
       <Link to="/engenharia-reversa" className="back"><ArrowLeft size={15} />Engenharia reversa</Link>
+      <div style={{ margin: '12px 0 20px' }}><Fotos value={c.fotos} onChange={(v) => salvar({ fotos: v })} /></div>
       <p className="eyebrow">{[c.fabricante, c.codigo, c.serie].filter(Boolean).join(' · ')}</p>
       <h1 style={{ marginTop: 8 }}>{c.nome}</h1>
       <p className="faint" style={{ fontSize: 13, marginTop: 4 }}>{maiusc(incluidoEm(c.criadoEm))}</p>
@@ -80,7 +81,6 @@ export default function ComercialDetalhe() {
           {curva && <Link to={`/curvas/${curva.id}`} style={{ textDecoration: 'underline', fontSize: 13.5 }}>Abrir {curva.codigo}</Link>}
         </Campo>
         <Campo rotulo="Fontes"><ListaEditavel rotulo="fonte (link)" link itens={c.fontes} onSalvar={(v) => salvar({ fontes: v })} vazio="Nenhuma fonte." /></Campo>
-        <Campo rotulo="Fotos"><Fotos value={c.fotos} onChange={(v) => salvar({ fotos: v })} /></Campo>
         <Campo rotulo="Observações"><TextoEditavel rotulo="observações" multilinha valor={c.observacoes} onSalvar={t('observacoes')} /></Campo>
       </div>
 
