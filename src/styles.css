@@ -1184,3 +1184,26 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
 .cat-foto { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--surface-2); }
 .cat-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cat-foto button { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(30,28,25,.65); color: #fff; display: grid; place-items: center; padding: 0; }
+
+/* Ficha do esmalte industrial › Fluidez durante a queima: fabricante, estimativa da IA e testes do usuário separados */
+.selo.usuario { background: var(--carvao); color: var(--marfim); }
+.fluidez .fluidez-nota { font-size: 13px; margin: 0 0 14px; }
+.fluidez-bloco { border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px 16px; margin-top: 12px; background: var(--surface); }
+.fluidez-bloco.ia { border-style: dashed; border-color: var(--terracota); background: transparent; }
+.fluidez-bloco.seu { background: var(--surface-2); }
+.fluidez-origem { margin: 0 0 10px; }
+.fluidez-vazia { font-size: 15px; color: var(--ink-2); font-style: italic; }
+.fluidez-res { padding: 10px 0; border-top: 1px solid var(--line); }
+.fluidez-res:first-of-type { border-top: 0; padding-top: 2px; }
+.fluidez-res p { margin: 4px 0 0; font-size: 14.5px; }
+.fluidez-termo { font-size: 17px !important; }
+.fluidez-termo b { font-weight: 600; }
+.fluidez-termo span { color: var(--ink-2); }
+.fluidez-cone { font-size: 12px !important; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.fluidez-escala { font-size: 13.5px !important; }
+.fluidez-ficha { margin-top: 10px; }
+.fluidez-ficha dd { font-size: 14px; font-variant-numeric: normal; }
+.fluidez-fotos { margin-top: 12px; }
+.fluidez-fontes { display: flex; flex-wrap: wrap; gap: 6px 12px; margin: 12px 0 0; font-size: 12.5px; }
+.fluidez-fontes .fonte { color: var(--ink-3); text-decoration: underline; }
+@media (max-width: 640px) { .fluidez-ficha { grid-template-columns: 1fr; } }

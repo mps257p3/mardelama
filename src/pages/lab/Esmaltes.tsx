@@ -9,9 +9,10 @@ import { FAIXAS_TEMP, normaliza, textoBusca } from '../../lib/filtros'
 import { Foto, Multi, Estrelas } from '../../ui/form'
 import { useAjuste, definirAjuste } from '../../db/settings'
 import { Menu } from '../../ui/Menu'
+import { rotulosFluidez } from '../../lib/fluidez'
 
-type F = { cor: string[]; temp: string[]; acab: string[]; text: string[]; fam: string[]; status: string[]; atm: string[]; fav: boolean }
-const VAZIO: F = { cor: [], temp: [], acab: [], text: [], fam: [], status: [], atm: [], fav: false }
+type F = { cor: string[]; temp: string[]; acab: string[]; text: string[]; fam: string[]; status: string[]; atm: string[]; flu: string[]; fav: boolean }
+const VAZIO: F = { cor: [], temp: [], acab: [], text: [], fam: [], status: [], atm: [], flu: [], fav: false }
 
 export default function Esmaltes({ embutido, familia }: { embutido?: boolean; familia?: string } = {}) {
   const esmaltes = useEsmaltes()
@@ -22,15 +23,18 @@ export default function Esmaltes({ embutido, familia }: { embutido?: boolean; fa
   const [f, setF] = useState<F>(VAZIO)
   const ativos = Object.entries(f).reduce((n, [, v]) => n + (Array.isArray(v) ? v.length : v ? 1 : 0), 0)
   const famNome = useMemo(() => new Map(familias.map((x) => [x.id, x.nome])), [familias])
+  // cada fabricante com a própria classificação de fluidez (sem equivalência entre marcas)
+  const opFluidez = useMemo(() => [...new Set((esmaltes ?? []).flatMap(rotulosFluidez))].sort((a, b) => a.localeCompare(b, 'pt-BR')).map((x) => ({ v: x, l: x })), [esmaltes])
 
   const lista = useMemo(() => (esmaltes ?? []).filter((e) => {
     const qq = normaliza(q.trim())
-    if (qq && !textoBusca(e.nome, e.codigo, e.autoria, e.cor, e.tags, e.familias.map((id) => famNome.get(id) ?? '')).includes(qq)) return false
+    if (qq && !textoBusca(e.nome, e.codigo, e.autoria, e.cor, e.tags, e.familias.map((id) => famNome.get(id) ?? ''), (e.fluidezQueima?.resultados ?? []).flatMap((r) => [r.classificacao ?? '', r.traducao ?? ''])).includes(qq)) return false
     const any = (sel: string[], v?: string) => !sel.length || (v != null && sel.includes(v))
     if (!any(f.cor, e.cor) || !any(f.acab, e.acabamento) || !any(f.text, e.textura) || !any(f.status, e.status) || !any(f.atm, e.atmosfera)) return false
     if (familia && !e.familias.includes(familia)) return false
     if (f.fam.length && !f.fam.some((id) => e.familias.includes(id))) return false
     if (f.temp.length && !(e.temperatura != null && FAIXAS_TEMP.some((x) => f.temp.includes(x.v) && x.t(e.temperatura!)))) return false
+    if (f.flu.length && !rotulosFluidez(e).some((r) => f.flu.includes(r))) return false
     if (f.fav && !e.favorito) return false
     return true
   }), [esmaltes, q, f, famNome, familia])
@@ -57,6 +61,7 @@ export default function Esmaltes({ embutido, familia }: { embutido?: boolean; fa
           <div className="linha"><span>Acabamento</span><Multi value={f.acab} onChange={set('acab')} opcoes={op(ACABAMENTOS)} /></div>
           <div className="linha"><span>Textura</span><Multi value={f.text} onChange={set('text')} opcoes={op(TEXTURAS)} /></div>
           <div className="linha"><span>Atmosfera</span><Multi value={f.atm} onChange={set('atm')} opcoes={op(ATMOSFERAS)} /></div>
+          {opFluidez.length > 0 && <div className="linha"><span>Fluidez na queima</span><Multi value={f.flu} onChange={set('flu')} opcoes={opFluidez} /></div>}
           <div className="linha"><span>Status</span><Multi value={f.status} onChange={set('status')} opcoes={op(STATUS)} /></div>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', flexWrap: 'wrap' }}>
             <button className={'chip' + (f.fav ? ' on' : '')} onClick={() => setF({ ...f, fav: !f.fav })}><Heart size={13} />Só favoritos</button>
