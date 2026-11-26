@@ -193,7 +193,7 @@ export default function ReceitaEditor() {
             ))}
             <div style={{ gridColumn: '1 / -1' }}>
               <button className="btn sm ghost" onClick={() => mudar({ liquidos: [...(r.liquidos ?? []), { nome: '', quantidade: 0, unidade: 'gotas/100g' }] })}><Plus size={14} />Aditivo líquido</button>
-              <Link to="/biblioteca/glossario#floculacao" className="faint" style={{ fontSize: 12.5, marginLeft: 8 }}>Vinagre, sal de Epsom: quando usar</Link>
+              <Link to="/biblioteca/bib-guia-vinagre-esmalte" className="faint" style={{ fontSize: 12.5, marginLeft: 8 }}>Como usar vinagre: passo a passo</Link>
               <datalist id="aditivos-liquidos">{['Vinagre branco', 'Sal de Epsom (solução saturada)', 'Cloreto de cálcio (solução)', 'Defloculante (silicato de sódio)', 'Darvan 7', 'Goma CMC (solução)', 'Conservante'].map((x) => <option key={x} value={x} />)}</datalist>
             </div>
             <div style={{ gridColumn: '1 / -1' }}><Campo label="Variações e queima"><AreaTexto value={r.parametros} onChange={(v) => mudar({ parametros: v })} rows={linhasDe(r.parametros)} /></Campo></div>
