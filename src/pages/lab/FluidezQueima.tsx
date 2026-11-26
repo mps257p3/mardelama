@@ -14,7 +14,7 @@ const data = (d?: string) => (d ? new Date(d + 'T12:00').toLocaleDateString('pt-
  * Ficha do esmalte industrial › Fluidez durante a queima.
  * Três origens visualmente separadas: o que o fabricante publica (oficial ou descritivo), a estimativa da IA e os testes do usuário.
  */
-export function FluidezQueima({ e }: { e: Esmalte }) {
+export function FluidezQueima({ e, embutida, soTestes }: { e: Esmalte; embutida?: boolean; soTestes?: boolean }) {
   const toast = useToast()
   const [consultando, setConsultando] = useState(false)
   const [teste, setTeste] = useState<TesteFluidez>()
@@ -36,11 +36,11 @@ export function FluidezQueima({ e }: { e: Esmalte }) {
   ] : []
 
   return (
-    <section className="secao fluidez">
-      <div className="secao-head"><h2>Fluidez durante a queima</h2></div>
-      <p className="faint fluidez-nota">Como o esmalte fundido se move e escorre na queima. Não é a consistência do esmalte líquido antes de aplicar.</p>
+    <section className={'fluidez' + (embutida ? ' embutida' : ' secao')}>
+      {!embutida && <div className="secao-head"><h2>Fluidez durante a queima</h2></div>}
+      {!embutida && <p className="faint fluidez-nota">Como o esmalte fundido se move e escorre na queima. Não é a consistência do esmalte líquido antes de aplicar.</p>}
 
-      <div className="fluidez-bloco">
+      {!soTestes && <div className="fluidez-bloco">
         <p className="fluidez-origem">{!f || f.situacao === 'nao-informada' ? <span className="selo">Fabricante</span> : f.situacao === 'descritiva' ? <span className="selo interpretacao">Descrição do fabricante</span> : <span className="selo verificado">Oficial do fabricante</span>}</p>
         {!f && <p className="muted">Ainda não consultado. Toque em Atualizar informações do fabricante.</p>}
         {f?.situacao === 'nao-informada' && <p className="fluidez-vazia">Fluidez não informada pelo fabricante.</p>}
@@ -64,9 +64,9 @@ export function FluidezQueima({ e }: { e: Esmalte }) {
         </p>}
         <button className="btn sm" disabled={consultando} onClick={consultar} style={{ marginTop: 14 }}><RefreshCw size={14} className={consultando ? 'gira' : undefined} />{consultando ? 'Consultando o fabricante…' : 'Atualizar informações do fabricante'}</button>
         {consultando && <p className="recebido-lendo" style={{ marginTop: 10 }}>Procurando a fluidez no site, na ficha técnica e nos catálogos do fabricante… leva 1 ou 2 minutos. Pode sair do app: a consulta continua e termina quando você voltar. O que já está na ficha não se perde.</p>}
-      </div>
+      </div>}
 
-      {f?.estimativaIA && <div className="fluidez-bloco ia">
+      {!soTestes && f?.estimativaIA && <div className="fluidez-bloco ia">
         <p className="fluidez-origem"><span className="selo hipotese">Estimativa por IA</span></p>
         <p>{f.estimativaIA}</p>
         <p className="faint" style={{ fontSize: 12.5, marginTop: 6 }}>Interpretação da IA a partir do que está publicado. Não é classificação do fabricante nem resultado de teste.</p>

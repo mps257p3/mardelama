@@ -2,13 +2,35 @@ import { Voltar } from '../../ui/Voltar'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { db, novo, type Esmalte } from '../../db/schema'
+import { db, novo, type Compat, type DefeitoEsmalte, type Esmalte, type FonteGrupo, type Nivel, type OrigemDado, type PerfilEsmalte, type TecnicaEsmalte, type Verificacao } from '../../db/schema'
 import { proximoCodigo } from '../../db/codigos'
 import { useFamilias, useReceitas } from '../../db/hooks'
-import { ACABAMENTOS, APLICACOES, ATMOSFERAS, CONES, CORES, FLUIDEZ, STATUS, TEXTURAS, TRANSPARENCIAS, coneMaisProximo, tempDoCone } from '../../lib/opcoes'
+import { ATMOSFERAS, CONES, CORES, FLUIDEZ, STATUS, coneMaisProximo, tempDoCone } from '../../lib/opcoes'
+import {
+  ACABAMENTOS_FICHA, APLICACAO, ATRIBUTOS_COMPORTAMENTO, COMPAT, COMPORTAMENTOS_SUPERFICIE, DEFEITOS_FICHA, EXPRESSIVO, GEOMETRIAS, MASSAS, METODOS, NIVEIS,
+  OPACIDADES, ORIGENS, PREPARACAO, QUEIMA, SEGURANCA, TEXTURAS_FICHA, VERIFICACAO, VISUAL, texturasDe,
+} from '../../lib/esmalteFicha'
 import { AreaTexto, Campo, Escolha, Estrelas, Fotos, Multi, Numero, Sugestao, Tags, Texto } from '../../ui/form'
 import { useToast } from '../../ui/toast'
 import { criarReceita } from './Receitas'
+
+/** Tira chaves vazias de um registro de textos (o que fica vazio não aparece na ficha). */
+const limpo = (r: Record<string, string | undefined>) => Object.fromEntries(Object.entries(r).filter(([, v]) => v?.trim())) as Record<string, string>
+
+/** Origem do grupo: de onde vêm estas informações (uma vez por grupo, não por linha). */
+function OrigemCampo({ valor, onChange }: { valor?: FonteGrupo; onChange: (o: FonteGrupo | undefined) => void }) {
+  const v = valor ?? {}
+  const muda = (x: Partial<FonteGrupo>) => { const n = { ...v, ...x }; onChange(n.origem || n.fonte ? n : undefined) }
+  return (
+    <div className="fx-form-origem wide-row">
+      <select className="input" value={v.origem ?? ''} onChange={(x) => muda({ origem: (x.target.value || undefined) as OrigemDado | undefined })} aria-label="Origem destas informações">
+        <option value="">Origem: não informada</option>{(Object.keys(ORIGENS) as OrigemDado[]).map((k) => <option key={k} value={k}>Origem: {ORIGENS[k]}</option>)}
+      </select>
+      <input className="input" placeholder="Link da fonte (opcional)" value={v.fonte ?? ''} onChange={(x) => muda({ fonte: x.target.value || undefined })} />
+      <input className="input" type="date" value={v.data ?? ''} onChange={(x) => muda({ data: x.target.value || undefined })} aria-label="Data da consulta" />
+    </div>
+  )
+}
 
 const VAZIO: Omit<Esmalte, 'id' | 'criadoEm' | 'atualizadoEm'> = { nome: '', codigo: '', fotos: [], origem: 'propria', familias: [], tags: [] }
 
@@ -30,6 +52,10 @@ export default function EsmalteForm() {
   }, [id])
 
   const set = <K extends keyof Esmalte>(k: K) => (v: Esmalte[K]) => setE((x) => ({ ...x, [k]: v }))
+  const perfil: PerfilEsmalte = e.perfil ?? {}
+  const tec: TecnicaEsmalte = e.tecnica ?? {}
+  const setPerfil = (x: Partial<PerfilEsmalte>) => setE((y) => ({ ...y, perfil: { ...y.perfil, ...x } }))
+  const setTec = (x: Partial<TecnicaEsmalte>) => setE((y) => ({ ...y, tecnica: { ...y.tecnica, ...x } }))
 
   async function salvar() {
     if (!e.nome.trim()) { toast('Dê um nome ao esmalte'); return }
@@ -56,49 +82,118 @@ export default function EsmalteForm() {
       <p className="eyebrow">{e.id ? 'Editar esmalte' : 'Novo esmalte'}</p>
       <h1 style={{ marginTop: 8, marginBottom: 28 }}>{e.nome || 'Sem nome'}</h1>
 
+      <nav className="fx-form-nav">{[['ed-id', 'Identificação'], ['ed-perfil', 'Perfil'], ['ed-tecnica', 'Técnica'], ['ed-exp', 'Experimentos'], ['ed-doc', 'Documentação']].map(([k, l]) => <a key={k} href={'#' + k} onClick={(x) => { x.preventDefault(); document.getElementById(k)?.scrollIntoView({ behavior: 'smooth' }) }}>{l}</a>)}</nav>
+
       <div className="form">
+        <h3 id="ed-id">Identificação</h3>
         <Campo label="É um esmalte comercial ou uma fórmula sua?" wide><Escolha value={e.origem} onChange={set('origem')} opcoes={[{ v: 'propria', l: 'Minha fórmula' }, { v: 'comercial', l: 'Comercial' }]} /></Campo>
         <Campo label="Fotografias" wide><Fotos value={e.fotos} onChange={set('fotos')} /></Campo>
         <Campo label="Nome"><Texto value={e.nome} onChange={set('nome')} autoFocus={!e.id} /></Campo>
-        <Campo label="Código de identificação"><Texto value={e.codigo} onChange={set('codigo')} /></Campo>
+        <Campo label="Código interno"><Texto value={e.codigo} onChange={set('codigo')} /></Campo>
         <Campo label={e.origem === 'comercial' ? 'Fabricante' : 'Autoria'}><Texto value={e.autoria} onChange={set('autoria')} /></Campo>
-        <Campo label="Fonte da receita"><Texto value={e.fonteReceita} onChange={set('fonteReceita')} placeholder="Livro, site, colega…" /></Campo>
+        <Campo label="Função"><Texto value={e.funcao} onChange={set('funcao')} placeholder="Ex.: fundente, base, cobertura, efeito" /></Campo>
         <Campo label="Famílias (pode escolher várias)" wide><Multi value={e.familias} onChange={set('familias')} opcoes={familias.map((f) => ({ v: f.id, l: f.nome }))} /></Campo>
+        <Campo label="Descrição curta (até três linhas na ficha)" wide><AreaTexto value={e.descricao} onChange={set('descricao')} rows={3} /></Campo>
 
-        <h3>Aparência</h3>
-        <Campo label="Cor"><Sugestao id="cores" value={e.cor} onChange={set('cor')} opcoes={CORES} /></Campo>
-        <Campo label="Tom de referência">
+        <h3 id="ed-perfil">Perfil · identidade visual</h3>
+        <Campo label="Cor predominante"><Sugestao id="cores" value={e.cor} onChange={set('cor')} opcoes={CORES} /></Campo>
+        <Campo label="Amostra de cor (referência aproximada)">
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <input type="color" value={e.corHex ?? '#CBAB8F'} onChange={(x) => set('corHex')(x.target.value)} style={{ width: 46, height: 46, border: 0, background: 'none', padding: 0 }} />
-            <span className="faint" style={{ fontSize: 13 }}>Usado quando não há foto</span>
+            {e.corHex && <button type="button" className="btn sm ghost" onClick={() => set('corHex')(undefined)}>Tirar</button>}
           </div>
         </Campo>
-        <Campo label="Acabamento" wide><Escolha value={e.acabamento} onChange={set('acabamento')} opcoes={ACABAMENTOS.map((v) => ({ v, l: v }))} /></Campo>
-        <Campo label="Textura" wide><Escolha value={e.textura} onChange={set('textura')} opcoes={TEXTURAS.map((v) => ({ v, l: v }))} /></Campo>
-        <Campo label="Transparência" wide><Escolha value={e.transparencia} onChange={set('transparencia')} opcoes={TRANSPARENCIAS.map((v) => ({ v, l: v }))} /></Campo>
+        {VISUAL.map(([k, l]) => <Campo key={k} label={l}><Texto value={perfil.visual?.[k]} onChange={(v) => setPerfil({ visual: limpo({ ...perfil.visual, [k]: v }) })} /></Campo>)}
+        <Campo label="Acabamento" wide><Escolha value={e.acabamento} onChange={(v) => set('acabamento')(v === e.acabamento ? undefined : v)} opcoes={[...ACABAMENTOS_FICHA, ...(e.acabamento && !(ACABAMENTOS_FICHA as readonly string[]).includes(e.acabamento) ? [e.acabamento] : [])].map((v) => ({ v, l: v }))} /></Campo>
+        <Campo label="Opacidade" wide><Escolha value={e.transparencia} onChange={(v) => set('transparencia')(v === e.transparencia ? undefined : v)} opcoes={OPACIDADES.map((v) => ({ v, l: v }))} /></Campo>
+        <Campo label="Textura (pode marcar várias)" wide><Multi value={texturasDe(e)} onChange={(v) => set('textura')(v.join(', ') || undefined)} opcoes={[...new Set([...TEXTURAS_FICHA, ...texturasDe(e)])].map((v) => ({ v, l: v }))} /></Campo>
+        <OrigemCampo valor={perfil.origens?.visual} onChange={(o) => setPerfil({ origens: { ...perfil.origens, visual: o } })} />
 
-        <h3>Queima e aplicação</h3>
-        <Campo label="Temperatura de queima (°C)"><Numero value={e.temperatura} onChange={(t) => setE((x) => ({ ...x, temperatura: t, cone: x.cone || coneMaisProximo(t) }))} /></Campo>
-        <Campo label="Cone pirométrico">
+        <h3>Perfil · comportamento</h3>
+        <p className="faint wide-row" style={{ fontSize: 13 }}>Marque só o que foi observado ou informado. O que ficar sem marcação não aparece na ficha.</p>
+        {ATRIBUTOS_COMPORTAMENTO.map(([k, l]) => <Campo key={k} label={l} wide>
+          <Escolha value={perfil.comportamento?.[k] ? String(perfil.comportamento[k]) : undefined}
+            onChange={(v) => { const c = { ...perfil.comportamento }; if (c[k] === Number(v)) delete c[k]; else c[k] = Number(v) as Nivel; setPerfil({ comportamento: c }) }}
+            opcoes={([1, 2, 3, 4, 5] as Nivel[]).map((n) => ({ v: String(n), l: NIVEIS[n] }))} />
+        </Campo>)}
+        <OrigemCampo valor={perfil.origens?.comportamento} onChange={(o) => setPerfil({ origens: { ...perfil.origens, comportamento: o } })} />
+
+        <h3>Perfil · comportamento sobre a superfície</h3>
+        {GEOMETRIAS.map(([k, l]) => <Campo key={k} label={l} wide><Multi value={perfil.superficie?.[k] ?? []} onChange={(v) => { const x = { ...perfil.superficie, [k]: v }; if (!v.length) delete x[k]; setPerfil({ superficie: x }) }} opcoes={COMPORTAMENTOS_SUPERFICIE.map((v) => ({ v, l: v }))} /></Campo>)}
+        <OrigemCampo valor={perfil.origens?.superficie} onChange={(o) => setPerfil({ origens: { ...perfil.origens, superficie: o } })} />
+
+        <h3>Perfil · possibilidades expressivas</h3>
+        <Campo label="Adequado para (comprovado)" wide><Multi value={perfil.expressivo ?? []} onChange={(v) => setPerfil({ expressivo: v })} opcoes={EXPRESSIVO.map((v) => ({ v, l: v }))} /></Campo>
+        <Campo label="Descrição" wide><AreaTexto value={perfil.expressivoTexto} onChange={(v) => setPerfil({ expressivoTexto: v || undefined })} rows={3} /></Campo>
+        <Campo label="Sugestões criativas da IA (ficam separadas)" wide><AreaTexto value={perfil.sugestoesIA} onChange={(v) => setPerfil({ sugestoesIA: v || undefined })} rows={2} /></Campo>
+        <OrigemCampo valor={perfil.origens?.expressivo} onChange={(o) => setPerfil({ origens: { ...perfil.origens, expressivo: o } })} />
+
+        <h3 id="ed-tecnica">Técnica · preparação</h3>
+        {PREPARACAO.map(([k, l]) => <Campo key={k} label={l}><Texto value={tec.preparacao?.[k]} onChange={(v) => setTec({ preparacao: limpo({ ...tec.preparacao, [k]: v }) })} /></Campo>)}
+        <Campo label="Viscosidade do esmalte líquido (antes de aplicar)" wide><Texto value={e.viscosidade} onChange={set('viscosidade')} placeholder="Ex.: cremoso, ralo; densidade 1,45 g/ml" /></Campo>
+        <OrigemCampo valor={tec.origens?.preparacao} onChange={(o) => setTec({ origens: { ...tec.origens, preparacao: o } })} />
+
+        <h3>Técnica · aplicação</h3>
+        <Campo label="Métodos recomendados" wide><Multi value={tec.metodos ?? []} onChange={(v) => setTec({ metodos: v })} opcoes={[...new Set([...METODOS, ...(tec.metodos ?? [])])].map((v) => ({ v, l: v }))} /></Campo>
+        {APLICACAO.map(([k, l]) => <Campo key={k} label={l}><Texto value={tec.aplicacao?.[k]} onChange={(v) => setTec({ aplicacao: limpo({ ...tec.aplicacao, [k]: v }) })} /></Campo>)}
+        <Campo label="Recomendação de aplicação (texto)" wide><AreaTexto value={e.aplicacao} onChange={(v) => set('aplicacao')(v || undefined)} rows={3} /></Campo>
+        <OrigemCampo valor={tec.origens?.aplicacao} onChange={(o) => setTec({ origens: { ...tec.origens, aplicacao: o } })} />
+
+        <h3>Técnica · fluidez</h3>
+        <Campo label={e.origem === 'comercial' ? 'Fluidez na queima · sua avaliação (a do fabricante fica na ficha)' : 'Fluidez na queima · sua avaliação'} wide><Escolha value={e.fluidez} onChange={(v) => set('fluidez')(v === e.fluidez ? undefined : v)} opcoes={FLUIDEZ.map((v) => ({ v, l: v }))} /></Campo>
+
+        <h3>Técnica · queima</h3>
+        <Campo label="Temperatura de referência (°C)"><Numero value={e.temperatura} onChange={(t) => setE((x) => ({ ...x, temperatura: t, cone: x.cone || coneMaisProximo(t) }))} /></Campo>
+        <Campo label="Cone pirométrico recomendado">
           <select className="input" value={e.cone ?? ''} onChange={(x) => setE((y) => ({ ...y, cone: x.target.value || undefined, temperatura: y.temperatura ?? tempDoCone(x.target.value) }))}>
-            <option value="">—</option>{CONES.map((c) => <option key={c.cone} value={c.cone}>Cone {c.cone} · {c.c} °C</option>)}
+            <option value="">—</option>{[...(e.cone && !CONES.some((c) => c.cone === e.cone) ? [{ cone: e.cone, c: '' }] : []), ...CONES].map((c) => <option key={c.cone} value={c.cone}>Cone {c.cone}{c.c ? ` · ${c.c} °C` : ''}</option>)}
           </select>
         </Campo>
-        <Campo label="Atmosfera" wide><Escolha value={e.atmosfera} onChange={set('atmosfera')} opcoes={ATMOSFERAS.map((v) => ({ v, l: v }))} /></Campo>
-        <Campo label={e.origem === 'comercial' ? 'Fluidez na queima (sua avaliação; a do fabricante fica na ficha)' : 'Fluidez na queima'} wide><Escolha value={e.fluidez} onChange={set('fluidez')} opcoes={FLUIDEZ.map((v) => ({ v, l: v }))} /></Campo>
-        <Campo label="Consistência do esmalte líquido (antes de aplicar)" wide><Texto value={e.viscosidade} onChange={set('viscosidade')} placeholder="Ex.: cremoso, ralo; densidade 1,45 g/ml" /></Campo>
-        <Campo label="Método de aplicação" wide><Escolha value={e.aplicacao} onChange={set('aplicacao')} opcoes={APLICACOES.map((v) => ({ v, l: v }))} /></Campo>
+        <Campo label="Atmosfera" wide><Escolha value={e.atmosfera} onChange={(v) => set('atmosfera')(v === e.atmosfera ? undefined : v)} opcoes={ATMOSFERAS.map((v) => ({ v, l: v }))} /></Campo>
+        {QUEIMA.map(([k, l]) => <Campo key={k} label={l}><Texto value={tec.queima?.[k]} onChange={(v) => setTec({ queima: limpo({ ...tec.queima, [k]: v }) })} /></Campo>)}
+        <OrigemCampo valor={tec.origens?.queima} onChange={(o) => setTec({ origens: { ...tec.origens, queima: o } })} />
 
-        <h3>Receita e desenvolvimento</h3>
+        <h3>Técnica · compatibilidade</h3>
+        {MASSAS.map(([k, l]) => <Campo key={k} label={l} wide><Escolha value={tec.compatibilidade?.[k]} onChange={(v) => { const c = { ...tec.compatibilidade }; if (c[k] === v) delete c[k]; else c[k] = v; setTec({ compatibilidade: c }) }} opcoes={(Object.keys(COMPAT) as Compat[]).map((v) => ({ v, l: COMPAT[v] }))} /></Campo>)}
+        <Campo label="Notas de compatibilidade (inclui massas suas)" wide><AreaTexto value={tec.compatNotas} onChange={(v) => setTec({ compatNotas: v || undefined })} rows={2} /></Campo>
+        <OrigemCampo valor={tec.origens?.compatibilidade} onChange={(o) => setTec({ origens: { ...tec.origens, compatibilidade: o } })} />
+
+        <h3>Técnica · segurança e uso</h3>
+        {SEGURANCA.map(([k, l]) => <Campo key={k} label={l} wide><Escolha value={tec.seguranca?.[k]} onChange={(v) => { const c = { ...tec.seguranca }; if (c[k] === v) delete c[k]; else c[k] = v; setTec({ seguranca: c }) }} opcoes={(Object.keys(VERIFICACAO) as Verificacao[]).map((v) => ({ v, l: VERIFICACAO[v] }))} /></Campo>)}
+        <Campo label="Restrições e notas de segurança" wide><AreaTexto value={tec.segurancaNotas} onChange={(v) => setTec({ segurancaNotas: v || undefined })} rows={2} /></Campo>
+        <OrigemCampo valor={tec.origens?.seguranca} onChange={(o) => setTec({ origens: { ...tec.origens, seguranca: o } })} />
+
+        <h3>Técnica · alertas</h3>
+        <Campo label="Cuidados específicos (um por linha; aparecem no topo da ficha)" wide><AreaTexto value={(tec.alertas ?? []).join('\n')} onChange={(v) => setTec({ alertas: v.split('\n').map((x) => x.trim()).filter(Boolean) })} rows={2} /></Campo>
+
+        <h3>Técnica · defeitos e cuidados</h3>
+        {(tec.defeitos ?? []).map((d, i) => {
+          const muda = (x: Partial<DefeitoEsmalte>) => setTec({ defeitos: tec.defeitos!.map((y, j) => (j === i ? { ...y, ...x } : y)) })
+          return <div key={i} className="fx-form-def wide-row">
+            <Campo label="Defeito ou efeito"><Sugestao id={'def' + i} value={d.tipo} onChange={(v) => muda({ tipo: v })} opcoes={DEFEITOS_FICHA} /></Campo>
+            <Campo label="Tipo" wide><Escolha value={d.intencional ? 's' : 'n'} onChange={(v) => muda({ intencional: v === 's' })} opcoes={[{ v: 'n', l: 'Defeito indesejado' }, { v: 's', l: 'Efeito intencional' }]} /></Campo>
+            <Campo label="Possível causa"><Texto value={d.causa} onChange={(v) => muda({ causa: v || undefined })} /></Campo>
+            <Campo label="Solução"><Texto value={d.solucao} onChange={(v) => muda({ solucao: v || undefined })} /></Campo>
+            <label className="fx-check"><input type="checkbox" checked={!!d.hipotese} onChange={(x) => muda({ hipotese: x.target.checked })} />Causa e solução são hipóteses</label>
+            <button type="button" className="btn sm ghost" onClick={() => setTec({ defeitos: tec.defeitos!.filter((_, j) => j !== i) })}>Remover</button>
+          </div>
+        })}
+        <div className="wide-row"><button type="button" className="btn sm" onClick={() => setTec({ defeitos: [...(tec.defeitos ?? []), { tipo: '' }] })}>Registrar defeito ou efeito</button></div>
+
+        <h3 id="ed-exp">Experimentos</h3>
+        <Campo label="Observações pessoais" wide><AreaTexto value={e.notasPessoais} onChange={(v) => set('notasPessoais')(v || undefined)} rows={4} /></Campo>
+        <Campo label="Status de desenvolvimento"><select className="input" value={e.status ?? ''} onChange={(x) => set('status')(x.target.value || undefined)}><option value="">—</option>{STATUS.map((s) => <option key={s}>{s}</option>)}</select></Campo>
+        <Campo label="Avaliação pessoal"><Estrelas value={e.avaliacao} onChange={set('avaliacao')} tamanho={24} /></Campo>
+
+        <h3 id="ed-doc">Documentação</h3>
         <Campo label="Receita vinculada">
           <select className="input" value={e.receitaId ?? ''} onChange={(x) => set('receitaId')(x.target.value || undefined)}>
             <option value="">Nenhuma</option>{(receitas ?? []).map((r) => <option key={r.id} value={r.id}>{r.nome} (v{r.versaoAtual})</option>)}
           </select>
         </Campo>
-        <Campo label="Status de desenvolvimento"><select className="input" value={e.status ?? ''} onChange={(x) => set('status')(x.target.value || undefined)}><option value="">—</option>{STATUS.map((s) => <option key={s}>{s}</option>)}</select></Campo>
-        <Campo label="Avaliação pessoal"><Estrelas value={e.avaliacao} onChange={set('avaliacao')} tamanho={24} /></Campo>
+        <Campo label="Fonte da receita"><Texto value={e.fonteReceita} onChange={set('fonteReceita')} placeholder="Livro, site, colega…" /></Campo>
         <Campo label="Tags"><Tags value={e.tags} onChange={set('tags')} /></Campo>
-        <Campo label="Observações" wide><AreaTexto value={e.observacoes} onChange={set('observacoes')} rows={5} /></Campo>
+        <Campo label={e.origem === 'comercial' ? 'Documentação do fabricante e observações' : 'Observações'} wide><AreaTexto value={e.observacoes} onChange={set('observacoes')} rows={8} /></Campo>
       </div>
 
       <div className="barra-salvar">

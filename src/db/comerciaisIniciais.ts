@@ -547,3 +547,44 @@ export async function formulasVaziasDeComerciais() {
   }
   await db.ajustes.put({ chave: 'fix-formula-vazia-comercial-v1', valor: true })
 }
+
+/**
+ * 26/11, redesenho da ficha: o White Cascade (protótipo) ganha os campos estruturados,
+ * só com o que já está no rótulo da Mayco e na etiqueta da Zeramics. Não sobrescreve nada preenchido.
+ */
+export async function fichaWhiteCascade() {
+  const chave = 'fix-ficha-white-cascade-v1'
+  if (await db.ajustes.get(chave)) return
+  const e = await db.esmaltes.get('esm-mayco-pc602')
+  if (e && !e.excluido) {
+    const fab = { origem: 'fabricante' as const }
+    const p = e.perfil ?? {}
+    const t = e.tecnica ?? {}
+    const so = <T extends object>(atual: T | undefined, novo: T): T => ({ ...novo, ...(atual ?? {}) })
+    await db.esmaltes.update(e.id, {
+      funcao: e.funcao || 'Fundente',
+      descricao: e.descricao || 'Fundente da linha Pottery Cascade. Vai por cima ou por baixo de outros esmaltes atóxicos e escorre na queima; o movimento depende do esmalte que está por baixo.',
+      perfil: {
+        ...p,
+        superficie: so(p.superficie, { verticais: ['Escorre'] }),
+        expressivo: p.expressivo?.length ? p.expressivo : ['Escorrimentos', 'Sobreposições'],
+        origens: so(p.origens, { superficie: fab, expressivo: fab }),
+      },
+      tecnica: {
+        ...t,
+        aplicacao: so(t.aplicacao, { demaos: '1 a 2 (a Zeramics diz 2 a 3)', biscoito: 'Cone 04 (1060 °C)', restricoes: 'Não aplicar na metade de baixo da peça. Não borrifar sem proteção.' }),
+        metodos: t.metodos?.length ? t.metodos : ['Pincel', 'Sobreposição'],
+        queima: so(t.queima, {
+          tIdeal: '999 °C (cone 06, na prateleira)', tMax: '1031 °C (faixa da Zeramics: 999 a 1031 °C, cone 06/05)',
+          patamar: 'Temperatura, rampa e patamar realçam o escorrido.', alternativas: 'Cone 5/6: transparente com flutuação branca. A cor pode mudar em temperaturas mais altas.',
+        }),
+        seguranca: so(t.seguranca, { atoxico: 'sim', alimentarDeclarada: 'sim' }),
+        segurancaNotas: t.segurancaNotas || 'A Mayco declara "Food Safe" quando usado como manda o fabricante, mas avisa que a superfície pode não ser adequada para alimentos. Como vai junto com outros esmaltes, a peça só é segura se o esmalte de baixo também for.',
+        alertas: t.alertas?.length ? t.alertas : ['Evite a metade de baixo da peça: o esmalte escorre.', 'Segurança na louça depende do esmalte que vai por baixo.'],
+        origens: so(t.origens, { aplicacao: fab, queima: fab, seguranca: fab }),
+      },
+      atualizadoEm: Date.now(),
+    })
+  }
+  await db.ajustes.put({ chave, valor: true })
+}
