@@ -41,7 +41,7 @@ export function FluidezQueima({ e }: { e: Esmalte }) {
       <p className="faint fluidez-nota">Como o esmalte fundido se move e escorre na queima. Não é a consistência do esmalte líquido antes de aplicar.</p>
 
       <div className="fluidez-bloco">
-        <p className="fluidez-origem">{f?.situacao === 'descritiva' ? <span className="selo interpretacao">Descrição do fabricante</span> : <span className="selo verificado">Oficial do fabricante</span>}</p>
+        <p className="fluidez-origem">{!f || f.situacao === 'nao-informada' ? <span className="selo">Fabricante</span> : f.situacao === 'descritiva' ? <span className="selo interpretacao">Descrição do fabricante</span> : <span className="selo verificado">Oficial do fabricante</span>}</p>
         {!f && <p className="muted">Ainda não consultado. Toque em Atualizar informações do fabricante.</p>}
         {f?.situacao === 'nao-informada' && <p className="fluidez-vazia">Fluidez não informada pelo fabricante.</p>}
         {f?.situacao === 'descritiva' && <p className="faint" style={{ fontSize: 13 }}>O fabricante não tem uma classificação formal de fluidez; abaixo, o que ele descreve.</p>}
