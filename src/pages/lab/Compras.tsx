@@ -1,7 +1,8 @@
+import { Voltar } from '../../ui/Voltar'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, ExternalLink, Plus, Trash2 } from 'lucide-react'
+import { ExternalLink, Plus, Trash2 } from 'lucide-react'
 import { db, novo, type Compra, type Fornecedor } from '../../db/schema'
 import { brl, fmt } from '../../lib/opcoes'
 import { Numero } from '../../ui/form'
@@ -38,7 +39,7 @@ export default function Compras() {
 
   return (
     <div className="page" style={{ maxWidth: 860 }}>
-      <Link to="/laboratorio" className="back"><ArrowLeft size={15} />Esmaltaria</Link>
+      <Voltar to="/laboratorio">Esmaltaria</Voltar>
       <h1>Compras e fornecedores</h1>
       <p className="muted" style={{ marginTop: 10 }}>Lista planejada com valores estimados. Os preços mudam: confira no fornecedor antes de comprar.</p>
       <p style={{ marginTop: 14, fontSize: 14.5 }}>A comprar: <b>{brl(total('planejada'))}</b> <span className="faint">· já comprado: {brl(total('comprada'))}</span></p>

@@ -1,6 +1,7 @@
+import { Voltar } from '../../ui/Voltar'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Printer } from 'lucide-react'
+import { Printer } from 'lucide-react'
 import { db, novo, uid, type Esmalte, type Ingrediente, type Receita } from '../../db/schema'
 import { proximosCodigosTeste } from '../../db/codigos'
 import { useEsmaltes, useMateriais, useReceitas } from '../../db/hooks'
@@ -108,7 +109,7 @@ export default function Planejar() {
 
   if (criados) return (
     <div className="page" style={{ maxWidth: 760 }}>
-      <Link to="/testes" className="back"><ArrowLeft size={15} />Testes</Link>
+      <Voltar to="/testes">Testes</Voltar>
       <h1>Placas a preparar</h1>
       <p className="muted" style={{ marginTop: 8 }}>Inscreva cada código na placa correspondente. Os testes ficam como "planejados" até você registrar o resultado.</p>
       <table className="tabela" style={{ marginTop: 24 }}><thead><tr><th>Código</th><th>Composição</th></tr></thead>
@@ -124,7 +125,7 @@ export default function Planejar() {
   const minEsm = { mistura: 2, triaxial: 3, temperatura: 1, sobreposicao: 2 } as Record<Modo, number>
   return (
     <div className="page" style={{ maxWidth: 900 }}>
-      <Link to="/testes" className="back"><ArrowLeft size={15} />Testes</Link>
+      <Voltar to="/testes">Testes</Voltar>
       <p className="eyebrow">Esmaltaria</p>
       <h1 style={{ marginTop: 8 }}>Planejar experimento</h1>
       <div className="quick" style={{ marginTop: 24 }}>

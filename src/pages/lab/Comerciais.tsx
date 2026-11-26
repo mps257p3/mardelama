@@ -1,8 +1,9 @@
+import { Voltar } from '../../ui/Voltar'
 import { useRef, useState } from 'react'
 import { incluidoEm } from '../../lib/data'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, FlaskConical, ImagePlus, Plus, Sparkles } from 'lucide-react'
+import { FlaskConical, ImagePlus, Plus, Sparkles } from 'lucide-react'
 import { db, novo, type Comercial } from '../../db/schema'
 import { Foto } from '../../ui/form'
 import { useToast } from '../../ui/toast'
@@ -48,7 +49,7 @@ export default function Comerciais() {
   }
   return (
     <div className="page" style={{ maxWidth: 860 }}>
-      <Link to="/laboratorio" className="back"><ArrowLeft size={15} />Esmaltaria</Link>
+      <Voltar to="/laboratorio">Esmaltaria</Voltar>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
         <h1>Engenharia reversa</h1>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

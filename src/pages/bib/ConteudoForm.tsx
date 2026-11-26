@@ -1,6 +1,7 @@
+import { Voltar } from '../../ui/Voltar'
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+
 import { db, novo, type Conteudo } from '../../db/schema'
 import { CATEGORIAS_BIB, FORMATOS } from '../../lib/biblioteca'
 import { Campo, Escolha, Tags, Texto } from '../../ui/form'
@@ -27,7 +28,7 @@ export default function ConteudoForm() {
   }
   return (
     <div className="page" style={{ maxWidth: 900 }}>
-      <Link to={c.id ? `/biblioteca/${c.id}` : '/biblioteca'} className="back"><ArrowLeft size={15} />Voltar</Link>
+      <Voltar to={c.id ? `/biblioteca/${c.id}` : '/biblioteca'}>Voltar</Voltar>
       <p className="eyebrow">{c.id ? 'Editar conteúdo' : 'Novo conteúdo'}</p>
       <h1 style={{ marginTop: 8, marginBottom: 28 }}>{c.titulo || 'Sem título'}</h1>
       <div className="form">

@@ -1,6 +1,7 @@
+import { Voltar } from '../../../ui/Voltar'
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Plus, X } from 'lucide-react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { Plus, X } from 'lucide-react'
 import { db, novo, type Artista, type Certeza, type Fonte } from '../../../db/schema'
 import { ANALISE, CERTEZA, TEMAS_PROCESSO, listaParaTexto, textoParaLista } from '../../../lib/artistas'
 import { AreaTexto, Campo, Tags, Texto } from '../../../ui/form'
@@ -38,7 +39,7 @@ export default function ArtistaForm() {
   }
   return (
     <div className="page" style={{ maxWidth: 900 }}>
-      <Link to={a.id ? `/biblioteca/artistas/${a.id}` : '/biblioteca/artistas'} className="back"><ArrowLeft size={15} />Voltar</Link>
+      <Voltar to={a.id ? `/biblioteca/artistas/${a.id}` : '/biblioteca/artistas'}>Voltar</Voltar>
       <p className="eyebrow">{a.id ? 'Editar estudo' : 'Novo estudo de artista'}</p>
       <h1 style={{ marginTop: 8, marginBottom: 8 }}>{a.nome || 'Sem nome'}</h1>
       <p className="faint" style={{ fontSize: 13.5, marginBottom: 24 }}>Só o nome é obrigatório. Deixe vazio o que não estiver documentado: o perfil mostra "Não documentado".</p>

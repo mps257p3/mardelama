@@ -1,11 +1,14 @@
+import { useFecharComVoltar } from './voltarFecha'
+import { travarRolagem } from './rolagem'
 import { useEffect, type ReactNode } from 'react'
 
 export function Sheet({ onClose, children, label, alto }: { onClose: () => void; children: ReactNode; label: string; alto?: boolean }) {
+  useFecharComVoltar(onClose)
   useEffect(() => {
     const k = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', k)
-    const o = document.body.style.overflow; document.body.style.overflow = 'hidden'
-    return () => { window.removeEventListener('keydown', k); document.body.style.overflow = o }
+    const soltar = travarRolagem()
+    return () => { window.removeEventListener('keydown', k); soltar() }
   }, [onClose])
   return (
     <>

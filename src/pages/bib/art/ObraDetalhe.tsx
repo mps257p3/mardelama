@@ -1,7 +1,8 @@
+import { Voltar } from '../../../ui/Voltar'
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, BookmarkPlus, ExternalLink, FolderPlus, Heart, Pencil, Star, Trash2 } from 'lucide-react'
+import { BookmarkPlus, ExternalLink, FolderPlus, Heart, Pencil, Star, Trash2 } from 'lucide-react'
 import { db, type Obra } from '../../../db/schema'
 import { alternarFavorito, excluir } from '../../../db/hooks'
 import { salvarObraComoReferencia } from '../../../lib/artistas'
@@ -29,7 +30,7 @@ export default function ObraDetalhe() {
   return (
     <div className="page bib">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link to={a ? `/biblioteca/artistas/${a.id}` : '/biblioteca/artistas'} className="back"><ArrowLeft size={15} />{a?.nome ?? 'Artistas'}</Link>
+        <Voltar to={a ? `/biblioteca/artistas/${a.id}` : '/biblioteca/artistas'}>{a?.nome ?? 'Artistas'}</Voltar>
         <div style={{ display: 'flex', gap: 2 }}>
           <button className="iconbtn" aria-label="Favoritar" onClick={() => alternarFavorito('obras', o.id, o.favorito)}><Heart size={19} fill={o.favorito ? 'currentColor' : 'none'} /></button>
           <Menu itens={[

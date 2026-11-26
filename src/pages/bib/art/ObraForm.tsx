@@ -1,7 +1,8 @@
+import { Voltar } from '../../../ui/Voltar'
 import { useEffect, useRef, useState } from 'react'
 import { cabecalhoLogin } from '../../../lib/login'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, ImagePlus, Link2 } from 'lucide-react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { ImagePlus, Link2 } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, novo, type Obra } from '../../../db/schema'
 import { salvarArquivo } from '../../../db/files'
@@ -49,7 +50,7 @@ export default function ObraForm() {
   }
   return (
     <div className="page" style={{ maxWidth: 900 }}>
-      <Link to={o.artistaId ? `/biblioteca/artistas/${o.artistaId}` : '/biblioteca/artistas'} className="back"><ArrowLeft size={15} />Voltar</Link>
+      <Voltar to={o.artistaId ? `/biblioteca/artistas/${o.artistaId}` : '/biblioteca/artistas'}>Voltar</Voltar>
       <p className="eyebrow">{o.id ? 'Editar obra' : 'Nova obra'}</p>
       <h1 style={{ marginTop: 8, marginBottom: 20 }}>{o.titulo || 'Obra'}</h1>
       {!o.id && <div className="aviso" style={{ marginBottom: 20 }}>

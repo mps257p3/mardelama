@@ -1,3 +1,5 @@
+import { useFecharComVoltar } from '../../ui/voltarFecha'
+import { travarRolagem } from '../../ui/rolagem'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
@@ -10,6 +12,7 @@ import { ehSalvoInstagram } from '../../lib/instagram'
 
 /** Tela cheia do Acervo: imagem protagonista, metadados sob demanda, deslizar para navegar. */
 export function VisorRefs({ lista, inicio, onClose }: { lista: Referencia[]; inicio: number; onClose: () => void }) {
+  useFecharComVoltar(onClose)
   const [i, setI] = useState(inicio)
   const [info, setInfo] = useState(false)
   const [acao, setAcao] = useState<'grupos' | 'painel' | 'obra'>()
@@ -21,8 +24,8 @@ export function VisorRefs({ lista, inicio, onClose }: { lista: Referencia[]; ini
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if (acao) return; if (e.key === 'Escape') onClose(); if (e.key === 'ArrowLeft') ir(-1); if (e.key === 'ArrowRight') ir(1) }
     window.addEventListener('keydown', k)
-    const o = document.body.style.overflow; document.body.style.overflow = 'hidden'
-    return () => { window.removeEventListener('keydown', k); document.body.style.overflow = o }
+    const soltar = travarRolagem()
+    return () => { window.removeEventListener('keydown', k); soltar() }
   })
   if (!r) return null
   const gs = grupos.filter((g) => r.grupos.includes(g.id))

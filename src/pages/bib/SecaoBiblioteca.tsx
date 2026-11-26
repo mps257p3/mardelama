@@ -1,7 +1,8 @@
+import { Voltar } from '../../ui/Voltar'
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, ArrowUpRight, BookOpen, FileText, Heart, Link2, Plus, Search, Video } from 'lucide-react'
+import { ArrowUpRight, BookOpen, FileText, Heart, Link2, Plus, Search, Video } from 'lucide-react'
 import { db } from '../../db/schema'
 import { secaoDaCategoria, secaoPorSlug, type SecaoBib } from '../../lib/biblioteca'
 import { normaliza, textoBusca } from '../../lib/filtros'
@@ -16,7 +17,7 @@ export const semHtml = (h?: string) => (h ?? '').replace(/<[^>]+>/g, ' ').replac
 export function HeroSecao({ s, children }: { s: SecaoBib; children?: React.ReactNode }) {
   return (
     <>
-      <Link to="/biblioteca" className="back"><ArrowLeft size={15} />Biblioteca</Link>
+      <Voltar to="/biblioteca">Biblioteca</Voltar>
       <figure className="bib-hero">
         <CapaImg s={s} />
         <span className="bib-veu" />

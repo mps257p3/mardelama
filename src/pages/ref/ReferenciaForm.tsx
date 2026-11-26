@@ -1,6 +1,7 @@
+import { Voltar } from '../../ui/Voltar'
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Pipette, Plus, X } from 'lucide-react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Pipette, Plus, X } from 'lucide-react'
 import { db, novo, type Referencia } from '../../db/schema'
 import { useGrupos } from '../../db/hooks'
 import { extrairPaleta } from '../../lib/paleta'
@@ -53,7 +54,7 @@ export default function ReferenciaForm() {
 
   return (
     <div className="page" style={{ maxWidth: 900 }}>
-      <Link to={r.id ? `/referencias/${r.id}` : '/referencias/acervo'} className="back"><ArrowLeft size={15} />Voltar</Link>
+      <Voltar to={r.id ? `/referencias/${r.id}` : '/referencias/acervo'}>Voltar</Voltar>
       <p className="eyebrow">{r.id ? 'Editar referência' : 'Nova referência'}</p>
       <h1 style={{ marginTop: 8, marginBottom: 28 }}>{r.titulo || 'Sem título'}</h1>
       <div className="form">

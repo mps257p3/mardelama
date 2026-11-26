@@ -1,7 +1,8 @@
+import { Voltar } from '../../ui/Voltar'
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, PenTool, Plus, Trash2, X } from 'lucide-react'
+import { PenTool, Plus, Trash2, X } from 'lucide-react'
 import { db, novo, type Nota } from '../../db/schema'
 import { excluir } from '../../db/hooks'
 import { salvarArquivo } from '../../db/files'
@@ -50,7 +51,7 @@ export default function NotaEditor() {
 
   return (
     <div className="page" style={{ maxWidth: 820 }}>
-      <Link to="/caderno" className="back"><ArrowLeft size={15} />Caderno</Link>
+      <Voltar to="/caderno">Caderno</Voltar>
       <p className="eyebrow">{d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · <span style={{ textTransform: 'none', letterSpacing: 0 }}>{salvo ? 'salvo' : 'salvando…'}</span></p>
       <input className="serif" value={n.titulo ?? ''} placeholder="Título (opcional)" onChange={(e) => set('titulo')(e.target.value)}
         style={{ fontSize: 'clamp(32px,4vw,44px)', border: 0, background: 'none', width: '100%', padding: 0, margin: "8px 0 16px", outline: 'none', color: 'var(--ink)' }} />

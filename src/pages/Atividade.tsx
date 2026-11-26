@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom'
+import { Voltar } from '../ui/Voltar'
+
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft } from 'lucide-react'
+
 import { atividadeRecente } from '../lib/atividade'
 import { LinhaItem } from '../ui/itens'
 
@@ -9,7 +10,7 @@ export default function Atividade() {
   const dia = (t: number) => new Date(t).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
   return (
     <div className="page" style={{ maxWidth: 760 }}>
-      <Link to="/" className="back"><ArrowLeft size={15} />Início</Link>
+      <Voltar to="/">Início</Voltar>
       <h1 className="titulo-pagina">Atividade recente</h1>
       <div style={{ marginTop: 16 }}>
         {itens?.map((r, i) => {

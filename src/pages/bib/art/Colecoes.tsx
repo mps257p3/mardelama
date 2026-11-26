@@ -1,7 +1,8 @@
+import { Voltar } from '../../../ui/Voltar'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Check, FolderHeart, Plus, Trash2, X } from 'lucide-react'
+import { Check, FolderHeart, Plus, Trash2, X } from 'lucide-react'
 import { db, novo, type Colecao, type Tipo } from '../../../db/schema'
 import { excluir } from '../../../db/hooks'
 import { resumo, ROTULO, type Resumo } from '../../../lib/entidades'
@@ -42,7 +43,7 @@ export function ColecoesLista() {
   const nav = useNavigate()
   return (
     <div className="page bib" style={{ maxWidth: 900 }}>
-      <Link to="/biblioteca/artistas" className="back"><ArrowLeft size={15} />Artistas</Link>
+      <Voltar to="/biblioteca/artistas">Artistas</Voltar>
       <h1 className="titulo-pagina">Coleções pessoais</h1>
       <p className="muted" style={{ marginTop: 6 }}>Agrupe artistas, obras, referências e estudos por tema de pesquisa.</p>
       <div className="lista" style={{ marginTop: 18 }}>
@@ -63,7 +64,7 @@ export function ColecaoDetalhe() {
   if (!c || c.excluido) return <div className="page"><p>Coleção não encontrada.</p></div>
   return (
     <div className="page bib" style={{ maxWidth: 1000 }}>
-      <Link to="/biblioteca/colecoes" className="back"><ArrowLeft size={15} />Coleções</Link>
+      <Voltar to="/biblioteca/colecoes">Coleções</Voltar>
       <div className="head"><h1 className="titulo-pagina">{c.nome}</h1>
         <button className="iconbtn" aria-label="Excluir coleção" onClick={async () => { if (confirm('Excluir esta coleção? Os itens continuam na Biblioteca.')) { await excluir('colecoes', c.id); nav('/biblioteca/colecoes') } }}><Trash2 size={17} /></button></div>
       <div style={{ margin: '10px 0 18px' }}><TextoEditavel valor={c.descricao} rotulo="descrição" vazio="Sem descrição." onSalvar={(v) => db.colecoes.update(c.id, { descricao: v, atualizadoEm: Date.now() })} /></div>

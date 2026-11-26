@@ -1,7 +1,8 @@
+import { Voltar } from '../../ui/Voltar'
 import { useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft } from 'lucide-react'
+
 import { db, type Ingrediente } from '../../db/schema'
 import { useReceitas } from '../../db/hooks'
 import { CLASSES, comparar } from '../../lib/receita'
@@ -36,7 +37,7 @@ export default function ReceitaComparar() {
 
   return (
     <div className="page" style={{ maxWidth: 900 }}>
-      <Link to="/receitas" className="back"><ArrowLeft size={15} />Receitas</Link>
+      <Voltar to="/receitas">Receitas</Voltar>
       <h1>Comparar formulações</h1>
       <p className="muted" style={{ marginTop: 8 }}>Compare receitas diferentes ou versões da mesma receita. A base é normalizada para 100% nos dois lados.</p>
       <div className="grade2" style={{ marginTop: 24 }}>

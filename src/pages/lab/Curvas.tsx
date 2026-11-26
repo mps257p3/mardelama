@@ -1,6 +1,7 @@
+import { Voltar } from '../../ui/Voltar'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { db, novo, type Curva } from '../../db/schema'
 import { pontosDaCurva, duracaoTexto } from '../../lib/curva'
 
@@ -14,7 +15,7 @@ export default function Curvas() {
   }
   return (
     <div className="page" style={{ maxWidth: 860 }}>
-      <Link to="/laboratorio" className="back"><ArrowLeft size={15} />Esmaltaria</Link>
+      <Voltar to="/laboratorio">Esmaltaria</Voltar>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
         <h1>Curvas de queima</h1>
         <button className="btn primary" onClick={nova}><Plus size={16} />Nova curva</button>

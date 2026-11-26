@@ -1,7 +1,8 @@
+import { Voltar } from '../../ui/Voltar'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Plus, Trash2, X } from 'lucide-react'
+import { Plus, Trash2, X } from 'lucide-react'
 import { db, type Curva, type SegmentoCurva } from '../../db/schema'
 import { pontosDaCurva, duracaoTexto } from '../../lib/curva'
 import { GraficoCurva } from '../../ui/GraficoCurva'
@@ -30,7 +31,7 @@ export default function CurvaDetalhe() {
 
   return (
     <div className="page" style={{ maxWidth: 860 }}>
-      <Link to="/curvas" className="back"><ArrowLeft size={15} />Curvas de queima</Link>
+      <Voltar to="/curvas">Curvas de queima</Voltar>
       <p className="eyebrow">{c.codigo}</p>
       <h1 style={{ marginTop: 8 }}>{c.nome}</h1>
       <p className="muted" style={{ marginTop: 6 }}>{[c.cone && `Cone ${c.cone}`, c.atmosfera, pts.length > 1 && `${max} °C`, pts.length > 1 && duracaoTexto(pts[pts.length - 1].min) + ' até o fim da última etapa', c.resfriamentoNatural ? 'depois resfriamento natural' : ''].filter(Boolean).join(' · ')}</p>

@@ -1,7 +1,8 @@
+import { Voltar } from '../../ui/Voltar'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, ImageIcon, Plus, Sparkles, Trash2 } from 'lucide-react'
+import { ImageIcon, Plus, Sparkles, Trash2 } from 'lucide-react'
 import { db, type Serie } from '../../db/schema'
 import { excluir } from '../../db/hooks'
 import { vivos } from '../../lib/artistas'
@@ -47,7 +48,7 @@ export default function SerieDetalhe() {
   return (
     <div className="page serie">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link to="/obras?aba=series" className="back"><ArrowLeft size={15} />Séries</Link>
+        <Voltar to="/obras?aba=series">Séries</Voltar>
         <Menu itens={[
           { l: 'Trocar foto de capa', icon: <ImageIcon size={16} />, onClick: () => arq.current?.click() },
           { sep: true, l: '' },

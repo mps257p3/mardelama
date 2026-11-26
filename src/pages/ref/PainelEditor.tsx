@@ -1,7 +1,8 @@
+import { Voltar } from '../../ui/Voltar'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, ArrowUpToLine, ImagePlus, Images, Palette, Trash2, Type } from 'lucide-react'
+import { ArrowUpToLine, ImagePlus, Images, Palette, Trash2, Type } from 'lucide-react'
 import { db, uid, type ItemPainel, type Painel } from '../../db/schema'
 import { excluir, useReferencias } from '../../db/hooks'
 import { salvarArquivo } from '../../db/files'
@@ -73,7 +74,7 @@ export default function PainelEditor() {
 
   return (
     <div className="page" style={{ maxWidth: 1400 }}>
-      <Link to="/paineis" className="back"><ArrowLeft size={15} />Painéis</Link>
+      <Voltar to="/paineis">Painéis</Voltar>
       <input className="serif" value={p.nome} onChange={(e) => mudar(p.itens, { nome: e.target.value })}
         style={{ fontSize: 'clamp(32px,4vw,44px)', border: 0, background: 'none', width: '100%', padding: 0, outline: 'none', color: 'var(--ink)' }} />
       <div className="toolbar">

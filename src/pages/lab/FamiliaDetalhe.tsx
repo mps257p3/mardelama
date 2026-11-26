@@ -1,7 +1,8 @@
+import { Voltar } from '../../ui/Voltar'
 import { ArtistasAfins } from '../bib/art/ArtistasAfins'
 import { Link, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { AlertTriangle, ArrowLeft } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import { db, type Familia } from '../../db/schema'
 import { TextoEditavel, ListaEditavel } from '../../ui/editavel'
 import { Relacoes } from '../../ui/Relacoes'
@@ -25,7 +26,7 @@ export default function FamiliaDetalhe() {
 
   return (
     <div className="page" style={{ maxWidth: 860 }}>
-      <Link to="/familias" className="back"><ArrowLeft size={15} />Famílias</Link>
+      <Voltar to="/familias">Famílias</Voltar>
       <p className="eyebrow">{f.codigo ?? 'Família'}{f.nomeEn ? ` · ${f.nomeEn}` : ''}</p>
       <h1 style={{ marginTop: 8 }}>{f.nome}</h1>
       {f.dificuldade != null && <p className="faint" style={{ marginTop: 6 }}>Dificuldade {f.dificuldade} de 5</p>}

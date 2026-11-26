@@ -1,7 +1,8 @@
+import { Voltar } from '../../ui/Voltar'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Check, ExternalLink, FlaskConical, Heart, Pencil, Trash2 } from 'lucide-react'
+import { Check, ExternalLink, FlaskConical, Heart, Pencil, Trash2 } from 'lucide-react'
 import { db, type IdeiaEsmalte } from '../../db/schema'
 import { alternarFavorito, excluir, useEsmaltes, useFamilias } from '../../db/hooks'
 import { normaliza } from '../../lib/filtros'
@@ -98,7 +99,7 @@ export default function IdeiaDetalhe() {
   return (
     <div className="page ideia">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link to="/ideias" className="back"><ArrowLeft size={15} />Ideias</Link>
+        <Voltar to="/ideias">Ideias</Voltar>
         <div style={{ display: 'flex', gap: 2 }}>
           <button className="iconbtn" aria-label="Favoritar" onClick={() => alternarFavorito('ideias', i.id, i.favorito)}><Heart size={19} fill={i.favorito ? 'currentColor' : 'none'} /></button>
           <Menu itens={[

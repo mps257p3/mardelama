@@ -1,6 +1,7 @@
+import { Voltar } from '../../ui/Voltar'
 import { useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, FolderInput } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { FolderInput } from 'lucide-react'
 import { importarPinterest, imagemDoPin, lerExportacaoPinterest, type ExportacaoPinterest } from '../../lib/pinterest'
 import { useToast } from '../../ui/toast'
 import { ContaPinterest } from './ContaPinterest'
@@ -38,7 +39,7 @@ export default function ImportarPinterest() {
 
   return (
     <div className="page" style={{ maxWidth: 720 }}>
-      <Link to="/referencias/acervo" className="back"><ArrowLeft size={15} />Referências</Link>
+      <Voltar to="/referencias/acervo">Referências</Voltar>
       <p className="eyebrow">Repertório</p>
       <h1 style={{ marginTop: 6 }}>Pinterest</h1>
       <PastasRss />

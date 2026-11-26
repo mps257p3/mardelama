@@ -1,3 +1,5 @@
+import { useFecharComVoltar } from './voltarFecha'
+import { travarRolagem } from './rolagem'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronLeft, ChevronRight, ImagePlus, Trash2, X } from 'lucide-react'
@@ -24,6 +26,7 @@ function useEscolherFotos(aoSalvar: (ids: string[]) => unknown) {
 export function Visor({ fotos, inicio, onClose, onRemover, legenda }: {
   fotos: string[]; inicio: number; onClose: () => void; onRemover?: (id: string) => unknown; legenda?: string
 }) {
+  useFecharComVoltar(onClose)
   const [i, setI] = useState(inicio)
   const toque = useRef<number | undefined>(undefined)
   const n = fotos.length
@@ -31,8 +34,8 @@ export function Visor({ fotos, inicio, onClose, onRemover, legenda }: {
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); if (e.key === 'ArrowLeft') ir(-1); if (e.key === 'ArrowRight') ir(1) }
     window.addEventListener('keydown', k)
-    const o = document.body.style.overflow; document.body.style.overflow = 'hidden'
-    return () => { window.removeEventListener('keydown', k); document.body.style.overflow = o }
+    const soltar = travarRolagem()
+    return () => { window.removeEventListener('keydown', k); soltar() }
   })
   useEffect(() => { if (i >= n) setI(Math.max(0, n - 1)); if (!n) onClose() }, [n, i, onClose])
   if (!n) return null

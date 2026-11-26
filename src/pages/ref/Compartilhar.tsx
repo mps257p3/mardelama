@@ -1,6 +1,7 @@
+import { Voltar } from '../../ui/Voltar'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, BookOpen, FlaskConical, ImagePlus, Image as ImageIcon, Palette, Sparkles, Trash2 } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { BookOpen, FlaskConical, ImagePlus, Image as ImageIcon, Palette, Sparkles, Trash2 } from 'lucide-react'
 import { MAX_LEITURA, NAO_SEI, abrirPdfs, ehLinkDeArquivo, ehPdf, ehInstagram, guardar, temNaoSei, lerComIA, lerRecebido, limparRecebido, previaDoLink, type Destino, type Leitura, type Previa, type Recebido, type Resposta } from '../../lib/recebidos'
 import { useToast } from '../../ui/toast'
 
@@ -124,7 +125,7 @@ export default function Compartilhar() {
 
   return (
     <div className="page recebido" style={{ maxWidth: 760 }}>
-      <Link to="/" className="back"><ArrowLeft size={15} />Início</Link>
+      <Voltar to="/">Início</Voltar>
       <p className="eyebrow">Recebido</p>
       <h1 style={{ marginTop: 8, marginBottom: 18 }}>{vazio ? 'Trazer para o app' : titulo || (lendo ? 'Lendo…' : 'Sem título')}</h1>
 
