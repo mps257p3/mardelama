@@ -151,13 +151,13 @@ export const SEMENTES: Semente[] = [
   },
 ]
 
-async function arquivo(url: string, id: string, tipo: 'comercial' | 'esmalte' = 'comercial') {
+async function arquivo(url: string, id: string) {
   try {
     const r = await fetch(url)
     const b = r.ok ? await r.blob() : undefined
     if (!b?.type.startsWith('image/')) return undefined
     const { salvarArquivo } = await import('./files')
-    return await salvarArquivo(new File([b], url.split('/').pop()!, { type: b.type }), { tipo, id })
+    return await salvarArquivo(new File([b], url.split('/').pop()!, { type: b.type }), { tipo: 'comercial', id })
   } catch { return undefined }
 }
 
@@ -453,11 +453,11 @@ export async function temperaturaNasFormulas() {
 
 /**
  * 26/11: os dois potes do Marcelo, cadastrados em Esmaltes a partir das fotos dos rótulos (frente, verso e etiqueta da Zeramics).
- * Tudo vem do que está impresso no rótulo. Foto do pote em /public/seed/esmaltes; fotos da marca baixadas uma vez, como nos estudos.
+ * Tudo vem do que está impresso no rótulo. As fotos do pote serviram só de base: na ficha entram as fotos do site da marca.
  */
-const ROTULOS: { id: string; estudo: string; foto: string; marca: string[]; dados: Omit<import('./schema').Esmalte, 'id' | 'criadoEm' | 'atualizadoEm' | 'fotos' | 'codigo' | 'excluido' | 'favorito'> }[] = [
+const ROTULOS: { id: string; estudo: string; pote: string; marca: string[]; dados: Omit<import('./schema').Esmalte, 'id' | 'criadoEm' | 'atualizadoEm' | 'fotos' | 'codigo' | 'excluido' | 'favorito'> }[] = [
   {
-    id: 'esm-coyote-mbg164', estudo: 'com-er-001', foto: '/seed/esmaltes/coyote-crystal-nebula-pote.jpg',
+    id: 'esm-coyote-mbg164', estudo: 'com-er-001', pote: 'coyote-crystal-nebula-pote.jpg',
     marca: EXTRAS[0].marca,
     dados: {
       nome: 'Crystal Nebula', autoria: 'Coyote Clay & Color', origem: 'comercial', familias: ['fam-b07'],
@@ -475,7 +475,7 @@ const ROTULOS: { id: string; estudo: string; foto: string; marca: string[]; dado
     },
   },
   {
-    id: 'esm-mayco-pc602', estudo: 'com-er-002', foto: '/seed/esmaltes/mayco-white-cascade-frasco.jpg',
+    id: 'esm-mayco-pc602', estudo: 'com-er-002', pote: 'mayco-white-cascade-frasco.jpg',
     marca: EXTRAS[1].marca,
     dados: {
       nome: 'White Cascade', autoria: 'Mayco', origem: 'comercial', familias: ['fam-b08'],
@@ -500,10 +500,8 @@ export async function esmaltesDosRotulos() {
     const chave = 'seed-esmalte-rotulo:' + s.id
     if (!(await db.ajustes.get(chave))) {
       if (!(await db.esmaltes.get(s.id))) {
-        const foto = await arquivo(s.foto, s.id, 'esmalte')
-        if (!foto) continue
         const t = Date.now()
-        await db.esmaltes.add({ id: s.id, criadoEm: t, atualizadoEm: t, excluido: 0, favorito: 0, codigo: await proximoCodigo('E', 'esmaltes', 3), fotos: [foto], ...s.dados })
+        await db.esmaltes.add({ id: s.id, criadoEm: t, atualizadoEm: t, excluido: 0, favorito: 0, codigo: await proximoCodigo('E', 'esmaltes', 3), fotos: [], ...s.dados })
         if (await db.comerciais.get(s.estudo)) {
           await db.relacoes.add({ id: 'rel-' + s.id, aTipo: 'esmalte', aId: s.id, bTipo: 'comercial', bId: s.estudo, criadoEm: t, atualizadoEm: t, excluido: 0 }).catch(() => undefined)
         }
@@ -511,9 +509,22 @@ export async function esmaltesDosRotulos() {
       await db.ajustes.put({ chave, valor: true })
     }
     const chaveFotos = 'seed-esmalte-rotulo-fotos:' + s.id
-    if (await db.ajustes.get(chaveFotos)) continue
     const e = await db.esmaltes.get(s.id)
     if (!e || e.excluido) continue
+    // a primeira versão guardava a foto do pote na ficha: sai, e ficam só as fotos do site
+    const chavePote = 'fix-esmalte-rotulo-sem-pote:' + s.id
+    if (!(await db.ajustes.get(chavePote))) {
+      const arqs = await db.arquivos.bulkGet(e.fotos)
+      const pote = arqs.filter((a) => a?.nome === s.pote).map((a) => a!.id)
+      if (pote.length) {
+        for (const f of pote) await db.arquivos.update(f, { excluido: 1, atualizadoEm: Date.now() })
+        const resto = e.fotos.filter((f) => !pote.includes(f))
+        await db.esmaltes.update(s.id, { fotos: resto, atualizadoEm: Date.now() })
+        if (!resto.length) await db.ajustes.delete(chaveFotos)
+      }
+      await db.ajustes.put({ chave: chavePote, valor: true })
+    }
+    if (await db.ajustes.get(chaveFotos)) continue
     const { fotosDoFabricante } = await import('../lib/comercial')
     const novas = await fotosDoFabricante(s.id, s.marca, 'esmalte').catch(() => [])
     if (!novas.length) continue
