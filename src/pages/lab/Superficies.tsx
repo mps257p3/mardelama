@@ -40,7 +40,7 @@ export default function Superficies({ aba, entrada }: { aba: Aba; entrada?: bool
   const ABAS: [Aba, string][] = [['esmaltes', 'Esmaltes'], ['receitas', 'Fórmulas'], ['testes', 'Testes'], ['ideias', 'Ideias']]
   return (
     <div className="page">
-      <Link to="/superficies" className="back"><ArrowLeft size={15} />Superfícies</Link>
+      <Link to="/laboratorio" className="back"><ArrowLeft size={15} />Laboratório</Link>
       <div className="topo-c">
         <h1>Superfícies</h1>
         <div className="icones">
