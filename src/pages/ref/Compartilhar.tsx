@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, BookOpen, FlaskConical, ImagePlus, Image as ImageIcon, Sparkles, Trash2 } from 'lucide-react'
-import { ehInstagram, guardar, lerComIA, lerRecebido, limparRecebido, previaDoLink, type Destino, type Leitura, type Previa, type Recebido, type Resposta } from '../../lib/recebidos'
+import { NAO_SEI, ehInstagram, guardar, temNaoSei, lerComIA, lerRecebido, limparRecebido, previaDoLink, type Destino, type Leitura, type Previa, type Recebido, type Resposta } from '../../lib/recebidos'
 import { useToast } from '../../ui/toast'
 
 const DESTINOS: { id: Destino; nome: string; desc: string; icone: typeof FlaskConical }[] = [
@@ -29,6 +29,7 @@ export default function Compartilhar() {
   const [respostas, setRespostas] = useState<Record<string, string>>({})
   const [respondidas, setRespondidas] = useState<Resposta[]>([])
   const [rodada, setRodada] = useState(0)
+  const [pesquisar, setPesquisar] = useState(false)
   const arquivo = useRef<HTMLInputElement>(null)
 
   // o que chegou: do service worker (POST com fotos) ou pelo endereço (link e texto)
@@ -55,7 +56,7 @@ export default function Compartilhar() {
       let p = previa
       if (!rodada) { p = r.url && !r.imagens.length && !ehInstagram(r.url) ? await previaDoLink(r.url) : undefined; if (!vivo) return; setPrevia(p) }
       try {
-        const l = await lerComIA(r, p, respondidas)
+        const l = await lerComIA(r, p, respondidas, leitura, pesquisar)
         if (!vivo) return
         setLeitura(l); setRespostas({})
         if (!l) setErroIA('A leitura automática não está ligada. Escolha o destino abaixo.')
@@ -101,7 +102,7 @@ export default function Compartilhar() {
   function responder() {
     const novas = (leitura?.perguntas ?? []).map((q) => ({ pergunta: q.pergunta, resposta: (respostas[q.pergunta] ?? '').trim() })).filter((x) => x.resposta)
     if (!novas.length) return
-    setRespondidas([...respondidas, ...novas]); setRodada((n) => n + 1)
+    setRespondidas([...respondidas, ...novas]); setPesquisar(temNaoSei(novas)); setRodada((n) => n + 1)
   }
 
   const perguntas = !lendo ? leitura?.perguntas ?? [] : []
@@ -134,7 +135,7 @@ export default function Compartilhar() {
         {r.url && ehInstagram(r.url) && !r.imagens.length && <p className="faint recebido-aviso">O Instagram não deixa abrir o post por link. Para ler a imagem e a legenda, compartilhe um print.</p>}
 
         <section className="recebido-leitura">
-          {lendo && <p className="recebido-lendo"><Sparkles size={15} />Lendo a imagem e preenchendo os campos… leva uns 20 segundos.</p>}
+          {lendo && <p className="recebido-lendo"><Sparkles size={15} />{pesquisar ? 'Procurando na internet o que você não sabia… pode levar 1 ou 2 minutos.' : 'Lendo a imagem e preenchendo os campos… leva uns 20 segundos.'}</p>}
           {erroIA && !lendo && <p className="faint">{erroIA} {erroIA.startsWith('A leitura não') && <button className="btn sm" onClick={() => setRodada((n) => n + 1)}>Tentar de novo</button>}</p>}
           {leitura && <>
             {leitura.resumo && <p>{leitura.resumo}</p>}
@@ -150,8 +151,8 @@ export default function Compartilhar() {
             {perguntas.map((q) => (
               <div key={q.pergunta} className="recebido-q">
                 <p>{q.pergunta}</p>
-                {q.opcoes.length > 0 && <div className="chips">{q.opcoes.map((o) => <button key={o} className={'chip' + (respostas[q.pergunta] === o ? ' on' : '')} onClick={() => setRespostas({ ...respostas, [q.pergunta]: o })}>{o}</button>)}</div>}
-                <input className="input" placeholder="Ou escreva aqui" value={q.opcoes.includes(respostas[q.pergunta] ?? '') ? '' : respostas[q.pergunta] ?? ''} onChange={(e) => setRespostas({ ...respostas, [q.pergunta]: e.target.value })} />
+                <div className="chips">{[...q.opcoes.filter((o) => o !== NAO_SEI), NAO_SEI].map((o) => <button key={o} className={'chip' + (respostas[q.pergunta] === o ? ' on' : '')} onClick={() => setRespostas({ ...respostas, [q.pergunta]: o })}>{o}</button>)}</div>
+                <input className="input" placeholder="Ou escreva aqui" value={[...q.opcoes, NAO_SEI].includes(respostas[q.pergunta] ?? '') ? '' : respostas[q.pergunta] ?? ''} onChange={(e) => setRespostas({ ...respostas, [q.pergunta]: e.target.value })} />
               </div>
             ))}
             <button className="btn primary" disabled={!Object.values(respostas).some((v) => v.trim())} onClick={responder}><Sparkles size={15} />Responder e completar</button>
