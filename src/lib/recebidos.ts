@@ -1,4 +1,4 @@
-import { db, novo, type Referencia } from '../db/schema'
+import { db, novo, type Artista, type Obra, type Referencia } from '../db/schema'
 import { cabecalhoLogin } from './login'
 import { chamar, iaConfigurada, paraBase64 } from './iaRepertorio'
 import { novaIdeia } from './ideias'
@@ -14,7 +14,7 @@ export interface Recebido {
 
 export interface Previa { imagem?: string; titulo?: string; site?: string; erro?: string }
 
-export type Destino = 'ideia' | 'referencia' | 'nota'
+export type Destino = 'ideia' | 'referencia' | 'nota' | 'artista'
 
 export interface Leitura {
   titulo: string
@@ -74,14 +74,38 @@ export const temNaoSei = (rs: Resposta[]) => rs.some((x) => x.resposta === NAO_S
 /** Com "Não sei" em alguma resposta, o servidor pesquisa na internet antes de preencher (demora mais). */
 export async function lerComIA(r: Recebido, previa?: Previa, respostas: Resposta[] = [], anterior?: Leitura, pesquisar = false): Promise<Leitura | undefined> {
   if (!(await iaConfigurada())) return undefined
-  const imagens = await Promise.all(r.imagens.slice(0, 4).map(async (b) => ({ base64: await paraBase64(b), tipo: 'image/jpeg' })))
-  return chamar<Leitura>({ acao: 'receber', imagens, titulo: r.titulo, texto: r.texto, url: r.url, previa: previa && !previa.erro ? previa : undefined, respostas, pesquisar,
+  const imagens = await Promise.all(r.imagens.slice(0, MAX_LEITURA).map(async (b) => ({ base64: await paraBase64(b), tipo: 'image/jpeg' })))
+  return chamar<Leitura>({ acao: 'receber', imagens, total: r.imagens.length, titulo: r.titulo, texto: r.texto, url: r.url, previa: previa && !previa.erro ? previa : undefined, respostas, pesquisar,
     contexto: anterior ? { titulo: anterior.titulo, autor: anterior.autor, resumo: anterior.resumo, transcricao: anterior.transcricao } : undefined }, pesquisar ? 175000 : 90000)
 }
 
-async function guardarImagens(r: Recebido, tipo: 'ideia' | 'referencia' | 'nota', id: string) {
+async function guardarImagens(r: Recebido, tipo: 'ideia' | 'referencia' | 'nota' | 'obra', id: string) {
   const { salvarArquivo } = await import('../db/files')
   return Promise.all(r.imagens.map((b, i) => salvarArquivo(new File([b], `recebido-${i + 1}.${(b.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg')}`, { type: b.type || 'image/jpeg' }), { tipo, id })))
+}
+
+/** A IA lê só as primeiras; todas as fotos do envio vão juntas para a mesma ficha. */
+export const MAX_LEITURA = 4
+
+const semAcento = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/^@/, '').replace(/[^a-z0-9]/g, '')
+
+/** Acha o artista pelo nome ou @perfil; se não houver, cria um novo com o que foi lido. */
+async function artistaDe(r: Recebido, l?: Leitura, previa?: Previa): Promise<Artista> {
+  const nome = (l?.autor || r.titulo || previa?.titulo || '').trim()
+  const chave = semAcento(nome)
+  if (chave) {
+    const achado = (await db.artistas.toArray()).find((a) => !a.excluido && [a.nome, a.nomeOriginal, a.instagram].some((x) => x && semAcento(x.replace(/^https?:\/\/(www\.)?instagram\.com\//, '').replace(/\/$/, '')) === chave))
+    if (achado) return achado
+  }
+  const insta = ehInstagram(r.url) ? r.url : nome.startsWith('@') ? `https://www.instagram.com/${nome.slice(1)}/` : undefined
+  const a = novo({
+    nome: nome || 'Artista sem nome', pais: [], caracteristicas: [], processos: [], estudar: [], publicacoes: [], fontes: [], relacionados: [], tags: l?.tags ?? [],
+    tecnicas: [], materiais: [], esmaltes: [], queimas: [], esteticas: [], tiposObra: [], origem: 'usuario',
+    instagram: insta, site: r.url && !ehInstagram(r.url) ? r.url : undefined, links: r.url ? [r.url] : [],
+    notas: [l?.resumo, l?.transcricao].filter(Boolean).map((p) => `<p>${escapar(p as string).replace(/\n/g, '<br>')}</p>`).join('') || undefined,
+  }) as Artista
+  await db.artistas.add(a)
+  return a
 }
 
 const escapar = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -116,6 +140,17 @@ export async function guardar(destino: Destino, r: Recebido, l?: Leitura, previa
     const imagens = await guardarImagens(r, 'referencia', x.id)
     if (imagens.length) await db.referencias.update(x.id, { imagens })
     caminho = `/referencias/${x.id}`
+  } else if (destino === 'artista') {
+    const a = await artistaDe(r, l, previa)
+    // cada foto vira uma obra do mesmo artista; sem fotos, a imagem do link
+    const base = { artistaId: a.id, titulo: l?.titulo || undefined, fonte: r.url, credito: fonte, tags: l?.tags ?? [], notas: transcricao || undefined }
+    const ids: string[] = []
+    if (r.imagens.length) for (const _ of r.imagens) { const o = novo(base) as Obra; await db.obras.add(o); ids.push(o.id) }
+    else if (externa) { const o = novo({ ...base, imagem: externa }) as Obra; await db.obras.add(o); ids.push(o.id) }
+    const arqs = await Promise.all(r.imagens.map(async (b, i) => (await import('../db/files')).salvarArquivo(new File([b], `recebido-${i + 1}.jpg`, { type: b.type || 'image/jpeg' }), { tipo: 'obra', id: ids[i] })))
+    for (let i = 0; i < arqs.length; i++) await db.obras.update(ids[i], { arquivo: arqs[i] })
+    if (!a.capa && ids[0]) await db.artistas.update(a.id, { capa: ids[0], atualizadoEm: Date.now() })
+    caminho = `/biblioteca/artistas/${a.id}`
   } else {
     const n = novo({
       titulo: titulo || undefined, imagens: [], arquivos: [], audios: [], tags: l?.tags ?? [], paleta: [], links: r.url ? [r.url] : [],
