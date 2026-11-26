@@ -13,6 +13,7 @@ const MAX = 1500
 /** Preço por milhão de tokens, em US$: entrada, saída, cache lido, cache escrito. */
 const PRECOS: Record<string, [number, number, number, number]> = {
   'claude-opus-5-5': [4, 20, 0.2, 5],
+  'claude-sonnet-5-5': [2, 10, 0.1, 2.5],
   'claude-haiku-5-5': [0.1, 0.5, 0.01, 0.125],
 }
 const BUSCA = 10 / 1000 // US$ 10 a cada mil buscas na web
