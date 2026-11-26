@@ -62,3 +62,45 @@ export function EscolherPainel({ ids, onClose }: { ids: string[]; onClose: () =>
     {!paineis?.length && <p className="faint" style={{ marginTop: 10 }}>Ou veja os <Link to="/paineis" style={{ textDecoration: 'underline' }}>painéis</Link>.</p>}
   </Sheet>
 }
+
+/**
+ * Leva referências para uma obra que vai acontecer (Minhas obras). Uma obra pode juntar várias referências;
+ * a ligação fica em Conexões e aparece em "Referências" na página da obra.
+ */
+export function EscolherObra({ ids, onClose }: { ids: string[]; onClose: () => void }) {
+  const toast = useToast()
+  const [nome, setNome] = useState('')
+  const pecas = useLiveQuery(async () => (await db.entrada.toArray())
+    .filter((p) => !p.excluido && p.etapa !== 'pronta')
+    .sort((a, b) => (a.etapa === 'ideia' ? 0 : 1) - (b.etapa === 'ideia' ? 0 : 1) || b.atualizadoEm - a.atualizadoEm), [], [])
+  async function levar(pid: string, titulo: string) {
+    const ja = await db.relacoes.where('[bTipo+bId]').equals(['entrada', pid]).toArray()
+    const novos = ids.filter((rid) => !ja.some((x) => !x.excluido && x.aTipo === 'referencia' && x.aId === rid))
+    const agora = Date.now()
+    await db.relacoes.bulkAdd(novos.map((rid) => ({ id: uid(), aTipo: 'referencia' as const, aId: rid, bTipo: 'entrada' as const, bId: pid, criadoEm: agora, atualizadoEm: agora, excluido: 0 as const })))
+    await db.entrada.update(pid, { atualizadoEm: agora })
+    toast(`Levada a "${titulo || 'obra sem título'}". Está em Minhas obras.`)
+    onClose()
+  }
+  async function criar() {
+    const titulo = nome.trim(); if (!titulo) return
+    const { novaPeca } = await import('../obras/comum')
+    await levar(await novaPeca({ titulo }), titulo)
+  }
+  return <Sheet label="Levar a uma obra" alto onClose={onClose}>
+    <h3>Levar a uma obra</h3>
+    <p className="faint" style={{ fontSize: 13.5, marginTop: 4 }}>Junte referências para uma peça que ainda vai acontecer. Uma obra pode ter várias.</p>
+    <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+      <input className="input" placeholder="Nova obra (ex.: Vaso de muitas bocas)" value={nome} onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void criar() }} />
+      <button className="btn primary" disabled={!nome.trim()} onClick={criar}><Plus size={15} />Criar</button>
+    </div>
+    {pecas.length > 0 && <p className="eyebrow" style={{ marginTop: 18 }}>Obras em andamento</p>}
+    <div className="lista" style={{ marginTop: 6 }}>
+      {pecas.map((p) => (
+        <button key={p.id} className="row" style={{ gridTemplateColumns: '1fr auto', background: 'none', border: 0, borderBottom: '1px solid var(--line)', width: '100%', textAlign: 'left' }} onClick={() => levar(p.id, p.titulo)}>
+          <span className="t" style={{ fontSize: 17 }}>{p.titulo || 'Sem título'}</span><span className="faint">{p.etapa === 'ideia' ? 'Ideia' : 'Em processo'}</span>
+        </button>
+      ))}
+    </div>
+  </Sheet>
+}
