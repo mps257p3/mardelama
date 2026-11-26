@@ -4,7 +4,7 @@ import { incluidoEm } from '../../lib/data'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Copy, FlaskConical, Heart, Pencil, Plus, ScrollText, Trash2, TestTube } from 'lucide-react'
+import { Copy, Download, FlaskConical, Heart, Pencil, Plus, ScrollText, Trash2, TestTube } from 'lucide-react'
 import { db, novo } from '../../db/schema'
 import { alternarFavorito, excluir, useFamilias } from '../../db/hooks'
 import { proximoCodigo } from '../../db/codigos'
@@ -28,6 +28,7 @@ export default function EsmalteDetalhe() {
   const receita = useLiveQuery(async () => (e?.receitaId ? db.receitas.get(e.receitaId) : undefined), [e?.receitaId])
   const testes = useLiveQuery(async () => (await db.testes.where('esmalteId').equals(id!).toArray()).filter((t) => !t.excluido).sort((a, b) => b.data.localeCompare(a.data)), [id])
   const [verTestes, setVerTestes] = useState(false)
+  const [exportando, setExportando] = useState<string>()
   // esmalte comercial: o botão vira Engenharia reversa e leva ao estudo (ou cria um)
   const estudo = useLiveQuery(async () => (e?.origem === 'comercial' ? (await import('../../lib/comercial')).estudoDoEsmalte(e) : undefined), [e])
   const aprovada = useLiveQuery(async () => (estudo?.receita?.aprovadaId ? db.receitas.get(estudo.receita.aprovadaId) : undefined), [estudo?.receita?.aprovadaId])
@@ -115,6 +116,11 @@ export default function EsmalteDetalhe() {
             <Link className="btn sm primary" to={`/esmaltes/${e.id}/editar`}><Pencil size={14} />Editar</Link>
                         <button className="btn sm" onClick={() => alternarFavorito('esmaltes', e.id, e.favorito)}><Heart size={14} fill={e.favorito ? 'currentColor' : 'none'} />{e.favorito ? 'Favorito' : 'Favoritar'}</button>
             <button className="btn sm ghost" onClick={duplicar}><Copy size={14} />Duplicar</button>
+            <button className="btn sm ghost" disabled={!!exportando} onClick={async () => {
+              setExportando('Preparando…')
+              try { const { exportarEsmalte } = await import('../../lib/exportarEsmalte'); await exportarEsmalte(e, setExportando); toast('Ficha exportada') }
+              catch (x) { toast('Não consegui exportar: ' + (x as Error).message) } finally { setExportando(undefined) }
+            }}><Download size={14} />Exportar</button>
             <button className="btn sm ghost" onClick={async () => { if (confirm(`Excluir "${e.nome}"?`)) { await excluir('esmaltes', e.id); toast('Esmalte excluído'); nav('/esmaltes') } }}><Trash2 size={14} />Excluir</button>
           </div>
 
@@ -132,6 +138,7 @@ export default function EsmalteDetalhe() {
       </div>
       <GaleriaPecas titulo="Peças com este esmalte" fotos={e.pecas ?? []}
         onChange={(v) => db.esmaltes.update(e.id, { pecas: v, atualizadoEm: Date.now() })} />
+      {exportando && <div className="sync-pill" role="status">{exportando}</div>}
     </div>
   )
 }
