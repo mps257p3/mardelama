@@ -1,5 +1,5 @@
+import { LinkSegurar } from '../../ui/Segurar'
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { Columns2, Download, GitBranch, Grid2x2, Layers, List, ScrollText, Search } from 'lucide-react'
 import { Menu } from '../../ui/Menu'
 import { Foto } from '../../ui/form'
@@ -67,7 +67,7 @@ export default function Receitas({ embutido, familia }: { embutido?: boolean; fa
           {lista.map((r) => {
             const f = r.fotos?.[0] ?? r.pecas?.[0] ?? (r.esmalteId ? fotoEsm.get(r.esmalteId) : undefined)
             return (
-              <Link key={r.id} to={`/receitas/${r.id}`} className="peca">
+              <LinkSegurar key={r.id} to={`/receitas/${r.id}`} className="peca" opcoes={{ tabela: 'receitas', id: r.id, titulo: r.nome, nome: 'fórmula' }}>
                 <div className="ph">
                   {f ? <Foto id={f} alt={r.nome} /> : r.origemId ? <GitBranch size={28} strokeWidth={1.1} /> : <ScrollText size={28} strokeWidth={1.1} />}
                   {r.codigo && <span className="cod">{r.codigo}</span>}
@@ -76,21 +76,21 @@ export default function Receitas({ embutido, familia }: { embutido?: boolean; fa
                   <div className="t">{r.nome}</div>
                   <div className="s">{[r.status, r.ehBase ? 'Base reutilizável' : '', 'v' + r.versaoAtual].filter(Boolean).join(' · ')}</div>
                 </div>
-              </Link>
+              </LinkSegurar>
             )
           })}
         </div>
       ) : (
         <div className="lista">
           {lista.map((r) => (
-            <Link key={r.id} to={`/receitas/${r.id}`}>
+            <LinkSegurar key={r.id} to={`/receitas/${r.id}`} opcoes={{ tabela: 'receitas', id: r.id, titulo: r.nome, nome: 'fórmula' }}>
               <div className="mini">{(r.fotos?.[0] ?? (r.esmalteId && fotoEsm.get(r.esmalteId))) ? <Foto id={r.fotos?.[0] ?? fotoEsm.get(r.esmalteId!)} /> : r.origemId ? <GitBranch size={20} strokeWidth={1.2} /> : <ScrollText size={20} strokeWidth={1.2} />}</div>
               <div>
                 <div className="t">{r.codigo && <span className="codigo" style={{ marginRight: 8, color: 'var(--area)' }}>{r.codigo}</span>}{r.nome}</div>
                 <div className="s">{[r.status, (r.familias ?? []).map((f) => codFam.get(f)).filter(Boolean).join(' ') , r.ehBase ? 'Base reutilizável' : '', r.esmalteId && nomeEsm.get(r.esmalteId), r.origemId && 'variação de ' + (nomeRec.get(r.origemId) ?? '…'), r.ingredientes.length + ' ingredientes'].filter(Boolean).join(' · ')}</div>
               </div>
               <div className="r">v{r.versaoAtual}<br /><span className="faint">base {fmt(somaBase(r.ingredientes), 1)}%</span></div>
-            </Link>
+            </LinkSegurar>
           ))}
         </div>
       )}

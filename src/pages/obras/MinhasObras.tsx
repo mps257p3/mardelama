@@ -1,3 +1,4 @@
+import { LinkSegurar } from '../../ui/Segurar'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -57,7 +58,7 @@ export default function MinhasObras() {
 
   if (!pecas) return null
   const grade = (xs: Peca[], vazio: string) => xs.length
-    ? <div className="obras-mural">{xs.map((p) => <Link key={p.id} to={`/obras/peca/${p.id}`} className="obra-card"><CartaoPeca p={p} serie={p.serieId ? porSerie.get(p.serieId) : undefined} /></Link>)}</div>
+    ? <div className="obras-mural">{xs.map((p) => <LinkSegurar key={p.id} to={`/obras/peca/${p.id}`} className="obra-card" opcoes={{ tabela: 'entrada', id: p.id, titulo: p.titulo ?? '', favorito: p.favorito, nome: 'peça' }}><CartaoPeca p={p} serie={p.serieId ? porSerie.get(p.serieId) : undefined} /></LinkSegurar>)}</div>
     : <p className="faint">{vazio}</p>
 
   return (

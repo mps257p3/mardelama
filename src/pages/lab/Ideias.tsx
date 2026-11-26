@@ -1,5 +1,6 @@
+import { LinkSegurar } from '../../ui/Segurar'
 import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Heart, Plus, Search } from 'lucide-react'
 import { db } from '../../db/schema'
@@ -41,14 +42,14 @@ export default function Ideias({ familia }: { familia?: string }) {
       </div>}
       {lista.length === 0 && <p className="faint">Nenhuma ideia com esse filtro.</p>}
       <div className="mural">{lista.map((i) => (
-        <Link key={i.id} to={`/ideias/${i.id}`} className="ref">
+        <LinkSegurar key={i.id} to={`/ideias/${i.id}`} className="ref" opcoes={{ tabela: 'ideias', id: i.id, titulo: i.titulo, favorito: i.favorito, nome: 'ideia' }}>
           <div className="img">
             {temImagem(i) ? <ImgRef r={i} style={{ height: 'auto' }} /> : <div className="sem">{i.titulo || 'Ideia sem imagem'}</div>}
             {i.favorito ? <Heart size={16} className="fav" fill="currentColor" /> : null}
             {testadas.has(i.id) && <span className="ideia-testada">Com teste</span>}
           </div>
           {i.titulo && <div className="t">{i.titulo}</div>}
-        </Link>
+        </LinkSegurar>
       ))}</div>
     </div>
   )

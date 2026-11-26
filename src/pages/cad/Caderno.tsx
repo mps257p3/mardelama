@@ -1,5 +1,6 @@
+import { LinkSegurar } from '../../ui/Segurar'
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus, Search } from 'lucide-react'
 import { db } from '../../db/schema'
@@ -45,7 +46,7 @@ export default function Caderno() {
           <p className="eyebrow" style={{ textTransform: 'uppercase' }}>{g}</p>
           <div className="diario">
             {ns.map((n) => { const d = new Date(n.criadoEm); const txt = semHtml(n.corpo); return (
-              <Link key={n.id} to={`/caderno/${n.id}`} className="entrada">
+              <LinkSegurar key={n.id} to={`/caderno/${n.id}`} className="entrada" opcoes={{ tabela: 'notas', id: n.id, titulo: n.titulo || txt.slice(0, 40), nome: 'anotação' }}>
                 <div className="dia"><b>{d.getDate()}</b><span>{d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</span></div>
                 <div>
                   <div className="t">{n.titulo || txt.slice(0, 60) || 'Sem título'}</div>
@@ -56,7 +57,7 @@ export default function Caderno() {
                   </div> : null}
                   <div className="s faint" style={{ fontSize: 12, marginTop: 8 }}>{[modo === 'tempo' && n.tema, ...n.tags.map((t) => '#' + t), n.audios.length ? `${n.audios.length} áudio` : ''].filter(Boolean).join('  ')}</div>
                 </div>
-              </Link>) })}
+              </LinkSegurar>) })}
           </div>
         </section>
       ))}
