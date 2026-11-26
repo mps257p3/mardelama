@@ -1,4 +1,4 @@
-import { db, type Comercial } from './schema'
+import { db, type Comercial, type Receita } from './schema'
 
 /**
  * Estudos de engenharia reversa enviados pelo Marcelo (prints do reel de @katiebceramics com os 3 esmaltes "móveis" favoritos dela).
@@ -261,10 +261,15 @@ export async function completarEstudosAntigos() {
 
 type Ing = [slug: string, nome: string, pct: number, classe?: 'base' | 'corante' | 'opacificante' | 'aditivo']
 const CMC: Ing = ['goma-cmc', 'Goma CMC', 0.8, 'aditivo']
-const PREPARO = [
+const PREPARO_V1 = [
   'Preparo (100 g de seco, para pincel): dissolva a goma CMC em 80 a 90 ml de água um dia antes; junte o seco aos poucos; peneire duas vezes em 80 mesh; deixe descansar 24 h e mexa antes de usar. Densidade de pincel: perto de 1,45 a 1,50 g/ml.',
   'Gerstley Borate trocado por frita borácica (o Gerstley quase não existe no Brasil): a frita assenta no fundo, mexa sempre. A troca muda um pouco o resultado; é parte do teste.',
   'Aplicação: 3 demãos em plaquinha vertical, deixando o pé limpo; prato ou biscoito por baixo.',
+]
+const PREPARO = [
+  'Para 100 g de esmalte seco, dissolva a goma CMC em 80 a 90 ml de água um dia antes. No dia, junte o pó aos poucos, mexendo, e passe tudo duas vezes pela peneira de 80 mesh. Deixe descansar 24 horas e mexa bem antes de usar. Para pincel, a densidade boa fica entre 1,45 e 1,50 g/ml.',
+  'A receita original usaria Gerstley Borate, que quase não existe no Brasil, então troquei por frita borácica. A frita assenta no fundo do pote, por isso mexa sempre. A troca muda um pouco o resultado, e isso também faz parte do teste.',
+  'Aplique 3 demãos numa plaquinha em pé, deixando o pé sem esmalte, e queime com um prato ou um caco de biscoito por baixo.',
 ]
 
 const FORMULAS: { id: string; comercial: string; codigo: string; nome: string; ings: Ing[]; parametros: string; extra?: string }[] = [
@@ -272,26 +277,26 @@ const FORMULAS: { id: string; comercial: string; codigo: string; nome: string; i
     id: 'rec-er-pc33-iron-lustre', comercial: 'comercial-amaco-pc33-iron-lustre', codigo: 'ER-PC33', nome: 'Hipótese Iron Lustre (Amaco PC-33)',
     ings: [['sienito-nefelinico', 'Sienito nefelínico', 48], ['frita-boracica', 'Frita borácica', 26], ['silica', 'Sílica (quartzo)', 20], ['caulim', 'Caulim', 6],
       ['oxido-ferro-vermelho', 'Óxido de ferro vermelho', 6, 'corante'], ['rutilo', 'Rutilo', 4, 'corante'], CMC],
-    parametros: 'Variações: ferro 4, 6 e 8%. Para puxar o azul da flutuação, uma placa com óxido de cobalto 0,25 a 0,5%. Cone 6 (cerca de 1222 °C), resfriamento lento entre 1100 e 900 °C.',
+    parametros: 'Vale fazer três placas, com 4, 6 e 8 g de ferro. Se quiser puxar o azul da flutuação, faça mais uma com 0,25 a 0,5 g de óxido de cobalto. Queime em cone 6, perto de 1222 °C, e esfrie devagar entre 1100 e 900 °C.',
   },
   {
     id: 'rec-er-1431-pearl-white', comercial: 'comercial-spectrum-1431-pearl-white', codigo: 'ER-1431', nome: 'Hipótese Pearl White (Spectrum 1431)',
     ings: [['sienito-nefelinico', 'Sienito nefelínico', 48], ['frita-boracica', 'Frita borácica', 26], ['silica', 'Sílica (quartzo)', 20], ['caulim', 'Caulim', 6],
       ['dioxido-titanio', 'Dióxido de titânio', 5, 'opacificante'], ['rutilo', 'Rutilo', 1.5, 'corante'], CMC],
-    parametros: 'Variações: titânio 4 e 6%; rutilo 1 e 2% (mais rutilo, mais "areia"). Queima a 1200 °C, cone 4 a 6.',
+    parametros: 'Teste também com 4 e 6 g de titânio, e com 1 e 2 g de rutilo. Quanto mais rutilo, mais aparece aquele pontilhado de areia. Queime a 1200 °C, entre cone 4 e 6.',
   },
   {
     id: 'rec-er-pc17-honey-flux', comercial: 'comercial-amaco-pc17-honey-flux', codigo: 'ER-PC17', nome: 'Hipótese Honey Flux (Amaco PC-17)',
     ings: [['sienito-nefelinico', 'Sienito nefelínico', 40], ['frita-boracica', 'Frita borácica', 35], ['silica', 'Sílica (quartzo)', 20], ['caulim', 'Caulim', 5],
       ['rutilo', 'Rutilo', 4, 'corante'], ['oxido-ferro-vermelho', 'Óxido de ferro vermelho', 1, 'corante'], CMC],
-    parametros: 'Muito fluido: placa vertical sempre com prato por baixo. Testar sozinho e por cima de um esmalte que você já usa, no cone 5 e no cone 6. Para escorrer menos: trocar 5 de frita por caulim.',
+    parametros: 'Este escorre muito, então use sempre placa em pé com prato por baixo. Teste sozinho e por cima de um esmalte que você já usa, no cone 5 e no cone 6. Se escorrer demais, troque 5 g de frita por 5 g de caulim.',
   },
   {
     id: 'rec-er-sw214-micro-pearl', comercial: 'comercial-mayco-sw214-micro-pearl', codigo: 'ER-SW214', nome: 'Hipótese Micro Pearl (Mayco SW-214)',
     ings: [['feldspato-potassico', 'Feldspato potássico', 25], ['frita-boracica', 'Frita borácica', 25], ['silica', 'Sílica (quartzo)', 20], ['oxido-zinco', 'Óxido de zinco', 12],
       ['carbonato-calcio', 'Carbonato de cálcio', 10], ['caulim', 'Caulim', 8], ['dioxido-titanio', 'Dióxido de titânio', 7, 'opacificante'], CMC],
-    parametros: 'Variações: zinco 10 e 14%; titânio 6 e 8%. Cone 6; uma queima com resfriamento natural e outra com patamar de 1 h a 1050 °C.',
-    extra: 'Óxido de zinco cru encolhe muito e pode fazer o esmalte retrair; se acontecer, calcine o zinco a uns 900 °C antes de pesar.',
+    parametros: 'Teste também com 10 e 14 g de zinco, e com 6 e 8 g de titânio. Queime em cone 6 duas vezes: uma esfriando naturalmente e outra parando 1 hora a 1050 °C na descida.',
+    extra: 'O óxido de zinco cru encolhe muito e pode fazer o esmalte se retrair na peça. Se isso acontecer, calcine o zinco a uns 900 °C antes de pesar.',
   },
 ]
 
@@ -317,6 +322,27 @@ export async function semearFormulasDeTeste() {
     await db.relacoes.add({ id: 'rel-' + f.id, aTipo: 'comercial', aId: f.comercial, bTipo: 'receita', bId: f.id, criadoEm: T })
   }
   await db.ajustes.put({ chave: 'seed-formulas-er-v1', valor: true })
+}
+
+/** Textos das fórmulas como foram semeados em 26/11 (antes da reescrita). */
+const PARAMETROS_V1 = ['Variações: ferro 4, 6 e 8%. Para puxar o azul da flutuação, uma placa com óxido de cobalto 0,25 a 0,5%. Cone 6 (cerca de 1222 °C), resfriamento lento entre 1100 e 900 °C.',
+  'Variações: titânio 4 e 6%; rutilo 1 e 2% (mais rutilo, mais "areia"). Queima a 1200 °C, cone 4 a 6.',
+  'Muito fluido: placa vertical sempre com prato por baixo. Testar sozinho e por cima de um esmalte que você já usa, no cone 5 e no cone 6. Para escorrer menos: trocar 5 de frita por caulim.',
+  'Variações: zinco 10 e 14%; titânio 6 e 8%. Cone 6; uma queima com resfriamento natural e outra com patamar de 1 h a 1050 °C.']
+const EXTRA_V1 = 'Óxido de zinco cru encolhe muito e pode fazer o esmalte retrair; se acontecer, calcine o zinco a uns 900 °C antes de pesar.'
+
+/** Reescreve parâmetros e preparo das fórmulas de teste, só onde ainda estão como foram semeados. */
+export async function reescreverFormulas() {
+  if (await db.ajustes.get('fix-formulas-textos-v1')) return
+  for (const [n, f] of FORMULAS.entries()) {
+    const r = await db.receitas.get(f.id); if (!r) continue
+    const obsV1 = [...PREPARO_V1, ...(f.extra ? [EXTRA_V1] : [])].join('\n\n')
+    const d: Partial<Receita> = {}
+    if (r.parametros === PARAMETROS_V1[n]) d.parametros = f.parametros
+    if (r.observacoes === obsV1) d.observacoes = [...PREPARO, ...(f.extra ? [f.extra] : [])].join('\n\n')
+    if (Object.keys(d).length) await db.receitas.update(f.id, { ...d, atualizadoEm: Date.now() })
+  }
+  await db.ajustes.put({ chave: 'fix-formulas-textos-v1', valor: true })
 }
 
 /** 26/11: troca os textos semeados pelos reescritos (TEXTOS_V2), só onde o campo ainda está igual ao semeado. */

@@ -285,8 +285,9 @@ export async function semearIdeias() {
   await completarEstudosAntigos().catch(() => undefined)
   const { semearFormulasDeTeste } = await import('./comerciaisIniciais')
   await semearFormulasDeTeste().catch(() => undefined)
-  const { reescreverTextos } = await import('./comerciaisIniciais')
+  const { reescreverTextos, reescreverFormulas } = await import('./comerciaisIniciais')
   await reescreverTextos().catch(() => undefined)
+  await reescreverFormulas().catch(() => undefined)
 }
 
 /** 25/11: anotações mais diretas (sem a nota sobre as IAs, sem "O que se vê" e sem "Possibilidade autoral"; degradê e pigmentos primeiro), se o usuário não mexeu. */
