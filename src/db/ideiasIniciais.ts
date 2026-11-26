@@ -62,14 +62,14 @@ const MATERIAIS_KATIEB = [
   'Esmalte reativo: manchas e variações (os de ferro e rutilo reagem bem)',
   'Esmalte fluido: movimento e escorrido, sempre com pé de peça protegido',
   'Esmalte estável: segura o escorrido onde não se quer movimento',
-  'Esmalte translúcido: profundidade; opaco: contraste',
+  'Esmalte translúcido: profundidade',
+  'Esmalte opaco: contraste',
   'Esmalte de efeito: microcristais, floating',
   'Liner interno testado para alimento: o lado de dentro da peça utilitária',
-  'Pincéis largos e macios, esponja natural úmida e esponja seca',
-  'Placas verticais de teste e placas de sacrifício para a prateleira',
+  'Pincel largo e macio, esponja natural úmida e esponja seca: aplicação',
 ].join('\n')
 
-const NOTAS_KATIEB = [
+const NOTAS_KATIEB_V1 = [
   'Sete técnicas para esmaltar de forma expressiva sem perder o controle: o acaso só aparece quando o resto está anotado.',
   '1. Camadas irregulares: varie a carga do pincel, o número de demãos e a pressão; alterne grosso e fino, deixando a massa aparecer. O grosso reage e escorre mais.',
   '2. Diluição medida: separe porções e acrescente água em quantidade anotada; aplique as concentrações lado a lado ou sobrepostas para degradês e transparências. A água muda o quanto de esmalte fica na peça, não a fluidez na queima.',
@@ -79,6 +79,22 @@ const NOTAS_KATIEB = [
   '6. Acaso controlado: combine espessuras, diluições, sobreposições e intervenções; teste esmaltes reativos e curvas de resfriamento.',
   '7. Dentro funcional, fora experimental: liner testado por dentro; borda, área da boca e encontros entre esmaltes também precisam ser seguros.',
   'Nos testes: anote composição, diluição, número de camadas e ordem; fotografe antes e depois; placa vertical para ver o escorrido; placa de sacrifício na prateleira; anote temperatura, patamar e resfriamento; compare sempre sobre a mesma massa.',
+].join('\n\n')
+
+
+const COMO_KATIEB = [
+  'Camadas irregulares (foto 1): varie a carga do pincel, o número de demãos e a pressão. Alterne grosso e fino, deixando a massa aparecer. O grosso reage e escorre mais.',
+  'Diluição medida (foto 2): separe porções e acrescente água em quantidade anotada. Aplique as concentrações lado a lado ou sobrepostas, para degradês e transparências. A água muda o quanto de esmalte fica na peça, não a fluidez na queima.',
+  'Uma função para cada esmalte (foto 3): combine base, reativo, fluido, estável, translúcido, opaco e de efeito, conforme a lista de esmaltes acima. Dois esmaltes estáveis juntos podem virar uma mistura muito fluida.',
+  'Pincel seco (foto 4): pouca carga e muitas passadas sem recarregar, mudando direção, pressão e velocidade. Deixa estrias e falhas e realça o relevo. As marcas suavizam um pouco no forno.',
+  'Esponja (foto 5): úmida para tirar, espalhar e suavizar. Seca para puxar o excesso ainda úmido. O esmalte se acumula nas cavidades.',
+  'Acaso controlado (foto 6): junte espessuras, diluições, sobreposições e intervenções. Teste esmaltes reativos e curvas de resfriamento.',
+  'Liner por dentro (foto 7): liner testado por dentro e experimentação só por fora. Borda, área da boca e encontros entre esmaltes também precisam ser seguros.',
+].join('\n\n')
+
+const NOTAS_KATIEB = [
+  'Nos testes: anote composição, diluição, número de camadas e ordem; fotografe antes e depois; use placa vertical para ver o escorrido; ponha placa de sacrifício na prateleira; anote temperatura, patamar e resfriamento; compare sempre sobre a mesma massa.',
+  'Cuidado: nunca esfregue esmalte seco com a esponja, por causa da poeira.',
 ].join('\n\n')
 
 const IRON_LUSTRE: Omit<Comercial, 'id' | 'criadoEm' | 'atualizadoEm' | 'fotos'> = {
@@ -113,6 +129,24 @@ const IRON_LUSTRE: Omit<Comercial, 'id' | 'criadoEm' | 'atualizadoEm' | 'fotos'>
     'Reel de @katiebceramics, "3. Iron Lustre by Amaco"',
   ],
   observacoes: 'Temperatura: cone 5 = 1186 °C e cone 6 = 1222 °C a 60 °C/h nos últimos 100 °C (Bath Potters); a The Ceramic Shop cita 1184 e 1241 °C a 150 °C/h.\n\nVisto no reel de @katiebceramics sobre esmaltes "flutuantes". A receita é hipótese: a Amaco não publica a fórmula. Primeiro teste: 3 placas verticais com a base e ferro 4, 6 e 8% (rutilo 4% em todas), uma metade com 2 demãos e outra com 3, mais uma placa com óxido de cobalto 0,5%. Cone 6, resfriamento lento entre 1100 e 900 °C ajuda a flutuação. O rutilo varia muito de lote para lote.',
+}
+
+/** Fotos do PC-33 na loja Bath Potters (distribuidora da Amaco no Reino Unido): a primeira é a placa do próprio esmalte. */
+const FOTOS_IRON_LUSTRE = [6361, 4264, 2686, 8977].map((n) => `https://www.bathpotters.co.uk/images/products/large/2201_${n}.jpg`)
+
+/** Junta as fotos da marca ao estudo (precisa estar logado e com internet; tenta de novo na próxima abertura). */
+async function fotosIronLustre() {
+  const id = 'comercial-amaco-pc33-iron-lustre'
+  if (await db.ajustes.get('seed-comercial-fotos:' + id)) return
+  const c = await db.comerciais.get(id)
+  if (!c || c.excluido) return
+  const { fotosDoFabricante } = await import('../lib/comercial')
+  const novas = await fotosDoFabricante(id, FOTOS_IRON_LUSTRE)
+  if (!novas.length) return
+  // as fotos da marca vêm primeiro (a capa vira a placa do esmalte); o print do reel fica no fim
+  const atual = await db.comerciais.get(id)
+  await db.comerciais.update(id, { fotos: [...novas, ...(atual?.fotos ?? [])], atualizadoEm: Date.now() })
+  await db.ajustes.put({ chave: 'seed-comercial-fotos:' + id, valor: true })
 }
 
 async function semearIronLustre() {
@@ -184,7 +218,7 @@ const IDEIAS: { id: string; em: number; imagens: string[]; dados: Omit<IdeiaEsma
       efeitos: ['Camadas sobrepostas', 'Pintado / pincelado', 'Escorrido', 'Variegado', 'Manchado'],
       familias: [],
       materiais: MATERIAIS_KATIEB,
-      esmaltes: 'Camadas irregulares a pincel; diluições medidas lado a lado; cada esmalte com uma função; pincel seco por cima; esponja úmida para tirar e espalhar; liner por dentro, experimentação só por fora.',
+      esmaltes: COMO_KATIEB,
       queima: 'Conforme o esmalte. Forno elétrico em oxidação serve; alta temperatura (1200 a 1280 °C) com materiais compatíveis.',
       autor: 'Katie B Ceramics',
       fonte: 'Publicação de @katiebceramics (Instagram), com guia ilustrado',
@@ -224,7 +258,9 @@ export async function semearIdeias() {
     await db.ajustes.put({ chave, valor: true })
   }
   await ajustarIdeias()
+  await ajustarKatieb()
   await semearIronLustre()
+  await fotosIronLustre().catch(() => undefined)
 }
 
 /** 25/11: anotações mais diretas (sem a nota sobre as IAs, sem "O que se vê" e sem "Possibilidade autoral"; degradê e pigmentos primeiro), se o usuário não mexeu. */
@@ -236,4 +272,15 @@ export async function ajustarIdeias() {
   const y = await db.ideias.get('ideia-cmw-rainbow-polkadot')
   if (y && !y.materiais) await db.ideias.update(y.id, { materiais: MATERIAIS, atualizadoEm: Date.now() })
   await db.ajustes.put({ chave: 'fix-ideias-v3', valor: true })
+}
+
+/** 26/11: a ideia da esmaltação expressiva fica sem repetição (as 7 técnicas em "Como foi feito", uma por foto), se o usuário não mexeu. */
+async function ajustarKatieb() {
+  if (await db.ajustes.get('fix-ideias-v4')) return
+  const x = await db.ideias.get('ideia-katieb-esmaltacao-expressiva')
+  if (x && x.notas === NOTAS_KATIEB_V1) {
+    const ideia = IDEIAS.find((d) => d.id === x.id)!.dados
+    await db.ideias.update(x.id, { notas: NOTAS_KATIEB, esmaltes: COMO_KATIEB, materiais: ideia.materiais, atualizadoEm: Date.now() })
+  }
+  await db.ajustes.put({ chave: 'fix-ideias-v4', valor: true })
 }
