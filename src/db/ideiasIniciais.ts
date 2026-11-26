@@ -1,4 +1,4 @@
-import { db, type IdeiaEsmalte } from './schema'
+import { db, type Comercial, type IdeiaEsmalte } from './schema'
 
 /**
  * Ideias de esmaltação enviadas pelo Marcelo na conversa, com a leitura feita a partir das fotos.
@@ -56,6 +56,85 @@ const NOTAS_MOSCA = [
   'Primeiro teste: plaquinhas com o esmalte branco; pulverizar uma mancha de cada cor, de 10 cm e de 20 cm de distância, para ver o tamanho e o granulado da borda; em outras, pulverizar o esmalte colorido só no terço de cima para testar o degradê; queimar na temperatura de sempre.',
 ].join('\n\n')
 
+
+const MATERIAIS_KATIEB = [
+  'Esmalte base: a cor predominante da peça',
+  'Esmalte reativo: manchas e variações (os de ferro e rutilo reagem bem)',
+  'Esmalte fluido: movimento e escorrido, sempre com pé de peça protegido',
+  'Esmalte estável: segura o escorrido onde não se quer movimento',
+  'Esmalte translúcido: profundidade; opaco: contraste',
+  'Esmalte de efeito: microcristais, floating',
+  'Liner interno testado para alimento: o lado de dentro da peça utilitária',
+  'Pincéis largos e macios, esponja natural úmida e esponja seca',
+  'Placas verticais de teste e placas de sacrifício para a prateleira',
+].join('\n')
+
+const NOTAS_KATIEB = [
+  'Sete técnicas para esmaltar de forma expressiva sem perder o controle: o acaso só aparece quando o resto está anotado.',
+  '1. Camadas irregulares: varie a carga do pincel, o número de demãos e a pressão; alterne grosso e fino, deixando a massa aparecer. O grosso reage e escorre mais.',
+  '2. Diluição medida: separe porções e acrescente água em quantidade anotada; aplique as concentrações lado a lado ou sobrepostas para degradês e transparências. A água muda o quanto de esmalte fica na peça, não a fluidez na queima.',
+  '3. Uma função para cada esmalte: base, reativo, fluido, estável, translúcido, opaco, de efeito. Teste toda combinação: dois esmaltes estáveis podem virar uma mistura muito fluida.',
+  '4. Pincel seco: pouca carga e muitas passadas sem recarregar, mudando direção, pressão e velocidade. Deixa estrias, falhas e realça o relevo; as marcas suavizam um pouco no forno.',
+  '5. Esponja: úmida para tirar, espalhar e suavizar; seca para puxar o excesso ainda úmido. O esmalte se acumula nas cavidades. Nunca esfregue esmalte seco (poeira).',
+  '6. Acaso controlado: combine espessuras, diluições, sobreposições e intervenções; teste esmaltes reativos e curvas de resfriamento.',
+  '7. Dentro funcional, fora experimental: liner testado por dentro; borda, área da boca e encontros entre esmaltes também precisam ser seguros.',
+  'Nos testes: anote composição, diluição, número de camadas e ordem; fotografe antes e depois; placa vertical para ver o escorrido; placa de sacrifício na prateleira; anote temperatura, patamar e resfriamento; compare sempre sobre a mesma massa.',
+].join('\n\n')
+
+const IRON_LUSTRE: Omit<Comercial, 'id' | 'criadoEm' | 'atualizadoEm' | 'fotos'> = {
+  fabricante: 'Amaco',
+  nome: 'Iron Lustre',
+  codigo: 'PC-33',
+  serie: "Potter's Choice",
+  familias: [],
+  cone: '5 a 6',
+  temperatura: '1186 a 1222 °C, oxidação',
+  instrucoes: 'Pincel, 2 a 3 demãos grossas (aplicação fina fica sem graça, sem a flutuação). Deixe uma folga no pé: o esmalte se move. A Amaco mostra combinações com ele por cima de outros PC, como PC-21 Oatmeal.',
+  declarados: [
+    'Marrom onde fica fino; flutuações azul-acinzentadas onde fica grosso',
+    'Efeitos de redução em queima de oxidação (característica da linha Potter\'s Choice)',
+    'Cone 5 a 6',
+    'Próprio para louça de mesa segundo a Amaco (a linha toda, exceto PC-4, PC-9 e PC-64); sem chumbo',
+  ],
+  documentacao: 'Ficha de segurança SDS 5430, rev. 40 (25/04/2021), seção 3: dióxido de silício até 15% (CAS 14808-60-7); silicato de alumínio (caulim) até 15% (CAS 1332-58-7); carbonato de cálcio menos de 1%; conservante triazina menos de 1%. Nenhum composto de ferro, cobalto, manganês, cromo, bário, zinco ou lítio aparece, o que só quer dizer que estão abaixo do limite de declaração ou não são classificados como perigosos. O restante (cerca de 70% do sólido) não é declarado: em esmaltes comerciais costuma ser frita, que não entra na ficha por não ser perigosa.',
+  hipoteses: [
+    'Tipo de esmalte: base de boro (frita ou Gerstley Borate) com ferro e rutilo, da mesma família do "Floating Blue" de cone 6. O azul-acinzentado que "flutua" no grosso é típico de rutilo ou titânio em vidro de boro; o marrom no fino vem do ferro.',
+    'Pouca sílica e caulim livres (até 15% cada) apontam para uma base feita quase toda de frita.',
+    'Ponto de partida (100): nefelina sienita 48, Gerstley Borate 26, sílica 20, caulim 6. Adições: óxido de ferro vermelho 4 a 6%, rutilo claro 4%.',
+    'Para puxar o azul da flutuação: testar 0,25 a 0,5% de óxido de cobalto. Para mais marrom metálico: subir o ferro até 8%.',
+    'Base de referência publicada: Floating Blue (cone 6, oxidação; Ceramics Monthly, out. 2001): Gerstley Borate 26, nefelina sienita 48, caulim EPK 6, sílica 20 + óxido de cobalto 1, rutilo claro 4, óxido de ferro vermelho 2. Aqui o ferro sobe e o cobalto cai porque a cor dominante é marrom.',
+  ],
+  fontes: [
+    'https://www.bathpotters.co.uk/userfiles/file/amaco-potters-choice-pc-31-pc-712.pdf',
+    'https://www.bathpotters.co.uk/iron-lustre-amaco-potters-choice-glaze/p2201',
+    'https://www.theceramicshop.com/product/9814/pc33-iron-lustre-pint/',
+    'https://amaco.com/resources/layering/pc-33-iron-lustre-over-pcf-74-river-birch',
+    'https://ceramicartsnetwork.org/ceramic-recipes/recipe/Floating-Blue-Glaze-143691',
+    'Reel de @katiebceramics, "3. Iron Lustre by Amaco"',
+  ],
+  observacoes: 'Temperatura: cone 5 = 1186 °C e cone 6 = 1222 °C a 60 °C/h nos últimos 100 °C (Bath Potters); a The Ceramic Shop cita 1184 e 1241 °C a 150 °C/h.\n\nVisto no reel de @katiebceramics sobre esmaltes "flutuantes". A receita é hipótese: a Amaco não publica a fórmula. Primeiro teste: 3 placas verticais com a base e ferro 4, 6 e 8% (rutilo 4% em todas), uma metade com 2 demãos e outra com 3, mais uma placa com óxido de cobalto 0,5%. Cone 6, resfriamento lento entre 1100 e 900 °C ajuda a flutuação. O rutilo varia muito de lote para lote.',
+}
+
+async function semearIronLustre() {
+  const id = 'comercial-amaco-pc33-iron-lustre'
+  const chave = 'seed-comercial:' + id
+  if (await db.ajustes.get(chave)) return
+  if (!(await db.comerciais.get(id))) {
+    let fotos: string[] = []
+    try {
+      const r = await fetch('/seed/ideias/amaco-iron-lustre-reel.jpg')
+      const b = r.ok ? await r.blob() : undefined
+      if (b?.type.startsWith('image/')) {
+        const { salvarArquivo } = await import('./files')
+        fotos = [await salvarArquivo(new File([b], 'amaco-iron-lustre-reel.jpg', { type: b.type }), { tipo: 'comercial', id })]
+      }
+    } catch { /* offline: tenta na próxima */ }
+    if (!fotos.length) return
+    await db.comerciais.add({ id, criadoEm: Date.UTC(2026, 10, 26, 1, 40), atualizadoEm: Date.now(), excluido: 0, favorito: 0, ...IRON_LUSTRE, fotos })
+  }
+  await db.ajustes.put({ chave, valor: true })
+}
+
 const IDEIAS: { id: string; em: number; imagens: string[]; dados: Omit<IdeiaEsmalte, 'id' | 'criadoEm' | 'atualizadoEm' | 'imagens'> }[] = [
   {
     id: 'ideia-cmw-rainbow-polkadot',
@@ -96,6 +175,25 @@ const IDEIAS: { id: string; em: number; imagens: string[]; dados: Omit<IdeiaEsma
       notas: NOTAS_MOSCA,
     },
   },
+  {
+    id: 'ideia-katieb-esmaltacao-expressiva',
+    em: Date.UTC(2026, 10, 26, 1, 35),
+    imagens: [...[1, 2, 3, 4, 5, 6, 7].map((n) => `/seed/ideias/katieb-tecnica-${n}.jpg`), '/seed/ideias/katieb-post-1.jpg'],
+    dados: {
+      titulo: 'Esmaltação expressiva: 7 técnicas',
+      efeitos: ['Camadas sobrepostas', 'Pintado / pincelado', 'Escorrido', 'Variegado', 'Manchado'],
+      familias: [],
+      materiais: MATERIAIS_KATIEB,
+      esmaltes: 'Camadas irregulares a pincel; diluições medidas lado a lado; cada esmalte com uma função; pincel seco por cima; esponja úmida para tirar e espalhar; liner por dentro, experimentação só por fora.',
+      queima: 'Conforme o esmalte. Forno elétrico em oxidação serve; alta temperatura (1200 a 1280 °C) com materiais compatíveis.',
+      autor: 'Katie B Ceramics',
+      fonte: 'Publicação de @katiebceramics (Instagram), com guia ilustrado',
+      url: 'https://www.instagram.com/katiebceramics/',
+      origem: 'semente:katieb-esmaltacao-expressiva',
+      tags: ['camadas', 'pincel seco', 'esponja', 'diluição', 'liner', 'acaso controlado'],
+      notas: NOTAS_KATIEB,
+    },
+  },
 ]
 
 async function arquivoDe(url: string, dono: string) {
@@ -126,6 +224,7 @@ export async function semearIdeias() {
     await db.ajustes.put({ chave, valor: true })
   }
   await ajustarIdeias()
+  await semearIronLustre()
 }
 
 /** 25/11: anotações mais diretas (sem a nota sobre as IAs, sem "O que se vê" e sem "Possibilidade autoral"; degradê e pigmentos primeiro), se o usuário não mexeu. */
