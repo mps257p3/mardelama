@@ -256,3 +256,65 @@ export async function completarEstudosAntigos() {
     await db.ajustes.put({ chave: chaveFotos, valor: true })
   }
 }
+
+/* ---------------------------------------- fórmulas de teste (hipóteses dos estudos, em 100 g) */
+
+type Ing = [slug: string, nome: string, pct: number, classe?: 'base' | 'corante' | 'opacificante' | 'aditivo']
+const CMC: Ing = ['goma-cmc', 'Goma CMC', 0.8, 'aditivo']
+const PREPARO = [
+  'Preparo (100 g de seco, para pincel): dissolva a goma CMC em 80 a 90 ml de água um dia antes; junte o seco aos poucos; peneire duas vezes em 80 mesh; deixe descansar 24 h e mexa antes de usar. Densidade de pincel: perto de 1,45 a 1,50 g/ml.',
+  'Gerstley Borate trocado por frita borácica (o Gerstley quase não existe no Brasil): a frita assenta no fundo, mexa sempre. A troca muda um pouco o resultado; é parte do teste.',
+  'Aplicação: 3 demãos em plaquinha vertical, deixando o pé limpo; prato ou biscoito por baixo.',
+]
+
+const FORMULAS: { id: string; comercial: string; codigo: string; nome: string; ings: Ing[]; parametros: string; extra?: string }[] = [
+  {
+    id: 'rec-er-pc33-iron-lustre', comercial: 'comercial-amaco-pc33-iron-lustre', codigo: 'ER-PC33', nome: 'Hipótese Iron Lustre (Amaco PC-33)',
+    ings: [['sienito-nefelinico', 'Sienito nefelínico', 48], ['frita-boracica', 'Frita borácica', 26], ['silica', 'Sílica (quartzo)', 20], ['caulim', 'Caulim', 6],
+      ['oxido-ferro-vermelho', 'Óxido de ferro vermelho', 6, 'corante'], ['rutilo', 'Rutilo', 4, 'corante'], CMC],
+    parametros: 'Variações: ferro 4, 6 e 8%. Para puxar o azul da flutuação, uma placa com óxido de cobalto 0,25 a 0,5%. Cone 6 (cerca de 1222 °C), resfriamento lento entre 1100 e 900 °C.',
+  },
+  {
+    id: 'rec-er-1431-pearl-white', comercial: 'comercial-spectrum-1431-pearl-white', codigo: 'ER-1431', nome: 'Hipótese Pearl White (Spectrum 1431)',
+    ings: [['sienito-nefelinico', 'Sienito nefelínico', 48], ['frita-boracica', 'Frita borácica', 26], ['silica', 'Sílica (quartzo)', 20], ['caulim', 'Caulim', 6],
+      ['dioxido-titanio', 'Dióxido de titânio', 5, 'opacificante'], ['rutilo', 'Rutilo', 1.5, 'corante'], CMC],
+    parametros: 'Variações: titânio 4 e 6%; rutilo 1 e 2% (mais rutilo, mais "areia"). Queima a 1200 °C, cone 4 a 6.',
+  },
+  {
+    id: 'rec-er-pc17-honey-flux', comercial: 'comercial-amaco-pc17-honey-flux', codigo: 'ER-PC17', nome: 'Hipótese Honey Flux (Amaco PC-17)',
+    ings: [['sienito-nefelinico', 'Sienito nefelínico', 40], ['frita-boracica', 'Frita borácica', 35], ['silica', 'Sílica (quartzo)', 20], ['caulim', 'Caulim', 5],
+      ['rutilo', 'Rutilo', 4, 'corante'], ['oxido-ferro-vermelho', 'Óxido de ferro vermelho', 1, 'corante'], CMC],
+    parametros: 'Muito fluido: placa vertical sempre com prato por baixo. Testar sozinho e por cima de um esmalte que você já usa, no cone 5 e no cone 6. Para escorrer menos: trocar 5 de frita por caulim.',
+  },
+  {
+    id: 'rec-er-sw214-micro-pearl', comercial: 'comercial-mayco-sw214-micro-pearl', codigo: 'ER-SW214', nome: 'Hipótese Micro Pearl (Mayco SW-214)',
+    ings: [['feldspato-potassico', 'Feldspato potássico', 25], ['frita-boracica', 'Frita borácica', 25], ['silica', 'Sílica (quartzo)', 20], ['oxido-zinco', 'Óxido de zinco', 12],
+      ['carbonato-calcio', 'Carbonato de cálcio', 10], ['caulim', 'Caulim', 8], ['dioxido-titanio', 'Dióxido de titânio', 7, 'opacificante'], CMC],
+    parametros: 'Variações: zinco 10 e 14%; titânio 6 e 8%. Cone 6; uma queima com resfriamento natural e outra com patamar de 1 h a 1050 °C.',
+    extra: 'Óxido de zinco cru encolhe muito e pode fazer o esmalte retrair; se acontecer, calcine o zinco a uns 900 °C antes de pesar.',
+  },
+]
+
+/** Cria as fórmulas de teste uma vez por aparelho e liga cada uma ao seu estudo. */
+export async function semearFormulasDeTeste() {
+  if (await db.ajustes.get('seed-formulas-er-v1')) return
+  const T = Date.UTC(2026, 10, 26, 2, 5)
+  for (const f of FORMULAS) {
+    if (!(await db.comerciais.get(f.comercial))) return // estudo ainda não chegou: tenta na próxima abertura
+    if (await db.receitas.get(f.id)) continue
+    const receita = {
+      id: f.id, criadoEm: T, atualizadoEm: T, excluido: 0 as const, favorito: 0 as const,
+      nome: f.nome, codigo: f.codigo, familias: [], status: 'Experimental — ainda não testada',
+      objetivo: 'Testar a hipótese de composição do estudo de engenharia reversa.',
+      referencia: 'Referência estética: ' + f.nome.replace('Hipótese ', '') + ' (não é reprodução confirmada).',
+      parametros: f.parametros, tags: ['engenharia reversa', 'teste 100 g'], versaoAtual: 1,
+      ingredientes: f.ings.map(([s, nome, p, c]) => ({ materialId: 'mat-' + s, nome, percentual: p, classe: c ?? 'base' as const })),
+      aguaMlPor100g: 85, observacoes: [...PREPARO, ...(f.extra ? [f.extra] : [])].join('\n\n'),
+    }
+    await db.receitas.add(receita)
+    const { id: _i, ...snapshot } = receita
+    await db.versoes.add({ id: 'ver-' + f.id + '-1', receitaId: f.id, versao: 1, criadoEm: T, nota: 'Versão inicial (hipótese do estudo)', snapshot })
+    await db.relacoes.add({ id: 'rel-' + f.id, aTipo: 'comercial', aId: f.comercial, bTipo: 'receita', bId: f.id, criadoEm: T })
+  }
+  await db.ajustes.put({ chave: 'seed-formulas-er-v1', valor: true })
+}
