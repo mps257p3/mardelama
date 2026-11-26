@@ -1,6 +1,7 @@
 import { db, type Artista, type Obra, type Processo, type Fonte, type FalaArtista } from './schema'
 import { ARTISTAS_NERIKOMI, OBRAS_NERIKOMI, CAPAS_NERIKOMI } from './artistasNerikomi'
 import { ARTISTAS_REFERENCIAS, OBRAS_REFERENCIAS, CAPAS_REFERENCIAS } from './artistasReferencias'
+import { ARTISTAS_LEVA2, OBRAS_LEVA2, CAPAS_LEVA2, AJUSTES_OBRAS } from './artistasLeva2'
 
 /**
  * Catálogo inicial de Artistas (11 ceramistas a partir de Ryuji Iwasaki).
@@ -1596,6 +1597,7 @@ const ARTISTAS: [string, A][] = [
   }],
   ...ARTISTAS_NERIKOMI,
   ...ARTISTAS_REFERENCIAS,
+  ...ARTISTAS_LEVA2,
   ...([
     ['art-taticouto', 'Tati Couto', 'ceramica_tati_couto', 'Cerâmica'],
     ['art-carnesalvaje', 'Carne Salvaje', 'carnesalvaje', 'Cerâmica'],
@@ -1616,7 +1618,7 @@ const iw = (serie: string, cod: string, img: string, prod = cod): [string, O] =>
   artistaId: 'art-iwasaki', serie, titulo: `${serie} ${cod.toUpperCase()}`, imagem: `${IW}/wp-content/uploads/${img}`, fonte: `${IW}/product/${prod}/`, credito: 'Ryuji Iwasaki, site oficial',
 }]
 const AL = 'https://static-assets.artlogic.net/w_1600,h_1600,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage'
-const OBRAS: [string, O][] = [
+const OBRAS_BASE: [string, O][] = [
   iw('Icegreen', 'ig1601', '2023/08/ig1601_00.jpg'), iw('Icegreen', 'ig1501', '2023/08/ig1501_00.jpg'), iw('Icegreen', 'ig1401', '2023/08/ig1401_00.jpg'),
   iw('Shikoh', 'sk1201', '2023/07/sk1201_00.jpg'), iw('Shikoh', 'sk1101', '2023/07/sk1101_00.jpg'), iw('Shikoh', 'sk1001', '2023/07/sk1001_00.jpg'),
   iw('Tsubaki', 'tbk1201', '2023/07/tbk1201_00.jpg'), iw('Tsubaki', 'tbk1101', '2023/07/tbk1101_00.jpg'), iw('Tsubaki', 'tbk1001', '2023/07/tbk1001_00.jpg'),
@@ -1843,7 +1845,9 @@ const OBRAS: [string, O][] = [
   ...([['wallpieces', 'Wall Pieces (conjunto de 4)', '1792932445701-MGTY0ABO9V7ATLKS2IJO/F2500318-4007-4BCB-B3FE-D8C2019B6F28.jpeg', 'https://www.lottastudio.de/shop/p/qtwprlfqivcteleftnej4g4ip9bklx'], ['basketball', 'Basketball', '1758533249856-CI2MGDKQD7QL9N0FPCR1/C3708D65-E103-4FC9-8907-D653BD7EA38D.jpeg', 'https://www.lottastudio.de/shop/p/basketball'], ['feeling', 'Feeling Bowl', 'aa080e9e-1835-4d78-bb3d-ea97518e331b/IMG_7716.jpg', 'https://www.lottastudio.de/shop/p/feeling-bowl'], ['flowerbelt', 'Flower Belt', 'c0208471-6096-415b-8234-f08383a01e28/L1001416.jpg', 'https://www.lottastudio.de/shop/p/flower-belt'], ['goodmood', 'Good Mood Cup', 'e1244f7f-a328-4d08-a395-4a933775cfea/IMG_7658.jpg', 'https://www.lottastudio.de/shop/p/good-mood-cup'], ['cloud', 'Cloud Cup', 'fd36ed58-1fc1-431c-9325-d13ae12764ce/IMG_4635.jpg', 'https://www.lottastudio.de/shop/p/cloud-cup-large']] as const).map(([k, t, arq, pag]): [string, O] => [`obra-lottastudio-${k}`, { artistaId: 'art-lottastudio', titulo: t, imagem: `https://images.squarespace-cdn.com/content/v1/67d31baa2daf95345a6d87f6/${arq}`, fonte: pag, credito: 'Lotta Studio (loja da artista)' }]),
   ...OBRAS_NERIKOMI,
   ...OBRAS_REFERENCIAS,
+  ...OBRAS_LEVA2,
 ]
+const OBRAS: [string, O][] = OBRAS_BASE.map(([id, o]) => [id, AJUSTES_OBRAS[id] ? { ...o, ...AJUSTES_OBRAS[id] } : o])
 
 /** Falas dos próprios artistas, traduzidas livremente para o português, com o original e a fonte (conferidas em 23/11/2026). */
 const FALAS: Record<string, FalaArtista[]> = {
@@ -1917,7 +1921,7 @@ const CAPAS: Record<string, string> = {
   'art-makhno': 'obra-makhno-sadok', 'art-rasmussen': 'obra-rasmussen-blueloop', 'art-diale': 'obra-diale-potofjoy', 'art-economides': 'obra-economides-1',
   'art-velazquez': 'obra-velazquez-1', 'art-alexandridi': 'obra-alexandridi-mourmoura', 'art-crittenden': 'obra-crittenden-chromatic', 'art-browne': 'obra-browne-bathing',
   'art-claireabelle': 'obra-claireabelle-2', 'art-carterrose': 'obra-carterrose-selma', 'art-lottastudio': 'obra-lottastudio-wallpieces',
-  ...CAPAS_NERIKOMI, ...CAPAS_REFERENCIAS,
+  ...CAPAS_NERIKOMI, ...CAPAS_REFERENCIAS, ...CAPAS_LEVA2,
 }
 
 /** Correção 23/11: a imagem de capa da Marina Anaya saiu do ar; troca a capa e a imagem morta (se o usuário não mexeu). */
@@ -1936,10 +1940,23 @@ async function corrigirAnaya() {
   await db.ajustes.put({ chave: 'fix-anaya-v1', valor: true })
 }
 
+/** Correção 26/11: fotos e dados encontrados para obras que entraram sem imagem (só onde o usuário não pôs foto). */
+async function completarObras() {
+  if (await db.ajustes.get('fix-obras-imagens-v1')) return
+  const atuais = await db.obras.bulkGet(Object.keys(AJUSTES_OBRAS))
+  for (const o of atuais) {
+    if (!o || o.imagem || o.arquivo) continue
+    const { notas, ...resto } = AJUSTES_OBRAS[o.id]
+    await db.obras.update(o.id, { ...resto, ...(notas && !o.notas ? { notas } : {}), atualizadoEm: Date.now() })
+  }
+  await db.ajustes.put({ chave: 'fix-obras-imagens-v1', valor: true })
+}
+
 /** Semeia o catálogo uma vez por aparelho, com ids fixos (não duplica entre aparelhos nem apaga o que já foi editado). */
 export async function semearArtistas() {
   await corrigirAnaya()
-  if (await db.ajustes.get('seed-artistas-v12')) return
+  await completarObras()
+  if (await db.ajustes.get('seed-artistas-v13')) return
   const existentesA = new Set((await db.artistas.toArray()).map((x) => x.id))
   const existentesO = new Set((await db.obras.toArray()).map((x) => x.id))
   const as: Artista[] = ARTISTAS.filter(([id]) => !existentesA.has(id)).map(([id, a], i) => ({
@@ -1959,5 +1976,5 @@ export async function semearArtistas() {
     }
     for (const x of semFalas) await db.artistas.update(x.id, { falas: FALAS[x.id], atualizadoEm: Date.now() })
   })
-  await db.ajustes.put({ chave: 'seed-artistas-v12', valor: true })
+  await db.ajustes.put({ chave: 'seed-artistas-v13', valor: true })
 }
