@@ -447,7 +447,7 @@ async function pesquisarArtista(d) {
     if (e instanceof Anthropic.AuthenticationError) return json({ erro: 'A chave da Anthropic foi recusada. Confira a variável ANTHROPIC_API_KEY na Vercel.' }, 503)
     if (e instanceof Anthropic.PermissionDeniedError) return json({ erro: 'A conta da Anthropic não tem permissão (crédito, limite de gasto ou busca na web desligada no Console).' }, 503)
     if (e instanceof Anthropic.RateLimitError) return json({ erro: 'Muitos pedidos seguidos. Espere um pouco.' }, 429)
-    if (e instanceof Anthropic.BadRequestError) return json({ erro: 'Pedido recusado pela API: ' + e.message }, 400)
+    if (e instanceof Anthropic.BadRequestError) return json({ erro: /credit balance/i.test(e.message) ? 'Acabou o crédito da Anthropic. Compre créditos em console.anthropic.com › Settings › Billing.' : 'Pedido recusado pela API: ' + e.message }, /credit balance/i.test(e.message) ? 402 : 400)
     if (e instanceof Anthropic.APIError) return json({ erro: `A IA não respondeu (${e.status ?? 'rede'}).` }, 502)
     return json({ erro: 'Erro inesperado: ' + (e instanceof Error ? e.message : String(e)) }, 500)
   }
@@ -520,7 +520,7 @@ function erroDaIA(e) {
   if (e instanceof Anthropic.AuthenticationError) return json({ erro: 'A chave da Anthropic foi recusada. Confira a variável ANTHROPIC_API_KEY na Vercel.' }, 503)
   if (e instanceof Anthropic.PermissionDeniedError) return json({ erro: 'A conta da Anthropic não tem permissão (crédito, limite de gasto ou busca na web desligada no Console).' }, 503)
   if (e instanceof Anthropic.RateLimitError) return json({ erro: 'Muitos pedidos seguidos. Espere um pouco.' }, 429)
-  if (e instanceof Anthropic.BadRequestError) return json({ erro: 'Pedido recusado pela API: ' + e.message }, 400)
+  if (e instanceof Anthropic.BadRequestError) return json({ erro: /credit balance/i.test(e.message) ? 'Acabou o crédito da Anthropic. Compre créditos em console.anthropic.com › Settings › Billing.' : 'Pedido recusado pela API: ' + e.message }, /credit balance/i.test(e.message) ? 402 : 400)
   if (e instanceof Anthropic.APIError) return json({ erro: `A IA não respondeu (${e.status ?? 'rede'}).` }, 502)
   return json({ erro: 'Erro inesperado: ' + (e instanceof Error ? e.message : String(e)) }, 500)
 }
@@ -574,7 +574,7 @@ export async function POST(req) {
     if (e instanceof Anthropic.AuthenticationError) return json({ erro: 'A chave da Anthropic foi recusada. Confira a variável ANTHROPIC_API_KEY na Vercel.' }, 503)
     if (e instanceof Anthropic.PermissionDeniedError) return json({ erro: 'A conta da Anthropic não tem permissão (crédito ou limite de gasto).' }, 503)
     if (e instanceof Anthropic.RateLimitError) return json({ erro: 'Muitos pedidos seguidos. Espere um pouco.' }, 429)
-    if (e instanceof Anthropic.BadRequestError) return json({ erro: 'Pedido recusado pela API: ' + e.message }, 400)
+    if (e instanceof Anthropic.BadRequestError) return json({ erro: /credit balance/i.test(e.message) ? 'Acabou o crédito da Anthropic. Compre créditos em console.anthropic.com › Settings › Billing.' : 'Pedido recusado pela API: ' + e.message }, /credit balance/i.test(e.message) ? 402 : 400)
     if (e instanceof Anthropic.APIError) return json({ erro: `A IA não respondeu (${e.status ?? 'rede'}).` }, 502)
     return json({ erro: 'Erro inesperado: ' + (e instanceof Error ? e.message : String(e)) }, 500)
   }
