@@ -411,7 +411,7 @@ function VisorDescobrir({ itens, inicio, curtidos, salvos, onClose, onAgir }: { 
       </div>
       <div className="visor-links">
         <button onClick={() => levar('painel')}><LayoutDashboard size={13} />Levar a um painel</button>
-        <button onClick={async () => { await ideiaDeDescobrir(x); toast('Guardada em Superfícies › Ideias') }}><FlaskConical size={13} />Ideia de esmalte</button>
+        <button onClick={async () => { await ideiaDeDescobrir(x); toast('Guardada em Esmaltaria › Ideias') }}><FlaskConical size={13} />Ideia de esmalte</button>
         <a href={x.link} target="_blank" rel="noreferrer"><ExternalLink size={13} />Ver no museu</a>
       </div>
       {extra === 'explicar' && <ExplicarObra x={x} onClose={() => setExtra(undefined)} />}

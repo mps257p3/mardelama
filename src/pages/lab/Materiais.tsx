@@ -18,7 +18,7 @@ export default function Materiais() {
   return (
     <div className="page">
       <div className="head">
-        <div><p className="eyebrow">Laboratório</p><h1 style={{ marginTop: 8 }}>Materiais</h1></div>
+        <div><p className="eyebrow">Esmaltaria</p><h1 style={{ marginTop: 8 }}>Materiais</h1></div>
         <div className="acts"><Link className="btn primary" to="/materiais/novo"><Plus size={16} />Novo material</Link></div>
       </div>
       <div className="toolbar">

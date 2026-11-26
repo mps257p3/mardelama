@@ -125,7 +125,7 @@ export default function Planejar() {
   return (
     <div className="page" style={{ maxWidth: 900 }}>
       <Link to="/testes" className="back"><ArrowLeft size={15} />Testes</Link>
-      <p className="eyebrow">Laboratório</p>
+      <p className="eyebrow">Esmaltaria</p>
       <h1 style={{ marginTop: 8 }}>Planejar experimento</h1>
       <div className="quick" style={{ marginTop: 24 }}>
         {MODOS.map((m) => <button key={m.v} onClick={() => { setModo(m.v); setIds([]) }} style={modo === m.v ? { borderColor: 'var(--ink)' } : undefined}><span>{m.l}<small>{m.d}</small></span></button>)}

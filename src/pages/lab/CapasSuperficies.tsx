@@ -8,7 +8,7 @@ type Capa = { id?: string; externa?: string }
 const recente = <T extends { atualizadoEm: number }>(xs: T[] | undefined, foto: (x: T) => Capa | undefined): Capa | undefined =>
   [...(xs ?? [])].sort((a, b) => b.atualizadoEm - a.atualizadoEm).map(foto).find((c) => c && (c.id || c.externa))
 
-/** Capas de Superfícies (esmaltes, fórmulas, testes, ideias) com fotos do próprio ateliê; ficam no topo do Laboratório. */
+/** Capas de Superfícies (esmaltes, fórmulas, testes, ideias) com fotos do próprio ateliê; ficam no topo da Esmaltaria. */
 export function CapasSuperficies() {
   const esmaltes = useEsmaltes(), receitas = useReceitas(), testes = useTestes(), ideias = useIdeias()
   const ITENS: { to: string; nome: string; n?: number; capa?: Capa; icon: typeof FlaskConical; cor: string; classe: string }[] = [

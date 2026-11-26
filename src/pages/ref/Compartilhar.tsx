@@ -5,7 +5,7 @@ import { NAO_SEI, ehInstagram, guardar, temNaoSei, lerComIA, lerRecebido, limpar
 import { useToast } from '../../ui/toast'
 
 const DESTINOS: { id: Destino; nome: string; desc: string; icone: typeof FlaskConical }[] = [
-  { id: 'ideia', nome: 'Ideia de esmaltação', desc: 'Superfícies > Ideias, com esmaltes e passo a passo', icone: FlaskConical },
+  { id: 'ideia', nome: 'Ideia de esmaltação', desc: 'Esmaltaria > Ideias, com esmaltes e passo a passo', icone: FlaskConical },
   { id: 'referencia', nome: 'Referência', desc: 'Acervo de imagens de inspiração', icone: ImageIcon },
   { id: 'nota', nome: 'Anotação no caderno', desc: 'Texto, aula, receita ou lembrete', icone: BookOpen },
 ]

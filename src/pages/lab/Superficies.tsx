@@ -40,9 +40,9 @@ export default function Superficies({ aba, entrada }: { aba: Aba; entrada?: bool
   const ABAS: [Aba, string][] = [['esmaltes', 'Esmaltes'], ['receitas', 'Fórmulas'], ['testes', 'Testes'], ['ideias', 'Ideias']]
   return (
     <div className="page">
-      <Link to="/laboratorio" className="back"><ArrowLeft size={15} />Laboratório</Link>
+      <Link to="/laboratorio" className="back"><ArrowLeft size={15} />Esmaltaria</Link>
       <div className="topo-c">
-        <h1>Superfícies</h1>
+        <h1>Esmaltaria</h1>
         <div className="icones">
           <Link className="iconbtn" to={fam ? `/familias/${fam}` : '/familias'} aria-label="Sobre as famílias" title="Sobre as famílias"><Info size={19} /></Link>
           <Menu rotulo="Adicionar" botao={<span className="iconbtn mais"><Plus size={19} /></span>} itens={[

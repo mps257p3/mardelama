@@ -14,7 +14,7 @@ export default function Curvas() {
   }
   return (
     <div className="page" style={{ maxWidth: 860 }}>
-      <Link to="/laboratorio" className="back"><ArrowLeft size={15} />Laboratório</Link>
+      <Link to="/laboratorio" className="back"><ArrowLeft size={15} />Esmaltaria</Link>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
         <h1>Curvas de queima</h1>
         <button className="btn primary" onClick={nova}><Plus size={16} />Nova curva</button>

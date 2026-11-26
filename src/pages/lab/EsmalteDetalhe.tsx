@@ -49,7 +49,7 @@ export default function EsmalteDetalhe() {
 
   return (
     <div className="page">
-      <Link to="/esmaltes" className="back"><ArrowLeft size={15} />Superfícies</Link>
+      <Link to="/esmaltes" className="back"><ArrowLeft size={15} />Esmaltaria</Link>
       <div className="detalhe">
         <div>
           <CapaFotos fotos={e.fotos} alt={e.nome} rotuloAdd="Adicionar foto do esmalte"
