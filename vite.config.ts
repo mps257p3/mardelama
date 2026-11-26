@@ -25,14 +25,14 @@ export default defineConfig({
         // fotos, links e textos de outros apps: o service worker guarda e abre a tela "Recebido"
         share_target: {
           action: '/compartilhar', method: 'POST', enctype: 'multipart/form-data',
-          params: { title: 'title', text: 'text', url: 'url', files: [{ name: 'arquivos', accept: ['image/*'] }] },
+          params: { title: 'title', text: 'text', url: 'url', files: [{ name: 'arquivos', accept: ['image/*', 'application/pdf', '.pdf'] }] },
         },
       },
       workbox: {
         importScripts: ['compartilhar-sw.js'],
         globPatterns: ['**/*.{js,css,html,png,jpg,svg,woff2}'],
         // o modelo de visão só carrega quando é usado; não entra na instalação do app
-        globIgnores: ['**/transformers*.js', '**/ort-*'],
+        globIgnores: ['**/transformers*.js', '**/ort-*', '**/pdf.worker*'],
         navigateFallback: '/index.html',
         skipWaiting: true,
         clientsClaim: true,

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, BookOpen, FlaskConical, ImagePlus, Image as ImageIcon, Palette, Sparkles, Trash2 } from 'lucide-react'
-import { MAX_LEITURA, NAO_SEI, ehInstagram, guardar, temNaoSei, lerComIA, lerRecebido, limparRecebido, previaDoLink, type Destino, type Leitura, type Previa, type Recebido, type Resposta } from '../../lib/recebidos'
+import { MAX_LEITURA, NAO_SEI, abrirPdfs, ehPdf, ehInstagram, guardar, temNaoSei, lerComIA, lerRecebido, limparRecebido, previaDoLink, type Destino, type Leitura, type Previa, type Recebido, type Resposta } from '../../lib/recebidos'
 import { useToast } from '../../ui/toast'
 
 const DESTINOS: { id: Destino; nome: string; desc: string; icone: typeof FlaskConical }[] = [
@@ -31,6 +31,7 @@ export default function Compartilhar() {
   const [respondidas, setRespondidas] = useState<Resposta[]>([])
   const [rodada, setRodada] = useState(0)
   const [pesquisar, setPesquisar] = useState(false)
+  const [abrindoPdf, setAbrindoPdf] = useState(false)
   const arquivo = useRef<HTMLInputElement>(null)
 
   // o que chegou: do service worker (POST com fotos) ou pelo endereço (link e texto)
@@ -38,12 +39,19 @@ export default function Compartilhar() {
     (async () => {
       const id = sp.get('recebido')
       const x = id ? await lerRecebido(id) : undefined
-      if (x) { setR(x); return }
+      if (x) { setR(await comPdf(x)); return }
       const texto = sp.get('text') ?? '', url = sp.get('url') || texto.match(/https?:\/\/\S+/)?.[0] || undefined
       if (texto || url || sp.get('title')) setR({ titulo: sp.get('title') ?? '', texto, url, imagens: [] })
       else setR({ titulo: '', texto: '', imagens: [] })
     })()
   }, [sp])
+
+  // PDF: tira o texto e recorta as figuras antes de ler
+  async function comPdf(x: Recebido): Promise<Recebido> {
+    if (!x.imagens.some(ehPdf)) return x
+    setAbrindoPdf(true)
+    try { return await abrirPdfs(x) } catch (e) { toast('Não consegui abrir o PDF: ' + (e as Error).message); return { ...x, imagens: x.imagens.filter((b) => !ehPdf(b)) } } finally { setAbrindoPdf(false) }
+  }
 
   const vazio = !!r && !r.imagens.length && !r.url && !r.texto.trim()
   const chave = r ? `${r.id}|${r.url}|${r.texto}|${r.imagens.length}` : ''
@@ -74,6 +82,7 @@ export default function Compartilhar() {
   const urls = useMemo(() => (r?.imagens ?? []).map((b) => URL.createObjectURL(b)), [r?.imagens])
   useEffect(() => () => urls.forEach((u) => URL.revokeObjectURL(u)), [urls])
 
+  if (abrindoPdf) return <div className="page recebido" style={{ maxWidth: 760 }}><p className="eyebrow">Recebido</p><p className="recebido-lendo" style={{ marginTop: 18 }}><Sparkles size={15} />Abrindo o PDF: tirando o texto e recortando as figuras…</p></div>
   if (!r) return null
 
   async function escolher(d: Destino) {
@@ -92,12 +101,12 @@ export default function Compartilhar() {
     nav('/', { replace: true })
   }
 
-  function usarColado(files?: FileList | null) {
+  async function usarColado(files?: FileList | null) {
     const texto = colado.trim()
-    const imagens = [...(files ?? [])].filter((f) => f.type.startsWith('image/'))
+    const imagens = [...(files ?? [])].filter((f) => f.type.startsWith('image/') || ehPdf(f))
     if (!texto && !imagens.length) return
-    setR({ titulo: '', texto, url: texto.match(/https?:\/\/\S+/)?.[0], imagens })
     setColado('')
+    setR(await comPdf({ titulo: '', texto, url: texto.match(/https?:\/\/\S+/)?.[0], imagens }))
   }
 
   function responder() {
@@ -118,12 +127,12 @@ export default function Compartilhar() {
 
       {vazio ? (
         <div className="recebido-colar">
-          <p className="faint">No celular, use o botão Compartilhar de qualquer app (galeria, navegador, Instagram) e escolha Mar de Lama. Para o Instagram, mande o print: o link não abre de fora. Aqui você também pode colar um link de site ou escolher fotos.</p>
+          <p className="faint">No celular, use o botão Compartilhar de qualquer app (galeria, navegador, Instagram) e escolha Mar de Lama. Para o Instagram, mande o print: o link não abre de fora. Aqui você também pode colar um link de site ou escolher fotos e PDFs.</p>
           <textarea className="input" rows={3} placeholder="Cole um link ou um texto" value={colado} onChange={(e) => setColado(e.target.value)} />
           <div className="recebido-acoes">
             <button className="btn primary" disabled={!colado.trim()} onClick={() => usarColado()}><Sparkles size={15} />Ler</button>
-            <button className="btn" onClick={() => arquivo.current?.click()}><ImagePlus size={15} />Escolher fotos</button>
-            <input ref={arquivo} type="file" accept="image/*" multiple hidden onChange={(e) => usarColado(e.target.files)} />
+            <button className="btn" onClick={() => arquivo.current?.click()}><ImagePlus size={15} />Escolher fotos ou PDF</button>
+            <input ref={arquivo} type="file" accept="image/*,application/pdf,.pdf" multiple hidden onChange={(e) => usarColado(e.target.files)} />
           </div>
         </div>
       ) : <>
@@ -132,6 +141,7 @@ export default function Compartilhar() {
             {urls.length ? urls.map((u) => <img key={u} src={u} alt="" />) : <img src={previa!.imagem} alt="" />}
           </div>
         )}
+        {!!r.pdfs?.length && <p className="faint recebido-aviso">PDF aberto: {r.imagens.length ? `${r.imagens.length} ${r.imagens.length > 1 ? 'figuras recortadas' : 'figura recortada'}` : 'sem figuras'} e o texto inteiro.</p>}
         {r.imagens.length > 1 && <p className="faint recebido-aviso">{r.imagens.length} fotos, que vão juntas para a mesma ficha.{r.imagens.length > MAX_LEITURA ? ` A leitura olha as ${MAX_LEITURA} primeiras.` : ''}</p>}
         {r.url && <p className="recebido-link"><a href={r.url} target="_blank" rel="noreferrer">{previa?.site || r.url}</a></p>}
         {r.url && ehInstagram(r.url) && !r.imagens.length && <p className="faint recebido-aviso">O Instagram não deixa abrir o post por link. Para ler a imagem e a legenda, compartilhe um print.</p>}
