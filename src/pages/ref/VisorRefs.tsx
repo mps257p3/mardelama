@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ExternalLink, FileText, FolderPlus, Heart, Info, LayoutDashboard, ScanSearch, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ExternalLink, FileText, FolderPlus, Heart, Info, LayoutDashboard, ScanSearch, Shapes, X } from 'lucide-react'
 import type { Referencia } from '../../db/schema'
 import { alternarFavorito, useGrupos } from '../../db/hooks'
 import { ImgRef, temImagem } from './ImgRef'
-import { EscolherGrupos, EscolherPainel } from './acoesRefs'
+import { EscolherGrupos, EscolherObra, EscolherPainel } from './acoesRefs'
 import { ehSalvoInstagram } from '../../lib/instagram'
 
 /** Tela cheia do Acervo: imagem protagonista, metadados sob demanda, deslizar para navegar. */
 export function VisorRefs({ lista, inicio, onClose }: { lista: Referencia[]; inicio: number; onClose: () => void }) {
   const [i, setI] = useState(inicio)
   const [info, setInfo] = useState(false)
-  const [acao, setAcao] = useState<'grupos' | 'painel'>()
+  const [acao, setAcao] = useState<'grupos' | 'painel' | 'obra'>()
   const grupos = useGrupos()
   const toque = useRef<{ x: number; y: number } | undefined>(undefined)
   const n = lista.length
@@ -55,6 +55,7 @@ export function VisorRefs({ lista, inicio, onClose }: { lista: Referencia[]; ini
         <button className="visor-btn" aria-label={r.favorito ? 'Desfavoritar' : 'Favoritar'} onClick={() => alternarFavorito('referencias', r.id, r.favorito)}><Heart size={19} fill={r.favorito ? 'currentColor' : 'none'} /></button>
         <button className="visor-btn" aria-label="Grupos" onClick={() => setAcao('grupos')}><FolderPlus size={19} /></button>
         <button className="visor-btn" aria-label="Levar a um painel" onClick={() => setAcao('painel')}><LayoutDashboard size={19} /></button>
+        <button className="visor-btn" aria-label="Levar a uma obra" title="Levar a uma obra" onClick={() => setAcao('obra')}><Shapes size={19} /></button>
         <Link className="visor-btn" aria-label="Ver semelhantes no Descobrir" title="Ver semelhantes" to={`/referencias/descobrir?ref=${r.id}`}><ScanSearch size={19} /></Link>
         {r.url && <a className="visor-btn" aria-label="Fonte original" href={r.url} target="_blank" rel="noreferrer"><ExternalLink size={18} /></a>}
         <button className={'visor-btn' + (info ? ' on' : '')} aria-label="Informações" onClick={() => setInfo(!info)}><Info size={19} /></button>
@@ -76,5 +77,6 @@ export function VisorRefs({ lista, inicio, onClose }: { lista: Referencia[]; ini
       </>}
       {acao === 'grupos' && <EscolherGrupos ids={[r.id]} onClose={() => setAcao(undefined)} />}
       {acao === 'painel' && <EscolherPainel ids={[r.id]} onClose={() => setAcao(undefined)} />}
+      {acao === 'obra' && <EscolherObra ids={[r.id]} onClose={() => setAcao(undefined)} />}
     </div>, document.body)
 }
