@@ -25,7 +25,10 @@ export interface Leitura {
   porque: string
   tags: string[]
   esmalte: { materiais: string[]; como: string; efeitos: string[]; queima: string; argila: string; notas: string }
+  perguntas: { pergunta: string; opcoes: string[] }[]
 }
+
+export interface Resposta { pergunta: string; resposta: string }
 
 const CACHE = 'recebidos'
 const linkDe = (texto: string) => texto.match(/https?:\/\/\S+/)?.[0]
@@ -65,10 +68,10 @@ function fonteDe(url?: string, site?: string) {
 }
 
 /** Transcreve, resume e sugere o destino. Precisa da IA configurada na Vercel. */
-export async function lerComIA(r: Recebido, previa?: Previa): Promise<Leitura | undefined> {
+export async function lerComIA(r: Recebido, previa?: Previa, respostas: Resposta[] = []): Promise<Leitura | undefined> {
   if (!(await iaConfigurada())) return undefined
   const imagens = await Promise.all(r.imagens.slice(0, 4).map(async (b) => ({ base64: await paraBase64(b), tipo: 'image/jpeg' })))
-  return chamar<Leitura>({ acao: 'receber', imagens, titulo: r.titulo, texto: r.texto, url: r.url, previa: previa && !previa.erro ? previa : undefined }, 90000)
+  return chamar<Leitura>({ acao: 'receber', imagens, titulo: r.titulo, texto: r.texto, url: r.url, previa: previa && !previa.erro ? previa : undefined, respostas }, 90000)
 }
 
 async function guardarImagens(r: Recebido, tipo: 'ideia' | 'referencia' | 'nota', id: string) {

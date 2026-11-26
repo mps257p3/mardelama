@@ -1104,3 +1104,11 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
 .recebido-destino.on { border-color: var(--carvao); box-shadow: 0 0 0 1px var(--carvao); }
 .recebido-destino:disabled { opacity: .6; }
 .recebido-descartar { margin-top: 16px; }
+.recebido-perguntas { display: grid; gap: 14px; margin-top: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.recebido-perguntas .recebido-pergunta { margin: 0; font-size: 20px; }
+.recebido-q { display: grid; gap: 8px; }
+.recebido-q p { margin: 0; font-weight: 500; }
+.recebido-q .chips { flex-wrap: wrap; }
+.recebido-perguntas > .btn { justify-self: start; }
+.recebido-lendo { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); font-size: 14px; animation: recebido-pulso 1.6s ease-in-out infinite; }
+@keyframes recebido-pulso { 50% { opacity: .55; } }

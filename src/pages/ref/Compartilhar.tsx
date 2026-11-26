@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, BookOpen, FlaskConical, ImagePlus, Image as ImageIcon, Sparkles, Trash2 } from 'lucide-react'
-import { ehInstagram, guardar, lerComIA, lerRecebido, limparRecebido, previaDoLink, type Destino, type Leitura, type Previa, type Recebido } from '../../lib/recebidos'
+import { ehInstagram, guardar, lerComIA, lerRecebido, limparRecebido, previaDoLink, type Destino, type Leitura, type Previa, type Recebido, type Resposta } from '../../lib/recebidos'
 import { useToast } from '../../ui/toast'
 
 const DESTINOS: { id: Destino; nome: string; desc: string; icone: typeof FlaskConical }[] = [
@@ -25,6 +25,10 @@ export default function Compartilhar() {
   const [erroIA, setErroIA] = useState<string>()
   const [salvando, setSalvando] = useState(false)
   const [colado, setColado] = useState('')
+  const [pendente, setPendente] = useState<Destino>()
+  const [respostas, setRespostas] = useState<Record<string, string>>({})
+  const [respondidas, setRespondidas] = useState<Resposta[]>([])
+  const [rodada, setRodada] = useState(0)
   const arquivo = useRef<HTMLInputElement>(null)
 
   // o que chegou: do service worker (POST com fotos) ou pelo endereço (link e texto)
@@ -42,22 +46,28 @@ export default function Compartilhar() {
   const vazio = !!r && !r.imagens.length && !r.url && !r.texto.trim()
   const chave = r ? `${r.id}|${r.url}|${r.texto}|${r.imagens.length}` : ''
 
-  // prévia do link e leitura automática assim que há conteúdo
+  // prévia do link e leitura automática assim que há conteúdo (e de novo depois das respostas)
   useEffect(() => {
     if (!r || vazio) return
     let vivo = true
-    setLeitura(undefined); setErroIA(undefined); setLendo(true)
+    setErroIA(undefined); setLendo(true)
     ;(async () => {
-      const p = r.url && !r.imagens.length && !ehInstagram(r.url) ? await previaDoLink(r.url) : undefined
-      if (!vivo) return
-      setPrevia(p)
-      try { const l = await lerComIA(r, p); if (vivo) { setLeitura(l); if (!l) setErroIA('A leitura automática não está ligada. Escolha o destino abaixo.') } }
-      catch (e) { if (vivo) setErroIA((e as Error).message) }
+      let p = previa
+      if (!rodada) { p = r.url && !r.imagens.length && !ehInstagram(r.url) ? await previaDoLink(r.url) : undefined; if (!vivo) return; setPrevia(p) }
+      try {
+        const l = await lerComIA(r, p, respondidas)
+        if (!vivo) return
+        setLeitura(l); setRespostas({})
+        if (!l) setErroIA('A leitura automática não está ligada. Escolha o destino abaixo.')
+      } catch (e) { if (vivo) setErroIA('A leitura não deu certo: ' + (e as Error).message) }
       finally { if (vivo) setLendo(false) }
     })()
     return () => { vivo = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chave])
+  }, [chave, rodada])
+
+  // tocou num destino durante a leitura: guarda assim que ela termina, já com os campos preenchidos
+  useEffect(() => { if (pendente && !lendo) { const d = pendente; setPendente(undefined); escolher(d) } }, [pendente, lendo]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const urls = useMemo(() => (r?.imagens ?? []).map((b) => URL.createObjectURL(b)), [r?.imagens])
   useEffect(() => () => urls.forEach((u) => URL.revokeObjectURL(u)), [urls])
@@ -66,6 +76,7 @@ export default function Compartilhar() {
 
   async function escolher(d: Destino) {
     if (!r || salvando) return
+    if (lendo) { setPendente(d); return }
     setSalvando(true)
     try {
       const caminho = await guardar(d, r, leitura, previa)
@@ -87,6 +98,13 @@ export default function Compartilhar() {
     setColado('')
   }
 
+  function responder() {
+    const novas = (leitura?.perguntas ?? []).map((q) => ({ pergunta: q.pergunta, resposta: (respostas[q.pergunta] ?? '').trim() })).filter((x) => x.resposta)
+    if (!novas.length) return
+    setRespondidas([...respondidas, ...novas]); setRodada((n) => n + 1)
+  }
+
+  const perguntas = !lendo ? leitura?.perguntas ?? [] : []
   const sugerido = leitura?.destino
   const titulo = leitura?.titulo || r.titulo || previa?.titulo
 
@@ -116,8 +134,8 @@ export default function Compartilhar() {
         {r.url && ehInstagram(r.url) && !r.imagens.length && <p className="faint recebido-aviso">O Instagram não deixa abrir o post por link. Para ler a imagem e a legenda, compartilhe um print.</p>}
 
         <section className="recebido-leitura">
-          {lendo && <p className="faint">Lendo o conteúdo e transcrevendo o texto…</p>}
-          {erroIA && !lendo && <p className="faint">{erroIA}</p>}
+          {lendo && <p className="recebido-lendo"><Sparkles size={15} />Lendo a imagem e preenchendo os campos… leva uns 20 segundos.</p>}
+          {erroIA && !lendo && <p className="faint">{erroIA} {erroIA.startsWith('A leitura não') && <button className="btn sm" onClick={() => setRodada((n) => n + 1)}>Tentar de novo</button>}</p>}
           {leitura && <>
             {leitura.resumo && <p>{leitura.resumo}</p>}
             {leitura.autor && <p className="faint">Autor: {leitura.autor}</p>}
@@ -126,10 +144,25 @@ export default function Compartilhar() {
           {!leitura && !lendo && r.texto && <p className="recebido-texto">{r.texto}</p>}
         </section>
 
+        {perguntas.length > 0 && (
+          <section className="recebido-perguntas">
+            <h2 className="recebido-pergunta">Antes de guardar</h2>
+            {perguntas.map((q) => (
+              <div key={q.pergunta} className="recebido-q">
+                <p>{q.pergunta}</p>
+                {q.opcoes.length > 0 && <div className="chips">{q.opcoes.map((o) => <button key={o} className={'chip' + (respostas[q.pergunta] === o ? ' on' : '')} onClick={() => setRespostas({ ...respostas, [q.pergunta]: o })}>{o}</button>)}</div>}
+                <input className="input" placeholder="Ou escreva aqui" value={q.opcoes.includes(respostas[q.pergunta] ?? '') ? '' : respostas[q.pergunta] ?? ''} onChange={(e) => setRespostas({ ...respostas, [q.pergunta]: e.target.value })} />
+              </div>
+            ))}
+            <button className="btn primary" disabled={!Object.values(respostas).some((v) => v.trim())} onClick={responder}><Sparkles size={15} />Responder e completar</button>
+          </section>
+        )}
+
         <h2 className="recebido-pergunta">Para onde vai?</h2>
+        {pendente && <p className="faint">Guardando assim que a leitura terminar…</p>}
         <div className="recebido-destinos">
           {DESTINOS.map(({ id, nome, desc, icone: I }) => (
-            <button key={id} className={'recebido-destino' + (sugerido === id ? ' on' : '')} disabled={salvando} onClick={() => escolher(id)}>
+            <button key={id} className={'recebido-destino' + (sugerido === id ? ' on' : '')} disabled={salvando || !!pendente} onClick={() => escolher(id)}>
               <I size={20} />
               <span className="t">{nome}{sugerido === id && <em>sugerido</em>}</span>
               <span className="s">{sugerido === id && leitura?.porque ? leitura.porque : desc}</span>
