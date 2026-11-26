@@ -31,6 +31,29 @@ export function iaConfigurada(): Promise<boolean> {
 }
 
 export async function chamar<T>(corpo: Record<string, unknown>, ms = 90000): Promise<T> {
+  // No celular, se o app sai da tela (trocou de app, apagou a tela) no meio da pesquisa, o Android
+  // corta a conexão ("Failed to fetch"). Mantém a tela acesa e, se caiu por isso, tenta de novo uma vez ao voltar.
+  const tela = await manterTelaAcesa()
+  let saiuDaTela = document.visibilityState === 'hidden'
+  const marcar = () => { if (document.visibilityState === 'hidden') saiuDaTela = true }
+  document.addEventListener('visibilitychange', marcar)
+  try {
+    try { return await chamarUmaVez<T>(corpo, ms) }
+    catch (e) {
+      if (!(e instanceof TypeError) || !saiuDaTela) throw e
+      await quandoVisivel()
+      return await chamarUmaVez<T>(corpo, ms)
+    }
+  } catch (e) {
+    if (e instanceof TypeError) throw new Error('A conexão caiu no meio da pesquisa. Deixe o app aberto na tela até terminar e tente de novo.')
+    throw e
+  } finally {
+    document.removeEventListener('visibilitychange', marcar)
+    tela?.release().catch(() => undefined)
+  }
+}
+
+async function chamarUmaVez<T>(corpo: Record<string, unknown>, ms: number): Promise<T> {
   const c = new AbortController(); const t = setTimeout(() => c.abort(), ms)
   try {
     const r = await fetch('/api/ia', { method: 'POST', headers: { 'content-type': 'application/json', ...(await cabecalhoLogin()) }, body: JSON.stringify(corpo), signal: c.signal })
@@ -42,6 +65,19 @@ export async function chamar<T>(corpo: Record<string, unknown>, ms = 90000): Pro
     if ((e as Error).name === 'AbortError') throw new Error('A IA demorou demais para responder')
     throw e
   } finally { clearTimeout(t) }
+}
+
+async function manterTelaAcesa() {
+  try { return await (navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<{ release: () => Promise<void> }> } }).wakeLock?.request('screen') }
+  catch { return undefined }
+}
+
+function quandoVisivel() {
+  return new Promise<void>((ok) => {
+    if (document.visibilityState === 'visible') return ok()
+    const f = () => { if (document.visibilityState === 'visible') { document.removeEventListener('visibilitychange', f); ok() } }
+    document.addEventListener('visibilitychange', f)
+  })
 }
 
 const topo = (o: Record<string, number>, n: number) => Object.entries(o).filter(([, p]) => p > 0).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k]) => k)
