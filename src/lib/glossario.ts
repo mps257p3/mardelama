@@ -13,6 +13,7 @@ export interface Termo {
   def: string
   chaves?: string[]
   ver?: string[]
+  exemplos?: string[]          // situações práticas, uma por item
 }
 
 export const CATS_GLOSSARIO: CatGlossario[] = ['Argila e preparo', 'Técnicas', 'Esmaltes e superfícies', 'Queima e fornos', 'Materiais', 'Defeitos', 'Formas', 'Tradições e estética']
@@ -68,6 +69,32 @@ export const GLOSSARIO: Termo[] = [
     def: 'Texturas e desenhos pressionados na argila mole com carimbos, rendas, folhas ou objetos.' },
   { id: 'decalque', termo: 'Decalque', cat: 'Técnicas',
     def: 'Imagem impressa em papel especial aplicada sobre o esmalte queimado e fixada numa terceira queima, de baixa temperatura.' },
+
+  // Preparo do esmalte (barbotina)
+  { id: 'floculacao', termo: 'Floculação (vinagre, sal de Epsom)', cat: 'Esmaltes e superfícies', chaves: ['floculação', 'floculante', 'flocular'], ver: ['defloculante', 'teste-vinagre'],
+    def: 'Fazer as partículas do esmalte líquido se juntarem um pouco, para ele ficar mais encorpado. O esmalte para de assentar duro no fundo do balde e de escorrer da peça, e a camada sai mais uniforme, até em parede vertical. Os floculantes mais usados são vinagre branco, sal de Epsom (sulfato de magnésio, dissolvido antes em água quente) e cloreto de cálcio. Use sempre aos poucos: o efeito leva alguns minutos para aparecer, e em excesso o esmalte vira um gel que deixa marca de pincel e pode descascar ao secar.',
+    exemplos: [
+      'Esmalte que assentou duro no fundo do balde: pingue vinagre branco, umas 5 gotas por litro, mexa bem e espere 10 minutos antes de pôr mais.',
+      'Esmalte ralo que escorre na imersão e deixa a camada fina: flocular deixa a camada mais grossa sem tirar água.',
+      'Esmaltes com muita frita e pouca argila (como os fundentes FLX, só frita e caulim) assentam com facilidade e costumam pedir um floculante.',
+      'Com sal de Epsom: dissolva o sal num pouco de água quente até não dissolver mais e junte essa solução no esmalte de colher de chá em colher de chá, mexendo entre uma e outra.',
+      'Passou do ponto e virou gel: junte um pouco de água ou 1 a 2 gotas de defloculante e mexa.',
+      'Na fórmula do app, registre em Preparo e queima › Aditivo líquido, por exemplo "Vinagre branco · 1 gota/100 g", para saber quanto cada balde levou.',
+    ] },
+  { id: 'defloculante', termo: 'Defloculante', cat: 'Esmaltes e superfícies', chaves: ['defloculante', 'silicato de sódio', 'darvan'], ver: ['floculacao', 'barbotina', 'colagem'],
+    def: 'O contrário do floculante: afasta as partículas e deixa a mistura mais fluida com menos água. É a base da barbotina de colagem em molde de gesso e serve para afinar um esmalte que engrossou demais. Os mais comuns são silicato de sódio, Darvan e barrilha (carbonato de sódio). Em excesso, faz o esmalte assentar duro no fundo do balde.',
+    exemplos: [
+      'Barbotina de colagem: a argila fica líquida com pouca água, seca mais rápido no molde e encolhe menos.',
+      'Esmalte que virou gel por excesso de vinagre ou de sal de Epsom: 1 a 2 gotas de defloculante por litro, mexendo bem.',
+      'Esmalte que precisa de bastante sólido e pouca água, como os de pincel: um toque de defloculante deixa a mistura espalhar melhor.',
+    ] },
+  { id: 'teste-vinagre', termo: 'Teste do vinagre ou do limão', cat: 'Esmaltes e superfícies', chaves: ['teste do vinagre', 'teste do limão'], ver: ['floculacao'],
+    def: 'Teste caseiro para ver se a superfície do esmalte resiste a comida ácida. Ele só mostra o que dá para ver: se a placa não muda, isso não prova que o esmalte é seguro para louça. Chumbo, cádmio e bário podem sair sem deixar marca, então só o teste de lixiviação em laboratório libera um esmalte para louça.',
+    exemplos: [
+      'Pingue vinagre branco ou ponha uma rodela de limão numa parte da placa queimada, cubra e deixe 24 a 48 horas.',
+      'Lave e compare com uma parte que não teve contato. Se a cor mudar, o brilho cair ou ficar uma mancha esbranquiçada, o esmalte não serve para louça.',
+      'Os esmaltes que mais costumam mudar no teste são os com muito cobre, manganês ou excesso de fundente.',
+    ] },
 
   // Esmaltes (gerais)
   { id: 'esmalte', termo: 'Esmalte (vidrado)', cat: 'Esmaltes e superfícies', ver: ['frita', 'fundente', 'silica'],
