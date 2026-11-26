@@ -81,6 +81,9 @@ export async function previaDoLink(url: string): Promise<Previa> {
   } catch { return { erro: 'Sem conexão' } }
 }
 
+/** Link de arquivo na nuvem (Acrobat, Drive, OneDrive, Dropbox): o app recebe só o endereço, não o arquivo. */
+export const ehLinkDeArquivo = (url?: string) => !!url && /(^|\.)(acrobat\.adobe\.com|drive\.google\.com|docs\.google\.com|onedrive\.live\.com|1drv\.ms|dropbox\.com)$/i.test(hostDe(url))
+
 export const ehInstagram = (url?: string) => !!url && /(^|\.)instagram\.com$/i.test(hostDe(url))
 function hostDe(url: string) { try { return new URL(url).hostname.replace(/^www\./, '') } catch { return '' } }
 function fonteDe(url?: string, site?: string) {
