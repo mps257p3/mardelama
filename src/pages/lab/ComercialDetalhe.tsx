@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { incluidoEm } from '../../lib/data'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Sparkles, Trash2 } from 'lucide-react'
+import { ArrowLeft, Check, Sparkles, Trash2 } from 'lucide-react'
 import { pesquisarEstudo } from '../../lib/comercial'
 import { useToast } from '../../ui/toast'
-import { db, type Comercial, type Receita } from '../../db/schema'
+import { db, uid, type Comercial, type Ingrediente, type Receita } from '../../db/schema'
 import { useFamilias } from '../../db/hooks'
 import { TextoEditavel, ListaEditavel } from '../../ui/editavel'
-import { Fotos, Multi } from '../../ui/form'
+import { Multi } from '../../ui/form'
+import { CapaFotos } from '../../ui/GaleriaFotos'
 import { Relacoes } from '../../ui/Relacoes'
 
 const maiusc = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
@@ -30,7 +31,7 @@ export default function ComercialDetalhe() {
   return (
     <div className="page" style={{ maxWidth: 860 }}>
       <Link to="/engenharia-reversa" className="back"><ArrowLeft size={15} />Engenharia reversa</Link>
-      <div style={{ margin: '12px 0 20px' }}><Fotos value={c.fotos} onChange={(v) => salvar({ fotos: v })} /></div>
+      <div style={{ margin: '12px 0 20px' }}><CapaFotos fotos={c.fotos} onChange={(v) => salvar({ fotos: v })} alt={c.nome} rotuloAdd="Adicionar foto" /></div>
       <p className="eyebrow">{[c.fabricante, c.codigo, c.serie].filter(Boolean).join(' · ')}</p>
       <h1 style={{ marginTop: 8 }}>{c.nome}</h1>
       <p className="faint" style={{ fontSize: 13, marginTop: 4 }}>{maiusc(incluidoEm(c.criadoEm))}</p>
@@ -50,7 +51,7 @@ export default function ComercialDetalhe() {
         <ListaEditavel rotulo="uso ou condição" itens={c.usos ?? []} onSalvar={(v) => salvar({ usos: v })} vazio="Nada registrado. A pesquisa com IA preenche." />
       </section>
 
-      <ReceitasDeTeste id={c.id} />
+      <ReceitaDeTeste c={c} />
 
       <Bloco n="1" titulo="Declarado pelo fabricante" sub="Somente o que está no rótulo ou na embalagem.">
         <ListaEditavel rotulo="item declarado" itens={c.declarados} onSalvar={(v) => salvar({ declarados: v })} vazio="Nada declarado registrado." />
@@ -94,45 +95,61 @@ export default function ComercialDetalhe() {
   )
 }
 
-/** Receitas ligadas ao estudo, mostradas inteiras: ingredientes em 100 g, parâmetros e preparo. */
-function ReceitasDeTeste({ id }: { id: string }) {
-  const rs = useLiveQuery(async () => {
-    const [a, b] = await Promise.all([
-      db.relacoes.where('[aTipo+aId]').equals(['comercial', id]).toArray(),
-      db.relacoes.where('[bTipo+bId]').equals(['comercial', id]).toArray(),
-    ])
-    const ids = [...a.filter((r) => !r.excluido && r.bTipo === 'receita').map((r) => r.bId), ...b.filter((r) => !r.excluido && r.aTipo === 'receita').map((r) => r.aId)]
-    const xs = await db.receitas.bulkGet([...new Set(ids)])
-    return xs.filter((x): x is Receita => !!x && !x.excluido)
-  }, [id], [])
-  if (!rs.length) return null
+/** Receita de teste do estudo (hipótese, em 100 g). Fica só aqui até o botão Aprovar copiar para Fórmulas. */
+function ReceitaDeTeste({ c }: { c: Comercial }) {
+  const nav = useNavigate()
+  const r = c.receita
+  const aprovada = useLiveQuery(async () => (r?.aprovadaId ? db.receitas.get(r.aprovadaId) : undefined), [r?.aprovadaId])
+  if (!r) return null
+  const base = r.ingredientes.filter((i) => i.classe === 'base')
+  const extra = r.ingredientes.filter((i) => i.classe !== 'base')
+  const soma = base.reduce((t, i) => t + i.percentual, 0)
+  const g = (n: number) => String(Math.round(n * 100) / 100).replace('.', ',') + ' g'
+  const linha = (i: Ingrediente, k: number) => (
+    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '7px 0', borderBottom: '1px solid var(--line)' }}>
+      <span>{i.nome}</span><span style={{ fontVariantNumeric: 'tabular-nums' }}>{g(i.percentual)}</span>
+    </div>
+  )
+  async function aprovar() {
+    if (!r) return
+    const agora = Date.now(), id = uid()
+    const usos = c.usos?.length ? 'Melhores usos e condições:\n' + c.usos.map((u) => '• ' + u).join('\n') : ''
+    const receita: Receita = {
+      id, criadoEm: agora, atualizadoEm: agora, excluido: 0,
+      nome: c.nome, codigo: r.codigo, familias: c.familias ?? [], status: 'Experimental — ainda não testada',
+      objetivo: `Chegar perto do ${[c.fabricante, c.codigo, c.nome].filter(Boolean).join(' ')}.`,
+      referencia: `Engenharia reversa de ${[c.fabricante, c.nome].filter(Boolean).join(' ')} (não é a fórmula do fabricante).`,
+      fonte: c.fontes?.[0], parametros: r.parametros, curvaId: c.curvaId, tags: ['engenharia reversa'], versaoAtual: 1,
+      ingredientes: r.ingredientes.map((i) => ({ ...i })), aguaMlPor100g: r.aguaMlPor100g,
+      observacoes: [r.observacoes, usos, c.observacoes].filter(Boolean).join('\n\n'),
+    }
+    const { id: _i, ...snapshot } = receita
+    await db.transaction('rw', db.receitas, db.versoes, db.relacoes, db.comerciais, async () => {
+      await db.receitas.add(receita)
+      await db.versoes.add({ id: uid(), receitaId: id, versao: 1, criadoEm: agora, nota: 'Aprovada a partir da engenharia reversa', snapshot })
+      await db.relacoes.add({ id: uid(), aTipo: 'comercial', aId: c.id, bTipo: 'receita', bId: id, criadoEm: agora, atualizadoEm: agora, excluido: 0 })
+      await db.comerciais.update(c.id, { receita: { ...r, aprovadaId: id }, atualizadoEm: agora })
+    })
+    nav(`/receitas/${id}`)
+  }
   return (
-    <>
-      {rs.map((r) => {
-        const base = r.ingredientes.filter((i) => i.classe === 'base')
-        const extra = r.ingredientes.filter((i) => i.classe !== 'base')
-        const soma = base.reduce((t, i) => t + i.percentual, 0)
-        const linha = (i: Receita['ingredientes'][number], k: number) => (
-          <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '7px 0', borderBottom: '1px solid var(--line)' }}>
-            <span>{i.nome}</span><span style={{ fontVariantNumeric: 'tabular-nums' }}>{String(i.percentual).replace('.', ',')} g</span>
-          </div>
-        )
-        return (
-          <section key={r.id} className="card" style={{ padding: 18, marginTop: 16 }}>
-            <h3>Receita para testar</h3>
-            <p className="faint" style={{ fontSize: 13, margin: '4px 0 12px' }}>{[r.codigo, r.status].filter(Boolean).join(' · ')}. Hipótese, não é a fórmula do fabricante.</p>
-            <p className="eyebrow" style={{ marginTop: 4 }}>Base · {String(soma).replace('.', ',')} g</p>
-            {base.map(linha)}
-            {extra.length > 0 && <p className="eyebrow" style={{ marginTop: 14 }}>Somar à base</p>}
-            {extra.map(linha)}
-            {r.aguaMlPor100g && <p className="muted" style={{ fontSize: 14, marginTop: 10 }}>Água: cerca de {r.aguaMlPor100g} ml para cada 100 g de seco.</p>}
-            {r.parametros && <><p className="eyebrow" style={{ marginTop: 16 }}>Variações e queima</p><p style={{ marginTop: 6, whiteSpace: 'pre-line' }}>{r.parametros}</p></>}
-            {r.observacoes && <><p className="eyebrow" style={{ marginTop: 16 }}>Preparo e aplicação</p><p style={{ marginTop: 6, whiteSpace: 'pre-line' }}>{r.observacoes}</p></>}
-            <Link to={`/receitas/${r.id}`} className="btn sm" style={{ marginTop: 14 }}>Abrir a receita</Link>
-          </section>
-        )
-      })}
-    </>
+    <section className="card" style={{ padding: 18, marginTop: 16 }}>
+      <h3>Receita para testar</h3>
+      <p className="faint" style={{ fontSize: 13, margin: '4px 0 12px' }}>{r.codigo ? r.codigo + ' · ' : ''}Hipótese, não é a fórmula do fabricante. Fica só aqui até você aprovar.</p>
+      <p className="eyebrow" style={{ marginTop: 4 }}>Base · {g(soma)}</p>
+      {base.map(linha)}
+      {extra.length > 0 && <p className="eyebrow" style={{ marginTop: 14 }}>Somar à base</p>}
+      {extra.map(linha)}
+      {r.aguaMlPor100g && <p className="muted" style={{ fontSize: 14, marginTop: 10 }}>Água: cerca de {r.aguaMlPor100g} ml para cada 100 g de seco.</p>}
+      {r.parametros && <><p className="eyebrow" style={{ marginTop: 16 }}>Variações e queima</p><p style={{ marginTop: 6, whiteSpace: 'pre-line' }}>{r.parametros}</p></>}
+      {r.observacoes && <><p className="eyebrow" style={{ marginTop: 16 }}>Preparo e aplicação</p><p style={{ marginTop: 6, whiteSpace: 'pre-line' }}>{r.observacoes}</p></>}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
+        {aprovada && !aprovada.excluido
+          ? <Link to={`/receitas/${aprovada.id}`} className="btn"><Check size={15} />Aprovada · abrir em Fórmulas</Link>
+          : <button className="btn primary" onClick={aprovar}><Check size={15} />Aprovar</button>}
+      </div>
+      {!(aprovada && !aprovada.excluido) && <p className="faint" style={{ fontSize: 13, marginTop: 8 }}>Aprovar copia a receita, o preparo, os melhores usos e as observações para Fórmulas.</p>}
+    </section>
   )
 }
 

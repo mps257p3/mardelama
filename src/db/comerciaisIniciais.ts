@@ -1,4 +1,4 @@
-import { db, type Comercial, type Receita } from './schema'
+import { db, type Comercial, type Receita, type ReceitaTeste } from './schema'
 
 /**
  * Estudos de engenharia reversa enviados pelo Marcelo (prints do reel de @katiebceramics com os 3 esmaltes "móveis" favoritos dela).
@@ -300,28 +300,38 @@ const FORMULAS: { id: string; comercial: string; codigo: string; nome: string; i
   },
 ]
 
-/** Cria as fórmulas de teste uma vez por aparelho e liga cada uma ao seu estudo. */
-export async function semearFormulasDeTeste() {
-  if (await db.ajustes.get('seed-formulas-er-v1')) return
-  const T = Date.UTC(2026, 10, 26, 2, 5)
-  for (const f of FORMULAS) {
-    if (!(await db.comerciais.get(f.comercial))) return // estudo ainda não chegou: tenta na próxima abertura
-    if (await db.receitas.get(f.id)) continue
-    const receita = {
-      id: f.id, criadoEm: T, atualizadoEm: T, excluido: 0 as const, favorito: 0 as const,
-      nome: f.nome, codigo: f.codigo, familias: [], status: 'Experimental — ainda não testada',
-      objetivo: 'Testar a hipótese de composição do estudo de engenharia reversa.',
-      referencia: 'Referência estética: ' + f.nome.replace('Hipótese ', '') + ' (não é reprodução confirmada).',
-      parametros: f.parametros, tags: ['engenharia reversa', 'teste 100 g'], versaoAtual: 1,
-      ingredientes: f.ings.map(([s, nome, p, c]) => ({ materialId: 'mat-' + s, nome, percentual: p, classe: c ?? 'base' as const })),
-      aguaMlPor100g: 85, observacoes: [...PREPARO, ...(f.extra ? [f.extra] : [])].join('\n\n'),
-    }
-    await db.receitas.add(receita)
-    const { id: _i, ...snapshot } = receita
-    await db.versoes.add({ id: 'ver-' + f.id + '-1', receitaId: f.id, versao: 1, criadoEm: T, nota: 'Versão inicial (hipótese do estudo)', snapshot })
-    await db.relacoes.add({ id: 'rel-' + f.id, aTipo: 'comercial', aId: f.comercial, bTipo: 'receita', bId: f.id, criadoEm: T })
+/** Monta a receita de teste de cada estudo a partir da tabela FORMULAS. */
+function receitaDe(f: (typeof FORMULAS)[number]): ReceitaTeste {
+  return {
+    codigo: f.codigo, aguaMlPor100g: 85, parametros: f.parametros,
+    ingredientes: f.ings.map(([s, nome, p, c]) => ({ materialId: 'mat-' + s, nome, percentual: p, classe: c ?? 'base' as const })),
+    observacoes: [...PREPARO, ...(f.extra ? [f.extra] : [])].join('\n\n'),
   }
-  await db.ajustes.put({ chave: 'seed-formulas-er-v1', valor: true })
+}
+
+/**
+ * 26/11: a receita de teste fica dentro do estudo, não em Fórmulas. Põe a receita em cada estudo
+ * (aproveitando o que já foi editado na Fórmula antiga, se houver) e tira de Fórmulas as que foram semeadas.
+ */
+export async function receitaNoEstudo() {
+  if (await db.ajustes.get('fix-receita-no-estudo-v1')) return
+  for (const f of FORMULAS) {
+    const c = await db.comerciais.get(f.comercial)
+    if (!c) return // estudo ainda não chegou: tenta na próxima abertura
+    const r = await db.receitas.get(f.id)
+    const viva = r && !r.excluido ? r : undefined
+    if (!c.receita) {
+      const receita = viva
+        ? { codigo: viva.codigo, ingredientes: viva.ingredientes, aguaMlPor100g: viva.aguaMlPor100g, parametros: viva.parametros, observacoes: viva.observacoes }
+        : receitaDe(f)
+      await db.comerciais.update(c.id, { receita, atualizadoEm: Date.now() })
+    }
+    if (viva) {
+      await db.receitas.update(f.id, { excluido: 1, atualizadoEm: Date.now() })
+      if (await db.relacoes.get('rel-' + f.id)) await db.relacoes.update('rel-' + f.id, { excluido: 1, atualizadoEm: Date.now() })
+    }
+  }
+  await db.ajustes.put({ chave: 'fix-receita-no-estudo-v1', valor: true })
 }
 
 /** Textos das fórmulas como foram semeados em 26/11 (antes da reescrita). */

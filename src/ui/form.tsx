@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Star, X, ImagePlus } from 'lucide-react'
 import { salvarArquivo, useArquivoUrl } from '../db/files'
+import { Visor } from './GaleriaFotos'
 
 export function Campo({ label, children, wide }: { label: string; children: ReactNode; wide?: boolean }) {
   return <div className="field" style={wide ? { gridColumn: '1 / -1' } : undefined}><label>{label}</label>{children}</div>
@@ -81,10 +82,10 @@ export function Tags({ value, onChange, sugestoes }: { value: string[]; onChange
   </div>
 }
 
-function Miniatura({ id, onRemove }: { id: string; onRemove: () => void }) {
+function Miniatura({ id, onRemove, onAbrir }: { id: string; onRemove: () => void; onAbrir: () => void }) {
   const url = useArquivoUrl(id)
   return <div style={{ position: 'relative', width: 96, height: 96, borderRadius: 10, overflow: 'hidden', background: 'var(--surface-2)' }}>
-    {url && <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+    {url && <button type="button" onClick={onAbrir} aria-label="Ampliar foto" style={{ display: 'block', width: '100%', height: '100%', padding: 0, border: 0, background: 'none', cursor: 'zoom-in' }}><img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></button>}
     <button type="button" className="iconbtn" aria-label="Remover foto" onClick={onRemove}
       style={{ position: 'absolute', top: 4, right: 4, width: 26, height: 26, background: 'rgba(245,240,232,.9)' }}><X size={14} /></button>
   </div>
@@ -93,6 +94,7 @@ function Miniatura({ id, onRemove }: { id: string; onRemove: () => void }) {
 export function Fotos({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
   const ref = useRef<HTMLInputElement>(null)
   const [enviando, setEnviando] = useState(false)
+  const [visor, setVisor] = useState<number>()
   async function add(files: FileList | null) {
     if (!files?.length) return
     setEnviando(true)
@@ -101,12 +103,13 @@ export function Fotos({ value, onChange }: { value: string[]; onChange: (v: stri
     onChange([...value, ...ids]); setEnviando(false)
   }
   return <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-    {value.map((id) => <Miniatura key={id} id={id} onRemove={() => onChange(value.filter((x) => x !== id))} />)}
+    {value.map((id, i) => <Miniatura key={id} id={id} onAbrir={() => setVisor(i)} onRemove={() => onChange(value.filter((x) => x !== id))} />)}
     <button type="button" onClick={() => ref.current?.click()} disabled={enviando}
       style={{ width: 96, height: 96, borderRadius: 10, border: '1px dashed var(--line-strong)', background: 'none', display: 'grid', placeItems: 'center', color: 'var(--ink-3)' }}>
       <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, fontSize: 11 }}><ImagePlus size={20} strokeWidth={1.3} />{enviando ? 'Salvando…' : 'Foto'}</span>
     </button>
     <input ref={ref} type="file" accept="image/*" multiple hidden onChange={(e) => { add(e.target.files); e.target.value = '' }} />
+    {visor != null && <Visor fotos={value} inicio={visor} onClose={() => setVisor(undefined)} onRemover={(r) => onChange(value.filter((x) => x !== r))} />}
   </div>
 }
 

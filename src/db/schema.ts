@@ -310,6 +310,16 @@ export interface Comercial extends Base {
   curvaId?: string
   fontes: string[]
   observacoes?: string
+  receita?: ReceitaTeste      // receita de teste: fica só no estudo até ser aprovada (aí vira uma Fórmula)
+}
+
+export interface ReceitaTeste {
+  codigo?: string
+  ingredientes: Ingrediente[]
+  aguaMlPor100g?: number
+  parametros?: string
+  observacoes?: string
+  aprovadaId?: string         // Fórmula criada pelo botão Aprovar
 }
 
 export interface Lote extends Base {

@@ -8,6 +8,7 @@ import { fmt } from '../../lib/opcoes'
 import { Estrelas, Foto } from '../../ui/form'
 import { Relacoes } from '../../ui/Relacoes'
 import { ImgRef, temImagem } from '../ref/ImgRef'
+import { CapaAmpliavel } from '../../ui/GaleriaFotos'
 
 export default function TesteDetalhe() {
   const { id } = useParams()
@@ -34,7 +35,7 @@ export default function TesteDetalhe() {
       <Link to="/testes" className="back"><ArrowLeft size={15} />Esmaltaria</Link>
       <div className="detalhe">
         <div>
-          <div className="capa">{t.fotos[foto] ? <Foto id={t.fotos[foto]} /> : <TestTube size={44} strokeWidth={1} />}</div>
+          <div className="capa">{t.fotos[foto] ? <CapaAmpliavel fotos={t.fotos} inicio={foto} legenda={t.codigo}><Foto id={t.fotos[foto]} /></CapaAmpliavel> : <TestTube size={44} strokeWidth={1} />}</div>
           {t.fotos.length > 1 && <div className="thumbs">{t.fotos.map((f, i) => <button key={f} className={i === foto ? 'on' : ''} onClick={() => setFoto(i)} aria-label={`Foto ${i + 1}`}><Foto id={f} /></button>)}</div>}
         </div>
         <div>

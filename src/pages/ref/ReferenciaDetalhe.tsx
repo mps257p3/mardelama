@@ -12,6 +12,7 @@ import { ParecidasNoAcervo } from './Parecidas'
 import { Relacoes } from '../../ui/Relacoes'
 import { Sheet } from '../../ui/Sheet'
 import { useToast } from '../../ui/toast'
+import { CapaAmpliavel } from '../../ui/GaleriaFotos'
 
 export default function ReferenciaDetalhe() {
   const { id } = useParams()
@@ -32,7 +33,7 @@ export default function ReferenciaDetalhe() {
       <Link to="/referencias/acervo" className="back"><ArrowLeft size={15} />Referências</Link>
       <div className="detalhe">
         <div>
-          <div className="capa" style={{ aspectRatio: 'auto', minHeight: 240 }}>{r.imagens[foto] ? <Foto id={r.imagens[foto]} alt={r.titulo} style={{ height: 'auto', maxHeight: '78vh', objectFit: 'contain' }} /> : r.imagemExterna ? <ImgRef r={r} style={{ height: 'auto', maxHeight: '78vh', objectFit: 'contain' }} /> : <Images size={44} strokeWidth={1} />}</div>
+          <div className="capa" style={{ aspectRatio: 'auto', minHeight: 240 }}>{r.imagens[foto] ? <CapaAmpliavel fotos={r.imagens} inicio={foto} legenda={r.titulo}><Foto id={r.imagens[foto]} alt={r.titulo} style={{ height: 'auto', maxHeight: '78vh', objectFit: 'contain' }} /></CapaAmpliavel> : r.imagemExterna ? <ImgRef r={r} style={{ height: 'auto', maxHeight: '78vh', objectFit: 'contain' }} /> : <Images size={44} strokeWidth={1} />}</div>
           {r.imagens.length > 1 && <div className="thumbs">{r.imagens.map((f, i) => <button key={f} className={i === foto ? 'on' : ''} onClick={() => setFoto(i)} aria-label={`Foto ${i + 1}`}><Foto id={f} /></button>)}</div>}
         </div>
         <div>

@@ -108,3 +108,15 @@ export function GaleriaPecas({ fotos, onChange, titulo = 'Peças' }: { fotos: st
     </section>
   )
 }
+
+/** Envolve a foto de capa de uma página: tocar abre o visor em tela cheia. */
+export function CapaAmpliavel({ fotos, inicio, legenda, children }: { fotos: string[]; inicio: number; legenda?: string; children: ReactNode }) {
+  const [visor, setVisor] = useState<number>()
+  if (!fotos[inicio]) return <>{children}</>
+  return (
+    <>
+      <button className="capa-btn" onClick={() => setVisor(inicio)} aria-label="Ampliar foto">{children}</button>
+      {visor != null && <Visor fotos={fotos} inicio={visor} legenda={legenda} onClose={() => setVisor(undefined)} />}
+    </>
+  )
+}
