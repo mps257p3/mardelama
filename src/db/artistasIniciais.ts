@@ -1956,7 +1956,7 @@ async function completarObras() {
 export async function semearArtistas() {
   await corrigirAnaya()
   await completarObras()
-  if (await db.ajustes.get('seed-artistas-v13')) return
+  if (await db.ajustes.get('seed-artistas-v14')) return
   const existentesA = new Set((await db.artistas.toArray()).map((x) => x.id))
   const existentesO = new Set((await db.obras.toArray()).map((x) => x.id))
   const as: Artista[] = ARTISTAS.filter(([id]) => !existentesA.has(id)).map(([id, a], i) => ({
@@ -1976,5 +1976,5 @@ export async function semearArtistas() {
     }
     for (const x of semFalas) await db.artistas.update(x.id, { falas: FALAS[x.id], atualizadoEm: Date.now() })
   })
-  await db.ajustes.put({ chave: 'seed-artistas-v13', valor: true })
+  await db.ajustes.put({ chave: 'seed-artistas-v14', valor: true })
 }

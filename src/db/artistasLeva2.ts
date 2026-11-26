@@ -223,6 +223,38 @@ export const ARTISTAS_LEVA2: [string, A][] = [
     tecnicas: ['Modelagem', 'Performance', 'Instalação'], materiais: ['Barro'], esmaltes: ['Cinza de folhas e capim'], tiposObra: ['Esculturas', 'Instalações', 'Performance'], esteticas: ['Corporal', 'Ritual', 'Terrosa'],
     tags: ['brasil', 'performance', 'ensino', 'referência histórica'],
   }],
+  ['art-hannahsimpson', {
+    ...vazio, relacionados: ['art-kurihara', 'art-isabelsanchez', 'art-lottastudio'],
+    nome: 'Hannah Simpson', pais: ['Reino Unido'], atuacao: 'Londres (Hannah Simpson Studio, desde 2020)',
+    especialidade: 'Esculturas de "monstros" de grés modeladas à mão, pintadas com engobe e esmalte brilhante; também luminárias e vasos',
+    linguagem: 'Criaturas bem-humoradas, de olhos saltados e bocas cheias de dentes, com superfícies muito trabalhadas: xadrez, pontilhado, "pelagem" de pingos de barro. Cores fortes e alegres.',
+    bio: 'Artista e designer baseada em Londres. Estudou Belas Artes (escultura) na Loughborough University, com mostra de formatura em 2019, e fez estágio com o designer espanhol Nacho Carbonell, onde tomou gosto pelo design de móveis (Cluster; The Invisible Collection). Ainda na faculdade já fazia "monstros", só que de gesso e pelúcia.\n\nPassou ao barro depois de formada e aprendeu cerâmica sozinha durante a pandemia de Covid-19 (The Invisible Collection). Abriu o Hannah Simpson Studio em 2020 (Ad Lib Gallery). Os monstros são, para ela, a forma concreta de pensamentos difíceis e emoções negativas, transformados em seres acessíveis e engraçados (Ad Lib). Depois ampliou para luminárias e objetos da casa, pela ideia de que formas coloridas e alegres fazem bem à saúde mental (London Design Festival).\n\nFoi expositora da Cluster Crafts (2022), participou da Royal Academy Summer Exhibition (2024), do pop-up de Selfridges (2023) e da Affordable Art Fair, e é representada pela Ad Lib Gallery, em Wimbledon. Vende pela 1stdibs desde 2022.',
+    caracteristicas: ['Monstros', 'Olhos saltados', 'Padrões pintados (xadrez, pontilhado)', 'Textura aplicada', 'Humor'],
+    afinidade: 'Do mesmo campo de Kaori Kurihara e Isabel Sánchez: figura engraçada de cerâmica, com cor e padrão fazendo o personagem.',
+    analise: {
+      formas: 'Corpos de pé sobre pernas grossas, antenas com olhos, bocas abertas; também potes com tampa e vasos.',
+      paleta: 'Laranja, verde-claro com vinho, amarelo pontilhado, azul-cobalto, rosa fosco com roxo brilhante.',
+      texturas: 'Superfícies cobertas de pingos e gotas de barro (como pelo), ou lisas e pintadas em xadrez e pontos.',
+      reconhecivel: 'Olhos brancos redondos com pupila preta e bocas largas cheias de dentes brancos.',
+    },
+    processos: [
+      v('Construção', 'Peças construídas à mão em grés; também terracota nas luminárias.', 'https://adlibgallery.squarespace.com/hannah-simpson'),
+      v('Superfície', 'Decoradas à mão com engobe (underglaze) e esmalte brilhante; em algumas, lustre de ouro 24 quilates pintado à mão.', 'https://adlibgallery.squarespace.com/hannah-simpson'),
+      v('Tempo', 'Cada etapa é minuciosa e demorada; uma peça costuma levar semanas.', 'https://adlibgallery.squarespace.com/hannah-simpson'),
+    ],
+    estudar: ['Personagem resolvido pela superfície: o mesmo corpo vira outro bicho com outro padrão.', 'Textura de "pelo" feita com pingos de barro aplicados.', 'Engobe pintado à mão sob esmalte brilhante.', 'Olhos e dentes como assinatura.'],
+    falas: [
+      fala('Meu trabalho quer trazer algo incomum para o nosso dia a dia.', 'My work aims to bring something unusual into our daily lives.', 'https://www.cluster-london.com/hannah-simpson-cluster-crafts-2022-exhibitor', 'Cluster'),
+      fala('Meu trabalho muitas vezes faz as pessoas rirem por instinto, ou quererem esticar a mão e tocar a superfície.', 'My work often makes people instinctively laugh, or want to reach out and try to touch the surface.', 'https://www.cluster-london.com/hannah-simpson-cluster-crafts-2022-exhibitor', 'Cluster'),
+      fala('A ideia de brincadeira e alegria é o sentimento que quero criar com a minha arte.', 'The idea of play and joy is the feeling that I want to create with my art', 'https://artshow2019.lboro.ac.uk/students/hannah-simpson/', 'Loughborough Degree Show 2019'),
+    ],
+    publicacoes: [f('Royal Academy Summer Exhibition', undefined, 'Exposições', '2024'), f('Cluster Crafts', 'https://www.cluster-london.com/hannah-simpson-cluster-crafts-2022-exhibitor', 'Exposições', '2022')],
+    fontes: [f('Site do estúdio', 'https://hannahsimpsonstudio.com/', 'Site oficial'), f('Ad Lib Gallery', 'https://adlibgallery.squarespace.com/hannah-simpson', 'Galerias'), f('London Design Festival', 'https://londondesignfestival.com/partners/hannah-simpson-studio', 'Feiras'), f('The Invisible Collection', 'https://theinvisiblecollection.com/clubroom-designers/hannah-simpson-studio', 'Lojas'), f('1stdibs', 'https://www.1stdibs.com/creators/hannah-simpson-studio/furniture', 'Lojas')],
+    site: 'https://hannahsimpsonstudio.com/', instagram: 'hannahsimpsonstudio',
+    retrato: 'https://images.squarespace-cdn.com/content/v1/53f4a27ae4b0d19096402194/8a8d35bd-688c-4f01-87e4-fe43dcd8d0df/hannah-simpson-artist-ad-lib-gallery.jpeg',
+    tecnicas: ['Modelagem manual', 'Pintura com engobe', 'Textura aplicada'], materiais: ['Grés', 'Terracota', 'Engobe', 'Lustre de ouro'], esmaltes: ['Esmalte brilhante'], tiposObra: ['Esculturas', 'Luminárias', 'Vasos', 'Potes com tampa'], esteticas: ['Bem-humorada', 'Colorida', 'Pop', 'Figurativa'],
+    tags: ['reino unido', 'escultura', 'monstros', 'cor'],
+  }],
 ]
 
 export const OBRAS_LEVA2: [string, O][] = [
@@ -241,10 +273,18 @@ export const OBRAS_LEVA2: [string, O][] = [
   ['obra-tostes-passagem', { artistaId: 'art-tostes', titulo: 'Passagem', ano: '1979', tecnica: 'Performance registrada em 21 fotografias (Henry Stahl)', imagem: 'https://hammer.ucla.edu/sites/default/files/styles/archive_artwork/public/migrated-assets/media/Digital_archives/Radical_Women/Art/tostes_celeida_passagem.jpg?itok=l7OWh3m5', fonte: TOS_PASS, credito: 'Hammer Museum (Raquel Silva / Projeto Celeida Tostes)' }],
   // Fotos que faltavam na primeira leva
   ['obra-sottsass-shiva-met', { artistaId: 'art-sottsass', titulo: 'Vaso Shiva', ano: '1973', dimensoes: '23,8 × 18 × 7,4 cm', materiais: 'Cerâmica', imagem: 'https://collectionapi.metmuseum.org/api/collection/v1/iiif/739872/2263807/restricted', fonte: 'https://metmuseum.org/art/collection/search/739872', credito: 'Metropolitan Museum (2017.204), imagem de uso restrito' }],
+  ['obra-hannahsimpson-tony', { artistaId: 'art-hannahsimpson', titulo: 'Tony (monstro)', ano: '2024', dimensoes: '54 × 30 × 15 cm', materiais: 'Cerâmica esmaltada, pintada à mão', imagem: 'https://a.1stdibscdn.com/tony-monster-sculpture-for-sale/f_67452/f_426825921733926592603/f_42682592_1733926593045_bg_processed.jpg', fonte: 'https://www.1stdibs.com/furniture/decorative-objects/sculptures/abstract-sculptures/tony-monster-sculpture/id-f_42682592', credito: 'Hannah Simpson Studio, via 1stdibs' }],
+  ['obra-hannahsimpson-sylvia', { artistaId: 'art-hannahsimpson', titulo: 'Sylvia (monstro)', ano: '2024', dimensoes: '40 × 30 × 15 cm', materiais: 'Cerâmica com esmaltes em camadas, pintada à mão', imagem: 'https://a.1stdibscdn.com/sylvia-monster-sculpture-for-sale/f_67452/f_426828121733927370523/f_42682812_1733927371050_bg_processed.jpg', fonte: 'https://www.1stdibs.com/furniture/decorative-objects/sculptures/abstract-sculptures/sylvia-monster-sculpture/id-f_42682812', credito: 'Hannah Simpson Studio, via 1stdibs' }],
+  ['obra-hannahsimpson-octopus', { artistaId: 'art-hannahsimpson', titulo: 'Octopus (monstro com tampa)', ano: '2022', dimensoes: '14 × 16 × 7 cm', materiais: 'Cerâmica rosa fosca com pintas roxas brilhantes; tampa removível', imagem: 'https://a.1stdibscdn.com/octopus-monster-sculpture-for-sale/f_67452/f_320624221672916037026/f_32062422_1672916037655_bg_processed.jpg', fonte: 'https://www.1stdibs.com/furniture/dining-entertaining/ceramics/octopus-monster-sculpture/id-f_32062422', credito: 'Hannah Simpson Studio, via 1stdibs' }],
+  ['obra-hannahsimpson-bouquet', { artistaId: 'art-hannahsimpson', titulo: 'Monster Bouquet Vase', ano: '2024', dimensoes: '12,5 × 11 cm', materiais: 'Cerâmica pintada à mão com monstros, esmalte brilhante', imagem: 'https://a.1stdibscdn.com/monster-bouquet-vase-for-sale/f_67452/f_412613721724945422402/f_41261372_1724945422789_bg_processed.jpg', fonte: 'https://www.1stdibs.com/furniture/decorative-objects/sculptures/abstract-sculptures/monster-bouquet-vase/id-f_41261372', credito: 'Hannah Simpson Studio, via 1stdibs' }],
+  ['obra-hannahsimpson-malvern', { artistaId: 'art-hannahsimpson', titulo: 'Malvern Table Lamp', ano: '2022', materiais: 'Terracota', imagem: 'https://images.squarespace-cdn.com/content/v1/5c5886f38d97401ca529db8a/b9098e15-7e25-4331-bc44-6b0a76f49e3e/Picture+1.png', fonte: 'https://www.cluster-london.com/hannah-simpson-cluster-crafts-2022-exhibitor', credito: 'Cluster Crafts 2022' }],
+  ['obra-hannahsimpson-marge', { artistaId: 'art-hannahsimpson', titulo: 'Marge (monstro)', imagem: 'https://images.squarespace-cdn.com/content/v1/5c5886f38d97401ca529db8a/b8a22df0-4a92-4f51-be2a-6445561796d9/Marge+Monster+Sculpture4.png', fonte: 'https://www.cluster-london.com/hannah-simpson-cluster-crafts-2022-exhibitor', credito: 'Cluster Crafts 2022' }],
+  ['obra-hannahsimpson-tony2019', { artistaId: 'art-hannahsimpson', titulo: 'Tony (trabalho de formatura)', ano: '2019', dimensoes: '130 × 110 cm', materiais: 'Gesso e pelúcia, com janela iluminada (não é cerâmica)', imagem: 'https://artshow2019.lboro.ac.uk/wp-content/uploads/2019/06/5328863-1100x879.png', fonte: 'https://artshow2019.lboro.ac.uk/students/hannah-simpson/', credito: 'Loughborough University, Degree Show 2019' }],
 ]
 
 export const CAPAS_LEVA2: Record<string, string> = {
   'art-hamada': 'obra-hamada-chawan', 'art-rosanjin': 'obra-rosanjin-caranguejo', 'art-price': 'obra-price-redegg', 'art-tostes': 'obra-tostes-passagem',
+  'art-hannahsimpson': 'obra-hannahsimpson-tony',
 }
 
 const HFI = 'https://hfgnext.s3.eu-west-3.amazonaws.com/img'
