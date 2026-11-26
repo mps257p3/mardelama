@@ -151,13 +151,13 @@ export const SEMENTES: Semente[] = [
   },
 ]
 
-async function arquivo(url: string, id: string) {
+async function arquivo(url: string, id: string, tipo: 'comercial' | 'esmalte' = 'comercial') {
   try {
     const r = await fetch(url)
     const b = r.ok ? await r.blob() : undefined
     if (!b?.type.startsWith('image/')) return undefined
     const { salvarArquivo } = await import('./files')
-    return await salvarArquivo(new File([b], url.split('/').pop()!, { type: b.type }), { tipo: 'comercial', id })
+    return await salvarArquivo(new File([b], url.split('/').pop()!, { type: b.type }), { tipo, id })
   } catch { return undefined }
 }
 
@@ -449,4 +449,76 @@ export async function temperaturaNasFormulas() {
     if (t) await db.receitas.update(r.id, { temperatura: t, atualizadoEm: Date.now() })
   }
   await db.ajustes.put({ chave: 'fix-temperatura-formulas-v1', valor: true })
+}
+
+/**
+ * 26/11: os dois potes do Marcelo, cadastrados em Esmaltes a partir das fotos dos rótulos (frente, verso e etiqueta da Zeramics).
+ * Tudo vem do que está impresso no rótulo. Foto do pote em /public/seed/esmaltes; fotos da marca baixadas uma vez, como nos estudos.
+ */
+const ROTULOS: { id: string; estudo: string; foto: string; marca: string[]; dados: Omit<import('./schema').Esmalte, 'id' | 'criadoEm' | 'atualizadoEm' | 'fotos' | 'codigo' | 'excluido' | 'favorito'> }[] = [
+  {
+    id: 'esm-coyote-mbg164', estudo: 'com-er-001', foto: '/seed/esmaltes/coyote-crystal-nebula-pote.jpg',
+    marca: EXTRAS[0].marca,
+    dados: {
+      nome: 'Crystal Nebula', autoria: 'Coyote Clay & Color', origem: 'comercial', familias: ['fam-b07'],
+      temperatura: 1204, cone: '5-6', atmosfera: 'Oxidação', louca: 'nao',
+      aplicacao: 'Pincel: 2 a 3 demãos sobre biscoito, alternando a direção da pincelada. Ou 1 demão mergulhada ou derramada. Mexer bem antes.',
+      tags: ['comercial', 'Coyote', 'Slow Cool Crystal', 'MBG164', 'cristais', 'resfriamento lento'],
+      observacoes: [
+        'Código do produto: MBG164 (Coyote, linha Slow Cool Crystal Series). Pote de 1 pint (473 ml).',
+        'Queima: cone 5 ou 6 de testemunho, com programa de resfriamento lento. Etiqueta da Zeramics: 1186 a 1220 °C.',
+        'Curva do rótulo, em 5 rampas: 38 °C/h até 104 °C; 177 °C/h até 1093 °C; 66 °C/h até 1204 °C com patamar de 15 min; 260 °C/h descendo até 1177 °C com patamar de 15 min; 52 °C/h descendo até 760 °C. (No rótulo, em °F: 100/h até 220; 350/h até 2000; 150/h até 2200, 15 min; 500/h até 2150, 15 min; 125/h até 1400.)',
+        'Louça: o rótulo diz que NÃO é recomendado para alimentos (pode riscar fácil, mudar de cor ou ter textura imprópria). A Zeramics também: não usar em peça utilitária.',
+        'Segurança: sem chumbo, atóxico (ASTM D-4236). Composição na etiqueta: argila, frita, pigmentos, água e conservantes.',
+        'Para mais informações sobre resfriamento lento, o rótulo indica coyoteclay.com.',
+      ].join('\n\n'),
+    },
+  },
+  {
+    id: 'esm-mayco-pc602', estudo: 'com-er-002', foto: '/seed/esmaltes/mayco-white-cascade-frasco.jpg',
+    marca: EXTRAS[1].marca,
+    dados: {
+      nome: 'White Cascade', autoria: 'Mayco', origem: 'comercial', familias: ['fam-b08'],
+      fluidez: 'Fluido', temperatura: 999, cone: '06-05', atmosfera: 'Oxidação', louca: 'sim',
+      aplicacao: 'Pincel: 1 a 2 demãos (a Zeramics diz 2 a 3) por cima ou por baixo de outros esmaltes atóxicos, sobre biscoito cone 04 (1060 °C). Não aplicar na metade de baixo da peça. Não borrifar sem proteção.',
+      tags: ['comercial', 'Mayco', 'Pottery Cascade', 'PC-602', 'fundente'],
+      observacoes: [
+        'Código do produto: PC-602 (Mayco, linha Pottery Cascade). Frasco de 16 fl oz (473 ml).',
+        'Queima: cone 06 na prateleira (999 °C). Etiqueta da Zeramics: cone 06/05, 999 a 1031 °C; a cor pode mudar em temperaturas mais altas.',
+        'Em média temperatura (cone 5/6), o rótulo diz: transparente com flutuação branca.',
+        'Dicas do rótulo: use como fundente com Elements e Element Chunkies. A aplicação e a posição da peça no forno mudam o escorrido. Evite a parte de baixo da peça. O movimento depende do esmalte que está por baixo. Temperatura, rampa e patamar realçam o escorrido.',
+        'Louça: a Mayco declara "Food Safe" quando usado como manda o fabricante, mas avisa que a superfície pode não ser adequada para alimentos. A Zeramics: pode ser usado em peça utilitária. Como ele vai junto com outros esmaltes, a peça só é segura se o esmalte de baixo também for.',
+        'Segurança: atóxico, sem chumbo.',
+      ].join('\n\n'),
+    },
+  },
+]
+
+export async function esmaltesDosRotulos() {
+  const { proximoCodigo } = await import('./codigos')
+  for (const s of ROTULOS) {
+    const chave = 'seed-esmalte-rotulo:' + s.id
+    if (!(await db.ajustes.get(chave))) {
+      if (!(await db.esmaltes.get(s.id))) {
+        const foto = await arquivo(s.foto, s.id, 'esmalte')
+        if (!foto) continue
+        const t = Date.now()
+        await db.esmaltes.add({ id: s.id, criadoEm: t, atualizadoEm: t, excluido: 0, favorito: 0, codigo: await proximoCodigo('E', 'esmaltes', 3), fotos: [foto], ...s.dados })
+        if (await db.comerciais.get(s.estudo)) {
+          await db.relacoes.add({ id: 'rel-' + s.id, aTipo: 'esmalte', aId: s.id, bTipo: 'comercial', bId: s.estudo, criadoEm: t, atualizadoEm: t, excluido: 0 }).catch(() => undefined)
+        }
+      }
+      await db.ajustes.put({ chave, valor: true })
+    }
+    const chaveFotos = 'seed-esmalte-rotulo-fotos:' + s.id
+    if (await db.ajustes.get(chaveFotos)) continue
+    const e = await db.esmaltes.get(s.id)
+    if (!e || e.excluido) continue
+    const { fotosDoFabricante } = await import('../lib/comercial')
+    const novas = await fotosDoFabricante(s.id, s.marca, 'esmalte').catch(() => [])
+    if (!novas.length) continue
+    const atual = await db.esmaltes.get(s.id)
+    await db.esmaltes.update(s.id, { fotos: [...(atual?.fotos ?? []), ...novas], atualizadoEm: Date.now() })
+    await db.ajustes.put({ chave: chaveFotos, valor: true })
+  }
 }
