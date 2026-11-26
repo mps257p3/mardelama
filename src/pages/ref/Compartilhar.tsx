@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, BookOpen, FlaskConical, ImagePlus, Image as ImageIcon, Palette, Sparkles, Trash2 } from 'lucide-react'
-import { MAX_LEITURA, NAO_SEI, abrirPdfs, ehPdf, ehInstagram, guardar, temNaoSei, lerComIA, lerRecebido, limparRecebido, previaDoLink, type Destino, type Leitura, type Previa, type Recebido, type Resposta } from '../../lib/recebidos'
+import { MAX_LEITURA, NAO_SEI, abrirPdfs, ehLinkDeArquivo, ehPdf, ehInstagram, guardar, temNaoSei, lerComIA, lerRecebido, limparRecebido, previaDoLink, type Destino, type Leitura, type Previa, type Recebido, type Resposta } from '../../lib/recebidos'
 import { useToast } from '../../ui/toast'
 
 const DESTINOS: { id: Destino; nome: string; desc: string; icone: typeof FlaskConical }[] = [
@@ -54,11 +54,14 @@ export default function Compartilhar() {
   }
 
   const vazio = !!r && !r.imagens.length && !r.url && !r.texto.trim()
+  const soLink = !!r && !r.imagens.length && ehLinkDeArquivo(r.url)
   const chave = r ? `${r.id}|${r.url}|${r.texto}|${r.imagens.length}` : ''
 
   // prévia do link e leitura automática assim que há conteúdo (e de novo depois das respostas)
   useEffect(() => {
     if (!r || vazio) return
+    // o Acrobat, o Drive e afins mandam só o link do arquivo: não há conteúdo para ler
+    if (soLink) return
     let vivo = true
     setErroIA(undefined); setLendo(true)
     ;(async () => {
@@ -144,6 +147,11 @@ export default function Compartilhar() {
         {!!r.pdfs?.length && <p className="faint recebido-aviso">PDF aberto: {r.imagens.length ? `${r.imagens.length} ${r.imagens.length > 1 ? 'figuras recortadas' : 'figura recortada'}` : 'sem figuras'} e o texto inteiro.</p>}
         {r.imagens.length > 1 && <p className="faint recebido-aviso">{r.imagens.length} fotos, que vão juntas para a mesma ficha.{r.imagens.length > MAX_LEITURA ? ` A leitura olha as ${MAX_LEITURA} primeiras.` : ''}</p>}
         {r.url && <p className="recebido-link"><a href={r.url} target="_blank" rel="noreferrer">{previa?.site || r.url}</a></p>}
+        {soLink && <div className="aviso forte" style={{ margin: '8px 0 16px' }}>
+          <p style={{ margin: 0 }}><strong>Chegou só o link, não o arquivo.</strong> Esse app mandou um endereço para abrir o PDF na nuvem, e o Mar de Lama não consegue ler o que está dentro.</p>
+          <p style={{ margin: '8px 0 0' }}>No Acrobat, use <strong>Compartilhar › Enviar uma cópia</strong> (ou "Compartilhar arquivo") e escolha Mar de Lama. Ou baixe o PDF e toque em "Escolher fotos ou PDF" aqui no app.</p>
+          <button className="btn sm" style={{ marginTop: 10 }} onClick={() => setR({ titulo: '', texto: '', imagens: [] })}><ImagePlus size={14} />Escolher o PDF aqui</button>
+        </div>}
         {r.url && ehInstagram(r.url) && !r.imagens.length && <p className="faint recebido-aviso">O Instagram não deixa abrir o post por link. Para ler a imagem e a legenda, compartilhe um print.</p>}
 
         <section className="recebido-leitura">
