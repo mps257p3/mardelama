@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Info, Plus } from 'lucide-react'
+import { FlaskConical, Info, Lightbulb, Plus, ScanText, ScrollText, TestTube } from 'lucide-react'
+import { Menu } from '../../ui/Menu'
 import { useFamilias, useEsmaltes, useReceitas, useTestes } from '../../db/hooks'
 import Esmaltes from './Esmaltes'
 import Receitas, { criarReceita } from './Receitas'
@@ -43,11 +44,14 @@ export default function Superficies({ aba, entrada }: { aba: Aba; entrada?: bool
         <h1>Superfícies</h1>
         <div className="icones">
           <Link className="iconbtn" to={fam ? `/familias/${fam}` : '/familias'} aria-label="Sobre as famílias" title="Sobre as famílias"><Info size={19} /></Link>
-          {aba === 'ideias'
-            ? <button className="iconbtn mais" aria-label="Nova ideia" onClick={async () => nav(`/ideias/${await novaIdeia(fam ? { familias: [fam] } : {})}?novo=1`)}><Plus size={19} /></button>
-            : aba === 'receitas'
-            ? <button className="iconbtn mais" aria-label="Nova fórmula" onClick={async () => nav(`/receitas/${await criarReceita(fam ? { familias: [fam] } : {})}`)}><Plus size={19} /></button>
-            : <Link className="iconbtn mais" to={aba === 'testes' ? '/testes/novo' : '/esmaltes/novo'} aria-label={aba === 'testes' ? 'Novo teste' : 'Novo esmalte'}><Plus size={19} /></Link>}
+          <Menu rotulo="Adicionar" botao={<span className="iconbtn mais"><Plus size={19} /></span>} itens={[
+            { l: 'Esmalte', icon: <FlaskConical size={16} />, to: '/esmaltes/novo' },
+            { l: 'Fórmula', icon: <ScrollText size={16} />, onClick: async () => nav(`/receitas/${await criarReceita(fam ? { familias: [fam] } : {})}`) },
+            { l: 'Teste', icon: <TestTube size={16} />, to: '/testes/novo' },
+            { l: 'Ideia de esmaltação', icon: <Lightbulb size={16} />, onClick: async () => nav(`/ideias/${await novaIdeia(fam ? { familias: [fam] } : {})}?novo=1`) },
+            { sep: true, l: '' },
+            { l: 'Ler print ou site', icon: <ScanText size={16} />, to: '/compartilhar' },
+          ]} />
         </div>
       </div>
       <div className="chips">

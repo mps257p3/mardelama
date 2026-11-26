@@ -169,7 +169,7 @@ ESQUEMAS.agrupar = {
 
 // o que foi compartilhado de outro app: transcreve, resume e sugere para onde vai
 ESQUEMAS.receber = {
-  type: 'object', additionalProperties: false, required: ['titulo', 'transcricao', 'resumo', 'autor', 'destino', 'porque', 'tags', 'esmalte'],
+  type: 'object', additionalProperties: false, required: ['titulo', 'transcricao', 'resumo', 'autor', 'destino', 'porque', 'tags', 'esmalte', 'perguntas'],
   properties: {
     titulo: { type: 'string', description: 'Título curto e descritivo em português (até 8 palavras).' },
     transcricao: { type: 'string', description: 'Todo o texto legível nas imagens (legendas, nomes, @perfis, preços, títulos), copiado como está, sem os botões e menus do aplicativo. Vazio se não houver texto.' },
@@ -188,6 +188,16 @@ ESQUEMAS.receber = {
         queima: { type: 'string', description: 'Queima provável (temperatura, atmosfera). Diga que é provável quando não estiver escrito.' },
         argila: { type: 'string', description: 'Argila aparente.' },
         notas: { type: 'string', description: 'Parágrafos curtos separados por linha em branco, cada um começando com um rótulo curto e dois-pontos (ex.: "Cuidados: ...", "Primeiro teste: ..."). Prático, sem falar de IA e sem descrever a imagem.' },
+      },
+    },
+    perguntas: {
+      type: 'array', description: 'Até 3 perguntas curtas para a pessoa, só sobre o que falta e muda o preenchimento (ex.: quem fez, se a peça é dela, temperatura que ela usa, o que ela quer testar). Vazio se nada importante faltar ou se já foi respondido.',
+      items: {
+        type: 'object', additionalProperties: false, required: ['pergunta', 'opcoes'],
+        properties: {
+          pergunta: { type: 'string', description: 'Pergunta curta, direta, em português.' },
+          opcoes: lista('De 0 a 4 respostas prováveis e curtas, para tocar em vez de digitar.'),
+        },
       },
     },
   },
@@ -243,8 +253,8 @@ A partir disso, proponha consultas para um feed de descoberta que traga coisas n
       conteudo: [
         ...imgs.map((x) => ({ type: 'image', source: { type: 'base64', media_type: x.tipo || 'image/jpeg', data: x.base64 } })),
         { type: 'text', text: `Um ceramista compartilhou isto para o app do ateliê, vindo de outro aplicativo (Instagram, site, galeria de fotos, WhatsApp).
-${d.titulo ? 'Título recebido: "' + String(d.titulo).slice(0, 300) + '"\n' : ''}${d.texto ? 'Texto recebido: "' + String(d.texto).slice(0, 3000) + '"\n' : ''}${d.url ? 'Link: ' + String(d.url).slice(0, 500) + '\n' : ''}${d.previa ? 'Prévia do link: ' + JSON.stringify(d.previa).slice(0, 600) + '\n' : ''}${imgs.length ? 'As imagens acima são o que foi compartilhado (muitas vezes prints de tela).\n' : ''}
-Transcreva o texto que aparece, diga o que é e sugira para onde vai no app. Se for uma esmaltação ou superfície cerâmica, preencha "esmalte" começando pelos esmaltes e materiais prováveis: é a informação mais útil para ele.` },
+${d.titulo ? 'Título recebido: "' + String(d.titulo).slice(0, 300) + '"\n' : ''}${d.texto ? 'Texto recebido: "' + String(d.texto).slice(0, 3000) + '"\n' : ''}${d.url ? 'Link: ' + String(d.url).slice(0, 500) + '\n' : ''}${d.previa ? 'Prévia do link: ' + JSON.stringify(d.previa).slice(0, 600) + '\n' : ''}${imgs.length ? 'As imagens acima são o que foi compartilhado (muitas vezes prints de tela).\n' : ''}${(d.respostas ?? []).length ? 'Respostas da pessoa às suas perguntas (use para preencher e não pergunte de novo): ' + JSON.stringify(d.respostas).slice(0, 1500) + '\n' : ''}
+Transcreva o texto que aparece, diga o que é e sugira para onde vai no app. Se for uma esmaltação ou superfície cerâmica, preencha "esmalte" com tudo o que der, começando pelos esmaltes e materiais prováveis: é a informação mais útil para ele. Se faltar algo que só ele sabe, pergunte em "perguntas".` },
       ],
     }
   }
@@ -311,7 +321,7 @@ Descreva o repertório estético dela a partir desses dados.` }],
   }
 }
 
-const LIMITES = { evitar: 8, olhar: 4, ideias: 4, consultas: 16, tags: 10, grupos: 4, paleta: 8, aplicacoes: 4, temas: 8, linguagens: 8, formas: 8, texturas: 8, artistas: 10, tendencias: 6, proximos: 6, afins: 20 }
+const LIMITES = { perguntas: 3, evitar: 8, olhar: 4, ideias: 4, consultas: 16, tags: 10, grupos: 4, paleta: 8, aplicacoes: 4, temas: 8, linguagens: 8, formas: 8, texturas: 8, artistas: 10, tendencias: 6, proximos: 6, afins: 20 }
 const HEX = /^#[0-9a-f]{6}$/i
 function aparar(o) {
   for (const [k, n] of Object.entries(LIMITES)) if (Array.isArray(o[k])) o[k] = o[k].slice(0, n)
