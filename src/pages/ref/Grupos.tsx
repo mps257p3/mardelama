@@ -1,6 +1,7 @@
+import { Voltar } from '../../ui/Voltar'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowLeft, Check, Merge, Pencil, Plus, Trash2, X } from 'lucide-react'
+
+import { Check, Merge, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { db, novo } from '../../db/schema'
 import { excluir, useGrupos, useReferencias } from '../../db/hooks'
 import { Sheet } from '../../ui/Sheet'
@@ -24,7 +25,7 @@ export default function Grupos() {
 
   return (
     <div className="page" style={{ maxWidth: 720 }}>
-      <Link to="/referencias/grupos" className="back"><ArrowLeft size={15} />Grupos</Link>
+      <Voltar to="/referencias/grupos">Grupos</Voltar>
       <h1>Gerenciar grupos</h1>
       <p className="muted" style={{ marginTop: 10 }}>Grupos não são pastas: uma referência pode estar em quantos grupos você quiser, sem duplicar nada.</p>
       <form style={{ display: 'flex', gap: 8, margin: '24px 0' }} onSubmit={async (e) => { e.preventDefault(); if (novoG.trim()) { await db.grupos.add(novo({ nome: novoG.trim() })); setNovoG('') } }}>

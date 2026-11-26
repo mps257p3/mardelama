@@ -1,7 +1,8 @@
+import { Voltar } from '../../ui/Voltar'
 import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, FolderInput, ImageDown, Upload } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { FolderInput, ImageDown, Upload } from 'lucide-react'
 import { db } from '../../db/schema'
 import { buscarFotos, estadoInstagram, type Andamento, type EstadoIG } from '../../lib/instagramFotos'
 import { importarInstagram, lerExportacao, pendenteInstagram, type ExportacaoInstagram } from '../../lib/instagram'
@@ -45,7 +46,7 @@ export default function ImportarInstagram() {
 
   return (
     <div className="page" style={{ maxWidth: 720 }}>
-      <Link to="/referencias/acervo" className="back"><ArrowLeft size={15} />Referências</Link>
+      <Voltar to="/referencias/acervo">Referências</Voltar>
       <p className="eyebrow">Repertório</p>
       <h1 style={{ marginTop: 6 }}>Importar do Instagram</h1>
       <p className="faint" style={{ fontSize: 13.5, marginTop: 6 }}>Use a exportação oficial (Central de Contas › Suas informações e permissões › Baixar suas informações, formato JSON). O Instagram não inclui as imagens dos posts de outras pessoas: cada post entra como um cartão com o @, a legenda e o link. Importar de novo não duplica.</p>

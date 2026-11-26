@@ -1,8 +1,9 @@
+import { Voltar } from '../../ui/Voltar'
 import { useState } from 'react'
 import { incluidoEm } from '../../lib/data'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Check, Sparkles, Trash2 } from 'lucide-react'
+import { Check, Sparkles, Trash2 } from 'lucide-react'
 import { pesquisarEstudo } from '../../lib/comercial'
 import { useToast } from '../../ui/toast'
 import { db, uid, type Comercial, type Ingrediente, type Receita } from '../../db/schema'
@@ -31,7 +32,7 @@ export default function ComercialDetalhe() {
 
   return (
     <div className="page" style={{ maxWidth: 860 }}>
-      <Link to="/engenharia-reversa" className="back"><ArrowLeft size={15} />Engenharia reversa</Link>
+      <Voltar to="/engenharia-reversa">Engenharia reversa</Voltar>
       <div style={{ margin: '12px 0 20px' }}><CapaFotos fotos={c.fotos} onChange={(v) => salvar({ fotos: v })} alt={c.nome} rotuloAdd="Adicionar foto" /></div>
       <p className="eyebrow">{[c.fabricante, c.codigo, c.serie].filter(Boolean).join(' · ')}</p>
       <h1 style={{ marginTop: 8 }}>{c.nome}</h1>

@@ -1,6 +1,7 @@
+import { Voltar } from '../../ui/Voltar'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+
 import { concluirConexao } from '../../lib/pinterestConta'
 
 /** Volta da autorização no Pinterest: troca o código pela conexão (no servidor) e segue para a escolha dos painéis. */
@@ -18,7 +19,7 @@ export default function RetornoPinterest() {
   }, [q, nav])
   return (
     <div className="page" style={{ maxWidth: 720 }}>
-      <Link to="/referencias/pinterest" className="back"><ArrowLeft size={15} />Pinterest</Link>
+      <Voltar to="/referencias/pinterest">Pinterest</Voltar>
       <h1 style={{ marginTop: 6 }}>Conectando o Pinterest</h1>
       <p className="faint" style={{ marginTop: 8 }}>{erro ?? 'Só um instante…'}</p>
       {erro && <Link className="btn" style={{ marginTop: 16 }} to="/referencias/pinterest">Voltar</Link>}

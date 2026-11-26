@@ -1,7 +1,8 @@
+import { Voltar } from '../../ui/Voltar'
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft } from 'lucide-react'
+
 import { db, novo, type Teste } from '../../db/schema'
 import { proximoCodigo } from '../../db/codigos'
 import { useEsmaltes, useReceitas } from '../../db/hooks'
@@ -47,7 +48,7 @@ export default function TesteForm() {
 
   return (
     <div className="page" style={{ maxWidth: 900 }}>
-      <Link to={t.id ? `/testes/${t.id}` : '/testes'} className="back"><ArrowLeft size={15} />Voltar</Link>
+      <Voltar to={t.id ? `/testes/${t.id}` : '/testes'}>Voltar</Voltar>
       <p className="eyebrow">{t.id ? 'Editar teste' : 'Novo teste'}</p>
       <h1 style={{ marginTop: 8, marginBottom: 6 }}>{t.codigo}</h1>
       <p className="faint" style={{ marginBottom: 28, fontSize: 13.5 }}>Inscreva este código na placa de teste antes da queima.</p>

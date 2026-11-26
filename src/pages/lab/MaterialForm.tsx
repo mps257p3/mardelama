@@ -1,6 +1,7 @@
+import { Voltar } from '../../ui/Voltar'
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, FileUp, X } from 'lucide-react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { FileUp, X } from 'lucide-react'
 import { db, novo, type Material } from '../../db/schema'
 import { salvarArquivo } from '../../db/files'
 import { CATEGORIAS_MATERIAIS } from '../../lib/opcoes'
@@ -39,7 +40,7 @@ export default function MaterialForm() {
   }
   return (
     <div className="page" style={{ maxWidth: 900 }}>
-      <Link to={m.id ? `/materiais/${m.id}` : '/materiais'} className="back"><ArrowLeft size={15} />Voltar</Link>
+      <Voltar to={m.id ? `/materiais/${m.id}` : '/materiais'}>Voltar</Voltar>
       <p className="eyebrow">{m.id ? 'Editar material' : 'Novo material'}</p>
       <h1 style={{ marginTop: 8, marginBottom: 28 }}>{m.nome || 'Sem nome'}</h1>
       <div className="form">

@@ -1,3 +1,5 @@
+import { useFecharComVoltar } from '../../ui/voltarFecha'
+import { travarRolagem } from '../../ui/rolagem'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
@@ -343,6 +345,7 @@ function MuralDescobrir({ itens, curtidos, salvos, onAbrir, onAgir }: { itens: I
 }
 
 function VisorDescobrir({ itens, inicio, curtidos, salvos, onClose, onAgir }: { itens: ItemDescoberta[]; inicio: number; curtidos: Set<string>; salvos: Map<string, string>; onClose: () => void; onAgir: (x: ItemDescoberta, t: Interacao) => unknown }) {
+  useFecharComVoltar(onClose)
   const [i, setI] = useState(inicio)
   const [acao, setAcao] = useState<{ tipo: 'grupos' | 'painel'; ref: string }>()
   const [extra, setExtra] = useState<'explicar' | 'comparar'>()
@@ -356,8 +359,8 @@ function VisorDescobrir({ itens, inicio, curtidos, salvos, onClose, onAgir }: { 
   const ir = (d: number) => setI((v) => (v + d + n) % n)
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if (acao || extra) return; if (e.key === 'Escape') onClose(); if (e.key === 'ArrowLeft') ir(-1); if (e.key === 'ArrowRight') ir(1) }
-    window.addEventListener('keydown', k); const o = document.body.style.overflow; document.body.style.overflow = 'hidden'
-    return () => { window.removeEventListener('keydown', k); document.body.style.overflow = o }
+    window.addEventListener('keydown', k); const soltar = travarRolagem()
+    return () => { window.removeEventListener('keydown', k); soltar() }
   })
   if (!x) return null
   async function levar(tipo: 'grupos' | 'painel') {

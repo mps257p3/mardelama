@@ -1,6 +1,7 @@
+import { Voltar } from '../../ui/Voltar'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, ExternalLink, Heart, Pencil, Trash2 } from 'lucide-react'
+import { ExternalLink, Heart, Pencil, Trash2 } from 'lucide-react'
 import { db } from '../../db/schema'
 import { alternarFavorito, excluir } from '../../db/hooks'
 import { Prosa } from '../../ui/rich'
@@ -16,7 +17,7 @@ export default function ConteudoDetalhe() {
   if (!c || c.excluido) return <div className="page"><p>Conteúdo não encontrado.</p></div>
   return (
     <div className="page">
-      <Link to={`/biblioteca/${secaoDaCategoria(c.categoria).slug}`} className="back"><ArrowLeft size={15} />{secaoDaCategoria(c.categoria).nome}</Link>
+      <Voltar to={`/biblioteca/${secaoDaCategoria(c.categoria).slug}`}>{secaoDaCategoria(c.categoria).nome}</Voltar>
       <div className="detalhe" style={{ gridTemplateColumns: undefined }}>
         <article className="leitura">
           <p className="eyebrow">{c.categoria}</p>

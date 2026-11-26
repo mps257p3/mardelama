@@ -1,6 +1,7 @@
+import { Voltar } from '../../ui/Voltar'
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams, Link } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { useNavigate, useParams } from 'react-router-dom'
+
 import { db, novo, type Esmalte } from '../../db/schema'
 import { proximoCodigo } from '../../db/codigos'
 import { useFamilias, useReceitas } from '../../db/hooks'
@@ -49,7 +50,7 @@ export default function EsmalteForm() {
   if (!pronto) return null
   return (
     <div className="page" style={{ maxWidth: 900 }}>
-      <Link to={e.id ? `/esmaltes/${e.id}` : '/esmaltes'} className="back"><ArrowLeft size={15} />Voltar</Link>
+      <Voltar to={e.id ? `/esmaltes/${e.id}` : '/esmaltes'}>Voltar</Voltar>
       <p className="eyebrow">{e.id ? 'Editar esmalte' : 'Novo esmalte'}</p>
       <h1 style={{ marginTop: 8, marginBottom: 28 }}>{e.nome || 'Sem nome'}</h1>
 

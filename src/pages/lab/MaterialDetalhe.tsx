@@ -1,7 +1,8 @@
+import { Voltar } from '../../ui/Voltar'
 import { ArtistasAfins } from '../bib/art/ArtistasAfins'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { AlertTriangle, ArrowLeft, ExternalLink, FileText, Heart, Layers, Pencil, ShoppingBag, Trash2 } from 'lucide-react'
+import { AlertTriangle, ExternalLink, FileText, Heart, Layers, Pencil, ShoppingBag, Trash2 } from 'lucide-react'
 import { db } from '../../db/schema'
 import { alternarFavorito, excluir, useFamilias, useReceitas, useTestes } from '../../db/hooks'
 import { useArquivoUrl } from '../../db/files'
@@ -41,7 +42,7 @@ export default function MaterialDetalhe() {
   ]
   return (
     <div className="page">
-      <Link to="/materiais" className="back"><ArrowLeft size={15} />Materiais</Link>
+      <Voltar to="/materiais">Materiais</Voltar>
       <div className="detalhe">
         <div className="capa">{m.fotos[0] ? <CapaAmpliavel fotos={m.fotos} inicio={0} legenda={m.nome}><Foto id={m.fotos[0]} /></CapaAmpliavel> : <Layers size={44} strokeWidth={1} />}</div>
         <div>

@@ -1,6 +1,7 @@
+import { Voltar } from '../../ui/Voltar'
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowLeft, Compass, RefreshCw, Sparkles, X } from 'lucide-react'
+
+import { Compass, RefreshCw, Sparkles, X } from 'lucide-react'
 import { gerarRepertorio, iaConfigurada, lerCorrecoes, lerRepertorio, salvarCorrecoes, salvarRepertorio, type Correcoes, type Repertorio as Rep, type RepertorioSalvo } from '../../lib/iaRepertorio'
 import { lerPerfil, salvarPerfil } from '../../lib/curadoria'
 import { useToast } from '../../ui/toast'
@@ -44,7 +45,7 @@ export default function Repertorio() {
   const r = s?.r
   return (
     <div className="page" style={{ maxWidth: 760 }}>
-      <Link to="/referencias/descobrir" className="back"><ArrowLeft size={15} />Referências</Link>
+      <Voltar to="/referencias/descobrir">Referências</Voltar>
       <p className="eyebrow">Repertório</p>
       <h1 style={{ marginTop: 6 }}>Meu repertório estético</h1>
       <p className="faint" style={{ fontSize: 13.5, marginTop: 6 }}>Uma leitura do seu acervo e do que você curte, salva e recusa no Descobrir. É uma interpretação: tire o que não for você e escreva o que falta.</p>

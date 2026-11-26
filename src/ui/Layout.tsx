@@ -1,3 +1,5 @@
+import { conferirRolagem } from './rolagem'
+import { pularEntradasOrfas } from './voltarFecha'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Home, FlaskConical, Images, BookOpen, Plus, RefreshCw } from 'lucide-react'
@@ -18,7 +20,8 @@ export function Layout() {
   const [add, setAdd] = useState(false)
   const { pathname } = useLocation()
   useEffect(() => { if (!emFluxoDeCadastro(pathname)) definirContexto(undefined) }, [pathname])
-  useEffect(() => { trocouDeTela() }, [pathname])
+  useEffect(() => { trocouDeTela(); const t = window.setTimeout(conferirRolagem, 400); return () => window.clearTimeout(t) }, [pathname])
+  useEffect(() => pularEntradasOrfas(), [])
   const area = AREA_DA_ROTA.find(([r]) => r.test(pathname))?.[1]
   return (
     <div className="app">

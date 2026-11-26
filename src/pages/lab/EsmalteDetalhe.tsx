@@ -1,9 +1,10 @@
+import { Voltar } from '../../ui/Voltar'
 import { ArtistasAfins } from '../bib/art/ArtistasAfins'
 import { incluidoEm } from '../../lib/data'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Copy, FlaskConical, Heart, Pencil, Plus, ScrollText, Trash2, TestTube } from 'lucide-react'
+import { Copy, FlaskConical, Heart, Pencil, Plus, ScrollText, Trash2, TestTube } from 'lucide-react'
 import { db, novo } from '../../db/schema'
 import { alternarFavorito, excluir, useFamilias } from '../../db/hooks'
 import { proximoCodigo } from '../../db/codigos'
@@ -53,7 +54,7 @@ export default function EsmalteDetalhe() {
 
   return (
     <div className="page">
-      <Link to="/esmaltes" className="back"><ArrowLeft size={15} />Esmaltaria</Link>
+      <Voltar to="/esmaltes">Esmaltaria</Voltar>
       <div className="detalhe">
         <div>
           <CapaFotos fotos={e.fotos} alt={e.nome} rotuloAdd="Adicionar foto do esmalte"

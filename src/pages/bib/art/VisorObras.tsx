@@ -1,3 +1,5 @@
+import { useFecharComVoltar } from '../../../ui/voltarFecha'
+import { travarRolagem } from '../../../ui/rolagem'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
@@ -16,6 +18,7 @@ export function fichaObra(o: Obra) {
 
 /** Visor das obras: ampliar, favoritar, salvar como referência e ir às conexões. */
 export function VisorObras({ obras, inicio, artista, onClose }: { obras: Obra[]; inicio: number; artista?: Artista; onClose: () => void }) {
+  useFecharComVoltar(onClose)
   const [i, setI] = useState(Math.max(0, inicio))
   const [info, setInfo] = useState(true)
   const [col, setCol] = useState(false)
@@ -28,8 +31,8 @@ export function VisorObras({ obras, inicio, artista, onClose }: { obras: Obra[];
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); if (e.key === 'ArrowLeft') ir(-1); if (e.key === 'ArrowRight') ir(1) }
     window.addEventListener('keydown', k)
-    const o = document.body.style.overflow; document.body.style.overflow = 'hidden'
-    return () => { window.removeEventListener('keydown', k); document.body.style.overflow = o }
+    const soltar = travarRolagem()
+    return () => { window.removeEventListener('keydown', k); soltar() }
   })
   const o = obras[Math.min(i, n - 1)]
   if (!o) return null

@@ -1,6 +1,7 @@
+import { Voltar } from '../../ui/Voltar'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, TestTube } from 'lucide-react'
+import { TestTube } from 'lucide-react'
 import { db } from '../../db/schema'
 import { useEsmaltes } from '../../db/hooks'
 import { fmt } from '../../lib/opcoes'
@@ -21,7 +22,7 @@ export default function TesteComparar() {
   ]
   return (
     <div className="page">
-      <Link to="/testes" className="back"><ArrowLeft size={15} />Testes</Link>
+      <Voltar to="/testes">Testes</Voltar>
       <h1>Comparar testes</h1>
       <div className="comparar" style={{ marginTop: 28 }}>
         {(testes ?? []).map((t) => t && (

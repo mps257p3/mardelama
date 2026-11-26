@@ -1,8 +1,9 @@
+import { Voltar } from '../../ui/Voltar'
 import { useEffect, useMemo, useState } from 'react'
 import { incluidoEm } from '../../lib/data'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, ScrollText, Copy, Download, GitBranch, History, Plus, Scale, Trash2, X, Columns2, Printer } from 'lucide-react'
+import { ScrollText, Copy, Download, GitBranch, History, Plus, Scale, Trash2, X, Columns2, Printer } from 'lucide-react'
 import { db, novo, uid, type ClasseIngrediente, type Ingrediente, type Receita } from '../../db/schema'
 import { excluir, useEsmaltes, useFamilias, useMapaMateriais, useMateriais, useReceitas } from '../../db/hooks'
 import { STATUS_RECEITA, TEXTURAS_AUTORAIS } from '../../db/conhecimento'
@@ -84,7 +85,7 @@ export default function ReceitaEditor() {
 
   return (
     <div className="page formula">
-      <Link to="/receitas" className="back"><ArrowLeft size={15} />Esmaltaria</Link>
+      <Voltar to="/receitas">Esmaltaria</Voltar>
       <div className="receita-capa">
         <CapaFotos fotos={r.fotos ?? []} alt={r.nome} rotuloAdd="Adicionar foto do esmalte" onChange={(v) => mudar({ fotos: v })}
           vazio={<ScrollText size={36} strokeWidth={1} />} />

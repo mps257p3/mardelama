@@ -1,7 +1,8 @@
+import { Voltar } from '../../ui/Voltar'
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Heart, Trash2 } from 'lucide-react'
+import { Heart, Trash2 } from 'lucide-react'
 import { db, ETAPAS, uid, type Etapa, type Peca, type Referencia } from '../../db/schema'
 import { alternarFavorito, excluir } from '../../db/hooks'
 import { vivos } from '../../lib/artistas'
@@ -55,7 +56,7 @@ export default function PecaDetalhe() {
   return (
     <div className="page peca">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link to={serie ? `/obras/serie/${serie.id}` : p.tipo === 'estudo' ? '/obras?aba=estudos' : '/obras'} className="back"><ArrowLeft size={15} />{serie?.nome || 'Minhas obras'}</Link>
+        <Voltar to={serie ? `/obras/serie/${serie.id}` : p.tipo === 'estudo' ? '/obras?aba=estudos' : '/obras'}>{serie?.nome || 'Minhas obras'}</Voltar>
         <div style={{ display: 'flex', gap: 2 }}>
           <button className="iconbtn" aria-label="Favoritar" onClick={() => alternarFavorito('entrada', p.id, p.favorito)}><Heart size={19} fill={p.favorito ? 'currentColor' : 'none'} /></button>
           <Menu itens={[

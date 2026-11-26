@@ -1,7 +1,8 @@
+import { Voltar } from '../../ui/Voltar'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Pencil, TestTube, Trash2, Heart } from 'lucide-react'
+import { Pencil, TestTube, Trash2, Heart } from 'lucide-react'
 import { db } from '../../db/schema'
 import { alternarFavorito, excluir, useEsmaltes } from '../../db/hooks'
 import { fmt } from '../../lib/opcoes'
@@ -32,7 +33,7 @@ export default function TesteDetalhe() {
   ]
   return (
     <div className="page">
-      <Link to="/testes" className="back"><ArrowLeft size={15} />Esmaltaria</Link>
+      <Voltar to="/testes">Esmaltaria</Voltar>
       <div className="detalhe">
         <div>
           <div className="capa">{t.fotos[foto] ? <CapaAmpliavel fotos={t.fotos} inicio={foto} legenda={t.codigo}><Foto id={t.fotos[foto]} /></CapaAmpliavel> : <TestTube size={44} strokeWidth={1} />}</div>

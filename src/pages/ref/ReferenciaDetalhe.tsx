@@ -1,7 +1,8 @@
+import { Voltar } from '../../ui/Voltar'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, ExternalLink, FlaskConical, Heart, Images, Pencil, Trash2, LayoutDashboard, ScanSearch, Sparkles } from 'lucide-react'
+import { ExternalLink, FlaskConical, Heart, Images, Pencil, Trash2, LayoutDashboard, ScanSearch, Sparkles } from 'lucide-react'
 import { ideiaDeReferencia } from '../../lib/ideias'
 import { Catalogar } from './Catalogar'
 import { db, uid } from '../../db/schema'
@@ -30,7 +31,7 @@ export default function ReferenciaDetalhe() {
 
   return (
     <div className="page">
-      <Link to="/referencias/acervo" className="back"><ArrowLeft size={15} />Referências</Link>
+      <Voltar to="/referencias/acervo">Referências</Voltar>
       <div className="detalhe">
         <div>
           <div className="capa" style={{ aspectRatio: 'auto', minHeight: 240 }}>{r.imagens[foto] ? <CapaAmpliavel fotos={r.imagens} inicio={foto} legenda={r.titulo}><Foto id={r.imagens[foto]} alt={r.titulo} style={{ height: 'auto', maxHeight: '78vh', objectFit: 'contain' }} /></CapaAmpliavel> : r.imagemExterna ? <ImgRef r={r} style={{ height: 'auto', maxHeight: '78vh', objectFit: 'contain' }} /> : <Images size={44} strokeWidth={1} />}</div>

@@ -1,7 +1,8 @@
+import { Voltar } from '../../ui/Voltar'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Check, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { Check, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { db, novo } from '../../db/schema'
 import { excluir, useFamilias } from '../../db/hooks'
 
@@ -22,7 +23,7 @@ export default function Familias() {
 
   return (
     <div className="page" style={{ maxWidth: 720 }}>
-      <Link to="/laboratorio" className="back"><ArrowLeft size={15} />Esmaltaria</Link>
+      <Voltar to="/laboratorio">Esmaltaria</Voltar>
       <h1>Famílias de esmaltes</h1>
       <p className="muted" style={{ marginTop: 10 }}>Bases organizadas por comportamento. Um esmalte ou fórmula pode pertencer a várias famílias.</p>
       <form style={{ display: 'flex', gap: 8, margin: '24px 0' }} onSubmit={async (ev) => {
