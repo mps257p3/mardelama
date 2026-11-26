@@ -5,7 +5,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, Sparkles, Trash2 } from 'lucide-react'
 import { pesquisarEstudo } from '../../lib/comercial'
 import { useToast } from '../../ui/toast'
-import { db, type Comercial } from '../../db/schema'
+import { db, type Comercial, type Receita } from '../../db/schema'
 import { useFamilias } from '../../db/hooks'
 import { TextoEditavel, ListaEditavel } from '../../ui/editavel'
 import { Fotos, Multi } from '../../ui/form'
@@ -50,6 +50,8 @@ export default function ComercialDetalhe() {
         <ListaEditavel rotulo="uso ou condição" itens={c.usos ?? []} onSalvar={(v) => salvar({ usos: v })} vazio="Nada registrado. A pesquisa com IA preenche." />
       </section>
 
+      <ReceitasDeTeste id={c.id} />
+
       <Bloco n="1" titulo="Declarado pelo fabricante" sub="Somente o que está no rótulo ou na embalagem.">
         <ListaEditavel rotulo="item declarado" itens={c.declarados} onSalvar={(v) => salvar({ declarados: v })} vazio="Nada declarado registrado." />
       </Bloco>
@@ -89,6 +91,48 @@ export default function ComercialDetalhe() {
         <button className="btn sm ghost" onClick={async () => { if (confirm('Excluir este estudo?')) { await salvar({ excluido: 1 }); nav('/engenharia-reversa') } }}><Trash2 size={14} />Excluir estudo</button>
       </div>
     </div>
+  )
+}
+
+/** Receitas ligadas ao estudo, mostradas inteiras: ingredientes em 100 g, parâmetros e preparo. */
+function ReceitasDeTeste({ id }: { id: string }) {
+  const rs = useLiveQuery(async () => {
+    const [a, b] = await Promise.all([
+      db.relacoes.where('[aTipo+aId]').equals(['comercial', id]).toArray(),
+      db.relacoes.where('[bTipo+bId]').equals(['comercial', id]).toArray(),
+    ])
+    const ids = [...a.filter((r) => !r.excluido && r.bTipo === 'receita').map((r) => r.bId), ...b.filter((r) => !r.excluido && r.aTipo === 'receita').map((r) => r.aId)]
+    const xs = await db.receitas.bulkGet([...new Set(ids)])
+    return xs.filter((x): x is Receita => !!x && !x.excluido)
+  }, [id], [])
+  if (!rs.length) return null
+  return (
+    <>
+      {rs.map((r) => {
+        const base = r.ingredientes.filter((i) => i.classe === 'base')
+        const extra = r.ingredientes.filter((i) => i.classe !== 'base')
+        const soma = base.reduce((t, i) => t + i.percentual, 0)
+        const linha = (i: Receita['ingredientes'][number], k: number) => (
+          <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '7px 0', borderBottom: '1px solid var(--line)' }}>
+            <span>{i.nome}</span><span style={{ fontVariantNumeric: 'tabular-nums' }}>{String(i.percentual).replace('.', ',')} g</span>
+          </div>
+        )
+        return (
+          <section key={r.id} className="card" style={{ padding: 18, marginTop: 16 }}>
+            <h3>Receita para testar</h3>
+            <p className="faint" style={{ fontSize: 13, margin: '4px 0 12px' }}>{[r.codigo, r.status].filter(Boolean).join(' · ')}. Hipótese, não é a fórmula do fabricante.</p>
+            <p className="eyebrow" style={{ marginTop: 4 }}>Base · {String(soma).replace('.', ',')} g</p>
+            {base.map(linha)}
+            {extra.length > 0 && <p className="eyebrow" style={{ marginTop: 14 }}>Somar à base</p>}
+            {extra.map(linha)}
+            {r.aguaMlPor100g && <p className="muted" style={{ fontSize: 14, marginTop: 10 }}>Água: cerca de {r.aguaMlPor100g} ml para cada 100 g de seco.</p>}
+            {r.parametros && <><p className="eyebrow" style={{ marginTop: 16 }}>Variações e queima</p><p style={{ marginTop: 6, whiteSpace: 'pre-line' }}>{r.parametros}</p></>}
+            {r.observacoes && <><p className="eyebrow" style={{ marginTop: 16 }}>Preparo e aplicação</p><p style={{ marginTop: 6, whiteSpace: 'pre-line' }}>{r.observacoes}</p></>}
+            <Link to={`/receitas/${r.id}`} className="btn sm" style={{ marginTop: 14 }}>Abrir a receita</Link>
+          </section>
+        )
+      })}
+    </>
   )
 }
 
