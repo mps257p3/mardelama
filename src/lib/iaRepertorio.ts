@@ -1,6 +1,6 @@
 import { db, type Referencia } from '../db/schema'
 import { cabecalhoLogin } from './login'
-import { iaAutomaticaLigada, registrarGasto } from './gastoIA'
+import { iaAutomaticaLigada, registrarGasto, type UsoIA } from './gastoIA'
 import { lerPerfil, salvarPerfil, UNIVERSOS, type GostoIA } from './curadoria'
 import type { FonteId, ItemDescoberta } from './fontes'
 import { FONTE, viaPonte } from './fontes'
@@ -74,7 +74,7 @@ async function emSegundoPlano<T>(corpo: Record<string, unknown>, cab: Record<str
     const { data } = await sb.from('integracoes').select('config').eq('provedor', 'ia:' + id).maybeSingle()
     if (data) {
       await sb.from('integracoes').delete().eq('provedor', 'ia:' + id)
-      const { status, corpo: c } = (data.config ?? {}) as { status?: number; corpo?: { resultado?: T; erro?: string; uso?: unknown } }
+      const { status, corpo: c } = (data.config ?? {}) as { status?: number; corpo?: { resultado?: T; erro?: string; uso?: UsoIA } }
       registrarGasto(String(corpo.acao ?? ''), c?.uso, !c?.resultado).catch(() => undefined)
       if (!c?.resultado) throw new Error(c?.erro ?? `HTTP ${status}`)
       return c.resultado
