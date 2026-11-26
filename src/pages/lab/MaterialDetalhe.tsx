@@ -8,6 +8,7 @@ import { useArquivoUrl } from '../../db/files'
 import { brl, fmt } from '../../lib/opcoes'
 import { Foto } from '../../ui/form'
 import { Relacoes } from '../../ui/Relacoes'
+import { CapaAmpliavel } from '../../ui/GaleriaFotos'
 
 function Doc({ id, rotulo }: { id?: string; rotulo: string }) {
   const url = useArquivoUrl(id)
@@ -42,7 +43,7 @@ export default function MaterialDetalhe() {
     <div className="page">
       <Link to="/materiais" className="back"><ArrowLeft size={15} />Materiais</Link>
       <div className="detalhe">
-        <div className="capa">{m.fotos[0] ? <Foto id={m.fotos[0]} /> : <Layers size={44} strokeWidth={1} />}</div>
+        <div className="capa">{m.fotos[0] ? <CapaAmpliavel fotos={m.fotos} inicio={0} legenda={m.nome}><Foto id={m.fotos[0]} /></CapaAmpliavel> : <Layers size={44} strokeWidth={1} />}</div>
         <div>
           <p className="eyebrow">{m.categoria}</p>
           <h1 style={{ marginTop: 8 }}>{m.nome}</h1>
