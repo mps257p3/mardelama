@@ -1,0 +1,258 @@
+import { db, type Comercial } from './schema'
+
+/**
+ * Estudos de engenharia reversa enviados pelo Marcelo (prints do reel de @katiebceramics com os 3 esmaltes "móveis" favoritos dela).
+ * Tudo o que está em "declarados" e "documentacao" vem das fontes listadas; as receitas são hipóteses para teste.
+ * O print do reel vem de /public/seed; as fotos da marca são baixadas no aparelho pela /api/imagem (precisa de login).
+ */
+type Dados = Omit<Comercial, 'id' | 'criadoEm' | 'atualizadoEm' | 'fotos'>
+interface Semente { id: string; em: number; reel: string; marca: string[]; dados: Dados }
+
+const REEL = 'Reel de @katiebceramics, "these are my 3 favourite mobile glazes"'
+
+const SEMENTES: Semente[] = [
+  {
+    id: 'comercial-spectrum-1431-pearl-white',
+    em: Date.UTC(2026, 10, 26, 1, 50),
+    reel: '/seed/ideias/spectrum-pearl-white-reel.jpg',
+    marca: [
+      'https://www.spectrumglazes.com/wp-content/uploads/2026/02/1431-12x10-1.jpg',
+      'https://kruegerpottery.com/cdn/shop/files/1431_08b3ae62-ee35-4fac-be6a-11aa8920be8b.jpg?v=1741130223',
+      'https://kruegerpottery.com/cdn/shop/files/1431-pearl-white-plate_05115d32-4799-48e0-9ed1-1f63ba7ff72f.jpg?v=1741130223',
+    ],
+    dados: {
+      fabricante: 'Spectrum', nome: 'Pearl White', codigo: '1431', serie: 'Floating (cone 4/6)', familias: [],
+      cone: '4 a 6', temperatura: '1180 a 1220 °C; melhor a 1200 °C',
+      instrucoes: '2 a 3 demãos para cobrir. A espessura muda a cor e a opacidade. Pode escorrer em superfícies verticais.',
+      usos: [
+        'Superfícies com textura: quebra e reage melhor sobre relevo (Bath Potters)',
+        'Sozinho: a linha Floating dá a impressão de duas cores sobrepostas sem precisar sobrepor esmaltes',
+        'Aplicação variada: onde é mais grosso fica mais opaco e aparecem os fluxos cor de areia',
+        'Queima a 1200 °C (indicação da Bath Potters); a massa usada muda o resultado',
+        'Peças verticais: deixe folga no pé, porque o esmalte se move',
+        'Louça de mesa: a linha é declarada sem chumbo e própria para louça',
+      ],
+      declarados: [
+        'Branco perolado transparente com fluxos cor de areia clara (descrição da loja Hot Clay)',
+        'Linha Floating: uma cor parece flutuar sobre a outra sem sobrepor esmaltes',
+        'Cone 4 a 6 (1180 a 1220 °C)',
+        '2 a 3 demãos para cobertura total',
+        'Sem chumbo e próprio para louça (Krueger, Creative Crafts, Hot Clay)',
+      ],
+      documentacao: 'Ficha COSHH da linha Floating cone 4/6 (1431 a 1442), 01/03/2019: o único componente declarado da linha é cobre (CAS 7440-50-8, 3,55%), e a mesma ficha marca o 1431 Pearl White como "(None)", ou seja, sem cobre. O resto da composição não é declarado. Preliminar: conferir a versão do produto.',
+      hipoteses: [
+        'Tipo de esmalte: vidro de boro com titânio ou rutilo, como os "floating" em geral; o titânio dá o véu perolado e os fluxos cor de areia onde acumula',
+        'Sem corante forte: o cobre da ficha da linha não se aplica ao Pearl White',
+        'Ponto de partida (100): nefelina sienita 48, Gerstley Borate 26 (ou frita de boro), sílica 20, caulim 6. Adições: dióxido de titânio 4 a 6% e rutilo 1 a 2%',
+        'Para mais "areia": subir o rutilo até 3%; para mais branco, trocar parte do titânio por zircônio (opacidade sem cor)',
+      ],
+      fontes: [
+        'https://www.spectrumglazes.com/product/1431-pearl-white/',
+        'https://www.bathpotters.co.uk/pearl-white-spectrum-floating-glaze-1431/p2736',
+        'https://www.bathpotters.co.uk/userfiles/file/spectrum-floating-glaze-coshh10.pdf',
+        'https://www.kruegerpottery.com/collections/mid-fire-glazes/products/spectrum-1431',
+        'https://www.hot-clay.com/products/spectrum-floating-glazes-pearl-white-1431',
+        REEL,
+      ],
+      observacoes: 'A receita é hipótese: a Spectrum não publica a fórmula. A base é a do Floating Blue de cone 6 (Ceramics Monthly, out. 2001), sem cobalto e sem ferro. Primeiro teste: placas verticais com titânio 4 e 6%, rutilo 1 e 2%, metade com 2 demãos e metade com 3, sobre a massa de sempre.',
+    },
+  },
+  {
+    id: 'comercial-amaco-pc17-honey-flux',
+    em: Date.UTC(2026, 10, 26, 1, 51),
+    reel: '/seed/ideias/amaco-honey-flux-reel.jpg',
+    marca: [
+      'https://kruegerpottery.com/cdn/shop/files/PC17_b56c1e8c-29a2-4bf2-a02a-5fd6011460c9.jpg?v=1715630190',
+      'https://www.bathpotters.co.uk/images/products/large/3748_6979.jpg',
+      'https://www.bathpotters.co.uk/images/products/large/3748_6978.jpg',
+    ],
+    dados: {
+      fabricante: 'Amaco', nome: 'Honey Flux', codigo: 'PC-17', serie: "Potter's Choice", familias: [],
+      cone: '5 a 6', temperatura: '1180 a 1220 °C, oxidação',
+      instrucoes: '2 a 3 demãos grossas (a Amaco diz que a linha rende com aplicação generosa). Deixe folga no pé: o esmalte se move.',
+      usos: [
+        'Por cima de outros esmaltes, para dar movimento: ele aumenta o escorrido do que está embaixo',
+        'Cone 5 para mel e creme opacos; cone 6 para branco fluido com pintas cor de mel',
+        'Combinações mostradas pela Amaco: Oatmeal (PC-31) por cima dele; ele por cima de Textured Amber Brown (PC-62), River Birch (PCF-74) e Chai Matte (SH-12); Flux Blossom (PCF-54) e Chun Plum (PC-55) por cima dele',
+        'Terço de cima da peça: como escorre, é melhor aplicar na borda e deixar descer',
+        'Prato ou placa de sacrifício por baixo nos testes',
+        'Louça de mesa: a Amaco classifica a linha como própria para louça',
+      ],
+      declarados: [
+        'Cor creme que aumenta o escorrido quando aplicado sobre outros esmaltes',
+        'Mel e creme opacos no cone 5; branco fluido com pintas cor de mel no cone 6',
+        'Efeitos de redução em queima de oxidação',
+        'Base da linha PCF (Potter\'s Choice Flux) da Amaco',
+        'Próprio para louça; sem chumbo',
+      ],
+      documentacao: 'Ficha de segurança do PC-17 não encontrada nas compilações da Bath Potters que consegui ler. Preliminar: procurar a SDS do PC-17 no site da Amaco.',
+      hipoteses: [
+        'Tipo de esmalte: vidro muito fundente, com muito boro (frita ou Gerstley Borate) e pouca alumina, por isso escorre e faz os outros escorrerem',
+        'A cor de mel e as pintas vêm provavelmente de rutilo com um pouco de ferro; no cone 5 o titânio deixa opaco, no cone 6 dissolve e fica fluido',
+        'Ponto de partida (100): Gerstley Borate 35, nefelina sienita 40, sílica 20, caulim 5. Adições: rutilo 4%, óxido de ferro vermelho 1%',
+        'Para escorrer mais: tirar 5 de sílica; para escorrer menos: trocar 5 de Gerstley Borate por caulim',
+      ],
+      fontes: [
+        'https://kruegerpottery.com/products/amaco-pc17',
+        'https://www.bathpotters.co.uk/honey-flux-amaco-potters-choice-brush-on-glaze-pc-17/p3748',
+        'https://www.theceramicshop.com/product/31745/pc17-honey-flux-pint/',
+        'https://amaco.com/asset/662032abdf5bd',
+        'https://shop.amaco.com/glazes-underglazes/high-fire-glazes/pcf-potters-choice-flux',
+        'https://amaco.com/resources/layering?glaze_top=pc-17-honey-flux',
+        REEL,
+      ],
+      observacoes: 'A receita é hipótese: a Amaco não publica a fórmula. Primeiro teste: placas verticais com prato embaixo, sozinho (2 e 3 demãos) e por cima de um esmalte que você já usa, no cone 5 e no cone 6, para ver a diferença entre creme opaco e branco fluido.',
+    },
+  },
+  {
+    id: 'comercial-mayco-sw214-micro-pearl',
+    em: Date.UTC(2026, 10, 26, 1, 52),
+    reel: '/seed/ideias/mayco-micro-pearl-reel.jpg',
+    marca: [
+      'https://www.maycocolors.com/wp-content/uploads/2024/03/SW214.jpg',
+      'https://www.maycocolors.com/wp-content/uploads/2024/03/sw214_1234coats_cone6_web.jpg',
+      'https://www.maycocolors.com/wp-content/uploads/2024/03/sw214_over_sw401_sw402_cone6_web.jpg',
+      'https://www.maycocolors.com/wp-content/uploads/2024/03/sw214_cone10.jpg',
+    ],
+    dados: {
+      fabricante: 'Mayco', nome: 'Micro Pearl', codigo: 'SW-214', serie: 'Stoneware (Micro)', familias: [],
+      cone: '5 a 10', temperatura: 'Cone 5 e 6 em oxidação; cone 10 em redução',
+      instrucoes: 'Estável com 3 demãos; mais demãos ou aplicação mais grossa podem fazer o esmalte se mover. Oxidação ou redução.',
+      usos: [
+        'Superfícies com textura: o branco quebra sobre o relevo',
+        'Cone 6 em oxidação para os microcristais iridescentes lilás e amarelo-claro',
+        'Cone 5 para um branco fosco-acetinado perolado e estável, sem movimento',
+        'Cone 10 em redução: escurece para azul, roxo e branco variegado',
+        'Sobre ou sob Light Flux (SW-401) e Dark Flux (SW-402), combinação mostrada pela Mayco',
+        'Louça de mesa: é o único da linha Micro considerado próprio para louça',
+      ],
+      declarados: [
+        'Branco brilhante semiopaco com fundo lilás que quebra sobre textura (cone 6)',
+        'Microcristalização iridescente em lilás e amarelo-claro durante a queima',
+        'Cone 5: branco semiopaco fosco-acetinado perolado e estável',
+        'Cone 10 redução: azul, roxo e branco variegado',
+        'Estável com 3 demãos; mais pode escorrer',
+        'Dinnerware Safe (selo na página da Mayco)',
+      ],
+      documentacao: 'Ficha de segurança Stoneware SW (set. 2026) inclui o MICRO PEARL (SW214), e o aviso de rótulo da ficha diz "Contém zinco" (a ficha cobre várias cores, então isso é forte indício, não certeza, de zinco no Micro Pearl). A seção 3 dá máximos para a linha inteira, não para este esmalte: feldspato até 26%, sílica cristalina até 23%, óxido de zinco até 13%, além de corantes de outras cores da linha (cobre, manganês, cobalto). Preliminar: conferir a versão do produto.',
+      hipoteses: [
+        'Microcristais: o zinco da ficha, com titânio, forma cristais muito pequenos (tipo titanato de zinco) no resfriamento; a Bath Potters confirma que os Micro não têm cristais prontos adicionados',
+        'O lilás e o amarelo iridescente são típicos de titânio em vidro com zinco; não precisa de corante',
+        'Ponto de partida (100): feldspato potássico 25, frita de boro 25, sílica 20, óxido de zinco 12, carbonato de cálcio 10, caulim 8. Adições: dióxido de titânio 6 a 8%',
+        'Resfriamento lento ou patamar entre 1100 e 1000 °C deve ajudar a formar os microcristais',
+      ],
+      fontes: [
+        'https://www.maycocolors.com/product/sw214-micro-pearl/',
+        'https://www.maycocolors.com/wp-content/uploads/2026/10/Stoneware-SW-CL-US-CA-SDS-Sept2026-EN.pdf',
+        REEL,
+      ],
+      observacoes: 'A receita é hipótese: a Mayco não publica a fórmula. Primeiro teste: base com zinco 10 e 14% e titânio 6 e 8%, cone 6, uma queima com resfriamento natural e outra com patamar de 1 hora a 1050 °C, para ver onde nascem os microcristais.',
+    },
+  },
+]
+
+async function arquivo(url: string, id: string) {
+  try {
+    const r = await fetch(url)
+    const b = r.ok ? await r.blob() : undefined
+    if (!b?.type.startsWith('image/')) return undefined
+    const { salvarArquivo } = await import('./files')
+    return await salvarArquivo(new File([b], url.split('/').pop()!, { type: b.type }), { tipo: 'comercial', id })
+  } catch { return undefined }
+}
+
+/** Cria cada estudo uma vez por aparelho (id fixo) e depois junta as fotos da marca, também uma vez. */
+export async function semearComerciais() {
+  for (const s of SEMENTES) {
+    const chave = 'seed-comercial:' + s.id
+    if (!(await db.ajustes.get(chave))) {
+      if (!(await db.comerciais.get(s.id))) {
+        const reel = await arquivo(s.reel, s.id)
+        if (!reel) continue
+        await db.comerciais.add({ id: s.id, criadoEm: s.em, atualizadoEm: Date.now(), excluido: 0, favorito: 0, ...s.dados, fotos: [reel] })
+      }
+      await db.ajustes.put({ chave, valor: true })
+    }
+    const chaveFotos = 'seed-comercial-fotos:' + s.id
+    if (await db.ajustes.get(chaveFotos)) continue
+    const c = await db.comerciais.get(s.id)
+    if (!c || c.excluido) continue
+    const { fotosDoFabricante } = await import('../lib/comercial')
+    const novas = await fotosDoFabricante(s.id, s.marca).catch(() => [])
+    if (!novas.length) continue
+    const atual = await db.comerciais.get(s.id)
+    await db.comerciais.update(s.id, { fotos: [...novas, ...(atual?.fotos ?? [])], atualizadoEm: Date.now() })
+    await db.ajustes.put({ chave: chaveFotos, valor: true })
+  }
+}
+
+/** Estudos que já vinham no app (ER-001 a ER-003): melhores usos e fotos da marca, só se o campo estiver vazio. */
+const EXTRAS: { id: string; usos: string[]; marca: string[] }[] = [
+  {
+    id: 'com-er-001',
+    usos: [
+      'Peças decorativas: a Coyote não recomenda para louça de mesa',
+      'Resfriamento lento é o que forma os cristais dourados (Coyote: "should be slow-cooled to achieve their best")',
+      'Curva da Coyote, em °C aproximados: 55 °C/h até 105; 195 °C/h até 1095; 85 °C/h até 1205 com patamar de 15 min; desce a 1175 com patamar de 15 min; 70 °C/h até 760',
+      'Cone 5 com patamar de 30 min em forno digital, ou cone 6',
+      '2 a 3 demãos a pincel; grosso escorre, então deixe uns 6 mm sem esmalte no pé',
+      'Segunda camada por cima só na metade de cima da peça',
+      'Pode ir ao forno com esmaltes que não são cristalinos e não exige bandeja de escorrido',
+    ],
+    marca: [
+      'https://coyoteclay.com/Images/250%20Tiles/SLCrystal%20Nebula%20MBG164%20SC.jpg',
+      'https://coyoteclay.com/Images/Tile%20Comparisons/Crystal%20Nebula.jpg',
+    ],
+  },
+  {
+    id: 'com-er-002',
+    usos: [
+      'Por baixo, por cima ou entre outros esmaltes, para criar reação e movimento (funciona como fundente)',
+      'Peças verticais: não aplicar no terço de baixo; camadas que vão diminuindo para baixo',
+      '1 a 3 demãos a pincel, ou batido com esponja, de forma livre ou uniforme',
+      'Cone 06/05 com subida média (cerca de 120 °C/h); um patamar realça o escorrido',
+      'Em alta (cone 6) fica transparente com flutuação branca e escorre mais: testar antes',
+      'Combinação mostrada pela Mayco: White Cascade sobre Blue Grotto (EL-118); técnicas Peacock, Frozen Pond e Plopping',
+      'Escorre menos que o Clear Cascade (PC-601): fica mais onde foi pintado',
+    ],
+    marca: [
+      'https://www.maycocolors.com/wp-content/uploads/2020/09/pc-602.jpg',
+      'https://www.maycocolors.com/wp-content/uploads/2020/09/pc-602_cone6.jpg',
+      'https://www.maycocolors.com/wp-content/uploads/2020/09/pc602_cone10.jpg',
+    ],
+  },
+  {
+    id: 'com-er-003',
+    usos: [
+      'Peças decorativas: superfície áspera e seca, tipo casca de árvore; não é para louça',
+      'Aplicação bem grossa, até a camada seca rachar antes da queima: é isso que faz o esmalte retrair',
+      'Cone 5 a 6',
+      'Por cima de underglaze, ou combinado com White Crawl e sobre shino (peças mostradas pela Coyote)',
+      'Deixe uns 6 mm sem esmalte no pé e nada de esmalte embaixo da peça',
+    ],
+    marca: [
+      'https://coyoteclay.com/Images/250%20Tiles/CRCactus%20Crawl%20MBG063%20RC.jpg',
+      'https://coyoteclay.com/Images/Tile%20Comparisons/Cactus%20Crawl.jpg',
+    ],
+  },
+]
+
+export async function completarEstudosAntigos() {
+  for (const x of EXTRAS) {
+    const c = await db.comerciais.get(x.id)
+    if (!c || c.excluido) continue
+    const chaveUsos = 'fix-comercial-usos:' + x.id
+    if (!(await db.ajustes.get(chaveUsos))) {
+      if (!c.usos?.length) await db.comerciais.update(x.id, { usos: x.usos, atualizadoEm: Date.now() })
+      await db.ajustes.put({ chave: chaveUsos, valor: true })
+    }
+    const chaveFotos = 'seed-comercial-fotos:' + x.id
+    if (await db.ajustes.get(chaveFotos)) continue
+    const { fotosDoFabricante } = await import('../lib/comercial')
+    const novas = await fotosDoFabricante(x.id, x.marca).catch(() => [])
+    if (!novas.length) continue
+    const atual = await db.comerciais.get(x.id)
+    await db.comerciais.update(x.id, { fotos: [...novas, ...(atual?.fotos ?? [])], atualizadoEm: Date.now() })
+    await db.ajustes.put({ chave: chaveFotos, valor: true })
+  }
+}

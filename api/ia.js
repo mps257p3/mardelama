@@ -474,7 +474,8 @@ Use a busca na web. Prefira, nesta ordem: página do produto no site do fabrican
 Regras: separe sempre o que é declarado pelo fabricante, o que vem de documentação técnica e o que é hipótese sua. Nunca apresente hipótese como fato. Não invente códigos, temperaturas nem composições. Se não achar, deixe vazio.`
 
 const FORMATO_COMERCIAL = `Responda no fim com um único bloco JSON, sem texto depois, neste formato:
-{"fabricante":"","nome":"","codigo":"","serie":"","cone":"","temperatura":"","instrucoes":"","declarados":[],"documentacao":"","hipoteses":[],"fontes":[],"observacoes":"","avisos":[],"imagens":[]}
+{"fabricante":"","nome":"","codigo":"","serie":"","cone":"","temperatura":"","instrucoes":"","declarados":[],"documentacao":"","hipoteses":[],"fontes":[],"usos":[],"observacoes":"","avisos":[],"imagens":[]}
+"usos": melhores usos e condições, até 8 frases curtas: em que peças e superfícies rende mais (relevo, borda, vertical, interior), espessura e número de camadas, queima e resfriamento, combinações com outros esmaltes que o fabricante mostra. Diga a fonte quando for do fabricante; o que for prática comum, diga que é.
 "imagens": até 4 links https diretos de foto do produto (placa de teste, amostra ou pote) que apareceram nas páginas do fabricante ou de lojas que você abriu: o endereço do arquivo de imagem (.jpg, .png, .webp), nunca o da página. Prefira a placa de teste do próprio esmalte, sem sobreposição. Se não achar, deixe vazio.
 "declarados": só o que o fabricante diz no rótulo ou na página do produto (ex.: "Sem chumbo", "Cone 5-6", "Indicado para utilitários"), até 10.
 "documentacao": o que a ficha técnica ou a ficha de segurança diz (componentes e faixas de porcentagem, números CAS), com a observação "Preliminar: conferir a versão do produto" e o link.
@@ -488,7 +489,7 @@ function limparComercial(o) {
   return {
     fabricante: so(o.fabricante, 120), nome: so(o.nome, 160), codigo: so(o.codigo, 60), serie: so(o.serie, 120),
     cone: so(o.cone, 40), temperatura: so(o.temperatura, 80), instrucoes: so(o.instrucoes, 2000),
-    declarados: textos(o.declarados, 10), documentacao: so(o.documentacao, 3000), hipoteses: textos(o.hipoteses, 8),
+    declarados: textos(o.declarados, 10), usos: textos(o.usos, 8), documentacao: so(o.documentacao, 3000), hipoteses: textos(o.hipoteses, 8),
     fontes: (Array.isArray(o.fontes) ? o.fontes : []).map(url).filter(Boolean).slice(0, 8),
     observacoes: so(o.observacoes, 2500), avisos: textos(o.avisos, 6),
     imagens: (Array.isArray(o.imagens) ? o.imagens : []).map(url).filter(Boolean).slice(0, 4),

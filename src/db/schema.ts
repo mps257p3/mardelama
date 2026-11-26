@@ -302,6 +302,7 @@ export interface Comercial extends Base {
   temperatura?: string
   fotos: string[]
   instrucoes?: string
+  usos?: string[]             // melhores usos e condições (peças, superfícies, queima, combinações)
   declarados: string[]        // declarado pelo fabricante (rótulo)
   documentacao?: string       // obtido em documentação técnica (preliminar)
   hipoteses: string[]         // hipóteses de composição (não confirmadas)

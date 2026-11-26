@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { incluidoEm } from '../../lib/data'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, ScrollText, Copy, Download, GitBranch, History, Plus, Scale, Trash2, X, Columns2, Printer } from 'lucide-react'
@@ -84,7 +85,7 @@ export default function ReceitaEditor() {
       </div>
       <div className="head">
         <div style={{ flex: 1, minWidth: 260 }}>
-          <p className="eyebrow">{r.codigo ? r.codigo + ' · ' : 'Fórmula · '}versão {r.versaoAtual}</p>
+          <p className="eyebrow">{r.codigo ? r.codigo + ' · ' : 'Fórmula · '}versão {r.versaoAtual}{original?.criadoEm ? ' · ' + incluidoEm(original.criadoEm) : ''}</p>
           <input className="serif" value={r.nome} onChange={(e) => mudar({ nome: e.target.value })}
             style={{ fontSize: 'clamp(32px,4vw,44px)', border: 0, background: 'none', width: '100%', padding: 0, marginTop: 6, outline: 'none', color: 'var(--ink)' }} />
           {r.status && <p style={{ marginTop: 4 }}><span className={'pill' + (/Experimental|Modelo/.test(r.status) ? ' alerta' : '')}>{r.status}</span></p>}
