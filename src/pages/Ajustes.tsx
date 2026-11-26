@@ -6,6 +6,7 @@ import { baixar, exportarTudo, importarTudo } from '../db/backup'
 import { definirAjuste, useAjuste } from '../db/settings'
 import { useToast } from '../ui/toast'
 import { AjustesInicio } from './AjustesInicio'
+import { AjustesGastoIA } from './AjustesGastoIA'
 
 export default function Ajustes() {
   const toast = useToast()
@@ -36,6 +37,8 @@ export default function Ajustes() {
       <h1 style={{ marginTop: 8 }}>Mar de Lama</h1>
 
       <Nuvem />
+
+      <AjustesGastoIA />
 
       <section style={{ marginTop: 32 }}>
         <h3>Backup</h3>

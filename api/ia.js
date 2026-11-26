@@ -11,6 +11,17 @@ const RAPIDAS = new Set(['buscar'])
 const BETAS = ['server-side-fallback-2026-07-01']
 const json = (dados, status = 200) => new Response(JSON.stringify(dados), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } })
 
+// Quanto cada pedido gastou: tokens e buscas na web, somados entre as voltas. O app guarda e mostra em Ajustes.
+function somarUso(total, r) {
+  const u = r?.usage; if (!u) return total
+  const t = total ?? { modelo: r.model, entrada: 0, saida: 0, cacheLido: 0, cacheEscrito: 0, buscas: 0, leituras: 0 }
+  t.modelo = r.model || t.modelo
+  t.entrada += u.input_tokens ?? 0; t.saida += u.output_tokens ?? 0
+  t.cacheLido += u.cache_read_input_tokens ?? 0; t.cacheEscrito += u.cache_creation_input_tokens ?? 0
+  t.buscas += u.server_tool_use?.web_search_requests ?? 0; t.leituras += u.server_tool_use?.web_fetch_requests ?? 0
+  return t
+}
+
 const TIPOS = ['Fotografia', 'Ilustração', 'Escultura', 'Pintura', 'Artista', 'Obra de arte', 'Textura', 'Objeto', 'Forma', 'Paleta cromática', 'Link', 'Vídeo']
 // mesma lista de src/lib/ideias.ts
 const EFEITOS = ['Escorrido', 'Camadas sobrepostas', 'Crawl (retraído)', 'Cristais', 'Craquelê', 'Variegado', 'Manchado', 'Gotas', 'Fosco', 'Acetinado', 'Brilhante', 'Texturizado', 'Lunar / crateras', 'Breaking (borda clara)', 'Gradiente', 'Pintado / pincelado', 'Engobe', 'Óxidos', 'Cinzas', 'Redução', 'Lustre / metálico']
@@ -404,6 +415,7 @@ Pesquise na web (site do artista, loja, Instagram público, entrevistas, fornece
         tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 4 }, { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 3 }],
         messages: mensagens,
       })
+      d.uso = somarUso(d.uso, r)
       if (r.stop_reason !== 'pause_turn') break
       mensagens.push({ role: 'assistant', content: r.content })
     }
@@ -422,6 +434,7 @@ async function pesquisarArtista(d) {
   const alvo = nome ? `o ceramista ${nome}` : `o artista apresentado nesta página: ${link} (comece abrindo a página e confirme quem é)`
   const client = new Anthropic()
   const mensagens = [{ role: 'user', content: `Pesquise ${alvo}.${d.contexto ? ' O que já se sabe: ' + so(d.contexto, 1500) : ''}${catalogo ? '\nArtistas já no acervo: ' + catalogo + '.' : ''}\n\n${FORMATO_ARTISTA}` }]
+  let uso
   try {
     let r
     // a busca roda no servidor da Anthropic; se ela pausar no meio, continuamos a mesma conversa (até 3 vezes)
@@ -433,6 +446,7 @@ async function pesquisarArtista(d) {
         tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 6 }, { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 5 }],
         messages: mensagens,
       })
+      uso = somarUso(uso, r)
       if (r.stop_reason !== 'pause_turn') break
       mensagens.push({ role: 'assistant', content: r.content })
     }
@@ -442,7 +456,7 @@ async function pesquisarArtista(d) {
     if (ini < 0 || fim <= ini) return json({ erro: 'A pesquisa não trouxe um resultado legível. Tente de novo.' }, 502)
     let o
     try { o = JSON.parse(texto.slice(ini, fim + 1)) } catch { return json({ erro: 'A pesquisa veio incompleta. Tente de novo.' }, 502) }
-    return json({ resultado: limparArtista(o) })
+    return json({ resultado: limparArtista(o), uso })
   } catch (e) {
     if (e instanceof Anthropic.AuthenticationError) return json({ erro: 'A chave da Anthropic foi recusada. Confira a variável ANTHROPIC_API_KEY na Vercel.' }, 503)
     if (e instanceof Anthropic.PermissionDeniedError) return json({ erro: 'A conta da Anthropic não tem permissão (crédito, limite de gasto ou busca na web desligada no Console).' }, 503)
@@ -491,6 +505,7 @@ Identifique o produto (fabricante, nome, código) pelo que aparece e pesquise na
 
 ${FORMATO_COMERCIAL}` },
   ] }]
+  let uso
   try {
     let r
     for (let i = 0; i < 3; i++) {
@@ -501,6 +516,7 @@ ${FORMATO_COMERCIAL}` },
         tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 6 }, { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 5 }],
         messages: mensagens,
       })
+      uso = somarUso(uso, r)
       if (r.stop_reason !== 'pause_turn') break
       mensagens.push({ role: 'assistant', content: r.content })
     }
@@ -510,7 +526,7 @@ ${FORMATO_COMERCIAL}` },
     if (ini < 0 || fim <= ini) return json({ erro: 'A pesquisa não trouxe um resultado legível. Tente de novo.' }, 502)
     let o
     try { o = JSON.parse(texto.slice(ini, fim + 1)) } catch { return json({ erro: 'A pesquisa veio incompleta. Tente de novo.' }, 502) }
-    return json({ resultado: limparComercial(o) })
+    return json({ resultado: limparComercial(o), uso })
   } catch (e) {
     return erroDaIA(e)
   }
@@ -558,18 +574,18 @@ export async function POST(req) {
     let r
     if (RAPIDAS.has(acao)) {
       // a IA rápida não tem reserva automática: se ela recusar ou falhar, a mais forte responde
-      try { r = await client.messages.create({ ...base, model: MODELO_RAPIDO }) } catch (e) {
+      try { r = await client.messages.create({ ...base, model: MODELO_RAPIDO }); d.uso = somarUso(d.uso, r) } catch (e) {
         if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) throw e
         console.warn('IA rápida falhou, usando a mais forte:', e instanceof Error ? e.message : e)
         r = undefined
       }
-      if (!r || r.stop_reason === 'refusal' || r.stop_reason === 'max_tokens') r = await forte()
-    } else r = await forte()
-    if (r.stop_reason === 'refusal') return json({ erro: 'A IA não quis responder a este pedido.' }, 422)
-    if (r.stop_reason === 'max_tokens') return json({ erro: 'A resposta ficou longa demais. Tente de novo.' }, 502)
+      if (!r || r.stop_reason === 'refusal' || r.stop_reason === 'max_tokens') { r = await forte(); d.uso = somarUso(d.uso, r) }
+    } else { r = await forte(); d.uso = somarUso(d.uso, r) }
+    if (r.stop_reason === 'refusal') return json({ erro: 'A IA não quis responder a este pedido.', uso: d.uso }, 422)
+    if (r.stop_reason === 'max_tokens') return json({ erro: 'A resposta ficou longa demais. Tente de novo.', uso: d.uso }, 502)
     const texto = r.content.find((b) => b.type === 'text')?.text
-    if (!texto) return json({ erro: 'Resposta vazia' }, 502)
-    return json({ resultado: aparar(JSON.parse(texto)) })
+    if (!texto) return json({ erro: 'Resposta vazia', uso: d.uso }, 502)
+    return json({ resultado: aparar(JSON.parse(texto)), uso: d.uso })
   } catch (e) {
     if (e instanceof Anthropic.AuthenticationError) return json({ erro: 'A chave da Anthropic foi recusada. Confira a variável ANTHROPIC_API_KEY na Vercel.' }, 503)
     if (e instanceof Anthropic.PermissionDeniedError) return json({ erro: 'A conta da Anthropic não tem permissão (crédito ou limite de gasto).' }, 503)
