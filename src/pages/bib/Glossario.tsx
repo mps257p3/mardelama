@@ -54,6 +54,7 @@ export default function Glossario() {
               <summary><h3>{t.termo}{t.original && <span className="orig">{t.original}</span>}</h3></summary>
               <div className="glo-def">
                 <p>{comLinks(t.def, t.id).map((x, i) => typeof x === 'string' ? x : <Link key={i} to={`#${x.t.id}`} className="glo-link" title={x.t.termo} onClick={() => { setQ(''); setCat(undefined) }}>{x.texto}</Link>)}</p>
+                {t.exemplos && <><p className="glo-ex-t">Exemplos</p><ul className="glo-ex">{t.exemplos.map((x) => <li key={x}>{x}</li>)}</ul></>}
                 {(aparece.get(t.id)?.length ?? 0) > 0 && <p className="glo-mais">Aparece em: {aparece.get(t.id)!.map((a, i) => <span key={a.id}>{i ? ', ' : ''}<Link to={`/biblioteca/artistas/${a.id}`}>{a.nome}</Link></span>)}</p>}
                 {t.ver && <p className="glo-mais">Ver também: {t.ver.map((v, i) => { const x = termoPorId(v); return x && <span key={v}>{i ? ', ' : ''}<Link to={`#${v}`} onClick={() => { setQ(''); setCat(undefined) }}>{x.termo}</Link></span> })}</p>}
               </div>
