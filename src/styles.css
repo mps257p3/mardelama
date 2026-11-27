@@ -1153,6 +1153,36 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
 .lab-lista .n { font: 500 12px/1 var(--sans); color: var(--ink-3); }
 .lab-lista .seta { color: var(--ink-3); }
 
+/* Esmaltaria: página inicial */
+.esm-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 6px 0 16px; }
+.esm-head .sup-titulo { margin: 0; }
+.esm-head .iconbtn { color: var(--ink-2); }
+.destaque.esm-capa { height: auto; aspect-ratio: 2.3 / 1; }
+.esm-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 12px; margin-top: 18px; }
+.esm-cards .card-area .desc { padding-left: 0; }
+@media (min-width: 900px) { .esm-cards { grid-template-columns: repeat(4, 1fr); } }
+.esm-bloco { margin-top: 30px; }
+.esm-grupo { font: 500 11px/1.2 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 2px; }
+.esm-bloco .lab-lista { margin-top: 8px; }
+.lab-lista.esm-seg { margin-top: 30px; }
+.lab-lista.esm-seg svg:first-child { color: var(--terracota); }
+
+/* Segurança no ateliê */
+.seg-pag h1 { margin-top: 4px; }
+.seg-intro { color: var(--ink-3); font-size: 14px; margin: 4px 0 8px; }
+.seg-secao { padding: 18px 0; border-bottom: 1px solid var(--line); }
+.seg-secao h2 { font-size: 24px; margin: 0 0 8px; }
+.seg-secao ul { margin: 0; padding-left: 1.2em; font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+.seg-secao li + li { margin-top: 4px; }
+.seg-secao p { font-size: 15px; line-height: 1.6; color: var(--ink-2); margin: 0 0 8px; }
+.seg-duas { display: grid; gap: 16px; }
+.seg-duas > div { padding-left: 14px; border-left: 2px solid var(--line); }
+.seg-duas > div:last-child { border-left-color: var(--terracota); }
+.seg-duas .esm-grupo { margin-bottom: 6px; }
+@media (min-width: 700px) { .seg-duas { grid-template-columns: 1fr 1fr; } }
+.seg-fonte { margin-top: 18px; font-size: 13px; color: var(--ink-3); }
+.seg-fonte a { text-decoration: underline; }
+
 /* Uso em louça: selo ao lado da temperatura (estudos, esmaltes e fórmulas) */
 .menu-c.esq .menu-pop { left: 0; right: auto; }
 .linha-queima { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin-top: 8px; }
