@@ -61,6 +61,7 @@ export interface Esmalte extends Base {
   codigo: string
   fotos: string[]            // ids de Arquivo (o esmalte em si: plaquinhas, testes bonitos)
   pecas?: string[]           // ids de Arquivo: peças feitas com o esmalte
+  fotosRecorte?: Record<string, { x: number; y: number; zoom: number }> // enquadramento da foto principal, por id de Arquivo
   autoria?: string
   origem: 'comercial' | 'propria'
   familias: string[]         // ids de Familia (múltiplas categorias)

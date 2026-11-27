@@ -125,7 +125,8 @@ export default function EsmalteDetalhe() {
       </div>
 
       <div className="fx-capa">
-        <Galeria fotos={fotos ?? []} nome={e.nome} corHex={e.corHex} />
+        <Galeria fotos={fotos ?? []} nome={e.nome} corHex={e.corHex} recortes={e.fotosRecorte}
+          onRecorte={(id, r) => db.esmaltes.update(e.id, { fotosRecorte: { ...e.fotosRecorte, [id]: r }, atualizadoEm: Date.now() })} />
         <div className="fx-resumo">
           {e.descricao && <TextoCurto texto={e.descricao} />}
           <QueimaResumo e={e} />
