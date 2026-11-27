@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Search, Settings, ImagePlus } from 'lucide-react'
+import { Search, Settings, ImagePlus, ArrowUpRight, Heart } from 'lucide-react'
+import { alternarFavorito } from '../db/hooks'
+import { SecBancada } from './inicio/Bancada'
 import { db, type Exposicao } from '../db/schema'
 import { ImgObra } from './bib/art/ImgObra'
 import { fimEfetivo, periodo } from './bib/Agenda'
@@ -18,13 +20,18 @@ export function useFotoArea(slug: string) {
   return url ?? `/areas/${slug}.jpg`
 }
 
+const DESC_AREA: Record<string, string> = {
+  esmaltes: 'Materiais e superfícies', referencias: 'Repertório visual', biblioteca: 'Conhecimento e pesquisa', caderno: 'Ideias e processos',
+}
+
 function CardArea({ a }: { a: (typeof AREAS)[number] }) {
   const src = useFotoArea(a.slug)
   const I = a.icon
   return (
     <Link to={a.to} className="card-area">
       <span className="foto"><img src={src} alt="" loading="lazy" /></span>
-      <span className="nome"><I size={15} strokeWidth={1.5} style={{ color: a.cor }} />{a.nome}</span>
+      <span className="nome"><I size={15} strokeWidth={1.5} style={{ color: a.cor }} />{a.nome}<ArrowUpRight size={14} strokeWidth={1.4} className="seta" aria-hidden /></span>
+      {DESC_AREA[a.slug] && <span className="desc">{DESC_AREA[a.slug]}</span>}
     </Link>
   )
 }
@@ -39,11 +46,10 @@ export function Destaque({ editar = true }: { editar?: boolean }) {
       {cfg.tituloSobre && (
         <figcaption style={{ color: cfg.tituloClaro ? 'var(--marfim)' : 'var(--carvao)' }}>
           <h1>Mar de Lama</h1>
-          <p>Pesquisa, matéria e criação.</p>
         </figcaption>
       )}
       {cfg.credito && <span className="credito">{cfg.credito}</span>}
-      {editar && <Link to="/ajustes#tela-inicial" className="editar" aria-label="Personalizar fotografia de destaque"><ImagePlus size={16} strokeWidth={1.5} /></Link>}
+      {editar && <Link to="/ajustes#tela-inicial" className="editar" aria-label="Personalizar fotografia de destaque"><ImagePlus size={13} strokeWidth={1.5} /></Link>}
     </figure>
   )
 }
@@ -60,6 +66,14 @@ function Secao({ titulo, link, children }: { titulo: string; link?: { to: string
   )
 }
 
+/** Situação pela data de hoje: em cartaz, últimos dias (até 7 dias do fim) ou em breve. */
+function situacao(e: Exposicao, h: string) {
+  if ((e.inicio ?? '') > h) return 'Em breve'
+  const f = fimEfetivo(e)
+  if (f) { const dias = (new Date(f + 'T12:00').getTime() - new Date(h + 'T12:00').getTime()) / 86400000; if (dias <= 7) return 'Últimos dias' }
+  return 'Em cartaz'
+}
+
 function SecAgenda() {
   const itens = useLiveQuery(async () => {
     const hoje = new Date(); const h = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`
@@ -67,25 +81,31 @@ function SecAgenda() {
     const fim = (e: Exposicao) => fimEfetivo(e) ?? '9999'
     const cartaz = es.filter((e) => (e.inicio ?? '') <= h && fim(e) >= h).sort((a, b) => fim(a).localeCompare(fim(b)))
     const breve = es.filter((e) => (e.inicio ?? '') > h).sort((a, b) => (a.inicio ?? '').localeCompare(b.inicio ?? ''))
-    return [...cartaz.map((e) => ({ e, quando: 'Em cartaz' })), ...breve.map((e) => ({ e, quando: 'Em breve' }))].slice(0, 4)
+    return [...cartaz, ...breve].slice(0, 4).map((e) => ({ e, quando: situacao(e, h) }))
   }, [])
   if (!itens?.length) return null
   return (
     <Secao titulo="Exposições em São Paulo" link={{ to: '/biblioteca/agenda', label: 'Ver agenda' }}>
       <div className="expo-trilho">{itens.map(({ e, quando }) => (
-        <Link key={e.id} to={`/biblioteca/agenda#${e.id}`} className={'expo-mini' + (e.imagem || e.arquivo ? ' com-foto' : '')}>
-          {(e.imagem || e.arquivo) && <span className="expo-mini-foto"><ImgObra o={{ imagem: e.imagem, arquivo: e.arquivo, titulo: e.titulo }} /></span>}
-          <span className="q">{quando}{e.favorito ? ' · quero ir' : ''}</span>
-          <span className="t">{e.titulo}</span>
-          <span className="s">{e.local}</span>
-          <span className="d">{periodo(e)}</span>
-        </Link>
+        <div key={e.id} className="expo-mini">
+          <Link to={`/biblioteca/agenda#${e.id}`} className="expo-mini-link">
+            {(e.imagem || e.arquivo) && <span className="expo-mini-foto"><ImgObra o={{ imagem: e.imagem, arquivo: e.arquivo, titulo: e.titulo }} /></span>}
+            <span className={'q' + (quando === 'Últimos dias' ? ' ultimos' : '')}>{quando}</span>
+            <span className="t">{e.titulo}</span>
+            <span className="s">{e.local}</span>
+            <span className="d">{periodo(e)}</span>
+          </Link>
+          <button className={'expo-fav' + (e.favorito ? ' on' : '')} aria-pressed={!!e.favorito} aria-label={e.favorito ? 'Tirar de "quero ir"' : 'Quero ir'} onClick={() => alternarFavorito('exposicoes', e.id, e.favorito)}>
+            <Heart size={15} strokeWidth={1.5} fill={e.favorito ? 'currentColor' : 'none'} />
+          </button>
+        </div>
       ))}</div>
     </Secao>
   )
 }
 
 const SECOES: Record<SecaoId, () => React.ReactElement | null> = {
+  bancada: SecBancada,
   agenda: SecAgenda,
 }
 
@@ -106,7 +126,6 @@ export default function Home() {
       {!cfg.tituloSobre && (
         <div className="titulo-inicio">
           <h1>Mar de Lama</h1>
-          <p>Pesquisa, matéria e criação.</p>
         </div>
       )}
 

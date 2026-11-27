@@ -1,5 +1,5 @@
 import { temTelaAnterior } from '../../ui/Voltar'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AlertTriangle, ArrowLeft, Info, ChevronRight, Copy, Download, Heart, ImagePlus, Pencil, ScrollText, TestTube, Trash2 } from 'lucide-react'
@@ -8,6 +8,7 @@ import { alternarFavorito, excluir, useFamilias } from '../../db/hooks'
 import { proximoCodigo } from '../../db/codigos'
 import { salvarArquivo } from '../../db/files'
 import { criarReceita as criarReceitaNova } from './Receitas'
+import { registrarConsultaEsmalte } from '../../lib/bancada'
 import { TABELA_CONES, EXPLICACAO_CONE, temperaturaDaFicha } from '../../lib/cones'
 import type { Esmalte } from '../../db/schema'
 import { alertasDe, dadosComerciais, outrasQueimas } from '../../lib/esmalteFicha'
@@ -28,6 +29,7 @@ type Aba = typeof ABAS[number][0]
  */
 export default function EsmalteDetalhe() {
   const { id } = useParams()
+  useEffect(() => { if (id) registrarConsultaEsmalte(id) }, [id])
   const nav = useNavigate()
   const toast = useToast()
   const e = useLiveQuery(() => db.esmaltes.get(id!), [id])

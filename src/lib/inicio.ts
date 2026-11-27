@@ -2,6 +2,7 @@ import { useAjuste } from '../db/settings'
 
 /** Seções dinâmicas da tela inicial — podem ser reordenadas e ocultadas em Ajustes. */
 export const SECOES_INICIO = [
+  { id: 'bancada', nome: 'Sobre a bancada' },
   { id: 'agenda', nome: 'Exposições em São Paulo' },
 ] as const
 export type SecaoId = (typeof SECOES_INICIO)[number]['id']
