@@ -1436,7 +1436,7 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
 .fx-prop-c { padding: 0 0 12px; }
 .fx-prop-c > .fx-par:first-child { margin-top: 0; }
 .fx-prop-l { margin: 6px 0 0; font-size: 13px; color: var(--ink-2); line-height: 1.45; }
-.fx-prop-l span { display: block; font-size: 12px; color: var(--ink-3); }
+.fx-prop-l > span:first-child { display: block; font-size: 12px; color: var(--ink-3); }
 .fx-nivel { display: inline-flex; align-items: center; gap: 8px; }
 .fx-barras { display: inline-grid; grid-template-columns: repeat(5, 8px); gap: 2px; }
 .fx-barras b { height: 3px; background: var(--line); }
@@ -1521,13 +1521,13 @@ dl.fx-resumo-l dd { margin: 0; }
 
 /* efeitos: biblioteca de amostras ilustrativas, grade de 2 colunas */
 .amostra-fen { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; border-radius: 6px; background: var(--surface-2); }
-.fx-amostras-f { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 10px; max-width: 520px; }
-.fx-amostra-f { all: unset; box-sizing: border-box; width: 100%; display: grid; justify-items: center; align-content: start; gap: 4px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.fx-amostras-f { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 10px; max-width: 520px; }
+.fx-amostra-f { all: unset; box-sizing: border-box; width: 100%; display: grid; justify-items: center; align-content: start; gap: 2px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .fx-amostra-f .amostra-fen, .fx-amostra-f .foto-fen { margin: 0; transition: opacity .15s var(--ease); }
-.fx-amostra-nome { font: 400 12px/1.25 var(--sans); color: var(--ink-2); text-align: center; }
+.fx-amostra-nome { font: 400 12px/1.2 var(--sans); color: var(--ink-2); text-align: center; }
 .fx-amostra-f:focus-visible { outline: 2px solid var(--terracota); outline-offset: 3px; border-radius: 6px; }
 .fx-amostra-f:active .amostra-fen { opacity: .88; }
-.fx-atlas-leg { max-width: 560px; }
+.fx-atlas-leg { max-width: 560px; margin-top: 6px; }
 .fx-status { font: 500 10.5px/1.3 var(--sans); letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); }
 .fx-status.experimental { color: #7A6A3A; }
 .fx-status.nao-confirmado { color: var(--terracota); }
