@@ -4,7 +4,7 @@
  * sempre separado desta explicação e com a origem identificada.
  *
  * Para incluir um fenômeno: uma entrada aqui, o par id/nome em PICTOGRAMAS (lib/esmalteFicha.ts) e a amostra em
- * scripts/amostras/render.js. As fichas guardam só o id (perfil.efeitos), então nenhuma ficha precisa mudar.
+ * o desenho em scripts/infograficos/gerar.mjs. As fichas guardam só o id (perfil.efeitos), então nenhuma ficha precisa mudar.
  */
 export interface Fenomeno {
   nome: string

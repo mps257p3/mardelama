@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { X } from 'lucide-react'
-import type { Esmalte, OrigemDado } from '../../../db/schema'
+import { Camera, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db, type Esmalte, type OrigemDado } from '../../../db/schema'
 import {
   ATRIBUTOS_COMPORTAMENTO, GEOMETRIAS, NIVEIS, ORIGENS, PICTOGRAMAS, ROTULO_STATUS, TIPOS_TEMPERATURA, VISUAL,
   associacoesFenomenos, statusDaOrigem, texturasDe, type StatusFenomeno,
@@ -8,6 +10,7 @@ import {
 import { FENOMENOS } from '../../../lib/fenomenos'
 import { Sheet } from '../../../ui/Sheet'
 import { AmostraFenomeno } from '../../../ui/AmostraFenomeno'
+import { FotoRecortada, MenuFoto } from './FotoFenomeno'
 
 const NOME = Object.fromEntries(PICTOGRAMAS)
 const ATRIB = Object.fromEntries(ATRIBUTOS_COMPORTAMENTO)
@@ -112,23 +115,27 @@ export function especificoDoFenomeno(e: Esmalte, tipo: string): Item[] {
 /** Seção de efeitos: grade de amostras da biblioteca; cada uma abre o painel do fenômeno. */
 export function AtlasEfeitos({ e }: { e: Esmalte }) {
   const [aberto, setAberto] = useState<{ tipo: string; status: StatusFenomeno }>()
+  const [menu, setMenu] = useState<string>()
   const lista = associacoesFenomenos(e)
   if (!lista.length) return null
   return (
     <>
       <ul className="fx-amostras-f">
         {lista.map((a) => (
-          <li key={a.tipo}>
+          <li key={a.tipo} className="fx-amostra-w">
             <button className="fx-amostra-f" onClick={() => setAberto(a)} aria-label={`${NOME[a.tipo] ?? a.tipo}: ver explicação`}>
-              <AmostraFenomeno tipo={a.tipo} />
+              {e.fotosFenomenos?.[a.tipo] ? <FotoRecortada foto={e.fotosFenomenos[a.tipo]} alt={`${NOME[a.tipo] ?? a.tipo}: registro próprio`} /> : <AmostraFenomeno tipo={a.tipo} />}
               <span className="fx-amostra-nome">{NOME[a.tipo] ?? a.tipo}</span>
+              <span className="fx-img-origem">{e.fotosFenomenos?.[a.tipo] ? 'Registro próprio' : 'Infográfico técnico'}</span>
               {a.status !== 'documentado' && <span className={'fx-status ' + a.status}>{ROTULO_STATUS[a.status]}</span>}
             </button>
+            <button className="fx-cam" onClick={() => setMenu(a.tipo)} aria-label={`Foto própria de ${NOME[a.tipo] ?? a.tipo}`}><Camera size={14} strokeWidth={1.6} /></button>
           </li>
         ))}
       </ul>
-      <p className="fx-atlas-leg">Imagens ilustrativas dos fenômenos descritos. Não representam resultados de testes realizados com este esmalte.</p>
+      <p className="fx-atlas-leg">Infográficos técnicos: representações esquemáticas dos fenômenos, não resultados de testes com este esmalte. Toque no ícone de câmera para usar uma foto sua nesta ficha.</p>
       {aberto && <PainelFenomeno e={e} tipo={aberto.tipo} status={aberto.status} onClose={() => setAberto(undefined)} />}
+      {menu && <MenuFoto e={e} tipo={menu} onClose={() => setMenu(undefined)} />}
     </>
   )
 }
@@ -144,14 +151,21 @@ function PainelFenomeno({ e, tipo, status, onClose }: { e: Esmalte; tipo: string
   const nome = fen?.nome ?? NOME[tipo] ?? tipo
   const itens = especificoDoFenomeno(e, tipo)
   const fontes = [...new Set(itens.map((i) => i.fonte).filter((x): x is string => !!x && /^https?:/.test(x)))]
+  const foto = e.fotosFenomenos?.[tipo]
   return (
     <Sheet onClose={onClose} label={nome}>
       <div className="fx-fen">
         <div className="fx-fen-h"><h2>{nome}</h2><button className="iconbtn" aria-label="Fechar" onClick={onClose}><X size={18} /></button></div>
 
+        {foto && <section className="fx-fen-parte">
+          <p className="fx-rot">Registro próprio</p>
+          <figure className="fx-fen-fig"><FotoRecortada foto={foto} grande alt={`${nome}: registro próprio`} /><figcaption>Fotografia adicionada por você em {new Date(foto.data).toLocaleDateString('pt-BR')}. Não altera as informações do fabricante.</figcaption></figure>
+          {foto.testeId && <ExperimentoLigado id={foto.testeId} />}
+        </section>}
+
         <section className="fx-fen-parte">
           <p className="fx-rot">Sobre o fenômeno</p>
-          <figure className="fx-fen-fig"><AmostraFenomeno tipo={tipo} grande /><figcaption>Imagem ilustrativa; não é fotografia do produto nem resultado de teste deste esmalte.</figcaption></figure>
+          <figure className="fx-fen-fig"><AmostraFenomeno tipo={tipo} grande /><figcaption>Infográfico técnico: representação esquemática do fenômeno, não resultado de teste deste esmalte.</figcaption></figure>
           {fen && <>
             <p className="fx-fen-def">{fen.definicao}</p>
             <h3>Como ocorre</h3><p className="fx-par">{fen.comoOcorre}</p>
@@ -180,5 +194,26 @@ function PainelFenomeno({ e, tipo, status, onClose }: { e: Esmalte; tipo: string
         </section>
       </div>
     </Sheet>
+  )
+}
+
+/** Dados do experimento ao qual a foto pertence, com atalho para o registro completo. */
+function ExperimentoLigado({ id }: { id: string }) {
+  const t = useLiveQuery(() => db.testes.get(id), [id])
+  const nomes = useLiveQuery(async () => (t?.combinacao?.length ? (await db.esmaltes.bulkGet(t.combinacao)).map((x) => x?.nome).filter(Boolean) as string[] : []), [t?.combinacao?.join()])
+  if (!t || t.excluido) return <p className="fx-vazio-l">O experimento desta foto não está mais disponível.</p>
+  const linhas: [string, string | number | undefined][] = [
+    ['Queima', [t.cone && `cone ${t.cone}`, t.temperatura && `${t.temperatura} °C`].filter(Boolean).join(' · ') || undefined],
+    ['Massa cerâmica', t.argila], ['Aplicação e espessura', [t.aplicacao, t.densidade && `densidade ${t.densidade}`].filter(Boolean).join(' · ') || undefined],
+    ['Camadas', t.camadas], ['Esmaltes usados juntos', nomes?.join(', ') || undefined], ['Curva de queima', t.curva],
+    ['Resultado', t.resultado], ['Observações', t.observacoes],
+  ]
+  const com = linhas.filter(([, v]) => v !== undefined && v !== '')
+  return (
+    <div className="fx-exp-lig">
+      <p className="fx-rot">Experimento {t.codigo}{t.data && ` · ${new Date(t.data + 'T12:00').toLocaleDateString('pt-BR')}`}</p>
+      {com.length ? <dl className="fx-fontes-l">{com.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl> : <p className="fx-vazio-l">O experimento não tem outros dados registrados.</p>}
+      <Link className="fx-link" to={`/testes/${t.id}`}>Abrir o registro do experimento</Link>
+    </div>
   )
 }
