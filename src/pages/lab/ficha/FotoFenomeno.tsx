@@ -1,6 +1,6 @@
 import { useRef, useState, type PointerEvent as PE } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Camera, Crop, FlaskConical, Image as ImageIcon, RotateCcw, X } from 'lucide-react'
+import { Camera, FlaskConical, Image as ImageIcon, RotateCcw, X } from 'lucide-react'
 import { db, type Esmalte, type FotoFenomeno } from '../../../db/schema'
 import { criarMiniatura, salvarArquivo, useArquivoUrl } from '../../../db/files'
 import { associacoesFenomenos } from '../../../lib/esmalteFicha'
@@ -42,6 +42,7 @@ function GerenciarImagens({ e, onClose }: { e: Esmalte; onClose: () => void }) {
   const criados = useRef(new Set<string>())
   const [vista, setVista] = useState<{ k: 'lista' } | { k: 'experimento' | 'ajuste'; tipo: string }>({ k: 'lista' })
   const [ocupado, setOcupado] = useState<string>()
+  const [menu, setMenu] = useState<string>()
   const [salvando, setSalvando] = useState(false)
   const alvo = useRef<string>('')
   const cam = useRef<HTMLInputElement>(null), gal = useRef<HTMLInputElement>(null)
@@ -54,6 +55,9 @@ function GerenciarImagens({ e, onClose }: { e: Esmalte; onClose: () => void }) {
     try {
       const miniaturaId = await criarMiniatura(arquivoId, dono)
       if (miniaturaId) criados.current.add(miniaturaId)
+      // uma imagem por fenômeno: a foto provisória anterior (desta edição) é descartada na hora
+      const ant = fotos[tipo]
+      if (ant) for (const id of [ant.arquivoId, ant.miniaturaId]) if (id && criados.current.has(id) && id !== arquivoId) { criados.current.delete(id); await excluir([id]) }
       setFotos((f) => ({ ...f, [tipo]: { arquivoId, miniaturaId, testeId, data: Date.now() } }))
       setVista({ k: 'ajuste', tipo })
     } finally { setOcupado(undefined) }
@@ -83,7 +87,7 @@ function GerenciarImagens({ e, onClose }: { e: Esmalte; onClose: () => void }) {
   } else if (vista.k === 'experimento') {
     corpo = <EscolherExperimento e={e} ocupado={!!ocupado} onBack={() => setVista({ k: 'lista' })} onPick={(testeId, arq) => usar(vista.tipo, arq, testeId)} />
   } else corpo = <>
-    <p className="fx-origem">As fotos aparecem só na ficha de {e.nome}. A biblioteca de infográficos, os outros esmaltes e as informações técnicas não mudam.</p>
+    <p className="fx-origem">Personalize as imagens dos fenômenos deste esmalte com seus próprios registros fotográficos.</p>
     <ul className="fx-ger">
       {tipos.map((t) => {
         const f = fotos[t]
@@ -93,19 +97,19 @@ function GerenciarImagens({ e, onClose }: { e: Esmalte; onClose: () => void }) {
             <div className="fx-ger-txt">
               <b>{nomeFenomeno(t)}</b>
               <span className="fx-ger-orig">{ocupado === t ? 'Preparando a foto…' : f ? (f.testeId ? 'Foto de experimento' : 'Fotografia própria') : 'Infográfico técnico'}</span>
-              <div className="fx-ger-acoes">
-                <button className="iconbtn" disabled={!!ocupado} aria-label="Fotografar" title="Fotografar" onClick={() => { alvo.current = t; cam.current?.click() }}><Camera size={17} strokeWidth={1.5} /></button>
-                <button className="iconbtn" disabled={!!ocupado} aria-label="Galeria" title="Galeria" onClick={() => { alvo.current = t; gal.current?.click() }}><ImageIcon size={17} strokeWidth={1.5} /></button>
-                <button className="iconbtn" disabled={!!ocupado} aria-label="Foto de um experimento" title="Experimento" onClick={() => setVista({ k: 'experimento', tipo: t })}><FlaskConical size={17} strokeWidth={1.5} /></button>
-                {f && <button className="iconbtn" aria-label="Ajustar enquadramento" title="Enquadrar" onClick={() => setVista({ k: 'ajuste', tipo: t })}><Crop size={17} strokeWidth={1.5} /></button>}
-                {f && <button className="iconbtn" aria-label="Restaurar infográfico original" title="Restaurar infográfico" onClick={() => setFotos((x) => ({ ...x, [t]: undefined }))}><RotateCcw size={17} strokeWidth={1.5} /></button>}
-              </div>
             </div>
+            <button className="iconbtn fx-ger-cam" disabled={!!ocupado} aria-label={`Imagem de ${nomeFenomeno(t)}`} aria-expanded={menu === t} onClick={() => setMenu(menu === t ? undefined : t)}><Camera size={18} strokeWidth={1.5} /></button>
+            {menu === t && <div className="fx-ger-menu" role="menu">
+              <button role="menuitem" onClick={() => { setMenu(undefined); alvo.current = t; cam.current?.click() }}><Camera size={16} strokeWidth={1.5} />Tirar foto</button>
+              <button role="menuitem" onClick={() => { setMenu(undefined); alvo.current = t; gal.current?.click() }}><ImageIcon size={16} strokeWidth={1.5} />Escolher da galeria</button>
+              <button role="menuitem" onClick={() => { setMenu(undefined); setVista({ k: 'experimento', tipo: t }) }}><FlaskConical size={16} strokeWidth={1.5} />Selecionar de um experimento</button>
+              {f && <button role="menuitem" onClick={() => { setMenu(undefined); setFotos((x) => ({ ...x, [t]: undefined })) }}><RotateCcw size={16} strokeWidth={1.5} />Restaurar infográfico</button>}
+            </div>}
           </li>
         )
       })}
     </ul>
-    <div className="fx-acoes"><button className="btn sm" onClick={fechar}>Cancelar</button><button className="btn sm primary" disabled={!mudou || salvando || !!ocupado} onClick={salvar}>Salvar alterações</button></div>
+    <div className="fx-acoes fx-rodape"><button className="btn sm" onClick={fechar}>Cancelar</button><button className="btn sm primary" disabled={!mudou || salvando || !!ocupado} onClick={salvar}>Salvar alterações</button></div>
   </>
 
   return (
