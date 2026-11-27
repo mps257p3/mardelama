@@ -1458,3 +1458,21 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
 .fx-louca span { font-size: 12.5px; color: var(--ink-2); }
 .fx-louca.nao { background: color-mix(in srgb, var(--terracota) 12%, transparent); }
 .fx-form-ind .wide-row { grid-column: 1 / -1; }
+
+/* refinamento pontual: resumo, amostras de cor, queima por faixa */
+.fx-resumo-l { border-bottom: 1px solid var(--line); }
+.fx-resumo-l .fx-tabela div, .fx-resumo-l .fx-tabela div.longo { grid-template-columns: minmax(104px, 2fr) 3fr; gap: 12px; padding: 7px 0; }
+.fx-resumo-l .fx-tabela dt { padding-top: 2px; }
+.fx-amostra { width: 20px; height: 20px; border-radius: 3px; margin-right: 8px; vertical-align: -5px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.14); }
+.fx-cores { display: inline; }
+.fx-cores > span { white-space: nowrap; }
+.fx-rec-r { white-space: normal; overflow: visible; text-overflow: clip; }
+.fx-faixas { list-style: none; margin: 4px 0 0; padding: 0; border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+.fx-faixas > li { display: grid; grid-template-columns: minmax(96px, 2fr) 3fr; gap: 12px; padding: 8px 0; border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+.fx-faixa-t { margin: 0; padding-top: 2px; font: 400 13px/1.35 var(--sans); color: var(--ink-3); }
+.fx-faixa-l + .fx-faixa-l { margin-top: 6px; }
+.fx-faixa-l p { margin: 0; font-size: 14.5px; line-height: 1.45; }
+.fx-faixa-l b { font-weight: 500; }
+.fx-faixa-l.pessoal p { color: var(--ink-2); }
+.fx-faixa-l.hip p { font-style: italic; color: var(--ink-2); }
+.fx-fontes .fx-nota { display: inline; margin-left: 6px; }

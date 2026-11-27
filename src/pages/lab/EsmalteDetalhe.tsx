@@ -14,8 +14,8 @@ import { useEstadoDaTela } from '../../ui/memoriaRolagem'
 import { Menu } from '../../ui/Menu'
 import { useToast } from '../../ui/toast'
 import { Galeria, useFotosFicha } from './ficha/Galeria'
-import { Grade, TextoCurto } from './ficha/partes'
-import { AbaDocumentacao, AbaExperimentos, AbaPerfil, AbaTecnica } from './ficha/Abas'
+import { Grade, Tabela, TextoCurto } from './ficha/partes'
+import { AbaDocumentacao, AbaExperimentos, AbaPerfil, AbaTecnica, classeFluidez, resumoSeguranca } from './ficha/Abas'
 
 const ABAS = [['perfil', 'Perfil'], ['tecnica', 'Técnica'], ['experimentos', 'Experimentos'], ['documentacao', 'Documentação']] as const
 type Aba = typeof ABAS[number][0]
@@ -121,6 +121,7 @@ export default function EsmalteDetalhe() {
           <Grade itens={[
             ['Temperatura', e.temperatura ? fmt(e.temperatura, 0) + ' °C' : undefined, 'referência'], ['Cone', e.cone], ['Atmosfera', e.atmosfera],
           ]} />
+          <div className="fx-resumo-l"><Tabela itens={[["Fluidez durante a queima", classeFluidez(e)], ["Segurança alimentar", resumoSeguranca(e)]]} /></div>
           {alertas.length > 0 && <ul className="fx-alertas" aria-label="Alertas">{alertas.map((a) => <li key={a}><AlertTriangle size={14} strokeWidth={1.6} />{a}</li>)}</ul>}
         </div>
       </div>
