@@ -160,6 +160,7 @@ export default function EsmalteForm() {
 
         <h3>Técnica · segurança e uso</h3>
         {SEGURANCA.map(([k, l]) => <Campo key={k} label={l} wide><Escolha value={tec.seguranca?.[k]} onChange={(v) => { const c = { ...tec.seguranca }; if (c[k] === v) delete c[k]; else c[k] = v; setTec({ seguranca: c }) }} opcoes={(Object.keys(VERIFICACAO) as Verificacao[]).map((v) => ({ v, l: VERIFICACAO[v] }))} /></Campo>)}
+        <Campo label="Uso em louça (resumo usado nos filtros)" wide><Escolha value={e.louca} onChange={set('louca')} opcoes={[{ v: 'sim', l: 'Pode ir à louça' }, { v: 'nao', l: 'Só decorativo' }, { v: 'testar', l: 'Só após teste' }]} /></Campo>
         <Campo label="Restrições e notas de segurança" wide><AreaTexto value={tec.segurancaNotas} onChange={(v) => setTec({ segurancaNotas: v || undefined })} rows={2} /></Campo>
         <OrigemCampo valor={tec.origens?.seguranca} onChange={(o) => setTec({ origens: { ...tec.origens, seguranca: o } })} />
 

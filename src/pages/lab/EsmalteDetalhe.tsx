@@ -1,6 +1,6 @@
 import { temTelaAnterior } from '../../ui/Voltar'
 import { useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AlertTriangle, ArrowLeft, Copy, Download, Heart, ImagePlus, Pencil, ScrollText, TestTube, Trash2 } from 'lucide-react'
 import { db, novo } from '../../db/schema'
@@ -9,7 +9,7 @@ import { proximoCodigo } from '../../db/codigos'
 import { salvarArquivo } from '../../db/files'
 import { criarReceita as criarReceitaNova } from './Receitas'
 import { fmt } from '../../lib/opcoes'
-import { alertasDe, fluidezResumo } from '../../lib/esmalteFicha'
+import { alertasDe, dadosComerciais, fluidezResumo } from '../../lib/esmalteFicha'
 import { useEstadoDaTela } from '../../ui/memoriaRolagem'
 import { Menu } from '../../ui/Menu'
 import { useToast } from '../../ui/toast'
@@ -49,6 +49,10 @@ export default function EsmalteDetalhe() {
   const comercial = e.origem === 'comercial'
   const flu = fluidezResumo(e)
   const alertas = alertasDe(e)
+  const com = dadosComerciais(e)
+  // código comercial quando existe (o interno fica em Documentação); fabricante só aqui
+  const eyebrow = [e.autoria, com.codigo ?? (comercial ? undefined : e.codigo)].filter(Boolean).join(' · ')
+  const familiaFuncao = [fam.join(', '), fam.some((f) => f.toLowerCase() === e.funcao?.toLowerCase()) ? '' : e.funcao].filter(Boolean).join(' · ')
 
   async function criarReceita() {
     const rid = await criarReceitaNova({ nome: e!.nome, esmalteId: e!.id })
@@ -83,15 +87,16 @@ export default function EsmalteDetalhe() {
         <button className="fx-voltar" onClick={() => (temTelaAnterior() ? nav(-1) : nav('/esmaltes'))}><ArrowLeft size={16} />Esmaltaria</button>
         <div className="fx-acoes">
           <button className="iconbtn" aria-label={e.favorito ? 'Tirar dos favoritos' : 'Favoritar'} onClick={() => alternarFavorito('esmaltes', e.id, e.favorito)}><Heart size={18} fill={e.favorito ? 'currentColor' : 'none'} /></button>
-          <Link className="iconbtn" aria-label="Editar" to={`/esmaltes/${e.id}/editar`}><Pencil size={18} /></Link>
           <Menu itens={[
+            { l: 'Editar', icon: <Pencil size={16} />, to: `/esmaltes/${e.id}/editar` },
+            { l: 'Duplicar', icon: <Copy size={16} />, onClick: duplicar },
+            { l: 'Exportar ficha', icon: <Download size={16} />, onClick: exportar, disabled: !!exportando },
+            { sep: true, l: '' },
             { l: 'Novo teste', icon: <TestTube size={16} />, to: `/testes/novo?esmalte=${e.id}` },
             comercial
               ? { l: aprovada && !aprovada.excluido ? 'Receita aprovada' : estudo ? 'Engenharia reversa' : 'Criar engenharia reversa', icon: <ScrollText size={16} />, onClick: engenhariaReversa }
               : receita && !receita.excluido ? { l: 'Abrir fórmula', icon: <ScrollText size={16} />, to: `/receitas/${receita.id}` } : { l: 'Criar fórmula', icon: <ScrollText size={16} />, onClick: criarReceita },
             { l: 'Adicionar foto', icon: <ImagePlus size={16} />, onClick: () => fotoRef.current?.click() },
-            { l: 'Duplicar', icon: <Copy size={16} />, onClick: duplicar },
-            { l: 'Exportar ficha', icon: <Download size={16} />, onClick: exportar, disabled: !!exportando },
             { sep: true, l: '' },
             { l: 'Excluir', icon: <Trash2 size={16} />, onClick: async () => { if (confirm(`Excluir "${e.nome}"?`)) { await excluir('esmaltes', e.id); toast('Esmalte excluído'); nav('/esmaltes') } } },
           ]} />
@@ -104,19 +109,20 @@ export default function EsmalteDetalhe() {
         }} />
       </header>
 
+      <div className="fx-id">
+        {eyebrow && <p className="fx-eyebrow">{eyebrow}</p>}
+        <h1 className="fx-nome">{e.nome}</h1>
+        {familiaFuncao && <p className="fx-familia">{familiaFuncao}</p>}
+      </div>
+
       <div className="fx-capa">
         <Galeria fotos={fotos ?? []} nome={e.nome} corHex={e.corHex} />
-        <div className="fx-id">
-          <p className="fx-eyebrow">{[e.codigo, e.autoria].filter(Boolean).join(' · ')}</p>
-          <h1 className="fx-nome">{e.nome}</h1>
-          {(fam.length > 0 || e.funcao) && <p className="fx-familia">{[fam.join(', '), fam.some((f) => f.toLowerCase() === e.funcao?.toLowerCase()) ? '' : e.funcao].filter(Boolean).join(' · ')}</p>}
+        <div className="fx-resumo">
           {e.descricao && <TextoCurto texto={e.descricao} />}
-
           <Grade itens={[
             ['Temperatura', e.temperatura ? fmt(e.temperatura, 0) + ' °C' : undefined], ['Cone', e.cone], ['Atmosfera', e.atmosfera],
-            ['Acabamento', e.acabamento], ['Opacidade', e.transparencia], ['Fluidez na queima', flu?.valor, flu?.nota],
+            ['Acabamento', e.acabamento], ['Opacidade', e.transparencia], ['Fluidez', flu?.valor, flu?.nota],
           ]} />
-
           {alertas.length > 0 && <ul className="fx-alertas" aria-label="Alertas">{alertas.map((a) => <li key={a}><AlertTriangle size={14} strokeWidth={1.6} />{a}</li>)}</ul>}
         </div>
       </div>
@@ -128,7 +134,7 @@ export default function EsmalteDetalhe() {
         {aba === 'perfil' && <AbaPerfil e={e} />}
         {aba === 'tecnica' && <AbaTecnica e={e} />}
         {aba === 'experimentos' && <AbaExperimentos e={e} testes={testes} />}
-        {aba === 'documentacao' && <AbaDocumentacao e={e} familias={fam} receita={receita} estudo={estudo} />}
+        {aba === 'documentacao' && <AbaDocumentacao e={e} familias={fam} receita={receita} estudo={estudo} aprovada={aprovada} />}
       </div>
       {exportando && <div className="sync-pill" role="status">{exportando}</div>}
     </div>
