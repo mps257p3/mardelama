@@ -1637,3 +1637,6 @@ dl.fx-resumo-l dd { margin: 0; }
 .versao-b .gira { animation: versao-gira 1s linear infinite; }
 @keyframes versao-gira { to { transform: rotate(360deg); } }
 .versao-msg { margin: 6px auto 0; max-width: 36ch; font-size: 12px; line-height: 1.45; color: var(--ink-2); }
+
+/* resumo da ficha: cada queima numa linha, sem separador */
+.fx-resumo-v { white-space: pre-line; }
