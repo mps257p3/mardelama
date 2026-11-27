@@ -6,6 +6,7 @@ import { Foto } from '../../../ui/form'
 import { Visor } from '../../../ui/GaleriaFotos'
 import { useArquivoUrl } from '../../../db/files'
 import { EditorRecorte, estiloRecorte, type Recorte } from '../../../ui/Recorte'
+import { useToast } from '../../../ui/toast'
 
 /**
  * Galeria da ficha: foto principal 4:3 e miniaturas em linha.
@@ -30,6 +31,7 @@ export function Galeria({ fotos, nome, corHex, recortes, onRecorte }: {
   const [visor, setVisor] = useState<number>()
   const [recortar, setRecortar] = useState<number>()
   const caixa = useRef<HTMLDivElement>(null)
+  const toast = useToast()
   useEffect(() => { if (i >= fotos.length) setI(0) }, [fotos.length, i])
   const atual = fotos[i]
   const url = useArquivoUrl(recortar != null ? atual?.id : undefined)
@@ -46,7 +48,7 @@ export function Galeria({ fotos, nome, corHex, recortes, onRecorte }: {
         {fotos.map((f, j) => <button key={f.id + j} className={j === i ? 'on' : ''} onClick={() => setI(j)} aria-label={`Foto ${j + 1}: ${f.tipo}`}><Foto id={f.id} /></button>)}
       </div>}
       {recortar != null && atual && onRecorte && <EditorRecorte src={url} aspecto={recortar} valor={recortes?.[atual.id]} titulo={`Reenquadrar · ${nome}`}
-        onSalvar={(r) => onRecorte(atual.id, r)} onClose={() => setRecortar(undefined)} />}
+        onSalvar={async (r) => { try { await onRecorte(atual.id, r); toast('Enquadramento salvo') } catch (err) { toast('Não consegui salvar o enquadramento: ' + ((err as Error)?.message ?? err)) } }} onClose={() => setRecortar(undefined)} />}
       {visor != null && <Visor fotos={fotos.map((f) => f.id)} inicio={visor} legenda={`${nome} · ${fotos[visor]?.tipo ?? ''}`} onClose={() => setVisor(undefined)} />}
     </div>
   )

@@ -1631,3 +1631,9 @@ dl.fx-resumo-l dd { margin: 0; }
 
 /* valor da temperatura no resumo da ficha: menor que cone e atmosfera, para caber numa linha */
 .fx-temp-v { font-size: .78em; white-space: nowrap; }
+
+.versao-b { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 999px; color: var(--ink-3); }
+.versao-b:hover, .versao-b:focus-visible { color: var(--ink-2); background: var(--surface-2); }
+.versao-b .gira { animation: versao-gira 1s linear infinite; }
+@keyframes versao-gira { to { transform: rotate(360deg); } }
+.versao-msg { margin: 6px auto 0; max-width: 36ch; font-size: 12px; line-height: 1.45; color: var(--ink-2); }

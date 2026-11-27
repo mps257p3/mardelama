@@ -126,7 +126,7 @@ export default function EsmalteDetalhe() {
 
       <div className="fx-capa">
         <Galeria fotos={fotos ?? []} nome={e.nome} corHex={e.corHex} recortes={e.fotosRecorte}
-          onRecorte={(id, r) => db.esmaltes.update(e.id, { fotosRecorte: { ...e.fotosRecorte, [id]: r }, atualizadoEm: Date.now() })} />
+          onRecorte={(id, r) => salvarRecorte(e.id, id, r)} />
         <div className="fx-resumo">
           {e.descricao && <TextoCurto texto={e.descricao} />}
           <QueimaResumo e={e} />
@@ -147,6 +147,14 @@ export default function EsmalteDetalhe() {
       {exportando && <div className="sync-pill" role="status">{exportando}</div>}
     </div>
   )
+}
+
+/** Guarda o enquadramento de uma foto da ficha e confere, lendo de volta, que ficou gravado. */
+async function salvarRecorte(esmalteId: string, fotoId: string, r: { x: number; y: number; zoom: number }) {
+  const atual = await db.esmaltes.get(esmalteId)
+  const n = await db.esmaltes.update(esmalteId, { fotosRecorte: { ...atual?.fotosRecorte, [fotoId]: r }, atualizadoEm: Date.now() })
+  const lido = (await db.esmaltes.get(esmalteId))?.fotosRecorte?.[fotoId]
+  if (!n || !lido || Math.abs(lido.y - r.y) > 1e-6 || Math.abs(lido.x - r.x) > 1e-6) throw new Error(n ? 'o enquadramento não ficou gravado' : 'esmalte não encontrado')
 }
 
 /** Temperatura, cone e atmosfera. Tocar no cone abre a explicação e a tabela usada nas conversões. */

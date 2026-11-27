@@ -32,3 +32,26 @@ export function podeRecarregarSozinho() {
     return true
   } catch { return false }
 }
+
+/**
+ * Botão do rodapé: confere agora se há versão nova publicada.
+ * Se houver, instala e recarrega (devolve 'nova'); senão devolve 'atual'. Sem internet: 'offline'.
+ */
+export async function buscarVersaoNova(): Promise<'nova' | 'atual' | 'offline'> {
+  if (!navigator.onLine) return 'offline'
+  const reg = await navigator.serviceWorker?.getRegistration()
+  if (!reg) return 'atual'
+  try { await reg.update() } catch { return 'offline' }
+  const sw = reg.installing ?? reg.waiting
+  if (!sw) return 'atual'
+  // espera a versão nova terminar de instalar (até 20 s) e recarrega com ela
+  await new Promise<void>((ok) => {
+    if (sw.state === 'installed' || sw.state === 'activated') return ok()
+    const t = setTimeout(ok, 20000)
+    sw.addEventListener('statechange', () => { if (sw.state === 'installed' || sw.state === 'activated') { clearTimeout(t); ok() } })
+  })
+  reg.waiting?.postMessage({ type: 'SKIP_WAITING' })
+  await espera(600)
+  location.reload()
+  return 'nova'
+}
