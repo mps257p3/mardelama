@@ -446,7 +446,8 @@ textarea.input { min-height: 110px; resize: vertical; }
 .ajuste-areas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 @media (min-width: 700px) { .ajuste-areas { grid-template-columns: repeat(3, 1fr); } }
 .ajuste-area { border-radius: 10px; overflow: hidden; background: var(--areia); }
-.ajuste-area img { width: 100%; height: 84px; object-fit: cover; }
+.ajuste-area-foto { display: block; height: 84px; overflow: hidden; }
+.ajuste-area-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ajuste-area .info { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 10px; font-size: 14px; }
 .linha-secao { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 0; min-height: 48px; border-bottom: 1px solid var(--line); font-size: 15px; }
 .iconbtn:disabled { opacity: .3; }
@@ -1614,3 +1615,15 @@ dl.fx-resumo-l dd { margin: 0; }
 .banc-tit { font: 500 18px/1.2 var(--serif); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .banc-ctx { font-size: 12.5px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .banc-seta { color: var(--ink-3); }
+
+/* Reenquadrar foto: área de corte com arraste e zoom */
+.recorte-caixa { position: relative; width: 100%; max-height: 60dvh; margin: 12px auto 0; overflow: hidden; border-radius: 4px; background: var(--surface-2); touch-action: none; cursor: grab; user-select: none; }
+.recorte-caixa:active { cursor: grabbing; }
+.recorte-caixa img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.recorte-grade { position: absolute; inset: 0; pointer-events: none; background:
+  linear-gradient(to right, transparent calc(33.33% - .5px), rgba(255,255,255,.45) calc(33.33% - .5px), rgba(255,255,255,.45) calc(33.33% + .5px), transparent calc(33.33% + .5px), transparent calc(66.66% - .5px), rgba(255,255,255,.45) calc(66.66% - .5px), rgba(255,255,255,.45) calc(66.66% + .5px), transparent calc(66.66% + .5px)),
+  linear-gradient(to bottom, transparent calc(33.33% - .5px), rgba(255,255,255,.45) calc(33.33% - .5px), rgba(255,255,255,.45) calc(33.33% + .5px), transparent calc(33.33% + .5px), transparent calc(66.66% - .5px), rgba(255,255,255,.45) calc(66.66% - .5px), rgba(255,255,255,.45) calc(66.66% + .5px), transparent calc(66.66% + .5px)); }
+.recorte-zoom { display: flex; align-items: center; gap: 12px; margin-top: 12px; font-size: 13px; color: var(--ink-2); }
+.recorte-zoom input { flex: 1; }
+.recorte-acoes { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
+.btn-recorte { position: absolute; z-index: 2; }

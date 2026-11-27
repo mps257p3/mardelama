@@ -45,7 +45,7 @@ export default function ObraForm() {
   async function salvar() {
     if (!o?.artistaId) { toast('Escolha o artista'); return }
     if (o.id) { await db.obras.put({ ...(o as Obra), atualizadoEm: Date.now() }); nav(`/biblioteca/obras/${o.id}`, { replace: true }) }
-    else { const n = novo(o); await db.obras.add(n); if (sp.get('capa')) await db.artistas.update(n.artistaId, { capa: n.id, atualizadoEm: Date.now() }); nav(`/biblioteca/artistas/${n.artistaId}`, { replace: true }) }
+    else { const n = novo(o); await db.obras.add(n); if (sp.get('capa')) await db.artistas.update(n.artistaId, { capa: n.id, capaRecorte: undefined, atualizadoEm: Date.now() }); nav(`/biblioteca/artistas/${n.artistaId}${sp.get('capa') ? '?recortar=1' : ''}`, { replace: true }) }
     toast('Obra salva')
   }
   return (

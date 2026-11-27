@@ -6,6 +6,7 @@ import { FolderPlus, Plus, Sparkles } from 'lucide-react'
 import { db, ETAPAS, type Observacao, type Peca, type Serie } from '../../db/schema'
 import { vivos } from '../../lib/artistas'
 import { Foto } from '../../ui/form'
+import { estiloRecorte } from '../../ui/Recorte'
 import { ArtistasParecidos } from './ArtistasParecidos'
 import { CartaoPeca, STATUS_SERIE, nomeEtapa, normPeca, normSerie, novaPeca, novaSerie } from './comum'
 
@@ -92,7 +93,7 @@ export default function MinhasObras() {
           const xs = pecas.filter((p) => p.serieId === s.id)
           const capa = s.capa ?? xs.find((p) => p.fotos[0])?.fotos[0]
           return <Link key={s.id} to={`/obras/serie/${s.id}`} className="mo-serie">
-            <span className="ph">{capa ? <Foto id={capa} /> : <span className="obra-sem"><span>Sem foto</span></span>}</span>
+            <span className="ph">{capa ? <Foto id={capa} style={s.capa === capa ? estiloRecorte(s.capaRecorte) : undefined} /> : <span className="obra-sem"><span>Sem foto</span></span>}</span>
             <span className="t">{s.nome || 'Série sem nome'}</span>
             <span className="s">{[STATUS_SERIE[s.status], s.ano, `${xs.length} ${xs.length === 1 ? 'peça' : 'peças'}`].filter(Boolean).join(' · ')}</span>
           </Link>

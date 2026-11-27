@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ImagePlus, Link2, Plus, RotateCcw, Search } from 'lucide-react'
+import { Crop, ImagePlus, Link2, Plus, RotateCcw, Search } from 'lucide-react'
 import { GLOSSARIO } from '../../lib/glossario'
 import { db, type Tipo } from '../../db/schema'
 import { useAjuste, definirAjuste } from '../../db/settings'
@@ -11,19 +11,21 @@ import { buscarTodos, ROTULO, type Resumo } from '../../lib/entidades'
 import { Foto } from '../../ui/form'
 import { Menu } from '../../ui/Menu'
 import { Sheet } from '../../ui/Sheet'
+import { EditorRecorte, estiloRecorte, salvarRecorteAjuste, useRecorteAjuste } from '../../ui/Recorte'
 
 /** Capa de uma seção: a foto escolhida pelo Marcelo; senão, a capa padrão (com reserva local se a externa falhar). */
 export function useCapa(s: SecaoBib) {
   const id = useAjuste<string | undefined>(`bib.capa.${s.slug}`, undefined)
   const url = useArquivoUrl(id)
-  return { src: url ?? s.capa, propria: !!id }
+  const recorte = useRecorteAjuste(`bib.capa.${s.slug}`)
+  return { src: url ?? s.capa, propria: !!id, recorte: id ? recorte : undefined }
 }
 
 export function CapaImg({ s, className }: { s: SecaoBib; className?: string }) {
-  const { src } = useCapa(s)
+  const { src, recorte } = useCapa(s)
   const [falhou, setFalhou] = useState(false)
   useEffect(() => setFalhou(false), [src])
-  return <img className={className} src={falhou && s.reserva ? s.reserva : src} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFalhou(true)} />
+  return <img className={className} src={falhou && s.reserva ? s.reserva : src} alt="" loading="lazy" referrerPolicy="no-referrer" style={estiloRecorte(recorte)} onError={() => setFalhou(true)} />
 }
 
 function CardSecao({ s, n, grande }: { s: SecaoBib; n: number; grande: boolean }) {
@@ -106,17 +108,22 @@ function Resultados({ itens, q }: { itens: Resumo[]; q: string }) {
 }
 
 function LinhaCapa({ s }: { s: SecaoBib }) {
-  const { propria } = useCapa(s)
+  const { propria, src, recorte } = useCapa(s)
+  const chave = `bib.capa.${s.slug}`
   const ref = useRef<HTMLInputElement>(null)
+  const [editar, setEditar] = useState(false)
   return (
     <div className="bib-capa-linha">
       <span className="ph"><CapaImg s={s} /></span>
       <span className="t">{s.nome}<span className="s">{propria ? 'Foto sua' : s.credito ? `Padrão · ${s.credito}` : 'Padrão'}</span></span>
       <span style={{ display: 'flex', gap: 4 }}>
-        {propria && <button className="iconbtn" aria-label="Voltar à capa padrão" onClick={() => definirAjuste(`bib.capa.${s.slug}`, undefined)}><RotateCcw size={16} /></button>}
+        {propria && <button className="iconbtn" aria-label="Reenquadrar foto" onClick={() => setEditar(true)}><Crop size={16} /></button>}
+        {propria && <button className="iconbtn" aria-label="Voltar à capa padrão" onClick={async () => { await definirAjuste(chave, undefined); await salvarRecorteAjuste(chave, undefined) }}><RotateCcw size={16} /></button>}
         <button className="btn sm" onClick={() => ref.current?.click()}><ImagePlus size={14} />Trocar</button>
       </span>
-      <input ref={ref} type="file" accept="image/*" hidden onChange={async (e) => { const f = e.target.files?.[0]; if (f) await definirAjuste(`bib.capa.${s.slug}`, await salvarArquivo(f)); e.target.value = '' }} />
+      <input ref={ref} type="file" accept="image/*" hidden onChange={async (e) => { const f = e.target.files?.[0]; if (f) { await definirAjuste(chave, await salvarArquivo(f)); await salvarRecorteAjuste(chave, undefined); setEditar(true) } e.target.value = '' }} />
+      {editar && <EditorRecorte src={src} aspecto={GRANDES.has(s.slug) ? 16 / 10 : 3 / 4} valor={recorte} titulo={`Reenquadrar · ${s.nome}`}
+        onSalvar={(r) => salvarRecorteAjuste(chave, r)} onClose={() => setEditar(false)} />}
     </div>
   )
 }

@@ -1,8 +1,10 @@
 import { Voltar } from '../../../ui/Voltar'
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Check, Download, ExternalLink, FolderPlus, Heart, ImageIcon, ImagePlus, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react'
+import { useArquivoUrl } from '../../../db/files'
+import { EditorRecorte, estiloRecorte } from '../../../ui/Recorte'
+import { Check, Crop, Download, ExternalLink, FolderPlus, Heart, ImageIcon, ImagePlus, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react'
 import { Sheet } from '../../../ui/Sheet'
 import { db, novo, uid, type Artista, type Certeza, type Nota, type Obra } from '../../../db/schema'
 import { alternarFavorito, excluir } from '../../../db/hooks'
@@ -45,6 +47,12 @@ export default function ArtistaDetalhe() {
   const [colecao, setColecao] = useState(false)
   const [ia, setIa] = useState(false)
   const [trocaCapa, setTrocaCapa] = useState(false)
+  const [sp, setSp] = useSearchParams()
+  const [recortar, setRecortar] = useState(sp.get('recortar') === '1')
+  useEffect(() => { if (sp.get('recortar')) setSp((x) => { x.delete('recortar'); return x }, { replace: true }) }, [sp, setSp])
+  const capaPropria = a && a.capa ? obras.find((o) => o.id === a.capa) : undefined
+  const urlArqCapa = useArquivoUrl(capaPropria?.arquivo)
+  const srcCapa = urlArqCapa ?? capaPropria?.imagem
   const [todasVer, setTodasVer] = useState(false)
   const [sug, setSug] = useState<Sugestao[]>([])
   const [exportando, setExportando] = useState<string>()
@@ -103,17 +111,20 @@ export default function ArtistaDetalhe() {
       </div>
 
       <figure className="art-capa" onClick={() => capa && setVisor(obras.indexOf(capa))}>
-        <ImgObra o={capa} alt={capa?.titulo ?? a.nome} />
+        <ImgObra o={capa} alt={capa?.titulo ?? a.nome} style={capa && capa.id === a.capa ? estiloRecorte(a.capaRecorte) : undefined} />
         {capa?.credito && <figcaption>{[capa.titulo, capa.credito].filter(Boolean).join(' · ')}</figcaption>}
         <button className="btn sm capa-trocar" onClick={(e) => { e.stopPropagation(); setTrocaCapa(true) }}><ImageIcon size={14} />Trocar capa</button>
       </figure>
+      {recortar && capaPropria && <EditorRecorte src={srcCapa} aspecto={(() => { const el = document.querySelector('.art-capa'); return el && el.clientHeight ? el.clientWidth / el.clientHeight : 0.85 })()} valor={a.capaRecorte} titulo={`Reenquadrar capa · ${a.nome}`}
+        onSalvar={(r) => salvar({ capaRecorte: r })} onClose={() => setRecortar(false)} />}
       {trocaCapa && <Sheet onClose={() => setTrocaCapa(false)} label="Trocar capa" alto>
         <h3>Foto de capa</h3>
         <p className="faint" style={{ fontSize: 13.5, margin: '4px 0 12px' }}>Escolha uma das obras ou envie uma foto sua.</p>
+        {capaPropria && <button className="btn sm" style={{ marginBottom: 12 }} onClick={() => { setTrocaCapa(false); setRecortar(true) }}><Crop size={14} />Reenquadrar a capa atual</button>}
         <div className="capa-opcoes">
           <Link className="capa-op nova" to={`/biblioteca/obras/nova?artista=${a.id}&capa=1`}><ImagePlus size={22} strokeWidth={1.4} /><span>Enviar foto</span></Link>
           {obras.filter((o) => o.arquivo || o.imagem).map((o) => (
-            <button key={o.id} className={'capa-op' + (capa?.id === o.id ? ' on' : '')} aria-label={o.titulo} onClick={async () => { await salvar({ capa: o.id }); setTrocaCapa(false) }}>
+            <button key={o.id} className={'capa-op' + (capa?.id === o.id ? ' on' : '')} aria-label={o.titulo} onClick={async () => { if (o.id !== a.capa) await salvar({ capa: o.id, capaRecorte: undefined }); setTrocaCapa(false); setRecortar(true) }}>
               <ImgObra o={o} />{capa?.id === o.id && <span className="capa-marca"><Check size={14} /></span>}
             </button>
           ))}
