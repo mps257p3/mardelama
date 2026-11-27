@@ -46,8 +46,7 @@ export function Layout() {
       <main className="main" style={area ? { ['--area' as string]: `var(--c-${area})` } : undefined}>
         <Suspense fallback={<div className="carregando-tela" aria-busy="true" />}><Outlet /></Suspense>
         <ProgressoSync />
-        {/* na ficha do esmalte a versão aparece em Documentação */}
-        {!/^\/esmaltes\/[^/]+$/.test(pathname) && <footer className="versao">Versão de {new Date(__VERSAO__).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })}</footer>}
+        <footer className="versao">Versão de {new Date(__VERSAO__).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })}</footer>
       </main>
 
       <nav className="bottom" aria-label="Navegação principal">

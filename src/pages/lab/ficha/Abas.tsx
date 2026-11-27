@@ -354,7 +354,6 @@ export function AbaDocumentacao({ e, familias, receita, estudo, aprovada }: { e:
         <Tabela itens={[
           ['Incluído em', quando(e.criadoEm)], ['Atualizado em', quando(e.atualizadoEm)],
           ['Fluidez consultada em', data(e.fluidezQueima?.consultadoEm)],
-          ['Versão do aplicativo', new Date(__VERSAO__).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })],
         ]} />
       </Grupo>
       {e.tags.length > 0 && <section className="fx-grupo"><h3>Tags</h3><p className="fx-tags">{e.tags.map((t) => <span key={t}>{t}</span>)}</p></section>}
