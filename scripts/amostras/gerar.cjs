@@ -14,9 +14,9 @@ const path = require('path')
   await p.addScriptTag({ content: codigo + '\nwindow.renderizar = renderizar; window.NOMES = NOMES;' })
   const nomes = process.argv.slice(2).length ? process.argv.slice(2) : await p.evaluate(() => window.NOMES)
   for (const n of nomes) {
-    const url = await p.evaluate((n) => window.renderizar(n, 960), n)
+    const url = await p.evaluate((n) => window.renderizar(n, 1024), n)
     fs.writeFileSync(path.join(dir, n + '.webp'), Buffer.from(url.split(',')[1], 'base64'))
-    console.log(n)
+    console.log(n, Math.round(fs.statSync(path.join(dir, n + ".webp")).size / 1024) + " KB")
   }
   await b.close()
 })()
