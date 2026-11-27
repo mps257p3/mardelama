@@ -15,7 +15,7 @@ import { GaleriaPecas } from '../../../ui/GaleriaFotos'
 import { Relacoes } from '../../../ui/Relacoes'
 import { ArtistasAfins } from '../../bib/art/ArtistasAfins'
 import { FluidezQueima } from '../FluidezQueima'
-import { Pictogramas } from './Pictogramas'
+import { AtlasEfeitos } from './Fenomeno'
 import { Estruturado, Grade, Grupo, Origem, Paragrafos, Propriedade, Recolhido, Tabela, TabelaNiveis, type Linha } from './partes'
 
 const data = (d?: string) => (d ? new Date(d + 'T12:00').toLocaleDateString('pt-BR') : '')
@@ -30,7 +30,7 @@ const Atalho = ({ to, titulo, nota }: { to: string; titulo: string; nota?: strin
 /* ——— Perfil: aparência, comportamento, efeitos e os seus registros ——— */
 const ROTULO_ORIGEM = ORIGENS
 
-export function AbaPerfil({ e, irPara }: { e: Esmalte; irPara: (aba: 'experimentos') => void }) {
+export function AbaPerfil({ e, irPara, foco }: { e: Esmalte; irPara: (aba: 'experimentos') => void; foco?: string }) {
   const p = e.perfil ?? {}
   const efeitos = efeitosDe(e)
   const v = p.visual ?? {}
@@ -55,7 +55,7 @@ export function AbaPerfil({ e, irPara }: { e: Esmalte; irPara: (aba: 'experiment
 
       <section className="fx-grupo">
         <h3>Comportamento</h3>
-        {temFluidez && <Fluidez e={e} irPara={irPara} />}
+        {temFluidez && <Fluidez e={e} irPara={irPara} aberta={foco === 'fluidez'} />}
         {props.map(([k, l]) => (
           <Propriedade key={k} nome={l}
             classe={p.comportamento?.[k] ? <span className="fx-nivel"><Barras nivel={p.comportamento[k]} />{NIVEIS[p.comportamento[k]]}</span> : p.comportamentoClasse?.[k] ?? 'Sem classificação'}
@@ -69,8 +69,7 @@ export function AbaPerfil({ e, irPara }: { e: Esmalte; irPara: (aba: 'experiment
       <section className="fx-grupo">
         <h3>Efeitos e interações</h3>
         {!temEfeitos && <p className="fx-vazio-l">Nenhum efeito identificado nas informações disponíveis.</p>}
-        <Pictogramas tipos={efeitos} />
-        {efeitos.length > 0 && <p className="fx-origem">Ilustrações esquemáticas dos efeitos identificados nas fontes; não são resultados de teste.</p>}
+        <AtlasEfeitos e={e} tipos={efeitos} />
         {superficie.length > 0 && <><p className="fx-sub">Interação com a superfície</p><Tabela itens={superficie.map(([k, l]) => [l, p.superficie![k].join(', ')])} /><Origem o={p.origens?.superficie} /></>}
         {/* possibilidades que só repetem os efeitos ilustrados não aparecem de novo */}
         {(!!outras.length || p.expressivoTexto || p.sugestoesIA) && <>
@@ -93,7 +92,7 @@ const Barras = ({ nivel }: { nivel: Nivel }) => <i className="fx-barras" aria-hi
  * Fluidez na queima numa só propriedade: classificação oficial (termo e escala originais), informação qualitativa,
  * outras fontes, sua avaliação, testes e divergências. A consulta ao fabricante continua aqui dentro.
  */
-function Fluidez({ e, irPara }: { e: Esmalte; irPara: (aba: 'experimentos') => void }) {
+function Fluidez({ e, irPara, aberta }: { e: Esmalte; irPara: (aba: 'experimentos') => void; aberta?: boolean }) {
   const p = e.perfil ?? {}
   const f = e.fluidezQueima
   const estado = estadoFluidez(e)
@@ -102,7 +101,7 @@ function Fluidez({ e, irPara }: { e: Esmalte; irPara: (aba: 'experimentos') => v
   const semEscala = !(f?.situacao === 'oficial' && f.resultados.some((r) => r.escala)) && !p.comportamento?.fluidez
   const origem = p.comportamentoOrigem?.fluidez
   return (
-    <Propriedade nome="Fluidez na queima" classe={classe}>
+    <Propriedade nome="Fluidez na queima" classe={classe} id="fx-fluidez" aberta={aberta}>
       <dl className="fx-fontes-l">
         {estado && <div><dt>Fabricante</dt><dd>
           <p className="fx-estado">{ROTULO_ESTADO[estado]}{f?.consultadoEm ? ` · consulta de ${data(f.consultadoEm)}` : ''}</p>
@@ -274,28 +273,40 @@ function rotuloCone(c: string) {
 }
 
 /**
- * Segurança alimentar em uma linha, com os termos do fabricante (Food Safe, Dinnerware Safe, contato com alimentos).
- * Sem declaração, fica "Não informada": a falta de informação não vira seguro nem inseguro.
+ * Segurança alimentar em poucas palavras para o resumo do topo. Usa só o que foi declarado, sem tratar Food Safe e
+ * Dinnerware Safe como equivalentes; condições e justificativas ficam em Técnica › Segurança.
+ * Sem declaração: "Não informada" (a falta de informação não vira seguro nem inseguro).
  */
-export function resumoSeguranca(e: Esmalte): string | undefined {
+export function segurancaCurta(e: Esmalte): string | undefined {
   const t = e.tecnica ?? {}
-  const s: Record<string, Verificacao | undefined> = { ...t.seguranca }
-  if (!s.foodSafe && s.alimentarDeclarada) s.foodSafe = s.alimentarDeclarada
+  const s = t.seguranca ?? {}
   const cond = t.segurancaCondicoes ?? {}
-  const quem = e.origem === 'comercial' ? 'fabricante' : 'seu registro'
-  const ensaio = s.ensaio === 'sim' ? '; ensaio próprio aprovado' : s.ensaio === 'nao' ? '; ensaio próprio reprovado' : ''
-  if (e.louca === 'nao' || s.decorativo === 'sim' || s.foodSafe === 'nao' || s.dinnerwareSafe === 'nao') {
-    const termo = s.decorativo === 'sim' ? 'Só decorativo' : s.foodSafe === 'nao' ? 'Não Food Safe' : s.dinnerwareSafe === 'nao' ? 'Não Dinnerware Safe' : 'Não usar em louça'
-    return `${termo} (${quem})${ensaio}`
+  if (s.decorativo === 'sim') return 'Só decorativo'
+  if (s.foodSafe === 'nao' || s.dinnerwareSafe === 'nao' || e.louca === 'nao') return 'Não recomendado para alimentos'
+  const termos = ([['foodSafe', 'Food Safe'], ['dinnerwareSafe', 'Dinnerware Safe']] as const).filter(([k]) => s[k] === 'sim')
+  const declarada = termos.length || s.contatoAlimento === 'sim' || s.alimentarDeclarada === 'sim' || e.louca === 'sim'
+  if (declarada) {
+    if (termos.some(([k]) => cond[k]) || cond.contatoAlimento || cond.loucaFuncional) return 'Com condições'
+    if (termos.length) return termos.map(([, l]) => l).join(' · ')
+    return e.origem === 'comercial' ? 'Declarada pelo fabricante' : 'Sim (seu registro)'
   }
-  const sim = ([['foodSafe', 'Food Safe'], ['dinnerwareSafe', 'Dinnerware Safe'], ['contatoAlimento', 'contato direto com alimentos']] as const).filter(([k]) => s[k] === 'sim')
-  if (sim.length) {
-    const comCond = sim.some(([k]) => cond[k]) || !!cond.loucaFuncional
-    const nomes = sim.map(([, l]) => l)
-    return `${nomes.length > 1 ? nomes.slice(0, -1).join(', ') + ' e ' + nomes.at(-1) : nomes[0]}${comCond ? ', com condições' : ''} (${quem})${ensaio}`
-  }
-  if (e.louca === 'sim') return `Pode ir à louça (${quem})${ensaio}`
-  return ensaio ? `Não informada pelo ${quem}${ensaio}` : e.origem === 'comercial' ? 'Não informada pelo fabricante' : undefined
+  if (s.ensaio === 'sim') return 'Ensaio próprio aprovado'
+  return e.origem === 'comercial' ? 'Não informada' : undefined
+}
+
+/** Fluidez em uma ou duas palavras para o resumo. A classificação completa, a escala e as fontes ficam em Perfil. */
+export function fluidezCurta(e: Esmalte): string | undefined {
+  const p = e.perfil ?? {}
+  const f = e.fluidezQueima
+  const oficiais = f?.situacao === 'oficial' ? [...new Set(f.resultados.map((r) => r.classificacao).filter(Boolean))] : []
+  if (oficiais.length) return oficiais.slice(0, 2).join(' · ')
+  if (p.comportamento?.fluidez) return NIVEIS[p.comportamento.fluidez]
+  if (p.comportamentoClasse?.fluidez) return p.comportamentoClasse.fluidez.split(/[,;(]/)[0].trim()
+  if (e.fluidez) return `${e.fluidez} (sua avaliação)`
+  const estado = estadoFluidez(e)
+  const CURTO = { 'nao-consultado': 'Não consultada', 'qualitativa-sem-consulta': 'Descrição qualitativa', indisponivel: 'Não disponível', 'sem-classificacao': 'Sem classificação', qualitativa: 'Descrição qualitativa', oficial: 'Classificação oficial' } as const
+  if (estado) return CURTO[estado]
+  return e.testesFluidez?.length ? 'Sem classificação' : undefined
 }
 
 const SEG_RESUMO = 'A classificação de segurança refere-se ao esmalte nas condições de uso e queima recomendadas. A segurança de combinações e sobreposições com outros esmaltes não é automaticamente assegurada.'
@@ -308,9 +319,8 @@ function Seguranca({ e }: { e: Esmalte }) {
   const t = e.tecnica ?? {}
   const s: Record<string, Verificacao | undefined> = { ...t.seguranca }
   const cond = t.segurancaCondicoes ?? {}
-  if (!s.foodSafe && s.alimentarDeclarada) s.foodSafe = s.alimentarDeclarada
   const comercial = e.origem === 'comercial'
-  const declarada = e.louca === 'sim' || s.foodSafe === 'sim' || s.dinnerwareSafe === 'sim'
+  const declarada = e.louca === 'sim' || s.foodSafe === 'sim' || s.dinnerwareSafe === 'sim' || s.alimentarDeclarada === 'sim'
   const vetada = e.louca === 'nao' || s.decorativo === 'sim'
   const condicoes = [cond.foodSafe, cond.dinnerwareSafe, cond.loucaFuncional].filter(Boolean) as string[]
   const valor = (k: string): string => {
@@ -321,8 +331,10 @@ function Seguranca({ e }: { e: Esmalte }) {
   const ESSENCIAIS = ['atoxico', 'semChumbo', 'foodSafe', 'dinnerwareSafe', 'contatoAlimento', 'ensaio']
   const itens: Linha[] = SEGURANCA.filter(([k]) => k !== 'combinacoes' && k !== 'alimentarDeclarada' && (ESSENCIAIS.includes(k) || s[k]))
     .map(([k, l]) => [k === 'ensaio' ? 'Ensaio laboratorial próprio' : l, valor(k), cond[k]])
+  // registro antigo, sem o termo exato do fabricante: não vira "Food Safe"
+  if (s.alimentarDeclarada) itens.splice(2, 0, ['Uso alimentar declarado', valor('alimentarDeclarada') + (s.foodSafe ? '' : ' (termo do fabricante não registrado)')])
   return (
-    <section className="fx-grupo">
+    <section className="fx-grupo" id="fx-seguranca">
       <h3>Segurança</h3>
       {(declarada || vetada) && <p className={'fx-louca' + (vetada ? ' nao' : '')}>
         <b>{vetada ? 'Não usar em louça' : 'Pode ir à louça'}</b>

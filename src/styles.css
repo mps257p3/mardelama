@@ -1476,3 +1476,41 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
 .fx-faixa-l.pessoal p { color: var(--ink-2); }
 .fx-faixa-l.hip p { font-style: italic; color: var(--ink-2); }
 .fx-fontes .fx-nota { display: inline; margin-left: 6px; }
+
+/* resumo curto: cada linha leva ao detalhe */
+dl.fx-resumo-l { margin: 0; border-bottom: 1px solid var(--line); }
+dl.fx-resumo-l > div { display: grid; grid-template-columns: minmax(104px, 2fr) 3fr; gap: 12px; align-items: center; border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+dl.fx-resumo-l > div:first-child { border-top: 0; }
+dl.fx-resumo-l dt { font: 400 13px/1.35 var(--sans); color: var(--ink-3); }
+dl.fx-resumo-l dd { margin: 0; }
+.fx-resumo-ir { all: unset; box-sizing: border-box; width: 100%; min-height: 40px; display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; font: 400 14.5px/1.35 var(--sans); color: var(--ink); }
+.fx-resumo-ir svg { color: var(--ink-3); flex: none; }
+.fx-resumo-ir:focus-visible { outline: 2px solid var(--terracota); outline-offset: 2px; }
+#fx-fluidez, #fx-seguranca { scroll-margin-top: 110px; }
+
+/* efeitos: atlas editorial */
+.fx-atlas { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 18px; }
+@media (min-width: 560px) { .fx-atlas { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.fx-atlas.poucos { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 420px; margin-inline: auto; }
+.fx-atlas-b { all: unset; box-sizing: border-box; width: 100%; display: grid; justify-items: center; gap: 6px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.fx-atlas-b span { font: 400 12.5px/1.3 var(--sans); letter-spacing: .02em; color: var(--ink-2); text-align: center; }
+.fx-atlas-b:focus-visible { outline: 2px solid var(--terracota); outline-offset: 4px; border-radius: 4px; }
+.fx-atlas-b:active .fx-atlas-svg { transform: scale(.98); }
+.fx-atlas-svg { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; transition: transform .2s var(--ease); }
+.fx-atlas-leg { margin: 14px 0 0; font: italic 400 13.5px/1.4 var(--serif); color: var(--ink-3); text-align: center; }
+
+/* painel do fenômeno */
+.fx-fen-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.fx-fen-h h2 { font: 400 26px/1.15 var(--serif); margin: 0; }
+.fx-fen-fig { margin: 8px 0 0; }
+.fx-fen-fig .fx-atlas-svg { max-width: 420px; margin: 0 auto; }
+.fx-fen-fig figcaption { margin-top: 6px; font-size: 12px; color: var(--ink-3); text-align: center; }
+.fx-fen-def { font: 400 18px/1.45 var(--serif); margin: 14px 0 4px; }
+.fx-fen h3 { font: 500 11px/1.3 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin: 16px 0 4px; }
+.fx-fen-lista { margin: 0; padding-left: 18px; font-size: 14.5px; line-height: 1.55; }
+.fx-fen-esp { margin-top: 20px; padding-top: 4px; border-top: 1px solid var(--line); }
+.fx-fen-esp h3 { color: var(--ink); font-size: 11.5px; }
+.fx-fen-g { margin-top: 8px; }
+.fx-fen-g .fx-rot { margin: 0 0 2px; }
+.fx-fen-g.seu { padding-left: 10px; border-left: 2px solid var(--areia, #E7DCCD); }
+.fx-fen-g dt span { color: var(--ink-3); }

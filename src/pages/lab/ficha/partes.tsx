@@ -126,11 +126,11 @@ export function TabelaNiveis({ itens, titulo = 'Detalhes' }: { itens: Linha[]; t
 }
 
 /** Propriedade expansível: nome e classificação objetiva; por baixo, explicação, fonte e condições de validade. */
-export function Propriedade({ nome, classe, fonte, condicoes, children }: { nome: string; classe?: ReactNode; fonte?: string; condicoes?: string; children?: ReactNode }) {
-  const [aberto, setAberto] = useState(false)
+export function Propriedade({ nome, classe, fonte, condicoes, children, id, aberta }: { nome: string; classe?: ReactNode; fonte?: string; condicoes?: string; children?: ReactNode; id?: string; aberta?: boolean }) {
+  const [aberto, setAberto] = useState(!!aberta)
   const temMais = !!(children || fonte || condicoes)
   return (
-    <div className={'fx-prop' + (aberto ? ' on' : '')}>
+    <div className={'fx-prop' + (aberto ? ' on' : '')} id={id}>
       <button className="fx-prop-b" aria-expanded={aberto} disabled={!temMais} onClick={() => setAberto(!aberto)}>
         <span className="n">{nome}</span><span className="c">{classe}</span>{temMais && <i aria-hidden>{aberto ? '−' : '+'}</i>}
       </button>
