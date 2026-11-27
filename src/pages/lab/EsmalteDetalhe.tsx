@@ -156,7 +156,7 @@ function QueimaResumo({ e }: { e: Esmalte }) {
   const cone = e.cone?.trim().replace(/^cone\s*/i, '')
   return <>
     <Grade itens={[
-      ['Temperatura', t?.valor, t?.referencia ? 'Referência' : undefined],
+      ['Temperatura', t?.valor && <span className="fx-temp-v">{t.valor}</span>, t?.referencia ? 'Referência' : undefined],
       ['Cone', cone && <button className="fx-cone-b" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{cone}<Info size={13} strokeWidth={1.6} aria-hidden /></button>],
       ['Atmosfera', e.atmosfera],
     ]} />
