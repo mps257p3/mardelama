@@ -120,6 +120,7 @@ export interface TecnicaEsmalte {
   seguranca?: Record<string, Verificacao>
   segurancaCondicoes?: Record<string, string>     // condições do fabricante, na nomenclatura dele, por item
   segurancaNotas?: string
+  restricoesAlimentares?: string                  // restrições específicas de contato alimentar declaradas (ex.: só superfícies externas)
   defeitos?: DefeitoEsmalte[]
   alertas?: string[]                              // cuidados específicos (só quando há)
   origens?: Record<string, FonteGrupo | undefined>            // por grupo: preparacao, aplicacao, queima, compatibilidade, seguranca, defeitos

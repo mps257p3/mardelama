@@ -631,7 +631,7 @@ export async function fichaWhiteCascadeV2() {
     p.visual = { coresSecundarias: 'Branco puro em cone 06, que se mistura às cores dos esmaltes usados junto', ...p.visual }
     p.efeitos = [...new Set([...(p.efeitos ?? []), 'escorrimento', 'sobreposicao'])]
     p.comportamentoNota = {
-      fluidez: 'A linha Pottery Cascade é descrita como "moving, flowing glazes", e o rótulo manda evitar a parte de baixo da peça; a dica do site diz "minimum movement and will stay in the pattern that you apply it in". As duas frases são da Mayco e não batem.',
+      fluidez: 'A linha Pottery Cascade é descrita como "moving, flowing glazes", e o rótulo manda evitar a parte de baixo da peça; a dica do site diz "minimum movement and will stay in the pattern that you apply it in". As duas orientações são da Mayco e divergem.',
       reatividade: '"Intermingles with the other glazes being used" (cone 06); o movimento depende do esmalte que está por baixo.',
       espessura: 'A aplicação e a posição da peça no forno mudam o escorrido (rótulo).',
       temperatura: 'Temperatura, rampa e patamar realçam o escorrido (rótulo). Reformulado para mover mais em baixa temperatura (site).',
@@ -726,6 +726,26 @@ export async function fichaWhiteCascadeV4() {
     }
     t.queima = q
     await db.esmaltes.update(e.id, { tecnica: t, atualizadoEm: Date.now() })
+  }
+  await db.ajustes.put({ chave, valor: true })
+}
+
+/**
+ * White Cascade, v5: variações cromáticas documentadas por temperatura e em sobreposição (página da Mayco e etiqueta da
+ * revenda), sem repetir a "variação geral". Só preenche campos vazios ou o texto que a v3 escreveu.
+ */
+export async function fichaWhiteCascadeV5() {
+  const chave = 'fix-ficha-white-cascade-v5'
+  if (await db.ajustes.get(chave)) return
+  const e = await db.esmaltes.get('esm-mayco-pc602')
+  if (e && !e.excluido) {
+    const p = { ...e.perfil }
+    const vis = { ...p.visual }
+    if (vis.variacao === 'Em cone 06, mistura-se às cores dos esmaltes aplicados em conjunto.') delete vis.variacao
+    vis.corSobreposicao ||= 'Em cone 06, mistura-se às cores dos esmaltes aplicados em conjunto e introduz branco a elas (Mayco).'
+    vis.corTemperatura ||= 'Cone 06: mistura-se às cores dos esmaltes aplicados em conjunto, introduzindo branco. Cone 6: transparente, incolor, com flutuação branca (Mayco). A etiqueta da revenda Zeramics informa que a cor pode mudar em temperaturas mais altas.'
+    p.visual = vis
+    await db.esmaltes.update(e.id, { perfil: p, atualizadoEm: Date.now() })
   }
   await db.ajustes.put({ chave, valor: true })
 }

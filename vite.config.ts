@@ -30,7 +30,7 @@ export default defineConfig({
       },
       workbox: {
         importScripts: ['compartilhar-sw.js'],
-        globPatterns: ['**/*.{js,css,html,png,jpg,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,png,jpg,svg,woff2}', 'fenomenos/*.webp'],
         // o modelo de visão só carrega quando é usado; não entra na instalação do app
         globIgnores: ['**/transformers*.js', '**/ort-*', '**/pdf.worker*'],
         navigateFallback: '/index.html',

@@ -197,7 +197,8 @@ export default function EsmalteForm() {
         {SEGURANCA.map(([k, l]) => <Campo key={k} label={l} wide><Escolha value={tec.seguranca?.[k]} onChange={(v) => { const c = { ...tec.seguranca }; if (c[k] === v) delete c[k]; else c[k] = v; setTec({ seguranca: c }) }} opcoes={(Object.keys(VERIFICACAO) as Verificacao[]).map((v) => ({ v, l: VERIFICACAO[v] }))} />
           {tec.seguranca?.[k] && <input className="input fx-form-cond" placeholder="Condições do fabricante (como ele escreve)" value={tec.segurancaCondicoes?.[k] ?? ''} onChange={(x) => setTec({ segurancaCondicoes: limpo({ ...tec.segurancaCondicoes, [k]: x.target.value }) })} />}</Campo>)}
         <Campo label="Uso em louça (resumo usado nos filtros)" wide><Escolha value={e.louca} onChange={set('louca')} opcoes={[{ v: 'sim', l: 'Pode ir à louça' }, { v: 'nao', l: 'Só decorativo' }, { v: 'testar', l: 'Só após teste' }]} /></Campo>
-        <Campo label="Restrições e notas de segurança" wide><AreaTexto value={tec.segurancaNotas} onChange={(v) => setTec({ segurancaNotas: v || undefined })} rows={2} /></Campo>
+        <Campo label="Restrições específicas de contato alimentar (só quando declaradas: ex. somente superfícies externas)" wide><AreaTexto value={tec.restricoesAlimentares} onChange={(v) => setTec({ restricoesAlimentares: v || undefined })} rows={2} /></Campo>
+        <Campo label="Observações de segurança do fabricante" wide><AreaTexto value={tec.segurancaNotas} onChange={(v) => setTec({ segurancaNotas: v || undefined })} rows={2} /></Campo>
         <OrigemCampo valor={tec.origens?.seguranca} onChange={(o) => setTec({ origens: { ...tec.origens, seguranca: o } })} />
 
         <h3>Técnica · alertas</h3>

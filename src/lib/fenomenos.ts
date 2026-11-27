@@ -28,51 +28,28 @@ export const FENOMENOS: Record<string, Fenomeno> = {
     cuidados: 'Deixar faixa sem esmalte acima do pé, usar placa ou bolacha de proteção e testar antes em provas verticais.',
     atributos: ['fluidez', 'patamar', 'temperatura'], superficie: ['Escorre'], defeitos: /escorr/i,
   },
-  verticalEstavel: {
-    nome: 'Estabilidade na vertical',
-    definicao: 'Capacidade do esmalte de permanecer onde foi aplicado em superfícies verticais.',
-    comoOcorre: 'Esmaltes de maior viscosidade no estado fundido, em geral com mais alumina ou sílica em relação aos fundentes, mantêm a camada coesa e não descem durante a queima.',
-    condicoes: ['Temperatura e patamar', 'Espessura da camada', 'Composição'],
-    exploracao: 'Desenhos precisos, linhas e reservas que se mantêm nítidas após a queima.',
-    cuidados: 'Em temperaturas acima da recomendada, mesmo esmaltes estáveis podem começar a escorrer.',
-    superficie: ['Permanece estável', 'Mantém a cobertura'],
-  },
+
   acumulo: {
-    nome: 'Acúmulo em relevos',
+    nome: 'Acúmulo em cavidades',
     definicao: 'Concentração de esmalte em depressões, incisões e reentrâncias da superfície.',
     comoOcorre: 'Na aplicação e na fusão, o esmalte se desloca das partes altas para as baixas. A camada mais espessa nas depressões muda cor, opacidade e brilho.',
     condicoes: ['Profundidade do relevo', 'Espessura aplicada', 'Fluidez na queima'],
     exploracao: 'Realçar texturas, carimbos, incisões e marcas do processo de construção.',
     cuidados: 'Acúmulos muito espessos podem craquelar, formar bolhas ou escorrer.',
-    atributos: ['acumulo'], superficie: ['Acumula'],
+    atributos: ['acumulo', 'texturas'], superficie: ['Acumula', 'Realça relevos'],
   },
-  afinaArestas: {
-    nome: 'Afinamento nas arestas',
-    definicao: 'Redução da espessura do esmalte sobre arestas, bordas e cristas.',
-    comoOcorre: 'A tensão superficial do vidro fundido o afasta das arestas vivas; a camada fina deixa ver a massa ou muda de tom.',
-    condicoes: ['Raio da aresta', 'Espessura aplicada', 'Fluidez na queima'],
-    exploracao: 'Contornos claros que desenham a forma da peça.',
-    cuidados: 'Em bordas de uso (lábios de canecas), a camada fina pode ficar áspera.',
-    atributos: ['arestas'],
+  quebraBordas: {
+    nome: 'Quebra de cor nas bordas',
+    definicao: 'Mudança de cor nas arestas, bordas e relevos, onde a camada de esmalte fica mais fina.',
+    comoOcorre: 'Na fusão, o esmalte se afasta das partes altas e se acumula nas baixas. Nas arestas, a camada fina deixa aparecer a massa ou desenvolve outra cor, como o âmbar e o ferrugem dos esmaltes ricos em ferro.',
+    condicoes: ['Raio das arestas e altura dos relevos', 'Espessura aplicada', 'Fluidez na queima', 'Cor da massa'],
+    exploracao: 'Contornos que desenham a forma, realce de texturas, bordas e marcas de torno.',
+    cuidados: 'Em bordas de uso, como lábios de canecas, a camada fina pode ficar áspera.',
+    atributos: ['arestas'], superficie: ['Afina', 'Revela a massa cerâmica'],
   },
-  realcaRelevo: {
-    nome: 'Realce de relevos',
-    definicao: 'Diferença de tom entre partes altas e baixas de uma superfície texturizada.',
-    comoOcorre: 'O esmalte fica mais espesso nas depressões e mais fino nas partes altas, o que acentua o desenho do relevo.',
-    condicoes: ['Profundidade e nitidez do relevo', 'Transparência do esmalte', 'Espessura aplicada'],
-    exploracao: 'Carimbos, texturas impressas, entalhes e marcas de ferramentas.',
-    cuidados: 'Relevos rasos demais podem desaparecer sob camadas espessas.',
-    atributos: ['texturas'], superficie: ['Realça relevos'],
-  },
-  cobreRelevo: {
-    nome: 'Cobertura de relevos',
-    definicao: 'Nivelamento da superfície pelo esmalte, que encobre detalhes do relevo.',
-    comoOcorre: 'Camadas espessas ou esmaltes opacos preenchem as depressões e formam uma superfície mais lisa que a massa.',
-    condicoes: ['Espessura aplicada', 'Opacidade', 'Fluidez na queima'],
-    exploracao: 'Superfícies contínuas e calmas sobre formas texturizadas.',
-    cuidados: 'Para preservar detalhes, aplicar camadas mais finas ou escolher esmaltes transparentes.',
-    superficie: ['Encobre detalhes', 'Suaviza relevos'],
-  },
+
+
+
   sobreposicao: {
     nome: 'Sobreposição',
     definicao: 'Aplicação de um esmalte sobre outro, com duas camadas distintas.',
@@ -82,7 +59,7 @@ export const FENOMENOS: Record<string, Fenomeno> = {
     cuidados: 'Sobreposições aumentam a espessura total e podem escorrer. A segurança alimentar da combinação não é garantida pela classificação de cada esmalte.',
   },
   reatividade: {
-    nome: 'Reatividade',
+    nome: 'Reatividade entre esmaltes',
     definicao: 'Transformação visual que surge do contato químico entre esmaltes, ou entre esmalte e massa, durante a fusão.',
     comoOcorre: 'Na fusão, componentes migram entre as camadas. Fundentes e corantes de um esmalte alteram o outro e produzem halos, manchas, veios e cores que nenhum dos dois apresenta isoladamente. É diferente da sobreposição simples, em que as camadas apenas se somam.',
     condicoes: ['Combinação de esmaltes', 'Ordem e espessura das camadas', 'Temperatura e patamar', 'Atmosfera'],
@@ -100,7 +77,7 @@ export const FENOMENOS: Record<string, Fenomeno> = {
     atributos: ['cristais', 'resfriamento'],
   },
   craquele: {
-    nome: 'Craquelamento',
+    nome: 'Craquelado',
     definicao: 'Rede de fissuras na camada de esmalte.',
     comoOcorre: 'Ocorre quando o esmalte se contrai mais que a massa no resfriamento e fica sob tensão de tração. As fissuras podem surgir no forno ou dias depois.',
     condicoes: ['Diferença de dilatação entre esmalte e massa', 'Espessura', 'Velocidade de resfriamento'],
@@ -117,23 +94,8 @@ export const FENOMENOS: Record<string, Fenomeno> = {
     cuidados: 'Quando indesejada: limpar o biscoito, reduzir a espessura e evitar manipular a camada crua.',
     defeitos: /crawling|retra/i,
   },
-  reticulacao: {
-    nome: 'Reticulação',
-    definicao: 'Padrão em rede formado pela camada superior de esmalte, que se abre e deixa ver a camada de baixo.',
-    comoOcorre: 'Uma camada de alta tensão superficial se contrai na fusão e se reorganiza em malha sobre a camada inferior.',
-    condicoes: ['Combinação de esmaltes', 'Espessura da camada superior', 'Temperatura'],
-    exploracao: 'Texturas de pele, casca e líquen.',
-    cuidados: 'Superfícies muito irregulares não são indicadas para áreas de contato com alimentos.',
-  },
-  revelaMassa: {
-    nome: 'Revelação da massa',
-    definicao: 'Aparecimento da cor e da textura da massa através ou entre as áreas esmaltadas.',
-    comoOcorre: 'Em camadas finas, esmaltes transparentes ou que afinam nas partes altas deixam a massa visível, às vezes com reação na interface.',
-    condicoes: ['Espessura', 'Transparência', 'Cor e textura da massa'],
-    exploracao: 'Valorizar marcas de torno, massas escuras ou com chamote.',
-    cuidados: 'A cor da massa influencia o resultado; testar com a massa que será usada.',
-    superficie: ['Revela a massa cerâmica'],
-  },
+
+
   variacaoEspessura: {
     nome: 'Variação por espessura',
     definicao: 'Mudança de cor, opacidade ou textura conforme a espessura da camada aplicada.',
@@ -151,14 +113,7 @@ export const FENOMENOS: Record<string, Fenomeno> = {
     exploracao: 'Azuis opalescentes, véus leitosos e variegações sutis.',
     cuidados: 'O efeito depende da curva de queima; pequenas mudanças alteram o resultado.',
   },
-  manchas: {
-    nome: 'Pontilhados e manchas',
-    definicao: 'Pequenas concentrações de cor distribuídas pela superfície.',
-    comoOcorre: 'Partículas de óxidos, ilmenita, granilhas ou impurezas da massa se dissolvem parcialmente no vidro e deixam pontos com halo.',
-    condicoes: ['Tamanho e quantidade das partículas', 'Temperatura', 'Atmosfera (a redução intensifica pontos de ferro)'],
-    exploracao: 'Superfícies de aspecto pétreo e rústico.',
-    cuidados: 'Pontos grandes podem formar crateras se a fusão for insuficiente.',
-  },
+
   metalico: {
     nome: 'Efeito metálico',
     definicao: 'Superfície com reflexo semelhante ao de metais.',
@@ -182,5 +137,30 @@ export const FENOMENOS: Record<string, Fenomeno> = {
     condicoes: ['Composição', 'Temperatura', 'Espessura'],
     exploracao: 'Contraste entre áreas lisas e ásperas, superfícies minerais.',
     cuidados: 'Superfícies ásperas são difíceis de limpar e não são indicadas para contato com alimentos.',
+  },
+  flutuacao: {
+    nome: 'Flutuação de cor',
+    definicao: 'Véus e manchas de outra cor que aparecem sobre o esmalte, como se flutuassem na superfície.',
+    comoOcorre: 'Óxidos como titânio (rutilo), ferro ou fósforo migram para a superfície durante a fusão e o resfriamento e formam véus claros ou azulados sobre um fundo de outra cor.',
+    condicoes: ['Composição (rutilo, ferro, fósforo)', 'Espessura', 'Temperatura máxima', 'Velocidade de resfriamento'],
+    exploracao: 'Superfícies com profundidade, véus azulados sobre fundos escuros, variegação suave.',
+    cuidados: 'O efeito varia muito com a espessura e o resfriamento; registrar a curva usada.',
+  },
+  opacidade: {
+    nome: 'Opacidade',
+    definicao: 'Capacidade do esmalte de esconder a massa e o que está sob ele.',
+    comoOcorre: 'Opacificantes (estanho, zircônio, titânio) ou microcristais e bolhas no vidro espalham a luz, que deixa de atravessar a camada.',
+    condicoes: ['Teor de opacificante', 'Espessura', 'Temperatura (excesso pode clarear o vidro)'],
+    exploracao: 'Superfícies de cor uniforme, cobertura de massas escuras, base para pintura sobre esmalte.',
+    cuidados: 'Esmaltes opacos encobrem relevos e incisões finas; testar a espessura em peças texturizadas.',
+    superficie: ['Encobre detalhes', 'Suaviza relevos'],
+  },
+  iridescencia: {
+    nome: 'Iridescência',
+    definicao: 'Reflexo que muda de cor conforme o ângulo de visão.',
+    comoOcorre: 'Uma película muito fina na superfície, formada por óxidos metálicos ou por lustres, provoca interferência da luz e produz tons que variam com o ângulo.',
+    condicoes: ['Composição (óxidos metálicos, bismuto, lustres)', 'Atmosfera', 'Resfriamento'],
+    exploracao: 'Superfícies cambiantes em peças decorativas.',
+    cuidados: 'Películas superficiais podem se desgastar com o uso e não costumam ser indicadas para contato com alimentos; seguir a classificação do fabricante.',
   },
 }

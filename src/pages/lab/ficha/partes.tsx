@@ -74,9 +74,9 @@ export function Origem({ o, padrao }: { o?: FonteGrupo; padrao?: string }) {
 }
 
 /** Grupo da ficha: título de seção + conteúdo. Não renderiza nada se o conteúdo estiver vazio. */
-export function Grupo({ titulo, origem, padrao, children, vazio }: { titulo: string; origem?: FonteGrupo; padrao?: string; children: ReactNode; vazio?: boolean }) {
+export function Grupo({ titulo, origem, padrao, children, vazio, id }: { titulo: string; origem?: FonteGrupo; padrao?: string; children: ReactNode; vazio?: boolean; id?: string }) {
   if (vazio) return null
-  return <section className="fx-grupo"><h3>{titulo}</h3>{children}<Origem o={origem} padrao={padrao} /></section>
+  return <section className="fx-grupo" id={id}><h3>{titulo}</h3>{children}<Origem o={origem} padrao={padrao} /></section>
 }
 
 /**

@@ -14,6 +14,7 @@ export const texturasDe = (e: Pick<Esmalte, 'textura'>) => (e.textura ?? '').spl
 export const VISUAL: [string, string][] = [
   ['coresSecundarias', 'Cores secundárias'], ['subtons', 'Subtons'], ['variacao', 'Variação cromática'],
   ['corFina', 'Em camada fina'], ['corEspessa', 'Em camada espessa'], ['corAcumulo', 'Nas áreas de acúmulo'],
+  ['corTemperatura', 'Por temperatura'], ['corAtmosfera', 'Por atmosfera'], ['corMassa', 'Influência da massa cerâmica'], ['corSobreposicao', 'Em sobreposições'],
 ]
 
 export const NIVEIS: Record<Nivel, string> = { 1: 'Muito baixo', 2: 'Baixo', 3: 'Moderado', 4: 'Alto', 5: 'Muito alto' }
@@ -65,7 +66,7 @@ export const COMPAT = { documentada: 'Documentada', experimental: 'Experimental'
  * Os essenciais aparecem como "não verificado" quando vazios. `alimentarDeclarada` é o campo antigo de Food Safe.
  */
 export const SEGURANCA: [string, string, boolean][] = [
-  ['atoxico', 'Atóxico', true], ['semChumbo', 'Sem chumbo declarado', true], ['foodSafe', 'Food Safe', true], ['dinnerwareSafe', 'Dinnerware Safe', true],
+  ['atoxico', 'Atóxico (Non-Toxic)', true], ['semChumbo', 'Sem chumbo declarado', true], ['foodSafe', 'Food Safe', true], ['dinnerwareSafe', 'Dinnerware Safe', true],
   ['contatoAlimento', 'Contato direto com alimentos', true], ['ensaio', 'Ensaio laboratorial', true], ['combinacoes', 'Em combinações e sobreposições', true],
   ['loucaFuncional', 'Uso funcional em louça', false], ['quimica', 'Resistência química', false], ['acidos', 'Resistência a ácidos', false],
   ['abrasao', 'Resistência à abrasão', false], ['lavaLoucas', 'Lava-louças', false], ['microondas', 'Micro-ondas', false], ['decorativo', 'Só decorativo', false],
@@ -73,42 +74,45 @@ export const SEGURANCA: [string, string, boolean][] = [
 
 /** Comportamentos com pictograma. Só aparecem quando identificados (registrados ou deduzidos de campos preenchidos). */
 export const PICTOGRAMAS: [string, string][] = [
-  ['escorrimento', 'Escorrimento'], ['verticalEstavel', 'Estável na vertical'], ['acumulo', 'Acumula em depressões'], ['afinaArestas', 'Afina nas arestas'],
-  ['realcaRelevo', 'Realça relevos'], ['cobreRelevo', 'Cobre relevos'], ['sobreposicao', 'Sobreposição'], ['transparencia', 'Transparência'],
-  ['craquele', 'Craquelamento'], ['cristalizacao', 'Cristalização'], ['reticulacao', 'Reticulação'], ['revelaMassa', 'Revela a massa'],
-  ['crawling', 'Retração (crawling)'], ['reatividade', 'Reatividade'], ['variacaoEspessura', 'Variação por espessura'], ['separacaoFases', 'Separação de fases'],
-  ['manchas', 'Manchas e pontilhados'], ['metalico', 'Efeito metálico'], ['textura', 'Textura'],
+  ['escorrimento', 'Escorrimento'], ['sobreposicao', 'Sobreposição'], ['reatividade', 'Reatividade entre esmaltes'], ['acumulo', 'Acúmulo em cavidades'],
+  ['quebraBordas', 'Quebra de cor nas bordas'], ['cristalizacao', 'Cristalização'], ['craquele', 'Craquelado'], ['crawling', 'Retração (crawling)'],
+  ['flutuacao', 'Flutuação de cor'], ['separacaoFases', 'Separação de fases'], ['variacaoEspessura', 'Variação por espessura'], ['textura', 'Textura'],
+  ['opacidade', 'Opacidade'], ['transparencia', 'Transparência'], ['metalico', 'Efeito metálico'], ['iridescencia', 'Iridescência'],
 ]
-/** Efeitos identificados: os marcados na ficha + os que decorrem do que já está preenchido. */
+/** Chaves antigas de efeitos, levadas para o fenômeno correspondente da biblioteca atual. */
+const EFEITO_ANTIGO: Record<string, string> = { afinaArestas: 'quebraBordas', revelaMassa: 'quebraBordas', realcaRelevo: 'acumulo', reticulacao: 'textura', cobreRelevo: 'opacidade' }
+/** Efeitos identificados: os marcados na ficha + os que decorrem do que já está preenchido. Nada é presumido. */
 export function efeitosDe(e: Esmalte): string[] {
-  const s = new Set(e.perfil?.efeitos ?? [])
+  const s = new Set((e.perfil?.efeitos ?? []).map((k) => EFEITO_ANTIGO[k] ?? k))
   const sup = e.perfil?.superficie ?? {}
   const tem = (geo: string | null, c: string) => (geo ? sup[geo] : Object.values(sup).flat())?.includes(c)
   if (tem(null, 'Escorre')) s.add('escorrimento')
-  if (tem('verticais', 'Permanece estável') || tem('verticais', 'Mantém a cobertura')) s.add('verticalEstavel')
-  if (tem(null, 'Acumula')) s.add('acumulo')
-  if (tem('arestas', 'Afina')) s.add('afinaArestas')
-  if (tem(null, 'Realça relevos')) s.add('realcaRelevo')
-  if (tem(null, 'Encobre detalhes') || tem(null, 'Suaviza relevos')) s.add('cobreRelevo')
-  if (tem(null, 'Revela a massa cerâmica')) s.add('revelaMassa')
+  if (tem(null, 'Acumula') || tem(null, 'Realça relevos')) s.add('acumulo')
+  if (tem('arestas', 'Afina') || tem(null, 'Revela a massa cerâmica')) s.add('quebraBordas')
   if (e.transparencia === 'Transparente' || e.transparencia === 'Translúcido') s.add('transparencia')
+  if (e.transparencia === 'Opaco') s.add('opacidade')
   const tx = texturasDe(e)
   if (tx.includes('Craquelada')) s.add('craquele')
   if (tx.includes('Cristalizada') || tx.includes('Microcristalina')) s.add('cristalizacao')
-  if (tx.includes('Reticulada')) s.add('reticulacao')
   if (tx.includes('Metálica') || e.acabamento === 'Metálico') s.add('metalico')
-  if (tx.includes('Pontilhada')) s.add('manchas')
-  if (tx.some((t) => ['Rugosa', 'Granulada', 'Enrugada', 'Espumada'].includes(t))) s.add('textura')
+  if (tx.includes('Iridescente') || /iridesc/i.test(e.acabamento ?? '')) s.add('iridescencia')
+  if (tx.some((t) => ['Rugosa', 'Granulada', 'Enrugada', 'Espumada', 'Reticulada'].includes(t))) s.add('textura')
   if (e.tecnica?.defeitos?.some((d) => d.intencional && /crawling|retra/i.test(d.tipo))) s.add('crawling')
   const p = e.perfil
   const documentado = (k: string) => !!(p?.comportamento?.[k] || p?.comportamentoNota?.[k] || p?.comportamentoClasse?.[k]) && p?.comportamentoOrigem?.[k] !== 'ia'
   if ((p?.comportamento?.reatividade ?? 0) >= 3 || (documentado('reatividade') && !p?.comportamento?.reatividade)) s.add('reatividade')
   if (p?.visual?.corFina || p?.visual?.corEspessa) s.add('variacaoEspessura')
+  // flutuação só quando a documentação fala dela (ex.: "white float", "flutuação branca")
+  const textos = [...Object.values(p?.visual ?? {}), ...(e.tecnica?.temperaturas ?? []).map((x) => x.descricao ?? '')]
+  if (textos.some((x) => /flutua|float/i.test(x))) s.add('flutuacao')
   return PICTOGRAMAS.map(([k]) => k).filter((k) => s.has(k))
 }
 
+/** Onde mora a amostra ilustrativa de cada fenômeno (mesma biblioteca para fichas, filtros e classificação). */
+export const imagemFenomeno = (k: string) => `/fenomenos/${k}.webp`
+
 /** "Possibilidades expressivas" que só repetem um efeito já ilustrado não aparecem de novo. */
-const EXPRESSIVO_EFEITO: Record<string, string> = { Escorrimentos: 'escorrimento', 'Sobreposições': 'sobreposicao', 'Revelação da massa cerâmica': 'revelaMassa' }
+const EXPRESSIVO_EFEITO: Record<string, string> = { Escorrimentos: 'escorrimento', 'Sobreposições': 'sobreposicao', 'Revelação da massa cerâmica': 'quebraBordas' }
 export const expressivoAlemDosEfeitos = (lista: string[] | undefined, efeitos: string[]) => (lista ?? []).filter((x) => !efeitos.includes(EXPRESSIVO_EFEITO[x]))
 
 /** Amostra aproximada para nomes de cor comuns. Só para cores nomeadas na documentação; nunca tirada de fotos. */
@@ -133,6 +137,48 @@ export const TIPOS_TEMPERATURA = {
   recomendado: 'Recomendado pelo fabricante', documentado: 'Documentado pelo fabricante', imagem: 'Imagem do fabricante, sem descrição',
   revendedor: 'Informado pelo revendedor', teste: 'Seu teste', hipotese: 'Hipótese não verificada',
 } as const
+/**
+ * Segurança alimentar em quatro classes, a partir do que foi declarado:
+ * - Seguro: o fabricante declara adequado ao contato alimentar/louça (Food Safe, Dinnerware Safe ou equivalente).
+ * - Uso restrito: há restrição específica declarada (ex.: só superfícies externas, limitação de acabamento).
+ * - Não seguro: o fabricante declara que não é adequado ao contato alimentar.
+ * - Não informado: documentação insuficiente.
+ * Cuidados gerais (aplicação, queima, integridade da superfície, combinações) não rebaixam a classe.
+ * Atóxico não é segurança alimentar. Formulação própria só é "Seguro" com ensaio laboratorial aprovado.
+ */
+export type ClasseSeguranca = 'seguro' | 'restrito' | 'nao-seguro' | 'nao-informado'
+export const ROTULO_SEGURANCA: Record<ClasseSeguranca, string> = { seguro: 'Seguro', restrito: 'Uso restrito', 'nao-seguro': 'Não seguro', 'nao-informado': 'Não informado' }
+export function classeSeguranca(e: Esmalte): { classe: ClasseSeguranca; motivo: string } {
+  const t = e.tecnica ?? {}
+  const s = t.seguranca ?? {}
+  const restricao = t.restricoesAlimentares?.trim()
+  const comercial = e.origem === 'comercial'
+  const quem = comercial ? 'o fabricante' : 'você'
+  if (s.foodSafe === 'nao' || s.dinnerwareSafe === 'nao' || s.contatoAlimento === 'nao' || s.decorativo === 'sim' || e.louca === 'nao')
+    return { classe: 'nao-seguro', motivo: comercial ? 'O fabricante declara que o esmalte não é adequado ao contato alimentar.' : 'Registrado por você como não adequado ao contato alimentar.' }
+  if (!comercial && s.ensaio === 'nao') return { classe: 'nao-seguro', motivo: 'Ensaio laboratorial reprovado.' }
+  const termos = ([['foodSafe', 'Food Safe'], ['dinnerwareSafe', 'Dinnerware Safe'], ['contatoAlimento', 'contato direto com alimentos']] as const).filter(([k]) => s[k] === 'sim').map(([, l]) => l)
+  const declarado = comercial ? termos.length > 0 || s.alimentarDeclarada === 'sim' || e.louca === 'sim' : s.ensaio === 'sim'
+  if (declarado) {
+    const base = comercial ? (termos.length ? `${termos.join(' e ')} declarado${termos.length > 1 ? 's' : ''} pelo fabricante.` : 'Uso em louça declarado pelo fabricante.') : 'Ensaio laboratorial aprovado.'
+    return restricao ? { classe: 'restrito', motivo: `${base} Restrição específica: ${restricao}` } : { classe: 'seguro', motivo: base }
+  }
+  if (!comercial && e.louca === 'sim') return { classe: 'nao-informado', motivo: 'Registrado por você como apto à louça, sem ensaio laboratorial documentado.' }
+  return { classe: 'nao-informado', motivo: `Não há documentação suficiente de ${quem} para estabelecer uma classificação.` }
+}
+
+/**
+ * Outras queimas com resultado documentado (fabricante, revenda, imagem), fora do cone de referência.
+ * Um resultado documentado não é recomendação; testes e hipóteses ficam de fora do resumo.
+ */
+export function outrasQueimas(e: Esmalte): string[] {
+  const norm = (c: string) => c.trim().replace(/^cone\s*/i, '')
+  const ref = new Set((e.cone ?? '').split(/[-/–]/).map(norm).filter(Boolean))
+  const xs = (e.tecnica?.temperaturas ?? []).filter((x) => x.tipo !== 'teste' && x.tipo !== 'hipotese')
+  const rot = xs.map((x) => x.cone ? (ref.has(norm(x.cone)) ? undefined : 'Cone ' + norm(x.cone)) : x.temperatura).filter((x): x is string => !!x)
+  return [...new Set(rot)]
+}
+
 export const VERIFICACAO = { sim: 'Sim', nao: 'Não', 'nao-verificado': 'Não verificado' } as const
 
 export const DEFEITOS_FICHA = ['Craquelamento', 'Descascamento', 'Crawling (retração)', 'Bolhas', 'Pinholes', 'Crateras', 'Escorrimento excessivo', 'Cobertura irregular', 'Desvitrificação indesejada', 'Alteração inesperada de cor'] as const
