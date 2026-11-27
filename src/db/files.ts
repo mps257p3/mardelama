@@ -24,6 +24,24 @@ export async function salvarArquivo(file: File, dono?: { tipo: Tipo; id: string 
   return a.id
 }
 
+/** Miniatura leve (WebP, lado maior `max`) de um arquivo de imagem já guardado; a original fica intacta. */
+export async function criarMiniatura(arquivoId: string, dono?: { tipo: Tipo; id: string }, max = 720) {
+  const a = await db.arquivos.get(arquivoId)
+  if (!a?.blob?.size || !a.mime.startsWith('image/')) return undefined
+  const bmp = await createImageBitmap(a.blob)
+  const k = Math.min(1, max / Math.max(bmp.width, bmp.height))
+  const c = document.createElement('canvas')
+  c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k)
+  const ctx = c.getContext('2d')!
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(bmp, 0, 0, c.width, c.height)
+  const blob = await new Promise<Blob | null>((r) => c.toBlob(r, 'image/webp', 0.82))
+  if (!blob || blob.type !== 'image/webp') return undefined
+  const m = novo({ nome: a.nome.replace(/\.[^.]+$/, '') + '-miniatura.webp', mime: 'image/webp', tamanho: blob.size, blob, donoTipo: dono?.tipo, donoId: dono?.id })
+  await db.arquivos.add(m)
+  return m.id
+}
+
 /** URL de objeto para exibir um arquivo guardado; libera a memória ao desmontar. */
 export function useArquivoUrl(id?: string) {
   const arq = useLiveQuery(() => (id ? db.arquivos.get(id) : undefined), [id])

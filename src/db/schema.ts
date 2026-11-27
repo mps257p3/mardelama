@@ -49,6 +49,13 @@ export interface Familia extends Base {
   usoInicial?: string
 }
 
+/**
+ * Fotografia própria de um fenômeno num esmalte. `arquivoId` é a foto original (de um experimento, quando `testeId`
+ * existe, sem duplicar o arquivo); `miniaturaId` é a versão leve (WebP) usada na grade. O enquadramento é só
+ * de exibição: centro (0 a 1) e ampliação; a foto em si não é alterada.
+ */
+export interface FotoFenomeno { arquivoId: string; miniaturaId?: string; testeId?: string; recorte?: { x: number; y: number; zoom: number }; data: number }
+
 export interface Esmalte extends Base {
   nome: string
   codigo: string
@@ -68,6 +75,8 @@ export interface Esmalte extends Base {
   fluidez?: string           // classificação pessoal (Estável… Muito fluido); a do fabricante fica em fluidezQueima
   viscosidade?: string       // consistência do esmalte LÍQUIDO antes de aplicar (não é a fluidez na queima)
   fluidezQueima?: FluidezQueima
+  /** Fotos próprias por fenômeno (chave = id do fenômeno). Só valem para este esmalte; não mudam a biblioteca nem os dados técnicos. */
+  fotosFenomenos?: Record<string, FotoFenomeno>
   testesFluidez?: TesteFluidez[]
   aplicacao?: string
   // ——— ficha editorial (redesenho de 26/11): tudo opcional; o que está vazio não aparece na consulta ———

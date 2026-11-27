@@ -143,7 +143,7 @@ export function associacoesFenomenos(e: Esmalte): { tipo: string; status: Status
 export const efeitosDe = (e: Esmalte) => associacoesFenomenos(e).map((x) => x.tipo)
 
 /** Onde mora a amostra ilustrativa de cada fenômeno (mesma biblioteca para fichas, filtros e classificação). */
-export const imagemFenomeno = (k: string) => `/fenomenos/${k}.webp`
+export const imagemFenomeno = (k: string) => `/fenomenos/${k}.svg`
 
 /** "Possibilidades expressivas" que só repetem um efeito já ilustrado não aparecem de novo. */
 const EXPRESSIVO_EFEITO: Record<string, string> = { Escorrimentos: 'escorrimento', 'Sobreposições': 'sobreposicao', 'Revelação da massa cerâmica': 'quebraBordas' }
