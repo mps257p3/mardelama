@@ -19,7 +19,7 @@ export const SECOES_ESM: (FotoEsm & { slug: string; to: string; unid: [string, s
   { slug: 'esmaltes', to: '/esmaltes', chave: 'esmaltaria.foto.esmaltes', nome: 'Esmaltes', aspecto: 3 / 2, unid: ['esmalte', 'esmaltes'],
     padrao: commons('Ceramics glaze crazing.jpg'), reserva: '/areas/esmaltes.jpg', credito: 'Wikimedia Commons' },
   { slug: 'receitas', to: '/receitas', chave: 'esmaltaria.foto.receitas', nome: 'Fórmulas', aspecto: 3 / 2, unid: ['fórmula', 'fórmulas'], padrao: '/areas/formulas.jpg' },
-  { slug: 'testes', to: '/testes', chave: 'esmaltaria.foto.testes', nome: 'Testes', aspecto: 3 / 2, unid: ['teste', 'testes'], padrao: '/areas/materiais.jpg' },
+  { slug: 'testes', to: '/testes', chave: 'esmaltaria.foto.testes', nome: 'Testes', aspecto: 3 / 2, unid: ['teste', 'testes'], padrao: '/areas/testes.jpg' },
   { slug: 'ideias', to: '/ideias', chave: 'esmaltaria.foto.ideias', nome: 'Ideias', aspecto: 3 / 2, unid: ['ideia', 'ideias'], padrao: '/areas/caderno.jpg' },
 ]
 
