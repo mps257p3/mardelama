@@ -7,7 +7,7 @@ import type { ReactNode } from 'react'
 import { ROTULO_ESTADO, estadoFluidez } from '../../../lib/fluidez'
 import {
   APLICACAO, ATRIBUTOS_COMPORTAMENTO, NIVEIS, COMPAT, DEFEITOS_FICHA, FAIXAS, GEOMETRIAS, MASSAS, ORIGENS, PREPARACAO, SEGURANCA,
-  QUEIMA_ANTIGA, TIPOS_TEMPERATURA, dadosComerciais, efeitosDe, expressivoAlemDosEfeitos, faixaDoCone, hexDaCor, temTexto, texturasDe,
+  QUEIMA_ANTIGA, ROTULO_SEGURANCA, TIPOS_TEMPERATURA, classeSeguranca, dadosComerciais, efeitosDe, expressivoAlemDosEfeitos, faixaDoCone, hexDaCor, temTexto, texturasDe,
 } from '../../../lib/esmalteFicha'
 import { fmt } from '../../../lib/opcoes'
 import { Foto } from '../../../ui/form'
@@ -36,9 +36,13 @@ export function AbaPerfil({ e, irPara, foco }: { e: Esmalte; irPara: (aba: 'expe
   const v = p.visual ?? {}
   const aparencia: Linha[] = [
     ['Cor principal', e.cor && <Cores texto={e.cor} hex={e.corHex} />],
-    ['Cores secundárias', v.coresSecundarias && <Cores texto={v.coresSecundarias} />], ['Subtons', v.subtons && <Cores texto={v.subtons} />],
     ['Acabamento', e.acabamento], ['Opacidade', e.transparencia], ['Textura', texturasDe(e).join(', ')],
-    ['Variação cromática', v.variacao], ['Em camada fina', v.corFina], ['Em camada espessa', v.corEspessa], ['Nas áreas de acúmulo', v.corAcumulo],
+  ]
+  const variacoes: Linha[] = [
+    ['Cores secundárias', v.coresSecundarias && <Cores texto={v.coresSecundarias} />], ['Subtons', v.subtons && <Cores texto={v.subtons} />],
+    ['Variação geral', v.variacao], ['Em camada fina', v.corFina], ['Em camada espessa', v.corEspessa],
+    ['Por temperatura', v.corTemperatura], ['Por atmosfera', v.corAtmosfera], ['Nas áreas de acúmulo', v.corAcumulo],
+    ['Influência da massa cerâmica', v.corMassa], ['Em sobreposições', v.corSobreposicao],
   ]
   const outras = expressivoAlemDosEfeitos(p.expressivo, efeitos)
   const origemDe = (k: string) => { const o = p.comportamentoOrigem?.[k] ?? p.origens?.comportamento?.origem; return o ? ROTULO_ORIGEM[o] : undefined }
@@ -48,9 +52,10 @@ export function AbaPerfil({ e, irPara, foco }: { e: Esmalte; irPara: (aba: 'expe
   const temEfeitos = efeitos.length || superficie.length || outras.length || p.expressivoTexto || p.sugestoesIA
   return (
     <>
-      <Grupo titulo="Aparência" origem={p.origens?.visual} vazio={!aparencia.some(([, x]) => x)}>
-        <TabelaNiveis itens={aparencia} titulo="Cor por espessura e variação" />
-        {(e.corHex || [e.cor, v.coresSecundarias, v.subtons].some((x) => x && hexDaCor(x))) && <p className="fx-origem">Amostras de cor aproximadas, a partir das cores descritas.</p>}
+      <Grupo titulo="Aparência" origem={p.origens?.visual} vazio={![...aparencia, ...variacoes].some(([, x]) => x)}>
+        <Tabela itens={aparencia} />
+        {variacoes.some(([, x]) => x) && <Recolhido titulo="Variações cromáticas"><Tabela itens={variacoes} /></Recolhido>}
+        {(e.corHex || [e.cor, v.coresSecundarias, v.subtons].some((x) => x && hexDaCor(x))) && <p className="fx-origem">Amostras de cor: aproximações visuais a partir das cores descritas, não extraídas de amostras reais.</p>}
       </Grupo>
 
       <section className="fx-grupo">
@@ -210,7 +215,7 @@ export function AbaTecnica({ e }: { e: Esmalte }) {
           {aplicMais.some(([, v]) => v) && <Recolhido titulo="Cuidados e recomendações"><Tabela itens={aplicMais} /></Recolhido>}
         </> : <Estruturado texto={e.aplicacao} />}
       </Grupo>
-      <Grupo titulo="Queima" origem={o.queima} padrao={padrao} vazio={![...essencial, ...queima].some(([, v]) => v) && !faixas.length}>
+      <Grupo titulo="Queima" id="fx-queima" origem={o.queima} padrao={padrao} vazio={![...essencial, ...queima].some(([, v]) => v) && !faixas.length}>
         <Tabela itens={essencial} />
         {faixas.length > 0 && <ul className="fx-faixas">{faixas.map(([f, xs]) => (
           <li key={f}><p className="fx-faixa-t">{FAIXAS[f]}</p>
@@ -277,22 +282,7 @@ function rotuloCone(c: string) {
  * Dinnerware Safe como equivalentes; condições e justificativas ficam em Técnica › Segurança.
  * Sem declaração: "Não informada" (a falta de informação não vira seguro nem inseguro).
  */
-export function segurancaCurta(e: Esmalte): string | undefined {
-  const t = e.tecnica ?? {}
-  const s = t.seguranca ?? {}
-  const cond = t.segurancaCondicoes ?? {}
-  if (s.decorativo === 'sim') return 'Só decorativo'
-  if (s.foodSafe === 'nao' || s.dinnerwareSafe === 'nao' || e.louca === 'nao') return 'Não recomendado para alimentos'
-  const termos = ([['foodSafe', 'Food Safe'], ['dinnerwareSafe', 'Dinnerware Safe']] as const).filter(([k]) => s[k] === 'sim')
-  const declarada = termos.length || s.contatoAlimento === 'sim' || s.alimentarDeclarada === 'sim' || e.louca === 'sim'
-  if (declarada) {
-    if (termos.some(([k]) => cond[k]) || cond.contatoAlimento || cond.loucaFuncional) return 'Com condições'
-    if (termos.length) return termos.map(([, l]) => l).join(' · ')
-    return e.origem === 'comercial' ? 'Declarada pelo fabricante' : 'Sim (seu registro)'
-  }
-  if (s.ensaio === 'sim') return 'Ensaio próprio aprovado'
-  return e.origem === 'comercial' ? 'Não informada' : undefined
-}
+export const segurancaCurta = (e: Esmalte) => ROTULO_SEGURANCA[classeSeguranca(e).classe]
 
 /** Fluidez em uma ou duas palavras para o resumo. A classificação completa, a escala e as fontes ficam em Perfil. */
 export function fluidezCurta(e: Esmalte): string | undefined {
@@ -309,7 +299,7 @@ export function fluidezCurta(e: Esmalte): string | undefined {
   return e.testesFluidez?.length ? 'Sem classificação' : undefined
 }
 
-const SEG_RESUMO = 'A classificação de segurança refere-se ao esmalte nas condições de uso e queima recomendadas. A segurança de combinações e sobreposições com outros esmaltes não é automaticamente assegurada.'
+const SEG_RESUMO = 'A classificação de segurança alimentar refere-se ao produto utilizado conforme as orientações do fabricante. Misturas, sobreposições e alterações nas condições de queima podem modificar as propriedades do esmalte e exigem avaliação independente.'
 
 /**
  * Segurança do produto cadastrado, na nomenclatura do fabricante. "Pode ir à louça" fica quando o fabricante declara,
@@ -319,29 +309,26 @@ function Seguranca({ e }: { e: Esmalte }) {
   const t = e.tecnica ?? {}
   const s: Record<string, Verificacao | undefined> = { ...t.seguranca }
   const cond = t.segurancaCondicoes ?? {}
-  const comercial = e.origem === 'comercial'
-  const declarada = e.louca === 'sim' || s.foodSafe === 'sim' || s.dinnerwareSafe === 'sim' || s.alimentarDeclarada === 'sim'
-  const vetada = e.louca === 'nao' || s.decorativo === 'sim'
-  const condicoes = [cond.foodSafe, cond.dinnerwareSafe, cond.loucaFuncional].filter(Boolean) as string[]
+  const { classe, motivo } = classeSeguranca(e)
+  // valores na nomenclatura do fabricante; as condições originais ficam como nota de cada item
   const valor = (k: string): string => {
     const v = s[k]
-    if (k === 'ensaio') return v === 'sim' ? 'Realizado, aprovado' : v === 'nao' ? 'Realizado, reprovado' : 'Não realizado'
-    return v === 'sim' ? (cond[k] ? 'Sim, com condições' : 'Sim') : v === 'nao' ? 'Não' : 'Não informado'
+    if (k === 'ensaio') return v === 'sim' ? 'Sim, aprovado' : v === 'nao' ? 'Sim, reprovado' : 'Não informado'
+    return v === 'sim' ? 'Sim' : v === 'nao' ? 'Não' : 'Não informado'
   }
-  const ESSENCIAIS = ['atoxico', 'semChumbo', 'foodSafe', 'dinnerwareSafe', 'contatoAlimento', 'ensaio']
-  const itens: Linha[] = SEGURANCA.filter(([k]) => k !== 'combinacoes' && k !== 'alimentarDeclarada' && (ESSENCIAIS.includes(k) || s[k]))
-    .map(([k, l]) => [k === 'ensaio' ? 'Ensaio laboratorial próprio' : l, valor(k), cond[k]])
+  const ESSENCIAIS = ['atoxico', 'semChumbo', 'foodSafe', 'dinnerwareSafe', 'contatoAlimento']
+  const itens: Linha[] = SEGURANCA.filter(([k]) => k !== 'combinacoes' && k !== 'alimentarDeclarada' && k !== 'ensaio' && (ESSENCIAIS.includes(k) || s[k]))
+    .map(([k, l]) => [l, valor(k), cond[k]])
   // registro antigo, sem o termo exato do fabricante: não vira "Food Safe"
   if (s.alimentarDeclarada) itens.splice(2, 0, ['Uso alimentar declarado', valor('alimentarDeclarada') + (s.foodSafe ? '' : ' (termo do fabricante não registrado)')])
+  itens.push(['Restrições específicas', t.restricoesAlimentares || (classe === 'seguro' ? 'Nenhuma declarada' : 'Não informado')])
+  itens.push(['Ensaio laboratorial documentado', valor('ensaio'), cond.ensaio])
   return (
     <section className="fx-grupo" id="fx-seguranca">
-      <h3>Segurança</h3>
-      {(declarada || vetada) && <p className={'fx-louca' + (vetada ? ' nao' : '')}>
-        <b>{vetada ? 'Não usar em louça' : 'Pode ir à louça'}</b>
-        <span>{comercial ? 'declarado pelo fabricante' : 'registrado por você'}{!vetada && condicoes.length ? ', com condições' : ''}</span>
-      </p>}
+      <h3>Segurança e uso</h3>
+      <p className={'fx-louca ' + classe}><b>{ROTULO_SEGURANCA[classe]}</b><span>{motivo}</span></p>
       <Tabela itens={itens} />
-      {t.segurancaNotas && <div className="fx-ressalva"><p className="fx-rot">Restrições</p><Estruturado texto={t.segurancaNotas} /></div>}
+      {t.segurancaNotas && <div className="fx-ressalva"><p className="fx-rot">Observações do fabricante</p><Estruturado texto={t.segurancaNotas} /></div>}
       {cond.combinacoes && <p className="fx-origem fx-cond">{cond.combinacoes}</p>}
       <p className="fx-origem">{SEG_RESUMO}</p>
       <Origem o={t.origens?.seguranca} />

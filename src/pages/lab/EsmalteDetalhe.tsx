@@ -9,7 +9,7 @@ import { proximoCodigo } from '../../db/codigos'
 import { salvarArquivo } from '../../db/files'
 import { criarReceita as criarReceitaNova } from './Receitas'
 import { fmt } from '../../lib/opcoes'
-import { alertasDe, dadosComerciais } from '../../lib/esmalteFicha'
+import { alertasDe, dadosComerciais, outrasQueimas } from '../../lib/esmalteFicha'
 import { useEstadoDaTela } from '../../ui/memoriaRolagem'
 import { Menu } from '../../ui/Menu'
 import { useToast } from '../../ui/toast'
@@ -76,7 +76,7 @@ export default function EsmalteDetalhe() {
     catch (x) { toast('Não consegui exportar: ' + (x as Error).message) } finally { setExportando(undefined) }
   }
   /** Toque no resumo: abre a aba certa e leva até o detalhe (a fluidez já abre expandida). */
-  const irParaDetalhe = (alvo: 'fluidez' | 'seguranca') => {
+  const irParaDetalhe = (alvo: 'fluidez' | 'seguranca' | 'queima') => {
     setFoco(alvo)
     trocarAba(alvo === 'fluidez' ? 'perfil' : 'tecnica')
     setTimeout(() => document.getElementById('fx-' + alvo)?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 60)
@@ -128,7 +128,7 @@ export default function EsmalteDetalhe() {
           <Grade itens={[
             ['Temperatura', e.temperatura ? fmt(e.temperatura, 0) + ' °C' : undefined, 'referência'], ['Cone', e.cone], ['Atmosfera', e.atmosfera],
           ]} />
-          <ResumoLinhas itens={[['Fluidez na queima', fluidezCurta(e), () => irParaDetalhe('fluidez')], ['Segurança alimentar', segurancaCurta(e), () => irParaDetalhe('seguranca')]]} />
+          <ResumoLinhas itens={[['Outras queimas documentadas', outrasQueimas(e).join(' · ') || undefined, () => irParaDetalhe('queima')], ['Fluidez na queima', fluidezCurta(e), () => irParaDetalhe('fluidez')], ['Segurança alimentar', segurancaCurta(e), () => irParaDetalhe('seguranca')]]} />
           {alertas.length > 0 && <ul className="fx-alertas" aria-label="Alertas">{alertas.map((a) => <li key={a}><AlertTriangle size={14} strokeWidth={1.6} />{a}</li>)}</ul>}
         </div>
       </div>

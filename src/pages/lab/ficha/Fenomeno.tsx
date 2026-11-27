@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import type { Esmalte, OrigemDado } from '../../../db/schema'
-import { ATRIBUTOS_COMPORTAMENTO, GEOMETRIAS, NIVEIS, ORIGENS, PICTOGRAMAS, texturasDe } from '../../../lib/esmalteFicha'
+import { ATRIBUTOS_COMPORTAMENTO, GEOMETRIAS, NIVEIS, ORIGENS, PICTOGRAMAS, TIPOS_TEMPERATURA, VISUAL, texturasDe } from '../../../lib/esmalteFicha'
 import { FENOMENOS } from '../../../lib/fenomenos'
 import { Sheet } from '../../../ui/Sheet'
-import { Ilustracao } from './Atlas'
+import { AmostraFenomeno } from '../../../ui/AmostraFenomeno'
 
 const NOME = Object.fromEntries(PICTOGRAMAS)
 const ATRIB = Object.fromEntries(ATRIBUTOS_COMPORTAMENTO)
 const GEO = Object.fromEntries(GEOMETRIAS)
+const VIS = Object.fromEntries(VISUAL)
 
 /** Um dado do esmalte ligado ao fenômeno, com a origem. `grupo` separa documentação, registros seus e IA. */
 interface Item { rotulo: string; texto: string; origem?: string; fonte?: string; grupo: 'doc' | 'seu' | 'ia' }
@@ -52,8 +53,14 @@ export function especificoDoFenomeno(e: Esmalte, tipo: string): Item[] {
   if (tipo === 'variacaoEspessura') { add('Em camada fina', p.visual?.corFina, vo, vf); add('Em camada espessa', p.visual?.corEspessa, vo, vf) }
   if (tipo === 'acumulo') add('Nas áreas de acúmulo', p.visual?.corAcumulo, vo, vf)
   if (tipo === 'transparencia' && (e.transparencia === 'Transparente' || e.transparencia === 'Translúcido')) add('Opacidade', e.transparencia, vo, vf)
+  if (tipo === 'opacidade' && e.transparencia === 'Opaco') add('Opacidade', e.transparencia, vo, vf)
+  if (tipo === 'flutuacao') {
+    for (const [k, txt] of Object.entries(p.visual ?? {})) if (/flutua|float/i.test(txt)) add(VIS[k] ?? 'Aparência', txt, vo, vf)
+    for (const x of t.temperaturas ?? []) if (/flutua|float/i.test(x.descricao ?? ''))
+      add([x.cone && 'Cone ' + x.cone, x.atmosfera].filter(Boolean).join(' · ') || 'Queima', `${x.descricao} (${TIPOS_TEMPERATURA[x.tipo].toLowerCase()})`, x.tipo === 'revendedor' ? 'revendedor' : x.tipo === 'teste' ? 'experimento' : x.tipo === 'hipotese' ? 'pessoal' : 'fabricante', x.fonte)
+  }
   const tx = texturasDe(e)
-  const TX: Record<string, string[]> = { craquele: ['Craquelada'], cristalizacao: ['Cristalizada', 'Microcristalina'], reticulacao: ['Reticulada'], metalico: ['Metálica'], manchas: ['Pontilhada'], textura: ['Rugosa', 'Granulada', 'Enrugada', 'Espumada'] }
+  const TX: Record<string, string[]> = { craquele: ['Craquelada'], cristalizacao: ['Cristalizada', 'Microcristalina'], metalico: ['Metálica'], iridescencia: ['Iridescente'], textura: ['Rugosa', 'Granulada', 'Enrugada', 'Espumada', 'Reticulada'] }
   const txs = tx.filter((x) => TX[tipo]?.includes(x))
   if (txs.length) add('Textura registrada', txs.join(', '), vo, vf)
   if (tipo === 'metalico' && e.acabamento === 'Metálico') add('Acabamento', e.acabamento, vo, vf)
@@ -73,17 +80,17 @@ export function AtlasEfeitos({ e, tipos }: { e: Esmalte; tipos: string[] }) {
   if (!tipos.length) return null
   return (
     <>
-      <ul className={'fx-atlas' + (tipos.length <= 2 ? ' poucos' : '')}>
+      <ul className="fx-amostras-f">
         {tipos.map((t) => (
           <li key={t}>
-            <button className="fx-atlas-b" onClick={() => setAberto(t)} aria-label={`${NOME[t] ?? t}: ver explicação`}>
-              <Ilustracao tipo={t} titulo={NOME[t]} />
+            <button className="fx-amostra-f" onClick={() => setAberto(t)} aria-label={`${NOME[t] ?? t}: ver explicação`}>
+              <AmostraFenomeno tipo={t} />
               <span>{NOME[t] ?? t}</span>
             </button>
           </li>
         ))}
       </ul>
-      <p className="fx-atlas-leg">Representações esquemáticas dos fenômenos cerâmicos.</p>
+      <p className="fx-atlas-leg">Representações ilustrativas dos fenômenos cerâmicos, não correspondentes a testes específicos deste esmalte.</p>
       {aberto && <PainelFenomeno e={e} tipo={aberto} onClose={() => setAberto(undefined)} />}
     </>
   )
@@ -98,7 +105,7 @@ function PainelFenomeno({ e, tipo, onClose }: { e: Esmalte; tipo: string; onClos
     <Sheet onClose={onClose} label={fen?.nome ?? NOME[tipo] ?? tipo}>
       <div className="fx-fen">
         <div className="fx-fen-h"><h2>{fen?.nome ?? NOME[tipo]}</h2><button className="iconbtn" aria-label="Fechar" onClick={onClose}><X size={18} /></button></div>
-        <figure className="fx-fen-fig"><Ilustracao tipo={tipo} titulo={fen?.nome} /><figcaption>Representação esquemática; não é resultado de teste nem previsão do esmalte.</figcaption></figure>
+        <figure className="fx-fen-fig"><AmostraFenomeno tipo={tipo} /><figcaption>Representação ilustrativa; não é fotografia do produto nem resultado de teste deste esmalte.</figcaption></figure>
         {fen && <>
           <p className="fx-fen-def">{fen.definicao}</p>
           <h3>Como ocorre</h3><p className="fx-par">{fen.comoOcorre}</p>
