@@ -1,24 +1,30 @@
-import { Voltar } from '../../ui/Voltar'
-import { ArtistasAfins } from '../bib/art/ArtistasAfins'
-import { incluidoEm } from '../../lib/data'
-import { useState } from 'react'
+import { temTelaAnterior } from '../../ui/Voltar'
+import { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Copy, Download, FlaskConical, Heart, Pencil, Plus, ScrollText, Trash2, TestTube } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Copy, Download, Heart, ImagePlus, Pencil, ScrollText, TestTube, Trash2 } from 'lucide-react'
 import { db, novo } from '../../db/schema'
 import { alternarFavorito, excluir, useFamilias } from '../../db/hooks'
 import { proximoCodigo } from '../../db/codigos'
+import { salvarArquivo } from '../../db/files'
 import { criarReceita as criarReceitaNova } from './Receitas'
 import { fmt } from '../../lib/opcoes'
-import { Estrelas, Foto } from '../../ui/form'
-import { Relacoes } from '../../ui/Relacoes'
+import { alertasDe, fluidezResumo } from '../../lib/esmalteFicha'
+import { useEstadoDaTela } from '../../ui/memoriaRolagem'
+import { Menu } from '../../ui/Menu'
 import { useToast } from '../../ui/toast'
-import { CapaFotos, GaleriaPecas } from '../../ui/GaleriaFotos'
-import { SeloLouca, loucaDoTexto } from '../../ui/Louca'
-import { FluidezQueima } from './FluidezQueima'
+import { Galeria, useFotosFicha } from './ficha/Galeria'
+import { Grade, TextoCurto } from './ficha/partes'
+import { AbaDocumentacao, AbaExperimentos, AbaPerfil, AbaTecnica } from './ficha/Abas'
 
-const maiusc = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+const ABAS = [['perfil', 'Perfil'], ['tecnica', 'Técnica'], ['experimentos', 'Experimentos'], ['documentacao', 'Documentação']] as const
+type Aba = typeof ABAS[number][0]
 
+/**
+ * Ficha do esmalte (Esmaltaria, redesenho editorial de 26/11).
+ * Consulta imediata (foto, identidade, resumo, alertas) → abas Perfil, Técnica, Experimentos e Documentação.
+ * A consulta não tem campos de formulário: tudo se edita em Editar.
+ */
 export default function EsmalteDetalhe() {
   const { id } = useParams()
   const nav = useNavigate()
@@ -26,25 +32,23 @@ export default function EsmalteDetalhe() {
   const e = useLiveQuery(() => db.esmaltes.get(id!), [id])
   const familias = useFamilias()
   const receita = useLiveQuery(async () => (e?.receitaId ? db.receitas.get(e.receitaId) : undefined), [e?.receitaId])
-  const testes = useLiveQuery(async () => (await db.testes.where('esmalteId').equals(id!).toArray()).filter((t) => !t.excluido).sort((a, b) => b.data.localeCompare(a.data)), [id])
-  const [verTestes, setVerTestes] = useState(false)
-  const [exportando, setExportando] = useState<string>()
-  // esmalte comercial: o botão vira Engenharia reversa e leva ao estudo (ou cria um)
+  const testes = useLiveQuery(async () => (await db.testes.where('esmalteId').equals(id!).toArray()).filter((t) => !t.excluido).sort((a, b) => b.data.localeCompare(a.data)), [id], [])
   const estudo = useLiveQuery(async () => (e?.origem === 'comercial' ? (await import('../../lib/comercial')).estudoDoEsmalte(e) : undefined), [e])
   const aprovada = useLiveQuery(async () => (estudo?.receita?.aprovadaId ? db.receitas.get(estudo.receita.aprovadaId) : undefined), [estudo?.receita?.aprovadaId])
+  const [aba, setAba] = useEstadoDaTela<Aba>('esmalte.aba', 'perfil')
+  const [exportando, setExportando] = useState<string>()
+  const abasRef = useRef<HTMLDivElement>(null)
+  const fotoRef = useRef<HTMLInputElement>(null)
+  const fotosTestes = useMemo(() => testes.flatMap((t) => t.fotos.slice(0, 1)), [testes])
+  const fotos = useFotosFicha(e ?? ({ fotos: [], origem: 'propria' } as never), fotosTestes)
 
   if (e === undefined) return null
   if (!e || e.excluido) return <div className="page"><p>Esmalte não encontrado.</p></div>
 
-  const fam = e.familias.map((f) => familias.find((x) => x.id === f)?.nome).filter(Boolean)
-  const ficha: [string, string | undefined][] = [
-    ['Código', e.codigo], ['Origem', e.origem === 'comercial' ? 'Comercial' : 'Formulação própria'],
-    [e.origem === 'comercial' ? 'Fabricante' : 'Autoria', e.autoria], ['Famílias', fam.join(', ')],
-    ['Cor', e.cor], ['Acabamento', e.acabamento], ['Textura', e.textura], ['Transparência', e.transparencia],
-    ['Temperatura', e.temperatura ? fmt(e.temperatura, 0) + ' °C' : undefined], ['Cone', e.cone],
-    ['Atmosfera', e.atmosfera], [e.origem === 'comercial' ? 'Fluidez (sua avaliação)' : 'Fluidez na queima', e.fluidez], ['Consistência do líquido', e.viscosidade], ['Aplicação', e.aplicacao], ['Status', e.status],
-    ['Fonte da receita', e.fonteReceita],
-  ]
+  const fam = e.familias.map((f) => familias.find((x) => x.id === f)?.nome).filter((x): x is string => !!x)
+  const comercial = e.origem === 'comercial'
+  const flu = fluidezResumo(e)
+  const alertas = alertasDe(e)
 
   async function criarReceita() {
     const rid = await criarReceitaNova({ nome: e!.nome, esmalteId: e!.id })
@@ -62,82 +66,70 @@ export default function EsmalteDetalhe() {
     const x = novo({ ...resto, nome: e!.nome + ' (cópia)', codigo: await proximoCodigo('E', 'esmaltes', 3), favorito: 0 as const })
     await db.esmaltes.add(x); toast('Esmalte duplicado'); nav(`/esmaltes/${x.id}`)
   }
+  async function exportar() {
+    setExportando('Preparando…')
+    try { const { exportarEsmalte } = await import('../../lib/exportarEsmalte'); await exportarEsmalte(e!, setExportando); toast('Ficha exportada') }
+    catch (x) { toast('Não consegui exportar: ' + (x as Error).message) } finally { setExportando(undefined) }
+  }
+  const trocarAba = (a: Aba) => {
+    setAba(a)
+    const el = abasRef.current
+    if (el && el.getBoundingClientRect().top < 1) window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top, behavior: 'instant' as ScrollBehavior })
+  }
 
   return (
-    <div className="page">
-      <Voltar to="/esmaltes">Esmaltaria</Voltar>
-      <div className="detalhe">
-        <div>
-          <CapaFotos fotos={e.fotos} alt={e.nome} rotuloAdd="Adicionar foto do esmalte"
-            onChange={(v) => db.esmaltes.update(e.id, { fotos: v, atualizadoEm: Date.now() })}
-            vazio={e.corHex ? <div className="swatch" style={{ background: e.corHex }} /> : <FlaskConical size={44} strokeWidth={1} />} />
-        </div>
-        <div>
-          <p className="eyebrow">{e.codigo}{fam.length ? ' · ' + fam.join(', ') : ''}</p>
-          <h1 style={{ marginTop: 8 }}>{e.nome}</h1>
-          <p className="faint" style={{ fontSize: 13, marginTop: 4 }}>{maiusc(incluidoEm(e.criadoEm))}</p>
-          <div className="linha-queima">
-            {(e.temperatura || e.cone) && <span className="t">{[e.temperatura && fmt(e.temperatura, 0) + ' °C', e.cone && 'cone ' + e.cone, e.atmosfera].filter(Boolean).join(', ')}</span>}
-            <SeloLouca origem={e.origem === 'comercial' ? 'fabricante' : 'proprio'} valor={e.louca ?? (e.origem === 'comercial' ? loucaDoTexto([e.observacoes, ...e.tags]) : undefined)}
-              onChange={(v) => db.esmaltes.update(e.id, { louca: v, atualizadoEm: Date.now() })} />
-          </div>
-          <div className="pills" style={{ marginTop: 12 }}>
-            {[e.acabamento, e.textura, e.status].filter(Boolean).map((p) => <span className="pill" key={String(p)}>{p}</span>)}
-          </div>
-          {!!e.avaliacao && <div style={{ marginTop: 14 }}><Estrelas value={e.avaliacao} /></div>}
-          <div className="esm-botoes">
-            {e.origem === 'comercial'
-              ? <button className="esm-botao" onClick={engenhariaReversa}><ScrollText size={20} strokeWidth={1.3} /><b>Engenharia reversa</b><span>{
-                  aprovada && !aprovada.excluido ? (aprovada.codigo ? aprovada.codigo + ' · ' : '') + 'receita aprovada'
-                    : estudo?.receita ? (estudo.receita.codigo ? estudo.receita.codigo + ' · ' : '') + 'receita reconstruída'
-                      : estudo ? 'Estudo sem receita · pesquisar' : 'Criar receita'}</span></button>
-              : receita && !receita.excluido
-              ? <Link className="esm-botao" to={`/receitas/${receita.id}`}><ScrollText size={20} strokeWidth={1.3} /><b>Fórmula</b><span>{receita.codigo ? receita.codigo + ' · ' : ''}versão {receita.versaoAtual}</span></Link>
-              : <button className="esm-botao" onClick={criarReceita}><ScrollText size={20} strokeWidth={1.3} /><b>Fórmula</b><span>Criar fórmula</span></button>}
-            <button className={'esm-botao' + (verTestes ? ' on' : '')} onClick={() => setVerTestes(!verTestes)}><TestTube size={20} strokeWidth={1.3} /><b>Testes</b><span>{testes?.length ? `${testes.length} ${testes.length === 1 ? 'registrado' : 'registrados'}` : 'Nenhum ainda'}</span></button>
-          </div>
-
-          {verTestes && <div className="esm-testes">
-            {testes && testes.length ? <div className="galeria" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-              {testes.map((t) => (
-                <Link key={t.id} to={`/testes/${t.id}`} className="peca">
-                  <div className="ph">{t.fotos[0] ? <Foto id={t.fotos[0]} /> : <TestTube size={22} strokeWidth={1.2} />}<span className="cod">{t.codigo}</span></div>
-                  <div className="s">{t.planejado ? 'Planejado' : new Date(t.data + 'T12:00').toLocaleDateString('pt-BR')}{t.cone ? ' · cone ' + t.cone : ''}</div>
-                </Link>
-              ))}
-            </div> : <p className="muted">Nenhum teste deste esmalte ainda.</p>}
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
-              <Link className="btn sm primary" to={`/testes/novo?esmalte=${e.id}`}><Plus size={14} />Novo teste</Link>
-              {testes && testes.length > 1 && <Link className="btn sm" to={`/testes/comparar?ids=${testes.slice(0, 4).map((t) => t.id).join(',')}`}>Comparar lado a lado</Link>}
-            </div>
-          </div>}
-
-          <div style={{ display: 'flex', gap: 8, marginTop: 20, flexWrap: 'wrap' }}>
-            <Link className="btn sm primary" to={`/esmaltes/${e.id}/editar`}><Pencil size={14} />Editar</Link>
-                        <button className="btn sm" onClick={() => alternarFavorito('esmaltes', e.id, e.favorito)}><Heart size={14} fill={e.favorito ? 'currentColor' : 'none'} />{e.favorito ? 'Favorito' : 'Favoritar'}</button>
-            <button className="btn sm ghost" onClick={duplicar}><Copy size={14} />Duplicar</button>
-            <button className="btn sm ghost" disabled={!!exportando} onClick={async () => {
-              setExportando('Preparando…')
-              try { const { exportarEsmalte } = await import('../../lib/exportarEsmalte'); await exportarEsmalte(e, setExportando); toast('Ficha exportada') }
-              catch (x) { toast('Não consegui exportar: ' + (x as Error).message) } finally { setExportando(undefined) }
-            }}><Download size={14} />Exportar</button>
-            <button className="btn sm ghost" onClick={async () => { if (confirm(`Excluir "${e.nome}"?`)) { await excluir('esmaltes', e.id); toast('Esmalte excluído'); nav('/esmaltes') } }}><Trash2 size={14} />Excluir</button>
-          </div>
-
-          <dl className="ficha" style={{ margin: '24px 0 0' }}>{ficha.filter(([, v]) => v).map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
-          {e.tags.length > 0 && <div className="pills" style={{ marginTop: 16 }}>{e.tags.map((t) => <span key={t} className="chip">#{t}</span>)}</div>}
-          {e.observacoes && <p style={{ marginTop: 20, whiteSpace: 'pre-wrap' }} className="muted">{e.observacoes}</p>}
-          {e.origem === 'comercial' && <FluidezQueima e={e} />}
-
-          <div style={{ marginTop: 28 }} />
-          <Relacoes tipo="esmalte" id={e.id} extras={[
-            ...(receita && !receita.excluido ? [{ tipo: 'receita' as const, id: receita.id, titulo: receita.nome, sub: `versão ${receita.versaoAtual}`, to: `/receitas/${receita.id}` }] : []),
+    <div className="page ficha-esm">
+      <header className="fx-topo">
+        <button className="fx-voltar" onClick={() => (temTelaAnterior() ? nav(-1) : nav('/esmaltes'))}><ArrowLeft size={16} />Esmaltaria</button>
+        <div className="fx-acoes">
+          <button className="iconbtn" aria-label={e.favorito ? 'Tirar dos favoritos' : 'Favoritar'} onClick={() => alternarFavorito('esmaltes', e.id, e.favorito)}><Heart size={18} fill={e.favorito ? 'currentColor' : 'none'} /></button>
+          <Link className="iconbtn" aria-label="Editar" to={`/esmaltes/${e.id}/editar`}><Pencil size={18} /></Link>
+          <Menu itens={[
+            { l: 'Novo teste', icon: <TestTube size={16} />, to: `/testes/novo?esmalte=${e.id}` },
+            comercial
+              ? { l: aprovada && !aprovada.excluido ? 'Receita aprovada' : estudo ? 'Engenharia reversa' : 'Criar engenharia reversa', icon: <ScrollText size={16} />, onClick: engenhariaReversa }
+              : receita && !receita.excluido ? { l: 'Abrir fórmula', icon: <ScrollText size={16} />, to: `/receitas/${receita.id}` } : { l: 'Criar fórmula', icon: <ScrollText size={16} />, onClick: criarReceita },
+            { l: 'Adicionar foto', icon: <ImagePlus size={16} />, onClick: () => fotoRef.current?.click() },
+            { l: 'Duplicar', icon: <Copy size={16} />, onClick: duplicar },
+            { l: 'Exportar ficha', icon: <Download size={16} />, onClick: exportar, disabled: !!exportando },
+            { sep: true, l: '' },
+            { l: 'Excluir', icon: <Trash2 size={16} />, onClick: async () => { if (confirm(`Excluir "${e.nome}"?`)) { await excluir('esmaltes', e.id); toast('Esmalte excluído'); nav('/esmaltes') } } },
           ]} />
-          <ArtistasAfins termos={[e.acabamento, e.textura, ...e.tags, ...(fam as string[])]} />
+        </div>
+        <input ref={fotoRef} type="file" accept="image/*" multiple hidden onChange={async (x) => {
+          const fs = Array.from(x.target.files ?? []); x.target.value = ''
+          const ids: string[] = []
+          for (const f of fs) { try { ids.push(await salvarArquivo(f)) } catch { /* segue */ } }
+          if (ids.length) { await db.esmaltes.update(e.id, { fotos: [...e.fotos, ...ids], atualizadoEm: Date.now() }); toast(ids.length === 1 ? 'Foto adicionada' : `${ids.length} fotos adicionadas`) }
+        }} />
+      </header>
+
+      <div className="fx-capa">
+        <Galeria fotos={fotos ?? []} nome={e.nome} corHex={e.corHex} />
+        <div className="fx-id">
+          <p className="fx-eyebrow">{[e.codigo, e.autoria].filter(Boolean).join(' · ')}</p>
+          <h1 className="fx-nome">{e.nome}</h1>
+          {(fam.length > 0 || e.funcao) && <p className="fx-familia">{[fam.join(', '), fam.some((f) => f.toLowerCase() === e.funcao?.toLowerCase()) ? '' : e.funcao].filter(Boolean).join(' · ')}</p>}
+          {e.descricao && <TextoCurto texto={e.descricao} />}
+
+          <Grade itens={[
+            ['Temperatura', e.temperatura ? fmt(e.temperatura, 0) + ' °C' : undefined], ['Cone', e.cone], ['Atmosfera', e.atmosfera],
+            ['Acabamento', e.acabamento], ['Opacidade', e.transparencia], ['Fluidez na queima', flu?.valor, flu?.nota],
+          ]} />
+
+          {alertas.length > 0 && <ul className="fx-alertas" aria-label="Alertas">{alertas.map((a) => <li key={a}><AlertTriangle size={14} strokeWidth={1.6} />{a}</li>)}</ul>}
         </div>
       </div>
-      <GaleriaPecas titulo="Peças com este esmalte" fotos={e.pecas ?? []}
-        onChange={(v) => db.esmaltes.update(e.id, { pecas: v, atualizadoEm: Date.now() })} />
+
+      <div className="fx-abas" ref={abasRef} role="tablist">
+        {ABAS.map(([k, l]) => <button key={k} role="tab" aria-selected={aba === k} className={aba === k ? 'on' : ''} onClick={() => trocarAba(k)}>{l}</button>)}
+      </div>
+      <div className="fx-conteudo" role="tabpanel">
+        {aba === 'perfil' && <AbaPerfil e={e} />}
+        {aba === 'tecnica' && <AbaTecnica e={e} />}
+        {aba === 'experimentos' && <AbaExperimentos e={e} testes={testes} />}
+        {aba === 'documentacao' && <AbaDocumentacao e={e} familias={fam} receita={receita} estudo={estudo} />}
+      </div>
       {exportando && <div className="sync-pill" role="status">{exportando}</div>}
     </div>
   )

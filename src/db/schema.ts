@@ -70,6 +70,12 @@ export interface Esmalte extends Base {
   fluidezQueima?: FluidezQueima
   testesFluidez?: TesteFluidez[]
   aplicacao?: string
+  // ——— ficha editorial (redesenho de 26/11): tudo opcional; o que está vazio não aparece na consulta ———
+  descricao?: string         // breve descrição das características principais (identidade)
+  funcao?: string            // função no ateliê: fundente, base, cobertura, efeito…
+  perfil?: PerfilEsmalte
+  tecnica?: TecnicaEsmalte
+  notasPessoais?: string     // anotações livres (separadas das informações oficiais e da IA)
   receitaId?: string
   observacoes?: string
   fonteReceita?: string
@@ -77,6 +83,37 @@ export interface Esmalte extends Base {
   avaliacao?: number         // 0..5
   louca?: Louca              // pode ir à louça (pratos, canecas)?
   tags: string[]
+}
+
+/** Origem de um grupo de informações da ficha (agrupada, não linha a linha). */
+export type OrigemDado = 'fabricante' | 'referencia' | 'receita' | 'experimento' | 'pessoal' | 'ia'
+export interface FonteGrupo { origem?: OrigemDado; fonte?: string; data?: string }
+/** 1 muito baixo … 5 muito alto. Atributo não avaliado simplesmente não existe no registro. */
+export type Nivel = 1 | 2 | 3 | 4 | 5
+export interface PerfilEsmalte {
+  visual?: Record<string, string>                 // coresSecundarias, subtons, variacao, corFina, corEspessa, corAcumulo
+  comportamento?: Record<string, Nivel>           // chaves em ATRIBUTOS_COMPORTAMENTO
+  superficie?: Record<string, string[]>           // geometria → comportamentos observados
+  expressivo?: string[]                           // adequações comprovadas
+  expressivoTexto?: string
+  sugestoesIA?: string                            // sugestões criativas da IA, sempre separadas
+  origens?: Record<string, FonteGrupo | undefined>            // por grupo: visual, comportamento, superficie, expressivo
+}
+export type Compat = 'documentada' | 'experimental' | 'incompativel'
+export type Verificacao = 'sim' | 'nao' | 'nao-verificado'
+export interface DefeitoEsmalte { tipo: string; intencional?: boolean; causa?: string; solucao?: string; hipotese?: boolean }
+export interface TecnicaEsmalte {
+  preparacao?: Record<string, string>
+  aplicacao?: Record<string, string>
+  metodos?: string[]
+  queima?: Record<string, string>
+  compatibilidade?: Record<string, Compat>
+  compatNotas?: string
+  seguranca?: Record<string, Verificacao>
+  segurancaNotas?: string
+  defeitos?: DefeitoEsmalte[]
+  alertas?: string[]                              // cuidados específicos (só quando há)
+  origens?: Record<string, FonteGrupo | undefined>            // por grupo: preparacao, aplicacao, queima, compatibilidade, seguranca, defeitos
 }
 
 /**

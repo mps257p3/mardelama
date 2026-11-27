@@ -283,7 +283,7 @@ export async function semearIdeias() {
   const { semearComerciais, completarEstudosAntigos } = await import('./comerciaisIniciais')
   await semearComerciais().catch(() => undefined)
   await completarEstudosAntigos().catch(() => undefined)
-  const { reescreverTextos, reescreverFormulas, receitaNoEstudo, receitasQueFaltam, tirarPrints, temperaturaNasFormulas, esmaltesDosRotulos, formulasVaziasDeComerciais } = await import('./comerciaisIniciais')
+  const { reescreverTextos, reescreverFormulas, receitaNoEstudo, receitasQueFaltam, tirarPrints, temperaturaNasFormulas, esmaltesDosRotulos, formulasVaziasDeComerciais, fichaWhiteCascade } = await import('./comerciaisIniciais')
   await reescreverTextos().catch(() => undefined)
   await reescreverFormulas().catch(() => undefined)
   await receitaNoEstudo().catch(() => undefined)
@@ -291,6 +291,7 @@ export async function semearIdeias() {
   await tirarPrints().catch(() => undefined)
   await temperaturaNasFormulas().catch(() => undefined)
   await esmaltesDosRotulos().catch(() => undefined)
+  await fichaWhiteCascade().catch(() => undefined)
   await formulasVaziasDeComerciais().catch(() => undefined)
   await (await import('./guiasIniciais')).semearGuias().catch(() => undefined)
 }
