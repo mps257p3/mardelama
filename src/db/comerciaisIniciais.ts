@@ -200,7 +200,7 @@ export const EXTRAS: { id: string; usos: string[]; marca: string[] }[] = [
       'Pode ir ao forno com esmaltes que não são cristalinos e não exige bandeja de escorrido',
     ],
     marca: [
-      'https://coyoteclay.com/Images/250%20Tiles/SLCrystal%20Nebula%20MBG164%20SC.jpg',
+      'https://coyoteclay.com/Images/SC%20Tiles/SLCrystal%20Nebula%20MBG164%20SC.jpg',
       'https://coyoteclay.com/Images/Tile%20Comparisons/Crystal%20Nebula.jpg',
     ],
   },
@@ -231,7 +231,7 @@ export const EXTRAS: { id: string; usos: string[]; marca: string[] }[] = [
       'Deixe uns 6 mm sem esmalte no pé e nada de esmalte embaixo da peça',
     ],
     marca: [
-      'https://coyoteclay.com/Images/250%20Tiles/CRCactus%20Crawl%20MBG063%20RC.jpg',
+      'https://coyoteclay.com/Images/RC%20Tiles/CRCactus%20Crawl%20MBG063%20RC.jpg',
       'https://coyoteclay.com/Images/Tile%20Comparisons/Cactus%20Crawl.jpg',
     ],
   },
@@ -780,4 +780,38 @@ export async function temperaturaDoFabricante() {
     if (q && /\d{3,4}\s*°?\s*[CF]\b/.test(q)) await db.esmaltes.update(e.id, { temperaturaFabricante: q, atualizadoEm: Date.now() })
   }
   await db.ajustes.put({ chave, valor: true })
+}
+
+/**
+ * 27/11: as plaquinhas da Coyote vinham na versão de 250 px (borrada na ficha).
+ * O site da Coyote tem a mesma foto maior (500 px no Crystal Nebula, 899 px no Cactus Crawl): troca no lugar, na mesma posição.
+ */
+const PLAQUINHAS_MAIORES: Record<string, string> = {
+  'SLCrystal%20Nebula%20MBG164%20SC.jpg': 'https://coyoteclay.com/Images/SC%20Tiles/SLCrystal%20Nebula%20MBG164%20SC.jpg',
+  'CRCactus%20Crawl%20MBG063%20RC.jpg': 'https://coyoteclay.com/Images/RC%20Tiles/CRCactus%20Crawl%20MBG063%20RC.jpg',
+}
+export async function plaquinhasCoyoteMaiores() {
+  const chave = 'fix-plaquinhas-coyote-maiores-v1'
+  if (await db.ajustes.get(chave)) return
+  const { fotosDoFabricante } = await import('../lib/comercial')
+  let falhou = false
+  for (const tabela of ['esmaltes', 'comerciais'] as const) {
+    const xs = (await db.table(tabela).toArray()) as { id: string; fotos?: string[]; excluido?: number }[]
+    for (const x of xs) {
+      if (x.excluido || !x.fotos?.length) continue
+      const arqs = await db.arquivos.bulkGet(x.fotos)
+      const fotos = [...x.fotos]
+      let mudou = false
+      for (let i = 0; i < fotos.length; i++) {
+        const url = arqs[i] && !arqs[i]!.excluido ? PLAQUINHAS_MAIORES[arqs[i]!.nome] : undefined
+        if (!url) continue
+        const [nova] = await fotosDoFabricante(x.id, [url], tabela === 'esmaltes' ? 'esmalte' : 'comercial').catch(() => [])
+        if (!nova) { falhou = true; continue }
+        await db.arquivos.update(fotos[i], { excluido: 1, atualizadoEm: Date.now() })
+        fotos[i] = nova; mudou = true
+      }
+      if (mudou) await db.table(tabela).update(x.id, { fotos, atualizadoEm: Date.now() })
+    }
+  }
+  if (!falhou) await db.ajustes.put({ chave, valor: true })
 }
