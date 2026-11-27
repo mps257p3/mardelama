@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Crop, ImagePlus, Link2, Plus, RotateCcw, Search } from 'lucide-react'
+import { Crop, ImagePlus, Plus, RotateCcw, Search } from 'lucide-react'
 import { GLOSSARIO } from '../../lib/glossario'
-import { db, type Tipo } from '../../db/schema'
+import { db } from '../../db/schema'
 import { useAjuste, definirAjuste } from '../../db/settings'
 import { useArquivoUrl, salvarArquivo } from '../../db/files'
 import { SECOES, secaoDaCategoria, type SecaoBib } from '../../lib/biblioteca'
-import { buscarTodos, ROTULO, type Resumo } from '../../lib/entidades'
-import { Foto } from '../../ui/form'
+import { buscarTodos, type Resumo } from '../../lib/entidades'
 import { Menu } from '../../ui/Menu'
 import { Sheet } from '../../ui/Sheet'
+import { ResultadosBusca } from '../../ui/ResultadosBusca'
 import { EditorRecorte, estiloRecorte, salvarRecorteAjuste, useRecorteAjuste } from '../../ui/Recorte'
 
 /** Capa de uma seção: a foto escolhida pelo Marcelo; senão, a capa padrão (com reserva local se a externa falhar). */
@@ -83,7 +83,7 @@ export default function Biblioteca() {
         <input className="input" placeholder="Buscar artistas, técnicas, esmaltes, leituras…" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
 
-      {res ? <Resultados itens={res} q={q} /> : (
+      {res ? <ResultadosBusca itens={res} q={q} /> : (
         <div className="bib-feed">
           {SECOES.map((s) => <CardSecao key={s.slug} s={s} n={porSecao.get(s.slug) ?? 0} grande={GRANDES.has(s.slug)} />)}
         </div>
@@ -91,20 +91,6 @@ export default function Biblioteca() {
       {capas && <TrocarCapas onClose={() => setCapas(false)} />}
     </div>
   )
-}
-
-function Resultados({ itens, q }: { itens: Resumo[]; q: string }) {
-  const grupos = useMemo(() => { const m = new Map<Tipo, Resumo[]>(); itens.forEach((r) => m.set(r.tipo, [...(m.get(r.tipo) ?? []), r])); return [...m.entries()] }, [itens])
-  if (!itens.length) return <p className="muted" style={{ marginTop: 24 }}>Nada encontrado para “{q}”.</p>
-  return <>{grupos.map(([t, rs]) => (
-    <section key={t} style={{ marginTop: 22 }}>
-      <p className="eyebrow">{ROTULO[t]} · {rs.length}</p>
-      <div className="lista">{rs.map((r) => (
-        <Link key={r.id} to={r.to}>
-          <div className="mini">{r.foto ? <Foto id={r.foto} /> : r.fotoUrl ? <img src={r.fotoUrl} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Link2 size={18} strokeWidth={1.3} />}</div>
-          <div><div className="t">{r.titulo}</div><div className="s">{r.sub}</div></div><span />
-        </Link>))}</div>
-    </section>))}</>
 }
 
 function LinhaCapa({ s }: { s: SecaoBib }) {

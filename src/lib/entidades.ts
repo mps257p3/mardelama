@@ -39,12 +39,13 @@ export async function resumo(tipo: Tipo, id: string): Promise<Resumo | undefined
   return { tipo, id, ...d.r(x) }
 }
 
-export async function buscarTodos(q: string, limite = 40): Promise<Resumo[]> {
+export async function buscarTodos(q: string, limite = 40, tipos: Tipo[] = TIPOS_RELACIONAVEIS): Promise<Resumo[]> {
   const n = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
   const termos = n(q.trim()).split(/\s+/).filter(Boolean)
   const out: Resumo[] = []
-  for (const tipo of TIPOS_RELACIONAVEIS) {
-    const d = DEF[tipo]!
+  for (const tipo of tipos) {
+    const d = DEF[tipo]
+    if (!d) continue
     const xs = await db.table(d.tabela).toArray()
     for (const x of xs) {
       if (x.excluido) continue
