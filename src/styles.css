@@ -1590,3 +1590,9 @@ dl.fx-resumo-l dd { margin: 0; }
 .fx-cone-exp .fx-nota { display: block; font-size: 12px; }
 .fx-resumo-ir.longo { font-size: 13px; }
 .fx-faixa-fonte { display: inline-block; margin-top: 2px; font-size: 12.5px; color: var(--terracota); text-decoration: none; }
+
+/* Tela que falhou ao abrir (ex.: janela com versão antiga do app) */
+.erro-tela { max-width: 440px; margin: 48px auto; padding: 0 20px; text-align: center; color: var(--ink-2); font-size: 15px; line-height: 1.5; }
+.erro-tela-t { font-family: var(--serif); font-size: 24px; color: var(--ink); margin: 0 0 8px; }
+.erro-tela .btn { margin-top: 16px; }
+.erro-tela-d { margin-top: 16px; font-size: 12px; color: var(--ink-3); overflow-wrap: anywhere; }

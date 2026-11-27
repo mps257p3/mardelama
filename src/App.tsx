@@ -1,6 +1,7 @@
 import { lazy, type ComponentType } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Layout } from './ui/Layout'
+import { podeRecarregarSozinho, recarregarComVersaoNova } from './lib/versaoNova'
 import { ToastProvider } from './ui/toast'
 import Home from './pages/Home'
 import { SECOES, SECOES_PROPRIAS } from './lib/biblioteca'
@@ -11,11 +12,11 @@ import { SECOES, SECOES_PROPRIAS } from './lib/biblioteca'
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function carregar<T extends ComponentType<any>>(f: () => Promise<{ default: T }>) {
-  const marca = { ler: () => { try { return sessionStorage.getItem('recarregou-versao') } catch { return '1' } }, por: (v?: string) => { try { if (v) sessionStorage.setItem('recarregou-versao', v); else sessionStorage.removeItem('recarregou-versao') } catch { /* sem armazenamento */ } } }
   return lazy(() => f().catch((e) => {
-    if (!marca.ler()) { marca.por('1'); location.reload(); return new Promise<never>(() => {}) }
+    // versão antiga aberta pedindo arquivo que sumiu: busca a nova e recarrega (no máximo uma vez a cada 30 s)
+    if (podeRecarregarSozinho()) { void recarregarComVersaoNova(); return new Promise<never>(() => {}) }
     throw e
-  }).then((m) => { marca.por(); return m }))
+  }))
 }
 
 const Ajustes = carregar(() => import('./pages/Ajustes'))
