@@ -11,6 +11,7 @@ import { definirContexto, emFluxoDeCadastro } from '../lib/contexto'
 import { progressoSync } from '../db/sync'
 import { trocouDeTela } from '../lib/atualizacao'
 import { ErroTela } from './ErroTela'
+import { buscarVersaoNova } from '../lib/versaoNova'
 
 const AREA_DA_ROTA: [RegExp, string][] = [
   [/^\/(superficies|esmaltes|receitas|testes|testoteca|laboratorio|queimas|bancada|familias|curvas|engenharia-reversa|compras)/, 'esmaltes'],
@@ -47,7 +48,7 @@ export function Layout() {
       <main className="main" style={area ? { ['--area' as string]: `var(--c-${area})` } : undefined}>
         <ErroTela chave={pathname}><Suspense fallback={<div className="carregando-tela" aria-busy="true" />}><Outlet /></Suspense></ErroTela>
         <ProgressoSync />
-        <footer className="versao">Versão de {new Date(__VERSAO__).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })}</footer>
+        <RodapeVersao />
       </main>
 
       <nav className="bottom" aria-label="Navegação principal">
@@ -85,4 +86,19 @@ function ProgressoSync() {
   useEffect(() => { const f = (e: Event) => setT((e as CustomEvent<string | undefined>).detail); window.addEventListener('sync-progresso', f); return () => window.removeEventListener('sync-progresso', f) }, [])
   if (!t) return null
   return <div className="sync-pill" role="status"><RefreshCw size={13} className="gira" />{t}</div>
+}
+
+/** Versão no rodapé. Tocar busca na hora se há versão nova publicada. */
+function RodapeVersao() {
+  const [estado, setEstado] = useState<'' | 'buscando' | 'atual' | 'offline' | 'nova'>('')
+  const data = new Date(__VERSAO__).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })
+  const msg = { '': '', buscando: 'Buscando versão nova…', nova: 'Versão nova encontrada. Recarregando…', atual: 'Você já está na versão mais recente. Se acabou de aprovar uma mudança, a publicação leva uns 2 minutos: toque de novo depois.', offline: 'Sem internet agora. Tente de novo quando estiver conectado.' }[estado]
+  return (
+    <footer className="versao">
+      <button className="versao-b" disabled={estado === 'buscando' || estado === 'nova'} onClick={async () => { setEstado('buscando'); setEstado(await buscarVersaoNova().catch(() => 'atual' as const)) }}>
+        <RefreshCw size={12} strokeWidth={1.6} className={estado === 'buscando' ? 'gira' : undefined} aria-hidden />Versão de {data} · buscar atualização
+      </button>
+      {msg && <p className="versao-msg" role="status">{msg}</p>}
+    </footer>
+  )
 }
