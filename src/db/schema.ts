@@ -486,6 +486,7 @@ export interface Artista extends Base {
   nascimento?: string          // ex.: "1981, Hiroshima" (só se documentado)
   retrato?: string             // URL da fotografia do artista (fonte oficial)
   capa?: string                // id da obra de destaque
+  capaRecorte?: { x: number; y: number; zoom: number } // enquadramento da capa (não altera a foto)
   especialidade?: string
   linguagem?: string           // breve descrição da linguagem artística
   bio?: string                 // biografia (texto simples, parágrafos separados por linha em branco)
@@ -587,6 +588,7 @@ export interface Serie extends Base {
   ano?: string
   status: 'ativa' | 'pausada' | 'concluida'
   capa?: string                // id de Arquivo
+  capaRecorte?: { x: number; y: number; zoom: number } // enquadramento da capa (não altera a foto)
   observacoes: Observacao[]
   tags: string[]
 }

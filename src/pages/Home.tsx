@@ -10,6 +10,7 @@ import { useArquivoUrl } from '../db/files'
 import { useAjuste } from '../db/settings'
 import { AREAS } from '../ui/nav'
 import { Monograma } from '../ui/Monograma'
+import { estiloRecorte, useRecorteAjuste } from '../ui/Recorte'
 import { useDestaqueCfg, useSecoesInicio, type SecaoId } from '../lib/inicio'
 
 const vivos = <T extends { excluido?: 0 | 1 }>(xs: T[]) => xs.filter((x) => !x.excluido)
@@ -19,6 +20,12 @@ export function useFotoArea(slug: string) {
   const url = useArquivoUrl(id)
   return url ?? `/areas/${slug}.jpg`
 }
+/** Enquadramento da foto própria de uma área (a padrão fica centralizada). */
+export function useEstiloFotoArea(slug: string) {
+  const id = useAjuste<string | undefined>(`area.foto.${slug}`, undefined)
+  const r = useRecorteAjuste(`area.foto.${slug}`)
+  return id ? estiloRecorte(r) : undefined
+}
 
 const DESC_AREA: Record<string, string> = {
   esmaltes: 'Materiais e superfícies', referencias: 'Repertório visual', biblioteca: 'Conhecimento e pesquisa', caderno: 'Ideias e processos',
@@ -26,10 +33,11 @@ const DESC_AREA: Record<string, string> = {
 
 function CardArea({ a }: { a: (typeof AREAS)[number] }) {
   const src = useFotoArea(a.slug)
+  const estilo = useEstiloFotoArea(a.slug)
   const I = a.icon
   return (
     <Link to={a.to} className="card-area">
-      <span className="foto"><img src={src} alt="" loading="lazy" /></span>
+      <span className="foto"><img src={src} alt="" loading="lazy" style={estilo} /></span>
       <span className="nome"><I size={15} strokeWidth={1.5} style={{ color: a.cor }} />{a.nome}<ArrowUpRight size={14} strokeWidth={1.4} className="seta" aria-hidden /></span>
       {DESC_AREA[a.slug] && <span className="desc">{DESC_AREA[a.slug]}</span>}
     </Link>
@@ -42,7 +50,7 @@ export function Destaque({ editar = true }: { editar?: boolean }) {
   const cfg = useDestaqueCfg()
   return (
     <figure className={'destaque' + (cfg.tituloSobre ? ' sobre' : '')}>
-      <img src={url ?? '/destaque-padrao.jpg'} alt={url ? "Fotografia de destaque" : "Raposa, obra de Marcelo Parducci"} style={{ objectPosition: url ? `${cfg.x}% ${cfg.y}%` : '50% 45%' }} />
+      <img src={url ?? '/destaque-padrao.jpg'} alt={url ? "Fotografia de destaque" : "Raposa, obra de Marcelo Parducci"} style={url ? estiloRecorte({ x: cfg.x / 100, y: cfg.y / 100, zoom: cfg.zoom ?? 1 }) : { objectPosition: '50% 45%' }} />
       {cfg.tituloSobre && (
         <figcaption style={{ color: cfg.tituloClaro ? 'var(--marfim)' : 'var(--carvao)' }}>
           <h1>Mar de Lama</h1>

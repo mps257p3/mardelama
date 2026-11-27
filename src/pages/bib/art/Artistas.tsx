@@ -12,6 +12,7 @@ import { Menu } from '../../../ui/Menu'
 import { Sheet } from '../../../ui/Sheet'
 import { HeroSecao } from '../SecaoBiblioteca'
 import { ImgObra } from './ImgObra'
+import { estiloRecorte } from '../../../ui/Recorte'
 import { PesquisaIA } from './PesquisaIA'
 import { alternarFavorito, excluir } from '../../../db/hooks'
 import { ignorarSugestao, sugerirArtistas, type SugestaoArtista } from '../../../lib/sugestaoArtistas'
@@ -40,7 +41,7 @@ function CardArtista({ a, capa, lista, onMenu }: { a: Artista; capa?: Obra; list
       onTouchEnd={(e) => { parar(); if (abriu.current) e.preventDefault() }} onTouchCancel={parar}
       onContextMenu={(e) => { e.preventDefault(); if (!abriu.current) { parar(); onMenu(a) } }}
       onClick={(e) => { if (abriu.current) { e.preventDefault(); abriu.current = false } }}>
-      <span className="ph"><ImgObra o={capa} alt={capa?.titulo ?? a.nome} /></span>
+      <span className="ph"><ImgObra o={capa} alt={capa?.titulo ?? a.nome} style={!lista && capa && capa.id === a.capa ? estiloRecorte(a.capaRecorte) : undefined} /></span>
       <span className="txt">
         <span className="pais">{a.pais.join(' / ') || 'País não documentado'}</span>
         <span className="nome">{a.nome}{a.favorito ? <Heart size={13} fill="currentColor" className="fav" aria-label="Favorito" /> : null}</span>

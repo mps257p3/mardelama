@@ -17,6 +17,6 @@ export function mesclarSecoes(salvo?: SecaoCfg[]): SecaoCfg[] {
 }
 export const useSecoesInicio = () => mesclarSecoes(useAjuste<SecaoCfg[] | undefined>('inicio.secoes', undefined))
 
-export interface DestaqueCfg { x: number; y: number; credito?: string; tituloSobre?: boolean; tituloClaro?: boolean }
+export interface DestaqueCfg { x: number; y: number; zoom?: number; credito?: string; tituloSobre?: boolean; tituloClaro?: boolean }
 export const DESTAQUE_PADRAO: DestaqueCfg = { x: 50, y: 35, tituloSobre: false, tituloClaro: true }
 export const useDestaqueCfg = () => ({ ...DESTAQUE_PADRAO, ...useAjuste<Partial<DestaqueCfg>>('destaque.cfg', {}) })

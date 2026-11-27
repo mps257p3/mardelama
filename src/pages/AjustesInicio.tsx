@@ -1,11 +1,13 @@
-import { useEffect, useRef } from 'react'
-import { ArrowDown, ArrowUp, Eye, EyeOff, ImagePlus, RotateCcw } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { ArrowDown, ArrowUp, Crop, Eye, EyeOff, ImagePlus, RotateCcw } from 'lucide-react'
 import { db } from '../db/schema'
 import { salvarArquivo } from '../db/files'
 import { definirAjuste, useAjuste } from '../db/settings'
 import { AREAS } from '../ui/nav'
 import { useToast } from '../ui/toast'
-import { Destaque, useFotoArea } from './Home'
+import { Destaque, useEstiloFotoArea, useFotoArea } from './Home'
+import { useArquivoUrl } from '../db/files'
+import { EditorRecorte, salvarRecorteAjuste, useRecorteAjuste } from '../ui/Recorte'
 import { SECOES_INICIO, useDestaqueCfg, useSecoesInicio, type DestaqueCfg } from '../lib/inicio'
 
 function escolherImagem(): Promise<File | undefined> {
@@ -25,6 +27,7 @@ async function trocarImagem(chave: string, atual: string | undefined, dono: stri
 async function restaurarImagem(chave: string, atual?: string) {
   if (atual) await db.arquivos.delete(atual)
   await db.ajustes.delete(chave)
+  await db.ajustes.delete(chave + '.recorte')
 }
 
 function FotoArea({ a }: { a: (typeof AREAS)[number] }) {
@@ -32,16 +35,22 @@ function FotoArea({ a }: { a: (typeof AREAS)[number] }) {
   const chave = `area.foto.${a.slug}`
   const atual = useAjuste<string | undefined>(chave, undefined)
   const src = useFotoArea(a.slug)
+  const estilo = useEstiloFotoArea(a.slug)
+  const recorte = useRecorteAjuste(chave)
+  const [editar, setEditar] = useState(false)
   return (
     <div className="ajuste-area">
-      <img src={src} alt="" />
+      <span className="ajuste-area-foto"><img src={src} alt="" style={estilo} /></span>
       <div className="info">
         <span style={{ fontWeight: 500 }}>{a.nome}</span>
         <div style={{ display: 'flex', gap: 4 }}>
-          <button className="btn sm" onClick={async () => { if (await trocarImagem(chave, atual, 'area-' + a.slug)) toast(`Foto de ${a.nome} atualizada`) }}><ImagePlus size={14} />Trocar</button>
+          <button className="btn sm" onClick={async () => { if (await trocarImagem(chave, atual, 'area-' + a.slug)) { await salvarRecorteAjuste(chave, undefined); setEditar(true) } }}><ImagePlus size={14} />Trocar</button>
+          {atual && <button className="iconbtn" aria-label="Reenquadrar foto" onClick={() => setEditar(true)}><Crop size={16} /></button>}
           {atual && <button className="iconbtn" aria-label="Restaurar foto original" onClick={() => restaurarImagem(chave, atual).then(() => toast('Foto original restaurada'))}><RotateCcw size={16} /></button>}
         </div>
       </div>
+      {editar && <EditorRecorte src={src} aspecto={3 / 2} valor={recorte} titulo={`Reenquadrar · ${a.nome}`}
+        onSalvar={async (r) => { await salvarRecorteAjuste(chave, r); toast(`Foto de ${a.nome} atualizada`) }} onClose={() => setEditar(false)} />}
     </div>
   )
 }
@@ -49,6 +58,8 @@ function FotoArea({ a }: { a: (typeof AREAS)[number] }) {
 export function AjustesInicio() {
   const toast = useToast()
   const destaque = useAjuste<string | undefined>('destaque', undefined)
+  const urlDestaque = useArquivoUrl(destaque)
+  const [enquadrar, setEnquadrar] = useState(false)
   const cfg = useDestaqueCfg()
   const secoes = useSecoesInicio()
   const ref = useRef<HTMLElement>(null)
@@ -66,12 +77,11 @@ export function AjustesInicio() {
       <p className="rotulo-ajuste">Fotografia de destaque</p>
       <Destaque editar={false} />
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
-        <button className="btn sm primary" onClick={async () => { if (await trocarImagem('destaque', destaque, 'destaque')) { await muda({ x: 50, y: 50 }); toast('Fotografia de destaque atualizada') } }}><ImagePlus size={14} />Trocar fotografia</button>
+        <button className="btn sm primary" onClick={async () => { if (await trocarImagem('destaque', destaque, 'destaque')) { await muda({ x: 50, y: 50, zoom: 1 }); setEnquadrar(true) } }}><ImagePlus size={14} />Trocar fotografia</button>
+        {destaque && <button className="btn sm" onClick={() => setEnquadrar(true)}><Crop size={14} />Reenquadrar</button>}
         {destaque && <button className="btn sm" onClick={() => restaurarImagem('destaque', destaque).then(() => toast('Fotografia original restaurada'))}><RotateCcw size={14} />Restaurar original</button>}
       </div>
       <div className="form" style={{ marginTop: 16 }}>
-        <div className="field"><label>Enquadramento horizontal</label><input type="range" min={0} max={100} value={cfg.x} onChange={(e) => muda({ x: +e.target.value })} /></div>
-        <div className="field"><label>Enquadramento vertical</label><input type="range" min={0} max={100} value={cfg.y} onChange={(e) => muda({ y: +e.target.value })} /></div>
         <div className="field"><label>Crédito da imagem (opcional)</label><input className="input" placeholder="ex.: @artista" defaultValue={cfg.credito ?? ''} onBlur={(e) => muda({ credito: e.target.value.trim() || undefined })} /></div>
         <div className="field">
           <label>Título</label>
@@ -82,6 +92,9 @@ export function AjustesInicio() {
           </div>
         </div>
       </div>
+
+      {enquadrar && <EditorRecorte src={urlDestaque} aspecto={2.15} valor={{ x: cfg.x / 100, y: cfg.y / 100, zoom: cfg.zoom ?? 1 }} titulo="Reenquadrar fotografia de destaque"
+        onSalvar={async (r) => { await muda({ x: Math.round(r.x * 1000) / 10, y: Math.round(r.y * 1000) / 10, zoom: r.zoom }); toast('Fotografia de destaque atualizada') }} onClose={() => setEnquadrar(false)} />}
 
       <p className="rotulo-ajuste">Fotografias das áreas</p>
       <div className="ajuste-areas">{AREAS.map((a) => <FotoArea key={a.slug} a={a} />)}</div>

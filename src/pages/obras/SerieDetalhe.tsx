@@ -2,13 +2,15 @@ import { Voltar } from '../../ui/Voltar'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ImageIcon, Plus, Sparkles, Trash2 } from 'lucide-react'
+import { Crop, ImageIcon, Plus, Sparkles, Trash2 } from 'lucide-react'
 import { db, type Serie } from '../../db/schema'
 import { excluir } from '../../db/hooks'
 import { vivos } from '../../lib/artistas'
 import { salvarArquivo } from '../../db/files'
 import { Foto, Tags } from '../../ui/form'
 import { Menu } from '../../ui/Menu'
+import { EditorRecorte, estiloRecorte } from '../../ui/Recorte'
+import { useArquivoUrl } from '../../db/files'
 import { Relacoes } from '../../ui/Relacoes'
 import { TextoEditavel } from '../../ui/editavel'
 import { ArtistasParecidos } from './ArtistasParecidos'
@@ -23,6 +25,9 @@ export default function SerieDetalhe() {
   const pecas = useLiveQuery(async () => vivos(await db.entrada.where('serieId').equals(id!).toArray()).map(normPeca).sort((a, b) => a.criadoEm - b.criadoEm), [id], [])
   const arq = useRef<HTMLInputElement>(null)
   const [criando, setCriando] = useState(false)
+  const fig = useRef<HTMLElement>(null)
+  const [recortar, setRecortar] = useState<number>()
+  const urlCapa = useArquivoUrl((bruto as Serie | undefined)?.capa)
   const recem = sp.get('novo') === '1'
 
   // série criada e abandonada sem nome nem conteúdo: não fica sobrando
@@ -38,6 +43,7 @@ export default function SerieDetalhe() {
   const s = normSerie(bruto)
   const salvar = (x: Partial<Serie>) => db.projetos.update(s.id, { ...x, atualizadoEm: Date.now() })
   const capa = s.capa ?? pecas.find((p) => p.fotos[0])?.fotos[0]
+  const abrirRecorte = () => { const el = fig.current; setRecortar(el && el.clientHeight ? el.clientWidth / el.clientHeight : 0.85) }
   const obras = pecas.filter((p) => p.tipo === 'obra'), estudos = pecas.filter((p) => p.tipo === 'estudo')
   async function adicionar(tipo: 'obra' | 'estudo') {
     if (criando) return
@@ -51,14 +57,17 @@ export default function SerieDetalhe() {
         <Voltar to="/obras?aba=series">Séries</Voltar>
         <Menu itens={[
           { l: 'Trocar foto de capa', icon: <ImageIcon size={16} />, onClick: () => arq.current?.click() },
+          ...(s.capa ? [{ l: 'Reenquadrar capa', icon: <Crop size={16} />, onClick: () => abrirRecorte() }] : []),
           { sep: true, l: '' },
           { l: 'Excluir série', icon: <Trash2 size={16} />, onClick: async () => { if (confirm('Excluir esta série? As peças continuam em Minhas obras, sem série.')) { await excluir('projetos', s.id); nav('/obras?aba=series') } } },
         ]} />
       </div>
-      <input ref={arq} type="file" accept="image/*" hidden onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) await salvar({ capa: await salvarArquivo(f) }) }} />
+      <input ref={arq} type="file" accept="image/*" hidden onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) { await salvar({ capa: await salvarArquivo(f), capaRecorte: undefined }); abrirRecorte() } }} />
 
-      <figure className="art-capa" onClick={() => !capa && arq.current?.click()}>
-        {capa ? <Foto id={capa} alt={s.nome} /> : <span className="obra-sem"><ImageIcon size={22} strokeWidth={1.2} /><span>Toque para escolher a foto de capa</span></span>}
+      {recortar && <EditorRecorte src={urlCapa} aspecto={recortar} valor={s.capaRecorte} titulo="Reenquadrar capa da série"
+        onSalvar={(r) => salvar({ capaRecorte: r })} onClose={() => setRecortar(undefined)} />}
+      <figure ref={fig} className="art-capa" onClick={() => !capa && arq.current?.click()}>
+        {capa ? <Foto id={capa} alt={s.nome} style={s.capa === capa ? estiloRecorte(s.capaRecorte) : undefined} /> : <span className="obra-sem"><ImageIcon size={22} strokeWidth={1.2} /><span>Toque para escolher a foto de capa</span></span>}
       </figure>
       <header className="art-titulo">
         <p className="eyebrow">Série{s.ano ? ` · ${s.ano}` : ''}</p>
