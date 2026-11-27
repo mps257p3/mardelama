@@ -133,7 +133,6 @@ export function AtlasEfeitos({ e }: { e: Esmalte }) {
           </li>
         ))}
       </ul>
-      <p className="fx-atlas-leg">Infográficos esquemáticos e registros fotográficos próprios, quando disponíveis.</p>
       {aberto && <PainelFenomeno e={e} tipo={aberto.tipo} status={aberto.status} onClose={() => setAberto(undefined)} />}
     </>
   )
