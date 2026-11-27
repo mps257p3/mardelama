@@ -796,11 +796,12 @@ export async function plaquinhasCoyoteMaiores() {
   const { fotosDoFabricante } = await import('../lib/comercial')
   let falhou = false
   for (const tabela of ['esmaltes', 'comerciais'] as const) {
-    const xs = (await db.table(tabela).toArray()) as { id: string; fotos?: string[]; excluido?: number }[]
+    const xs = (await db.table(tabela).toArray()) as { id: string; fotos?: string[]; excluido?: number; fotosRecorte?: Record<string, unknown> }[]
     for (const x of xs) {
       if (x.excluido || !x.fotos?.length) continue
       const arqs = await db.arquivos.bulkGet(x.fotos)
       const fotos = [...x.fotos]
+      const trocas: [string, string][] = []
       let mudou = false
       for (let i = 0; i < fotos.length; i++) {
         const url = arqs[i] && !arqs[i]!.excluido ? PLAQUINHAS_MAIORES[arqs[i]!.nome] : undefined
@@ -808,10 +809,38 @@ export async function plaquinhasCoyoteMaiores() {
         const [nova] = await fotosDoFabricante(x.id, [url], tabela === 'esmaltes' ? 'esmalte' : 'comercial').catch(() => [])
         if (!nova) { falhou = true; continue }
         await db.arquivos.update(fotos[i], { excluido: 1, atualizadoEm: Date.now() })
-        fotos[i] = nova; mudou = true
+        trocas.push([fotos[i], nova]); fotos[i] = nova; mudou = true
       }
-      if (mudou) await db.table(tabela).update(x.id, { fotos, atualizadoEm: Date.now() })
+      if (mudou) {
+        // o enquadramento salvo vai junto para a foto nova (lido de novo: pode ter mudado durante o download)
+        const agora = (await db.table(tabela).get(x.id)) as typeof x | undefined
+        const rec = { ...(agora?.fotosRecorte ?? {}) }
+        for (const [de, para] of trocas) if (rec[de] && !rec[para]) { rec[para] = rec[de]; delete rec[de] }
+        await db.table(tabela).update(x.id, { fotos, ...(agora?.fotosRecorte ? { fotosRecorte: rec } : {}), atualizadoEm: Date.now() })
+      }
     }
   }
   if (!falhou) await db.ajustes.put({ chave, valor: true })
+}
+
+/**
+ * 27/11: enquadramento salvo numa foto que depois foi trocada pela mesma foto em versão maior ficava "perdido".
+ * Leva o enquadramento para a foto atual que tem o mesmo nome de arquivo.
+ */
+export async function recortesOrfaos() {
+  for (const e of await db.esmaltes.toArray()) {
+    const rec = e.fotosRecorte
+    if (e.excluido || !rec) continue
+    const soltos = Object.keys(rec).filter((k) => !e.fotos.includes(k))
+    if (!soltos.length) continue
+    const atuais = await db.arquivos.bulkGet(e.fotos)
+    const novo = { ...rec }
+    for (const k of soltos) {
+      const velho = await db.arquivos.get(k)
+      const i = velho ? atuais.findIndex((a) => a && !a.excluido && a.nome === velho.nome) : -1
+      if (i >= 0 && !novo[e.fotos[i]]) novo[e.fotos[i]] = rec[k]
+      delete novo[k]
+    }
+    await db.esmaltes.update(e.id, { fotosRecorte: novo, atualizadoEm: Date.now() })
+  }
 }
