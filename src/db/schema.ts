@@ -86,15 +86,17 @@ export interface Esmalte extends Base {
 }
 
 /** Origem de um grupo de informações da ficha (agrupada, não linha a linha). */
-export type OrigemDado = 'fabricante' | 'referencia' | 'receita' | 'experimento' | 'pessoal' | 'ia'
+export type OrigemDado = 'fabricante' | 'rotulo' | 'distribuidor' | 'revendedor' | 'referencia' | 'receita' | 'experimento' | 'pessoal' | 'ia'
 export interface FonteGrupo { origem?: OrigemDado; fonte?: string; data?: string }
 /** 1 muito baixo … 5 muito alto. Atributo não avaliado simplesmente não existe no registro. */
 export type Nivel = 1 | 2 | 3 | 4 | 5
 export interface PerfilEsmalte {
   visual?: Record<string, string>                 // coresSecundarias, subtons, variacao, corFina, corEspessa, corAcumulo
   comportamento?: Record<string, Nivel>           // chaves em ATRIBUTOS_COMPORTAMENTO
-  comportamentoNota?: Record<string, string>      // descrição sem escala (ex.: frase do fabricante), quando não há nível justificável
-  comportamentoOrigem?: Record<string, OrigemDado> // de quem é cada classificação: fabricante, você, IA…
+  comportamentoNota?: Record<string, string>      // explicação técnica (texto), sem escala quando não há nível justificável
+  comportamentoOrigem?: Record<string, OrigemDado> // de quem é cada classificação: fabricante, distribuidor, você, IA…
+  comportamentoClasse?: Record<string, string>    // classificação curta em texto (ex.: "Variável"), quando não há nível
+  comportamentoCondicoes?: Record<string, string> // condições de validade (cone, aplicação, sobreposição…)
   efeitos?: string[]                              // comportamentos identificados (pictogramas): chaves em PICTOGRAMAS
   superficie?: Record<string, string[]>           // geometria → comportamentos observados
   expressivo?: string[]                           // adequações comprovadas
@@ -134,7 +136,8 @@ export interface ResultadoFluidez {
   escorrimentoMm?: string    // distância publicada, em mm
 }
 export interface FluidezQueima {
-  situacao: 'oficial' | 'descritiva' | 'nao-informada'   // classificação formal, só descrição, ou nada publicado
+  situacao: 'oficial' | 'descritiva' | 'nao-informada' | 'indisponivel'   // classificação formal, só descrição, nada publicado, ou consulta que não chegou ao fim
+  falhaEm?: string           // AAAA-MM-DD da última consulta que não terminou
   resultados: ResultadoFluidez[]   // um por cone/temperatura; nunca extrapolar de um para outro
   espessura?: string
   sobreposicao?: string

@@ -101,7 +101,8 @@ export const VERIFICACAO = { sim: 'Sim', nao: 'Não', 'nao-verificado': 'Não ve
 export const DEFEITOS_FICHA = ['Craquelamento', 'Descascamento', 'Crawling (retração)', 'Bolhas', 'Pinholes', 'Crateras', 'Escorrimento excessivo', 'Cobertura irregular', 'Desvitrificação indesejada', 'Alteração inesperada de cor'] as const
 
 export const ORIGENS: Record<OrigemDado, string> = {
-  fabricante: 'Fabricante', referencia: 'Referência técnica', receita: 'Receita original', experimento: 'Experimento próprio', pessoal: 'Observação pessoal', ia: 'Interpretação da IA',
+  fabricante: 'Fabricante', rotulo: 'Rótulo do fabricante', distribuidor: 'Distribuidor ou importador', revendedor: 'Revendedor',
+  referencia: 'Publicação técnica', receita: 'Receita original', experimento: 'Experimento próprio', pessoal: 'Observação pessoal', ia: 'Interpretação da IA',
 }
 
 /** Código comercial e linha que ficam nas observações ("Código do produto: PC-602 (Mayco, linha Pottery Cascade)"). */

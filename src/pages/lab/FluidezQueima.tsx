@@ -41,11 +41,13 @@ export function FluidezQueima({ e, embutida, soTestes, soFabricante }: { e: Esma
       {!embutida && <p className="faint fluidez-nota">Como o esmalte fundido se move e escorre na queima. Não é a consistência do esmalte líquido antes de aplicar.</p>}
 
       {!soTestes && <div className="fluidez-bloco">
-        <p className="fluidez-origem">{!f || f.situacao === 'nao-informada' ? <span className="selo">Fabricante</span> : f.situacao === 'descritiva' ? <span className="selo interpretacao">Descrição do fabricante</span> : <span className="selo verificado">Oficial do fabricante</span>}</p>
-        {!f && <p className="muted">Ainda não consultado. Toque em Atualizar informações do fabricante.</p>}
+        <p className="fluidez-origem">{!f || f.situacao === 'nao-informada' || f.situacao === 'indisponivel' ? <span className="selo">Fabricante</span> : f.situacao === 'descritiva' ? <span className="selo interpretacao">Descrição do fabricante</span> : <span className="selo verificado">Oficial do fabricante</span>}</p>
+        {!f && <p className="muted">A consulta específica de fluidez ainda não foi feita. Toque em Atualizar informações do fabricante.</p>}
+        {f?.situacao === 'indisponivel' && <p className="muted">A consulta não foi concluída{f.falhaEm ? ` (${data(f.falhaEm)})` : ''}. Tente de novo mais tarde.</p>}
+        {f?.falhaEm && f.situacao !== 'indisponivel' && <p className="faint" style={{ fontSize: 12.5 }}>A última tentativa de atualizar ({data(f.falhaEm)}) não foi concluída; abaixo, a consulta anterior.</p>}
         {f?.situacao === 'nao-informada' && <p className="fluidez-vazia">Fluidez não informada pelo fabricante.</p>}
         {f?.situacao === 'descritiva' && <p className="faint" style={{ fontSize: 13 }}>O fabricante não tem uma classificação formal de fluidez; abaixo, o que ele descreve.</p>}
-        {f && f.situacao !== 'nao-informada' && f.resultados.map((r, i) => (
+        {f && f.situacao !== 'nao-informada' && f.situacao !== 'indisponivel' && f.resultados.map((r, i) => (
           <div className="fluidez-res" key={i}>
             {r.classificacao && <p className="fluidez-termo"><b>{r.classificacao}</b>{r.traducao && <span> · {r.traducao}</span>}</p>}
             {(r.cone || r.temperatura) && <p className="fluidez-cone">{[r.cone && 'Cone ' + r.cone.replace(/^cone\s*/i, ''), r.temperatura].filter(Boolean).join(' · ')}</p>}
