@@ -1628,3 +1628,6 @@ dl.fx-resumo-l dd { margin: 0; }
 .recorte-zoom input { flex: 1; }
 .recorte-acoes { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
 .btn-recorte { position: absolute; z-index: 2; }
+
+/* valor da temperatura no resumo da ficha: menor que cone e atmosfera, para caber numa linha */
+.fx-temp-v { font-size: .78em; white-space: nowrap; }
