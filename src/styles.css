@@ -1588,3 +1588,5 @@ dl.fx-resumo-l dd { margin: 0; }
 .fx-cone-exp p { margin: 0; }
 .fx-cone-exp p + p { margin-top: 6px; }
 .fx-cone-exp .fx-nota { display: block; font-size: 12px; }
+.fx-resumo-ir.longo { font-size: 13px; }
+.fx-faixa-fonte { display: inline-block; margin-top: 2px; font-size: 12.5px; color: var(--terracota); text-decoration: none; }

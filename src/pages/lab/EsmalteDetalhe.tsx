@@ -127,7 +127,7 @@ export default function EsmalteDetalhe() {
         <div className="fx-resumo">
           {e.descricao && <TextoCurto texto={e.descricao} />}
           <QueimaResumo e={e} />
-          <ResumoLinhas itens={[['Outras queimas documentadas', outrasQueimas(e).join(' · ') || undefined, () => irParaDetalhe('queima')], ['Fluidez na queima', fluidezCurta(e), () => irParaDetalhe('fluidez')], ['Segurança alimentar', segurancaCurta(e), () => irParaDetalhe('seguranca')]]} />
+          <ResumoLinhas itens={[['Fluidez na queima', fluidezCurta(e), () => irParaDetalhe('fluidez')], ['Segurança alimentar', segurancaCurta(e), () => irParaDetalhe('seguranca')], ['Outras queimas documentadas', outrasQueimas(e).join(' · ') || undefined, () => irParaDetalhe('queima')]]} />
           {alertas.length > 0 && <ul className="fx-alertas" aria-label="Alertas">{alertas.map((a) => <li key={a}><AlertTriangle size={14} strokeWidth={1.6} />{a}</li>)}</ul>}
         </div>
       </div>
@@ -170,6 +170,6 @@ function ResumoLinhas({ itens }: { itens: [string, string | undefined, () => voi
   const xs = itens.filter(([, v]) => v)
   if (!xs.length) return null
   return <dl className="fx-resumo-l">{xs.map(([k, v, ir]) => (
-    <div key={k}><dt>{k}</dt><dd><button className="fx-resumo-ir" onClick={ir}>{v}<ChevronRight size={14} strokeWidth={1.6} aria-hidden /></button></dd></div>
+    <div key={k}><dt>{k}</dt><dd><button className={'fx-resumo-ir' + (v!.length > 28 ? ' longo' : '')} onClick={ir}>{v}<ChevronRight size={14} strokeWidth={1.6} aria-hidden /></button></dd></div>
   ))}</dl>
 }
