@@ -1322,3 +1322,69 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
 @media (max-width: 520px) { .fx-form-origem { grid-template-columns: 1fr 1fr; } .fx-form-origem > :nth-child(2) { grid-column: 1 / -1; grid-row: 2; } }
 .fx-form-def { display: grid; gap: 8px; padding: 12px 0; border-top: 1px solid var(--line); }
 .fx-check { display: flex; align-items: center; gap: 8px; font-size: 13.5px; min-height: 44px; }
+
+/* Ficha do esmalte, revisão 27/11: identidade antes da foto, foto mais baixa, menos rolagem */
+.fx-id { margin: 0 0 14px; }
+.fx-nome { margin-top: 6px; font-size: 30px; }
+.fx-familia { margin-top: 4px; }
+.fx-capa { gap: 14px; }
+.fx-foto { aspect-ratio: 16/9; }
+.fx-thumbs { gap: 6px; margin-top: 6px; }
+.fx-thumbs button { width: 52px; height: 52px; border-radius: 2px; overflow: hidden; }
+.fx-resumo .fx-desc { margin-top: 0; }
+.fx-grade { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 16px; margin-top: 14px; }
+.fx-grade div { padding: 8px 0; }
+.fx-grade dd { font-size: 15.5px; margin-top: 2px; }
+.fx-grade dt { font-size: 10.5px; }
+.fx-alertas { margin-top: 12px; gap: 6px; }
+.fx-abas { margin-top: 20px; gap: 22px; }
+@media (min-width: 640px) { .fx-abas { margin-top: 28px; } }
+.fx-conteudo { padding-bottom: 72px; min-height: 50vh; }
+.fx-grupo { padding: 18px 0 4px; }
+.fx-grupo h3 { font-size: 19px; margin-bottom: 6px; }
+.fx-tabela div { gap: 12px; padding: 7px 0; grid-template-columns: minmax(110px, 2fr) 3fr; }
+.fx-tabela div.longo { grid-template-columns: 1fr; gap: 2px; }
+.fx-tabela div.longo dt { padding-top: 0; }
+.fx-tabela .fx-nota { margin-top: 1px; }
+.fx-inds { gap: 12px; }
+.fx-origem { margin-top: 6px; }
+.fx-par { margin-top: 6px; line-height: 1.55; }
+
+/* texto técnico estruturado: rótulo em cima, conteúdo na largura toda */
+.fx-estr { margin: 0; }
+.fx-estr > div { padding: 8px 0; border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+.fx-estr > div:last-child { border-bottom: 0; }
+.fx-estr dt { font: 500 11px/1.3 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 2px; }
+.fx-estr dd { margin: 0; font-size: 15px; line-height: 1.5; }
+.fx-estr ul { margin: 0; padding: 0 0 0 16px; }
+.fx-estr li { margin: 2px 0; }
+.fx-estr li::marker { color: var(--ink-3); }
+
+/* bloco recolhido e atalho compacto */
+.fx-rec { border-top: 1px solid var(--line); margin-top: 8px; }
+.fx-rec-b { all: unset; box-sizing: border-box; width: 100%; min-height: 44px; display: flex; align-items: center; gap: 10px; cursor: pointer; font: 500 13.5px/1.3 var(--sans); color: var(--ink); }
+.fx-rec-b > span:first-child { flex: none; }
+.fx-rec-r { flex: 1; min-width: 0; font-weight: 400; font-size: 12.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fx-rec-b i { font-style: normal; font-size: 18px; color: var(--ink-3); margin-left: auto; }
+.fx-rec-c { padding: 0 0 8px; }
+.fx-atalho { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 6px 0; border-top: 1px solid var(--line); color: inherit; text-decoration: none; }
+.fx-atalho b { font-weight: 500; font-size: 14.5px; }
+.fx-atalho svg { flex: none; color: var(--ink-3); }
+.fx-ressalva { margin-top: 8px; padding-left: 12px; border-left: 2px solid var(--argila); }
+.fx-ressalva .fx-rot { display: block; margin: 0; }
+.fx-tags { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0; font-size: 13.5px; color: var(--ink-2); }
+.fx-tags span::before { content: '#'; color: var(--ink-3); }
+.fx-vazio-l { font-size: 14px; color: var(--ink-3); margin: 4px 0; }
+
+/* testes em linhas compactas, não em cartões */
+.fx-lista-t { display: grid; }
+.fx-linha-t { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent); color: inherit; text-decoration: none; }
+.fx-linha-t .ph { width: 52px; height: 52px; background: var(--surface-2); display: grid; place-items: center; color: var(--argila); overflow: hidden; }
+.fx-linha-t img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fx-linha-t p { margin: 0; }
+.fx-linha-t .t { font-size: 14px; font-weight: 500; }
+.fx-linha-t .s { font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
+.fx-linha-t .r { color: var(--ink); }
+.ficha-esm .pecas-sec { padding-top: 18px; }
+.ficha-esm .pecas-sec h3 { font-size: 19px; }
+.fx-rec .fluidez.embutida .fluidez-bloco:first-child { border-top: 0; padding-top: 0; }

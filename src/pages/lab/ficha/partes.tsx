@@ -17,11 +17,53 @@ export function Grade({ itens }: { itens: Linha[] }) {
   return <dl className="fx-grade">{xs.map(([k, v, n]) => <div key={k}><dt>{k}</dt><dd>{v}{n && <span className="fx-nota">{n}</span>}</dd></div>)}</dl>
 }
 
-/** Tabela atributo/valor, sem bordas pesadas. */
+/** Valor longo (frase) não cabe em meia tela: a linha vira rótulo em cima, texto na largura toda. */
+const longo = (v: ReactNode) => typeof v === 'string' && v.length > 42
+
+/** Tabela atributo/valor, sem bordas pesadas. Atributos curtos em duas colunas; textos longos na largura toda. */
 export function Tabela({ itens }: { itens: Linha[] }) {
   const xs = itens.filter(([, v]) => tem(v))
   if (!xs.length) return null
-  return <dl className="fx-tabela">{xs.map(([k, v, n]) => <div key={k}><dt>{k}</dt><dd>{v}{n && <span className="fx-nota">{n}</span>}</dd></div>)}</dl>
+  return <dl className="fx-tabela">{xs.map(([k, v, n]) => <div key={k} className={longo(v) ? 'longo' : undefined}><dt>{k}</dt><dd>{v}{n && <span className="fx-nota">{n}</span>}</dd></div>)}</dl>
+}
+
+/**
+ * Converte um texto corrido em linhas estruturadas, sem perder nada: cada parágrafo "Rótulo: conteúdo"
+ * vira rótulo + conteúdo; frases soltas viram itens. O texto original continua o mesmo no banco.
+ */
+export function estruturar(texto?: string): { rotulo?: string; itens: string[] }[] {
+  if (!texto?.trim()) return []
+  return texto.split(/\n{2,}|\n(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ][^:\n]{1,40}:\s)/).map((p) => p.trim()).filter(Boolean).map((p) => {
+    const m = p.match(/^([^:\n]{2,40}):\s+([\s\S]+)$/)
+    const corpo = m ? m[2] : p
+    const itens = corpo.length > 140 ? corpo.split(/(?<=[.;])\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ"(])/).map((x) => x.trim()).filter(Boolean) : [corpo]
+    return { rotulo: m?.[1], itens: itens.map((x) => x.charAt(0).toUpperCase() + x.slice(1)) }
+  })
+}
+
+/** Texto técnico estruturado: rótulo pequeno em cima, conteúdo na largura toda, frases longas em itens. */
+export function Estruturado({ texto }: { texto?: string }) {
+  const xs = estruturar(texto)
+  if (!xs.length) return null
+  return (
+    <dl className="fx-estr">{xs.map((x, i) => (
+      <div key={i}>
+        {x.rotulo && <dt>{x.rotulo}</dt>}
+        <dd>{x.itens.length > 1 ? <ul>{x.itens.map((t, j) => <li key={j}>{t}</li>)}</ul> : x.itens[0]}</dd>
+      </div>
+    ))}</dl>
+  )
+}
+
+/** Bloco que abre e fecha: guarda o que é consulta secundária sem ocupar a ficha. */
+export function Recolhido({ titulo, resumo, children }: { titulo: string; resumo?: string; children: ReactNode }) {
+  const [aberto, setAberto] = useState(false)
+  return (
+    <div className={'fx-rec' + (aberto ? ' on' : '')}>
+      <button className="fx-rec-b" aria-expanded={aberto} onClick={() => setAberto(!aberto)}><span>{titulo}</span>{resumo && <span className="fx-rec-r">{resumo}</span>}<i aria-hidden>{aberto ? '−' : '+'}</i></button>
+      {aberto && <div className="fx-rec-c">{children}</div>}
+    </div>
+  )
 }
 
 /** Linha discreta com a origem do grupo inteiro (não uma etiqueta por linha). */
