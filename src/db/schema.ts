@@ -70,6 +70,7 @@ export interface Esmalte extends Base {
   textura?: string
   transparencia?: string
   temperatura?: number       // °C
+  temperaturaFabricante?: string // temperatura como o fabricante informa ("1180 a 1220 °C"); sem ela, o cone dá a referência
   cone?: string
   atmosfera?: string
   fluidez?: string           // classificação pessoal (Estável… Muito fluido); a do fabricante fica em fluidezQueima

@@ -1579,3 +1579,12 @@ dl.fx-resumo-l dd { margin: 0; }
 .fx-ger-menu button:focus-visible { outline: 2px solid var(--terracota); outline-offset: -2px; }
 .fx-rodape { position: sticky; bottom: calc(-24px - env(safe-area-inset-bottom)); margin: 0 -20px calc(-24px - env(safe-area-inset-bottom)); padding: 10px 20px calc(14px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line); }
 @media (min-width: 900px) { .fx-rodape { bottom: -28px; margin: 0 -28px -28px; padding: 12px 28px 16px; } }
+
+/* Cone no cabeçalho: toque abre a explicação e a tabela de conversão */
+.fx-cone-b { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; -webkit-tap-highlight-color: transparent; }
+.fx-cone-b svg { color: var(--ink-3); }
+.fx-cone-b:focus-visible { outline: 2px solid var(--terracota); outline-offset: 3px; border-radius: 3px; }
+.fx-cone-exp { margin: 10px 0; padding: 10px 12px; background: var(--surface-2); border-radius: 6px; font-size: 13.5px; line-height: 1.45; color: var(--ink-2); }
+.fx-cone-exp p { margin: 0; }
+.fx-cone-exp p + p { margin-top: 6px; }
+.fx-cone-exp .fx-nota { display: block; font-size: 12px; }

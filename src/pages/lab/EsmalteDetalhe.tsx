@@ -2,13 +2,14 @@ import { temTelaAnterior } from '../../ui/Voltar'
 import { useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { AlertTriangle, ArrowLeft, ChevronRight, Copy, Download, Heart, ImagePlus, Pencil, ScrollText, TestTube, Trash2 } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Info, ChevronRight, Copy, Download, Heart, ImagePlus, Pencil, ScrollText, TestTube, Trash2 } from 'lucide-react'
 import { db, novo } from '../../db/schema'
 import { alternarFavorito, excluir, useFamilias } from '../../db/hooks'
 import { proximoCodigo } from '../../db/codigos'
 import { salvarArquivo } from '../../db/files'
 import { criarReceita as criarReceitaNova } from './Receitas'
-import { fmt } from '../../lib/opcoes'
+import { TABELA_CONES, EXPLICACAO_CONE, temperaturaDaFicha } from '../../lib/cones'
+import type { Esmalte } from '../../db/schema'
 import { alertasDe, dadosComerciais, outrasQueimas } from '../../lib/esmalteFicha'
 import { useEstadoDaTela } from '../../ui/memoriaRolagem'
 import { Menu } from '../../ui/Menu'
@@ -125,9 +126,7 @@ export default function EsmalteDetalhe() {
         <Galeria fotos={fotos ?? []} nome={e.nome} corHex={e.corHex} />
         <div className="fx-resumo">
           {e.descricao && <TextoCurto texto={e.descricao} />}
-          <Grade itens={[
-            ['Temperatura', e.temperatura ? fmt(e.temperatura, 0) + ' °C' : undefined, 'referência'], ['Cone', e.cone], ['Atmosfera', e.atmosfera],
-          ]} />
+          <QueimaResumo e={e} />
           <ResumoLinhas itens={[['Outras queimas documentadas', outrasQueimas(e).join(' · ') || undefined, () => irParaDetalhe('queima')], ['Fluidez na queima', fluidezCurta(e), () => irParaDetalhe('fluidez')], ['Segurança alimentar', segurancaCurta(e), () => irParaDetalhe('seguranca')]]} />
           {alertas.length > 0 && <ul className="fx-alertas" aria-label="Alertas">{alertas.map((a) => <li key={a}><AlertTriangle size={14} strokeWidth={1.6} />{a}</li>)}</ul>}
         </div>
@@ -145,6 +144,25 @@ export default function EsmalteDetalhe() {
       {exportando && <div className="sync-pill" role="status">{exportando}</div>}
     </div>
   )
+}
+
+/** Temperatura, cone e atmosfera. Tocar no cone abre a explicação e a tabela usada nas conversões. */
+function QueimaResumo({ e }: { e: Esmalte }) {
+  const [aberto, setAberto] = useState(false)
+  const t = temperaturaDaFicha(e)
+  const cone = e.cone?.trim().replace(/^cone\s*/i, '')
+  return <>
+    <Grade itens={[
+      ['Temperatura', t?.valor, t?.referencia ? 'Referência' : undefined],
+      ['Cone', cone && <button className="fx-cone-b" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{cone}<Info size={13} strokeWidth={1.6} aria-hidden /></button>],
+      ['Atmosfera', e.atmosfera],
+    ]} />
+    {aberto && <div className="fx-cone-exp" role="note">
+      <p>{EXPLICACAO_CONE}</p>
+      {t?.referencia && <p className="fx-nota">“Referência” indica temperatura convertida a partir do cone, não informada pelo fabricante.</p>}
+      <p className="fx-nota">Conversões: tabela de {TABELA_CONES.tipo}, aquecimento de {TABELA_CONES.taxa}. Fonte: <a href={TABELA_CONES.url} target="_blank" rel="noreferrer">{TABELA_CONES.fonte}</a>.</p>
+    </div>}
+  </>
 }
 
 /** Linhas curtas do resumo; cada uma leva ao detalhe correspondente. */

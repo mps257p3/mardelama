@@ -101,7 +101,7 @@ export async function catalogarEsmalte(fotos: Blob[], familias: string[] = []) {
   ].filter(Boolean).join('\n\n')
   const e: Esmalte = {
     ...novo({ nome: p.nome, codigo: await proximoCodigo('E', 'esmaltes', 3), origem: 'comercial' as const, autoria: p.fabricante || undefined, familias, fotos: ids, tags: [] as string[] }),
-    id, cone: p.cone || undefined, temperatura: grausDoTexto(p.temperatura), louca: p.louca, observacoes: observacoes || undefined,
+    id, cone: p.cone || undefined, temperatura: grausDoTexto(p.temperatura), temperaturaFabricante: grausDoTexto(p.temperatura) ? p.temperatura.trim() : undefined, louca: p.louca, observacoes: observacoes || undefined,
     fluidezQueima: await (await import('./fluidez')).fluidezDaPesquisa(id, p.fluidez),
   }
   await db.esmaltes.add(e)
