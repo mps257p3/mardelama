@@ -255,6 +255,7 @@ export function AbaTecnica({ e }: { e: Esmalte }) {
           <li key={f}><p className="fx-faixa-t">{FAIXAS[f]}</p>
             {xs.map((x, i) => <div key={i} className={'fx-faixa-l' + (x.tipo === 'teste' ? ' pessoal' : x.tipo === 'hipotese' ? ' hip' : '')}>
               <p><b>{[rotuloQueima(x), x.atmosfera].filter(Boolean).join(' · ')}</b>{x.descricao && <> · {x.descricao}</>}</p>
+              {x.fonte && <a className="fx-faixa-fonte" href={x.fonte} target="_blank" rel="noreferrer">{x.tipo === 'imagem' ? 'Ver a imagem na página do fabricante' : 'Ver na página do fabricante'} ↗</a>}
               <span className="fx-nota">{TIPOS_TEMPERATURA[x.tipo]}</span>
             </div>)}
           </li>
