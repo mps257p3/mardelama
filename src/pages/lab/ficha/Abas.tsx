@@ -16,6 +16,7 @@ import { Relacoes } from '../../../ui/Relacoes'
 import { ArtistasAfins } from '../../bib/art/ArtistasAfins'
 import { FluidezQueima } from '../FluidezQueima'
 import { AtlasEfeitos } from './Fenomeno'
+import { BotaoGerenciarImagens } from './FotoFenomeno'
 import { Estruturado, Grade, Grupo, Origem, Paragrafos, Propriedade, Recolhido, Tabela, TabelaNiveis, type Linha } from './partes'
 
 const data = (d?: string) => (d ? new Date(d + 'T12:00').toLocaleDateString('pt-BR') : '')
@@ -72,7 +73,7 @@ export function AbaPerfil({ e, irPara, foco }: { e: Esmalte; irPara: (aba: 'expe
       </section>
 
       <section className="fx-grupo">
-        <h3>Efeitos e interações</h3>
+        <div className="fx-h-acao"><h3>Efeitos e interações</h3><BotaoGerenciarImagens e={e} /></div>
         {!temEfeitos && <p className="fx-vazio-l">Nenhum efeito identificado nas informações disponíveis.</p>}
         <AtlasEfeitos e={e} />
         {superficie.length > 0 && <><p className="fx-sub">Interação com a superfície</p><Tabela itens={superficie.map(([k, l]) => [l, p.superficie![k].join(', ')])} /><Origem o={p.origens?.superficie} /></>}
