@@ -2,7 +2,7 @@ import { temTelaAnterior } from '../../ui/Voltar'
 import { useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { AlertTriangle, ArrowLeft, Copy, Download, Heart, ImagePlus, Pencil, ScrollText, TestTube, Trash2 } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, ChevronRight, Copy, Download, Heart, ImagePlus, Pencil, ScrollText, TestTube, Trash2 } from 'lucide-react'
 import { db, novo } from '../../db/schema'
 import { alternarFavorito, excluir, useFamilias } from '../../db/hooks'
 import { proximoCodigo } from '../../db/codigos'
@@ -14,8 +14,8 @@ import { useEstadoDaTela } from '../../ui/memoriaRolagem'
 import { Menu } from '../../ui/Menu'
 import { useToast } from '../../ui/toast'
 import { Galeria, useFotosFicha } from './ficha/Galeria'
-import { Grade, Tabela, TextoCurto } from './ficha/partes'
-import { AbaDocumentacao, AbaExperimentos, AbaPerfil, AbaTecnica, classeFluidez, resumoSeguranca } from './ficha/Abas'
+import { Grade, TextoCurto } from './ficha/partes'
+import { AbaDocumentacao, AbaExperimentos, AbaPerfil, AbaTecnica, fluidezCurta, segurancaCurta } from './ficha/Abas'
 
 const ABAS = [['perfil', 'Perfil'], ['tecnica', 'Técnica'], ['experimentos', 'Experimentos'], ['documentacao', 'Documentação']] as const
 type Aba = typeof ABAS[number][0]
@@ -38,6 +38,7 @@ export default function EsmalteDetalhe() {
   const [aba, setAba] = useEstadoDaTela<Aba>('esmalte.aba', 'perfil')
   const [exportando, setExportando] = useState<string>()
   const abasRef = useRef<HTMLDivElement>(null)
+  const [foco, setFoco] = useState<string>()
   const fotoRef = useRef<HTMLInputElement>(null)
   const fotosTestes = useMemo(() => testes.flatMap((t) => t.fotos.slice(0, 1)), [testes])
   const fotos = useFotosFicha(e ?? ({ fotos: [], origem: 'propria' } as never), fotosTestes)
@@ -73,6 +74,12 @@ export default function EsmalteDetalhe() {
     setExportando('Preparando…')
     try { const { exportarEsmalte } = await import('../../lib/exportarEsmalte'); await exportarEsmalte(e!, setExportando); toast('Ficha exportada') }
     catch (x) { toast('Não consegui exportar: ' + (x as Error).message) } finally { setExportando(undefined) }
+  }
+  /** Toque no resumo: abre a aba certa e leva até o detalhe (a fluidez já abre expandida). */
+  const irParaDetalhe = (alvo: 'fluidez' | 'seguranca') => {
+    setFoco(alvo)
+    trocarAba(alvo === 'fluidez' ? 'perfil' : 'tecnica')
+    setTimeout(() => document.getElementById('fx-' + alvo)?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 60)
   }
   const trocarAba = (a: Aba) => {
     setAba(a)
@@ -121,7 +128,7 @@ export default function EsmalteDetalhe() {
           <Grade itens={[
             ['Temperatura', e.temperatura ? fmt(e.temperatura, 0) + ' °C' : undefined, 'referência'], ['Cone', e.cone], ['Atmosfera', e.atmosfera],
           ]} />
-          <div className="fx-resumo-l"><Tabela itens={[["Fluidez durante a queima", classeFluidez(e)], ["Segurança alimentar", resumoSeguranca(e)]]} /></div>
+          <ResumoLinhas itens={[['Fluidez na queima', fluidezCurta(e), () => irParaDetalhe('fluidez')], ['Segurança alimentar', segurancaCurta(e), () => irParaDetalhe('seguranca')]]} />
           {alertas.length > 0 && <ul className="fx-alertas" aria-label="Alertas">{alertas.map((a) => <li key={a}><AlertTriangle size={14} strokeWidth={1.6} />{a}</li>)}</ul>}
         </div>
       </div>
@@ -130,7 +137,7 @@ export default function EsmalteDetalhe() {
         {ABAS.map(([k, l]) => <button key={k} role="tab" aria-selected={aba === k} className={aba === k ? 'on' : ''} onClick={() => trocarAba(k)}>{l}</button>)}
       </div>
       <div className="fx-conteudo" role="tabpanel">
-        {aba === 'perfil' && <AbaPerfil e={e} irPara={trocarAba} />}
+        {aba === 'perfil' && <AbaPerfil key={foco} e={e} irPara={trocarAba} foco={foco} />}
         {aba === 'tecnica' && <AbaTecnica e={e} />}
         {aba === 'experimentos' && <AbaExperimentos e={e} testes={testes} />}
         {aba === 'documentacao' && <AbaDocumentacao e={e} familias={fam} receita={receita} estudo={estudo} aprovada={aprovada} />}
@@ -138,4 +145,13 @@ export default function EsmalteDetalhe() {
       {exportando && <div className="sync-pill" role="status">{exportando}</div>}
     </div>
   )
+}
+
+/** Linhas curtas do resumo; cada uma leva ao detalhe correspondente. */
+function ResumoLinhas({ itens }: { itens: [string, string | undefined, () => void][] }) {
+  const xs = itens.filter(([, v]) => v)
+  if (!xs.length) return null
+  return <dl className="fx-resumo-l">{xs.map(([k, v, ir]) => (
+    <div key={k}><dt>{k}</dt><dd><button className="fx-resumo-ir" onClick={ir}>{v}<ChevronRight size={14} strokeWidth={1.6} aria-hidden /></button></dd></div>
+  ))}</dl>
 }
