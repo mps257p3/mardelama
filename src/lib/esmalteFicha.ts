@@ -19,11 +19,10 @@ export const VISUAL: [string, string][] = [
 export const NIVEIS: Record<Nivel, string> = { 1: 'Muito baixo', 2: 'Baixo', 3: 'Moderado', 4: 'Alto', 5: 'Muito alto' }
 /** Na ordem de relevância: os primeiros aparecem antes de "ver perfil completo". */
 export const ATRIBUTOS_COMPORTAMENTO: [string, string][] = [
-  ['fluidez', 'Fluidez durante a queima'], ['reatividade', 'Reatividade com outros esmaltes'], ['variacao', 'Variação cromática'],
-  ['espessura', 'Sensibilidade à espessura'], ['temperatura', 'Sensibilidade à temperatura'], ['patamar', 'Sensibilidade ao tempo de patamar'],
-  ['resfriamento', 'Sensibilidade à velocidade de resfriamento'], ['cristais', 'Tendência à formação de cristais'],
-  ['acumulo', 'Tendência ao acúmulo em depressões'], ['arestas', 'Tendência ao afinamento nas arestas'],
-  ['texturas', 'Capacidade de evidenciar texturas'], ['previsibilidade', 'Previsibilidade do resultado'],
+  ['fluidez', 'Fluidez'], ['reatividade', 'Reatividade'], ['espessura', 'Sensível à espessura'],
+  ['temperatura', 'Sensível à temperatura'], ['variacao', 'Variação cromática'], ['previsibilidade', 'Previsibilidade'],
+  ['patamar', 'Sensível ao patamar'], ['resfriamento', 'Sensível ao resfriamento'], ['cristais', 'Formação de cristais'],
+  ['acumulo', 'Acúmulo em depressões'], ['arestas', 'Afinamento nas arestas'], ['texturas', 'Evidencia texturas'],
 ]
 
 export const GEOMETRIAS: [string, string][] = [
@@ -35,32 +34,68 @@ export const COMPORTAMENTOS_SUPERFICIE = ['Mantém a cobertura', 'Revela a massa
 export const EXPRESSIVO = ['Esculturas', 'Superfícies texturizadas', 'Grafismos', 'Sobreposições', 'Transições cromáticas', 'Escorrimentos', 'Efeitos orgânicos', 'Contrastes', 'Revelação da massa cerâmica', 'Acabamentos uniformes'] as const
 
 export const PREPARACAO: [string, string][] = [
-  ['apresentacao', 'Forma de apresentação'], ['diluicao', 'Diluição'], ['agua', 'Proporção de água'], ['densidade', 'Densidade da suspensão'],
-  ['homogeneizacao', 'Homogeneização'], ['conservacao', 'Conservação'], ['cuidados', 'Cuidados de preparação'],
+  ['apresentacao', 'Apresentação'], ['diluicao', 'Diluição'], ['agua', 'Água'], ['densidade', 'Densidade'],
+  ['homogeneizacao', 'Homogeneização'], ['conservacao', 'Conservação'], ['cuidados', 'Cuidados'],
 ]
 export const APLICACAO: [string, string][] = [
-  ['demaos', 'Número de demãos'], ['espessura', 'Espessura'], ['intervalo', 'Intervalo entre demãos'], ['biscoito', 'Temperatura de biscoito'],
+  ['demaos', 'Demãos'], ['espessura', 'Espessura'], ['intervalo', 'Intervalo'], ['biscoito', 'Biscoito'],
   ['cuidados', 'Cuidados'], ['restricoes', 'Restrições'],
 ]
 export const METODOS = ['Pincel', 'Imersão', 'Pulverização', 'Derramamento', 'Esponja', 'Carimbo', 'Sobreposição', 'Aplicação localizada'] as const
+/**
+ * Queima: a temperatura de referência é a do esmalte (campo `temperatura`); aqui ficam a faixa que o fabricante recomenda
+ * e o que está documentado em outras temperaturas. O limite de uma faixa comercial não é "temperatura máxima" do esmalte.
+ * Patamar, aquecimento e resfriamento guardam valores (ex.: 15 min, 150 °C/h); comentários vão em Observações.
+ */
 export const QUEIMA: [string, string][] = [
-  ['tMin', 'Temperatura mínima'], ['tIdeal', 'Temperatura ideal'], ['tMax', 'Temperatura máxima'], ['conesAlternativos', 'Cones alternativos'],
-  ['aquecimento', 'Velocidade de aquecimento'], ['patamar', 'Tempo de patamar'], ['resfriamento', 'Velocidade de resfriamento'],
-  ['resfriamentoControlado', 'Resfriamento controlado'], ['eletrico', 'Forno elétrico'], ['gas', 'Forno a gás'], ['alternativas', 'Em outras temperaturas'],
+  ['faixa', 'Faixa do fabricante'], ['conesAlternativos', 'Cones'], ['curva', 'Curva'], ['aquecimento', 'Aquecimento'], ['patamar', 'Patamar'],
+  ['resfriamento', 'Resfriamento'], ['resfriamentoControlado', 'Resfriamento controlado'], ['eletrico', 'Forno elétrico'], ['gas', 'Forno a gás'],
+  ['alternativas', 'Outras temperaturas'], ['notas', 'Observações'],
 ]
+/** Campos antigos: só aparecem quando já têm valor. */
+export const QUEIMA_ANTIGA: [string, string][] = [['tMin', 'Mínima informada'], ['tIdeal', 'Indicada'], ['tMax', 'Limite informado']]
 export const MASSAS: [string, string][] = [
   ['terracota', 'Terracota'], ['faianca', 'Faiança'], ['gres', 'Grés'], ['porcelana', 'Porcelana'], ['claras', 'Massas claras'],
   ['escuras', 'Massas escuras'], ['chamote', 'Com chamote'], ['ferro', 'Alto teor de ferro'], ['engobes', 'Engobes'], ['esmaltes', 'Outros esmaltes'],
 ]
 export const COMPAT = { documentada: 'Documentada', experimental: 'Experimental', incompativel: 'Incompatível' } as const
 
-/** Segurança: os três primeiros são essenciais e aparecem como "não verificado" quando vazios. */
+/**
+ * Segurança, item por item, na nomenclatura do fabricante (Food Safe e Dinnerware Safe não são a mesma coisa).
+ * Os essenciais aparecem como "não verificado" quando vazios. `alimentarDeclarada` é o campo antigo de Food Safe.
+ */
 export const SEGURANCA: [string, string, boolean][] = [
-  ['atoxico', 'Atóxico (sem chumbo declarado)', true], ['alimentarDeclarada', 'Segurança alimentar declarada pelo fabricante', true],
-  ['ensaio', 'Segurança comprovada por ensaio laboratorial', true], ['contatoAlimento', 'Contato direto com alimentos', false],
-  ['loucaFuncional', 'Adequação funcional para louças', false], ['quimica', 'Resistência química', false], ['acidos', 'Resistência a ácidos', false],
-  ['abrasao', 'Resistência à abrasão', false], ['lavaLoucas', 'Lava-louças', false], ['microondas', 'Micro-ondas', false], ['decorativo', 'Uso exclusivamente decorativo', false],
+  ['atoxico', 'Atóxico', true], ['semChumbo', 'Sem chumbo declarado', true], ['foodSafe', 'Food Safe', true], ['dinnerwareSafe', 'Dinnerware Safe', true],
+  ['contatoAlimento', 'Contato direto com alimentos', true], ['ensaio', 'Ensaio laboratorial', true], ['combinacoes', 'Em combinações e sobreposições', true],
+  ['loucaFuncional', 'Uso funcional em louça', false], ['quimica', 'Resistência química', false], ['acidos', 'Resistência a ácidos', false],
+  ['abrasao', 'Resistência à abrasão', false], ['lavaLoucas', 'Lava-louças', false], ['microondas', 'Micro-ondas', false], ['decorativo', 'Só decorativo', false],
 ]
+
+/** Comportamentos com pictograma. Só aparecem quando identificados (registrados ou deduzidos de campos preenchidos). */
+export const PICTOGRAMAS: [string, string][] = [
+  ['escorrimento', 'Escorrimento'], ['verticalEstavel', 'Estável na vertical'], ['acumulo', 'Acumula em depressões'], ['afinaArestas', 'Afina nas arestas'],
+  ['realcaRelevo', 'Realça relevos'], ['cobreRelevo', 'Cobre relevos'], ['sobreposicao', 'Sobreposição'], ['transparencia', 'Transparência'],
+  ['craquele', 'Craquelamento'], ['cristalizacao', 'Cristalização'], ['reticulacao', 'Reticulação'], ['revelaMassa', 'Revela a massa'],
+]
+/** Efeitos identificados: os marcados na ficha + os que decorrem do que já está preenchido. */
+export function efeitosDe(e: Esmalte): string[] {
+  const s = new Set(e.perfil?.efeitos ?? [])
+  const sup = e.perfil?.superficie ?? {}
+  const tem = (geo: string | null, c: string) => (geo ? sup[geo] : Object.values(sup).flat())?.includes(c)
+  if (tem(null, 'Escorre')) s.add('escorrimento')
+  if (tem('verticais', 'Permanece estável') || tem('verticais', 'Mantém a cobertura')) s.add('verticalEstavel')
+  if (tem(null, 'Acumula')) s.add('acumulo')
+  if (tem('arestas', 'Afina')) s.add('afinaArestas')
+  if (tem(null, 'Realça relevos')) s.add('realcaRelevo')
+  if (tem(null, 'Encobre detalhes') || tem(null, 'Suaviza relevos')) s.add('cobreRelevo')
+  if (tem(null, 'Revela a massa cerâmica')) s.add('revelaMassa')
+  if (e.transparencia === 'Transparente' || e.transparencia === 'Translúcido') s.add('transparencia')
+  const tx = texturasDe(e)
+  if (tx.includes('Craquelada')) s.add('craquele')
+  if (tx.includes('Cristalizada') || tx.includes('Microcristalina')) s.add('cristalizacao')
+  if (tx.includes('Reticulada')) s.add('reticulacao')
+  return PICTOGRAMAS.map(([k]) => k).filter((k) => s.has(k))
+}
 export const VERIFICACAO = { sim: 'Sim', nao: 'Não', 'nao-verificado': 'Não verificado' } as const
 
 export const DEFEITOS_FICHA = ['Craquelamento', 'Descascamento', 'Crawling (retração)', 'Bolhas', 'Pinholes', 'Crateras', 'Escorrimento excessivo', 'Cobertura irregular', 'Desvitrificação indesejada', 'Alteração inesperada de cor'] as const

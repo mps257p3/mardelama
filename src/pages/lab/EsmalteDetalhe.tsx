@@ -9,7 +9,7 @@ import { proximoCodigo } from '../../db/codigos'
 import { salvarArquivo } from '../../db/files'
 import { criarReceita as criarReceitaNova } from './Receitas'
 import { fmt } from '../../lib/opcoes'
-import { alertasDe, dadosComerciais, fluidezResumo } from '../../lib/esmalteFicha'
+import { alertasDe, dadosComerciais } from '../../lib/esmalteFicha'
 import { useEstadoDaTela } from '../../ui/memoriaRolagem'
 import { Menu } from '../../ui/Menu'
 import { useToast } from '../../ui/toast'
@@ -47,7 +47,6 @@ export default function EsmalteDetalhe() {
 
   const fam = e.familias.map((f) => familias.find((x) => x.id === f)?.nome).filter((x): x is string => !!x)
   const comercial = e.origem === 'comercial'
-  const flu = fluidezResumo(e)
   const alertas = alertasDe(e)
   const com = dadosComerciais(e)
   // código comercial quando existe (o interno fica em Documentação); fabricante só aqui
@@ -120,8 +119,7 @@ export default function EsmalteDetalhe() {
         <div className="fx-resumo">
           {e.descricao && <TextoCurto texto={e.descricao} />}
           <Grade itens={[
-            ['Temperatura', e.temperatura ? fmt(e.temperatura, 0) + ' °C' : undefined], ['Cone', e.cone], ['Atmosfera', e.atmosfera],
-            ['Acabamento', e.acabamento], ['Opacidade', e.transparencia], ['Fluidez', flu?.valor, flu?.nota],
+            ['Temperatura', e.temperatura ? fmt(e.temperatura, 0) + ' °C' : undefined, 'referência'], ['Cone', e.cone], ['Atmosfera', e.atmosfera],
           ]} />
           {alertas.length > 0 && <ul className="fx-alertas" aria-label="Alertas">{alertas.map((a) => <li key={a}><AlertTriangle size={14} strokeWidth={1.6} />{a}</li>)}</ul>}
         </div>
@@ -131,7 +129,7 @@ export default function EsmalteDetalhe() {
         {ABAS.map(([k, l]) => <button key={k} role="tab" aria-selected={aba === k} className={aba === k ? 'on' : ''} onClick={() => trocarAba(k)}>{l}</button>)}
       </div>
       <div className="fx-conteudo" role="tabpanel">
-        {aba === 'perfil' && <AbaPerfil e={e} />}
+        {aba === 'perfil' && <AbaPerfil e={e} irPara={trocarAba} />}
         {aba === 'tecnica' && <AbaTecnica e={e} />}
         {aba === 'experimentos' && <AbaExperimentos e={e} testes={testes} />}
         {aba === 'documentacao' && <AbaDocumentacao e={e} familias={fam} receita={receita} estudo={estudo} aprovada={aprovada} />}

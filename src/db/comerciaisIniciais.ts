@@ -588,3 +588,58 @@ export async function fichaWhiteCascade() {
   }
   await db.ajustes.put({ chave, valor: true })
 }
+
+/**
+ * 27/11, refinamento da ficha: White Cascade com o que está no rótulo e na página oficial da Mayco
+ * (maycocolors.com/product/pc-602-white-cascade, lida em 27/11/2026). Faixa da Zeramics deixa de ser "temperatura máxima";
+ * a frase sobre patamar sai do campo de patamar; segurança separada em Food Safe e Dinnerware Safe, com as condições.
+ * Só mexe no que está vazio ou no que o ajuste v1 escreveu.
+ */
+export async function fichaWhiteCascadeV2() {
+  const chave = 'fix-ficha-white-cascade-v2'
+  if (await db.ajustes.get(chave)) return
+  const e = await db.esmaltes.get('esm-mayco-pc602')
+  if (e && !e.excluido) {
+    const URL = 'https://www.maycocolors.com/product/pc-602-white-cascade/'
+    const fab = { origem: 'fabricante' as const, fonte: URL, data: '2026-11-27' }
+    const p = { ...e.perfil }
+    const t = { ...e.tecnica }
+    const q = { ...t.queima }
+    if (q.tIdeal === '999 °C (cone 06, na prateleira)') delete q.tIdeal
+    if (q.tMax?.startsWith('1031 °C (faixa da Zeramics')) delete q.tMax
+    if (q.patamar === 'Temperatura, rampa e patamar realçam o escorrido.') delete q.patamar
+    if (q.alternativas === 'Cone 5/6: transparente com flutuação branca. A cor pode mudar em temperaturas mais altas.') delete q.alternativas
+    q.faixa ||= 'Cone 06/05, 999 a 1031 °C (etiqueta da Zeramics); a Mayco indica cone 06 na prateleira'
+    q.alternativas ||= 'Cone 6, oxidação: "Transparent. Color clear with white float" (Mayco; o rótulo diz cone 5/6). A página também mostra uma foto em cone 10 redução, sem descrição. A cor pode mudar em temperaturas mais altas (Zeramics).'
+    t.queima = q
+    const s = { ...t.seguranca }
+    if (s.alimentarDeclarada === 'sim' && !s.foodSafe) { s.foodSafe = 'sim'; delete s.alimentarDeclarada }
+    s.semChumbo ||= 'sim'
+    s.dinnerwareSafe ||= 'sim'
+    s.contatoAlimento ||= 'nao-verificado'
+    s.combinacoes ||= 'nao-verificado'
+    t.seguranca = s
+    t.segurancaCondicoes = {
+      foodSafe: 'Rótulo: "Food Safe" quando usado como o fabricante manda; avisa que a superfície pode não ser adequada para alimentos.',
+      combinacoes: 'A peça só é segura se o esmalte de baixo também for (rótulo).',
+      ...t.segurancaCondicoes,
+    }
+    if (t.segurancaNotas?.startsWith('A Mayco declara "Food Safe"')) delete t.segurancaNotas
+    t.metodos = [...new Set([...(t.metodos ?? []), 'Esponja'])]
+    t.aplicacao = { cuidados: 'Pode ser aplicado de forma aleatória ou uniforme (Mayco).', ...t.aplicacao }
+    t.origens = { ...t.origens, aplicacao: fab, queima: fab, seguranca: fab }
+    p.visual = { coresSecundarias: 'Branco puro em cone 06, que se mistura às cores dos esmaltes usados junto', ...p.visual }
+    p.efeitos = [...new Set([...(p.efeitos ?? []), 'escorrimento', 'sobreposicao'])]
+    p.comportamentoNota = {
+      fluidez: 'A linha Pottery Cascade é descrita como "moving, flowing glazes", e o rótulo manda evitar a parte de baixo da peça; a dica do site diz "minimum movement and will stay in the pattern that you apply it in". As duas frases são da Mayco e não batem.',
+      reatividade: '"Intermingles with the other glazes being used" (cone 06); o movimento depende do esmalte que está por baixo.',
+      espessura: 'A aplicação e a posição da peça no forno mudam o escorrido (rótulo).',
+      temperatura: 'Temperatura, rampa e patamar realçam o escorrido (rótulo). Reformulado para mover mais em baixa temperatura (site).',
+      ...p.comportamentoNota,
+    }
+    p.comportamentoOrigem = { fluidez: 'fabricante', reatividade: 'fabricante', espessura: 'fabricante', temperatura: 'fabricante', ...p.comportamentoOrigem }
+    p.origens = { ...p.origens, visual: fab, comportamento: fab }
+    await db.esmaltes.update(e.id, { perfil: p, tecnica: t, atualizadoEm: Date.now() })
+  }
+  await db.ajustes.put({ chave, valor: true })
+}

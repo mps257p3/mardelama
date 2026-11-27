@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronRight, Plus, TestTube } from 'lucide-react'
+import { ChevronRight, Pencil, Plus, TestTube } from 'lucide-react'
 import { db, type Comercial, type Esmalte, type Receita, type Teste, type Verificacao } from '../../../db/schema'
 import {
   APLICACAO, ATRIBUTOS_COMPORTAMENTO, COMPAT, DEFEITOS_FICHA, GEOMETRIAS, MASSAS, ORIGENS, PREPARACAO, QUEIMA, SEGURANCA, VERIFICACAO, VISUAL,
-  dadosComerciais, temTexto, texturasDe,
+  QUEIMA_ANTIGA, dadosComerciais, efeitosDe, temTexto, texturasDe,
 } from '../../../lib/esmalteFicha'
 import { fmt } from '../../../lib/opcoes'
 import { Foto } from '../../../ui/form'
@@ -13,6 +13,7 @@ import { GaleriaPecas } from '../../../ui/GaleriaFotos'
 import { Relacoes } from '../../../ui/Relacoes'
 import { ArtistasAfins } from '../../bib/art/ArtistasAfins'
 import { FluidezQueima } from '../FluidezQueima'
+import { Pictogramas } from './Pictogramas'
 import { Estruturado, Grade, Grupo, Indicador, Origem, Paragrafos, Recolhido, Tabela, Vazio, type Linha } from './partes'
 
 const data = (d?: string) => (d ? new Date(d + 'T12:00').toLocaleDateString('pt-BR') : '')
@@ -24,32 +25,42 @@ const Atalho = ({ to, titulo, nota }: { to: string; titulo: string; nota?: strin
   <Link className="fx-atalho" to={to}><span><b>{titulo}</b>{nota && <span className="fx-nota">{nota}</span>}</span><ChevronRight size={16} strokeWidth={1.5} /></Link>
 )
 
-/* ——— Perfil: que tipo de resultado este esmalte pode produzir? ——— */
-export function AbaPerfil({ e }: { e: Esmalte }) {
+/* ——— Perfil: a personalidade do esmalte ——— */
+const PRINCIPAIS = ['fluidez', 'reatividade', 'espessura', 'temperatura', 'variacao', 'previsibilidade']
+
+export function AbaPerfil({ e, irPara }: { e: Esmalte; irPara: (aba: 'experimentos') => void }) {
   const [todos, setTodos] = useState(false)
   const p = e.perfil ?? {}
-  const visual: Linha[] = [
-    ['Cor predominante', e.cor && <>{e.corHex && <i className="fx-amostra" style={{ background: e.corHex }} />}{e.cor}</>],
-    ...linhas(VISUAL, p.visual).slice(0, 2),
-    ['Textura', texturasDe(e).join(', ')],
-    ...linhas(VISUAL, p.visual).slice(2),
+  const efeitos = efeitosDe(e)
+  const cores: Linha[] = [
+    ['Predominante', e.cor && <>{e.corHex && <i className="fx-amostra" style={{ background: e.corHex }} />}{e.cor}</>],
+    ...linhas(VISUAL, p.visual),
   ]
-  const avaliados = ATRIBUTOS_COMPORTAMENTO.filter(([k]) => p.comportamento?.[k])
-  const mostrar = todos ? avaliados : avaliados.slice(0, 4)
+  const acab: Linha[] = [['Acabamento', e.acabamento], ['Opacidade', e.transparencia]]
+  const texturas = texturasDe(e)
+  const avaliados = ATRIBUTOS_COMPORTAMENTO.filter(([k]) => p.comportamento?.[k] || p.comportamentoNota?.[k])
+  const ordem = [...avaliados.filter(([k]) => PRINCIPAIS.includes(k)), ...avaliados.filter(([k]) => !PRINCIPAIS.includes(k))]
+  const mostrar = todos ? ordem : ordem.slice(0, 6)
   const superficie = GEOMETRIAS.filter(([k]) => p.superficie?.[k]?.length)
-  const nada = !visual.some(([, v]) => v) && !avaliados.length && !superficie.length && !p.expressivo?.length && !p.expressivoTexto && !p.sugestoesIA
+  const origemDe = (k: string) => { const o = p.comportamentoOrigem?.[k] ?? p.origens?.comportamento?.origem; return o ? ROTULO_ORIGEM[o] : undefined }
+  const nada = !efeitos.length && !cores.some(([, v]) => v) && !acab.some(([, v]) => v) && !texturas.length && !avaliados.length && !superficie.length && !p.expressivo?.length && !p.expressivoTexto && !p.sugestoesIA
   return (
     <>
-      {nada && <Vazio>O perfil visual e de comportamento ainda não foi registrado. Toque em ⋯ › Editar para preencher o que você já observou ou o que o fabricante informa.</Vazio>}
-      <Grupo titulo="Características visuais" origem={p.origens?.visual} vazio={!visual.some(([, v]) => v)}>
-        <Tabela itens={visual} />
-        {e.corHex && <p className="fx-origem">A amostra de cor é uma referência aproximada, não um valor absoluto.</p>}
+      {nada && <Vazio>A personalidade deste esmalte ainda não foi registrada. Toque em ⋯ › Editar para preencher o que você observou ou o que o fabricante informa.</Vazio>}
+      <Grupo titulo="Identidade visual" vazio={!efeitos.length && !e.corHex}>
+        {e.corHex && <div className="fx-cor"><i style={{ background: e.corHex }} /><span>{e.cor ?? 'Amostra de cor'}<span className="fx-nota">referência aproximada</span></span></div>}
+        <Pictogramas tipos={efeitos} />
+        {efeitos.length > 0 && <p className="fx-origem">Esquemas dos comportamentos identificados, não resultados de teste.</p>}
       </Grupo>
-      <Grupo titulo="Comportamento" origem={p.origens?.comportamento} vazio={!avaliados.length}>
-        <div className="fx-inds">{mostrar.map(([k, l]) => <Indicador key={k} nome={l} nivel={p.comportamento![k]} />)}</div>
-        {avaliados.length > 4 && <button className="fx-link" onClick={() => setTodos(!todos)}>{todos ? 'Mostrar menos' : `Ver perfil completo (${avaliados.length})`}</button>}
-      </Grupo>
-      <Fluidez e={e} />
+      <Grupo titulo="Cores e subtons" origem={p.origens?.visual} vazio={!cores.some(([, v]) => v)}><Tabela itens={cores} /></Grupo>
+      <Grupo titulo="Acabamento e opacidade" vazio={!acab.some(([, v]) => v)}><Tabela itens={acab} /></Grupo>
+      <Grupo titulo="Textura" vazio={!texturas.length}><p className="fx-lista">{texturas.join(' · ')}</p></Grupo>
+      <section className="fx-grupo">
+        <h3>Perfil comportamental</h3>
+        {mostrar.length > 0 && <div className="fx-inds">{mostrar.map(([k, l]) => <Indicador key={k} nome={l} nivel={p.comportamento?.[k]} nota={p.comportamentoNota?.[k]} origem={origemDe(k)} />)}</div>}
+        {ordem.length > 6 && <button className="fx-link" onClick={() => setTodos(!todos)}>{todos ? 'Mostrar menos' : `Ver todos (${ordem.length})`}</button>}
+        <Fluidez e={e} irPara={irPara} />
+      </section>
       <Grupo titulo="Interação com a superfície" origem={p.origens?.superficie} vazio={!superficie.length}>
         <Tabela itens={superficie.map(([k, l]) => [l, p.superficie![k].join(', ')])} />
       </Grupo>
@@ -62,30 +73,30 @@ export function AbaPerfil({ e }: { e: Esmalte }) {
   )
 }
 
-/** Fluidez na queima dentro do perfil: uma linha por origem; o fabricante completo e os testes abrem embaixo. */
-function Fluidez({ e }: { e: Esmalte }) {
+const ROTULO_ORIGEM: Record<string, string> = { fabricante: 'Fabricante', referencia: 'Referência', receita: 'Receita', experimento: 'Seu teste', pessoal: 'Sua avaliação', ia: 'IA' }
+
+/** Fluidez no perfil: o termo original do fabricante, a sua avaliação e a IA, separados. Detalhes e testes ficam a um toque. */
+function Fluidez({ e, irPara }: { e: Esmalte; irPara: (aba: 'experimentos') => void }) {
   const f = e.fluidezQueima
   const comercial = e.origem === 'comercial'
   const testes = e.testesFluidez ?? []
   const fab = !comercial ? undefined
     : !f ? 'Ainda não consultado'
-    : f.situacao === 'nao-informada' ? 'Não informada pelo fabricante'
-    : f.resultados.map((r) => [r.classificacao, r.traducao && `(${r.traducao})`, r.cone && 'cone ' + r.cone.replace(/^cone\s*/i, '')].filter(Boolean).join(' ')).filter(Boolean).join('; ') || 'Descrição do fabricante'
-  const ultimo = [...testes].sort((a, b) => b.data.localeCompare(a.data))[0]
+    : f.situacao === 'nao-informada' ? 'Não informada'
+    : f.resultados.map((r) => [r.classificacao, r.traducao && `(${r.traducao})`, r.cone && 'cone ' + r.cone.replace(/^cone\s*/i, '')].filter(Boolean).join(' ')).filter(Boolean).join('; ') || 'Só descrição'
   return (
-    <section className="fx-grupo">
-      <h3>Fluidez na queima</h3>
+    <div className="fx-flu">
+      <p className="fx-sub">Fluidez na queima</p>
       <Tabela itens={[
-        ['Fabricante', fab, f?.situacao === 'oficial' ? 'classificação oficial' : f?.situacao === 'descritiva' ? 'descrição, sem escala formal' : undefined],
+        ['Fabricante', fab, f?.situacao === 'oficial' ? 'classificação original' : undefined],
         ['Sua avaliação', e.fluidez],
-        ['Seus testes', testes.length ? `${testes.length} ${testes.length === 1 ? 'teste' : 'testes'}${ultimo?.escorrimentoMm != null ? ` · último: ${fmt(ultimo.escorrimentoMm, 0)} mm` : ''}` : comercial ? 'Nenhum' : undefined],
-        ['Estimativa por IA', f?.estimativaIA, 'interpretação, não é dado do fabricante'],
+        ['IA', f?.estimativaIA, 'interpretação, não é dado do fabricante'],
       ]} />
-      <Recolhido titulo={comercial ? 'Fabricante e testes de fluidez' : 'Testes de fluidez'} resumo={comercial ? 'consultar, fontes, registrar teste' : 'registrar teste'}>
-        <FluidezQueima e={e} embutida soTestes={!comercial} />
-      </Recolhido>
-      <p className="fx-origem">Fluidez é como o esmalte fundido se move na queima; viscosidade é a consistência do líquido antes de aplicar (em Técnica).</p>
-    </section>
+      <div className="fx-acoes-l">
+        {comercial && <Recolhido titulo="Detalhes do fabricante"><FluidezQueima e={e} embutida soFabricante /></Recolhido>}
+        <button className="fx-atalho" onClick={() => irPara('experimentos')}><span><b>Seus testes de fluidez</b><span className="fx-nota">{testes.length ? `${testes.length} registrado${testes.length > 1 ? 's' : ''}` : 'nenhum ainda'}, em Experimentos</span></span><ChevronRight size={16} strokeWidth={1.5} /></button>
+      </div>
+    </div>
   )
 }
 
@@ -94,22 +105,23 @@ export function AbaTecnica({ e }: { e: Esmalte }) {
   const t = e.tecnica ?? {}
   const o = t.origens ?? {}
   const padrao = e.origem === 'comercial' ? 'Fabricante' : undefined
-  const preparo: Linha[] = [...linhas(PREPARACAO, t.preparacao).slice(0, 4), ['Viscosidade da suspensão', e.viscosidade], ...linhas(PREPARACAO, t.preparacao).slice(4)]
+  const preparo: Linha[] = [...linhas(PREPARACAO, t.preparacao).slice(0, 4), ['Viscosidade', e.viscosidade, 'do esmalte líquido, antes de aplicar'], ...linhas(PREPARACAO, t.preparacao).slice(4)]
   const aplic: Linha[] = [['Métodos', t.metodos?.join(', ')], ...linhas(APLICACAO, t.aplicacao)]
   const temAplic = aplic.some(([, v]) => v)
-  const queima = linhas(QUEIMA, t.queima)
+  const queima = [...linhas(QUEIMA, t.queima).slice(0, -1), ...linhas(QUEIMA_ANTIGA, t.queima)]
   const compat = MASSAS.filter(([k]) => t.compatibilidade?.[k])
   const naoAvaliadas = MASSAS.filter(([k]) => !t.compatibilidade?.[k]).map(([, l]) => l)
   return (
     <>
       <Grupo titulo="Preparação" origem={o.preparacao} padrao={padrao} vazio={!preparo.some(([, v]) => v)}><Tabela itens={preparo} /></Grupo>
       <Grupo titulo="Aplicação" origem={o.aplicacao} padrao={padrao} vazio={!temAplic && !e.aplicacao}>
-        <Tabela itens={aplic} />
-        {e.aplicacao && (temAplic ? <Recolhido titulo="Texto original da aplicação"><Estruturado texto={e.aplicacao} /></Recolhido> : <Estruturado texto={e.aplicacao} />)}
+        {/* o texto corrido só aparece aqui quando ainda não foi estruturado; o original fica em Documentação */}
+        {temAplic ? <Tabela itens={aplic} /> : <Estruturado texto={e.aplicacao} />}
       </Grupo>
-      <Grupo titulo="Queima" origem={o.queima} padrao={padrao} vazio={!queima.some(([, v]) => v)}>
+      <Grupo titulo="Queima" origem={o.queima} padrao={padrao} vazio={!queima.some(([, v]) => v) && !t.queima?.notas}>
         <Tabela itens={queima} />
-        <p className="fx-origem">Temperatura, cone e atmosfera de referência estão no resumo do topo. O cone mede o trabalho de calor (temperatura e tempo), não só a temperatura.</p>
+        {t.queima?.notas && <Estruturado texto={t.queima.notas} />}
+        <p className="fx-origem">A referência (temperatura, cone e atmosfera) está no topo. O limite de uma faixa comercial não é a temperatura máxima do esmalte; o cone mede o trabalho de calor, não só a temperatura.</p>
       </Grupo>
       <Grupo titulo="Compatibilidade" origem={o.compatibilidade} vazio={!compat.length && !t.compatNotas}>
         <Tabela itens={compat.map(([k, l]) => [l, COMPAT[t.compatibilidade![k]]])} />
@@ -131,41 +143,40 @@ export function AbaTecnica({ e }: { e: Esmalte }) {
 }
 
 /**
- * Segurança separada em três perguntas: é atóxico? o fabricante declara segurança alimentar? pode ter contato direto com alimento?
- * Ressalva escrita transforma o "sim" em "sim, com ressalvas". Nada vira "pode ir à louça" genérico.
+ * Segurança item por item, na nomenclatura do fabricante: atóxico, sem chumbo, Food Safe, Dinnerware Safe,
+ * contato direto, ensaio e combinações. Condição escrita vira "Sim, com condições". Nada de "pode ir à louça" genérico.
  */
 function Seguranca({ e }: { e: Esmalte }) {
   const t = e.tecnica ?? {}
-  const s = t.seguranca ?? {}
-  const rot = (v?: Verificacao) => VERIFICACAO[v ?? 'nao-verificado']
-  const declarada: Verificacao | undefined = s.alimentarDeclarada ?? (e.louca === 'sim' ? 'sim' : e.louca === 'nao' ? 'nao' : undefined)
-  const contato: Verificacao | undefined = s.contatoAlimento ?? (e.louca === 'nao' ? 'nao' : undefined)
-  const ressalva = declarada === 'sim' && !!t.segurancaNotas?.trim()
-  const outros = SEGURANCA.filter(([k, , essencial]) => !essencial && k !== 'contatoAlimento' && s[k])
+  const s: Record<string, Verificacao | undefined> = { ...t.seguranca }
+  const cond = t.segurancaCondicoes ?? {}
+  if (!s.foodSafe && s.alimentarDeclarada) s.foodSafe = s.alimentarDeclarada
+  if (!s.foodSafe && e.louca && !t.seguranca) s.foodSafe = e.louca === 'sim' ? 'sim' : e.louca === 'nao' ? 'nao' : undefined
+  if (!s.contatoAlimento && e.louca === 'nao') s.contatoAlimento = 'nao'
+  const itens = SEGURANCA.filter(([k, , essencial]) => essencial || s[k]).map(([k, l]): Linha => {
+    const v = s[k] ?? 'nao-verificado'
+    const c = cond[k]
+    const valor = v === 'sim' && c ? 'Sim, com condições' : VERIFICACAO[v]
+    const nota = c ?? (k === 'combinacoes' && v === 'nao-verificado' ? 'segurança isolada não vale para a combinação' : undefined)
+    return [l, valor, nota]
+  })
   return (
     <section className="fx-grupo">
       <h3>Segurança</h3>
-      <Tabela itens={[
-        ['Atoxicidade', s.atoxico ? (s.atoxico === 'sim' ? 'Atóxico, sem chumbo declarado' : rot(s.atoxico)) : 'Não verificado'],
-        ['Segurança alimentar declarada', declarada === 'sim' ? (ressalva ? 'Sim, com ressalvas' : 'Sim') : rot(declarada), e.origem === 'comercial' ? 'pelo fabricante' : undefined],
-        ['Contato direto com alimentos', rot(contato), contato ? undefined : 'nenhum ensaio registrado'],
-        ['Ensaio laboratorial', rot(s.ensaio)],
-        ...outros.map(([k, l]): Linha => [l, rot(s[k])]),
-      ]} />
+      <Tabela itens={itens} />
       {t.segurancaNotas && <div className="fx-ressalva"><p className="fx-rot">Ressalvas</p><Estruturado texto={t.segurancaNotas} /></div>}
-      <p className="fx-origem">Atóxico não quer dizer próprio para alimentos. A segurança de um esmalte isolado não vale automaticamente para combinações e sobreposições.</p>
+      <p className="fx-origem">Atóxico não quer dizer próprio para alimentos. Uma combinação não é segura só porque cada esmalte é.</p>
       <Origem o={t.origens?.seguranca} />
     </section>
   )
 }
 export { DEFEITOS_FICHA }
 
-/* ——— Experimentos: caderno visual do ateliê ——— */
+/* ——— Experimentos: caderno do ateliê ——— */
 export function AbaExperimentos({ e, testes }: { e: Esmalte; testes: Teste[] }) {
   const nomes = useLiveQuery(async () => new Map((await db.esmaltes.toArray()).map((x) => [x.id, x.nome])), [], new Map<string, string>())
   const combos = useLiveQuery(async () => (await db.testes.toArray()).filter((t) => !t.excluido && t.combinacao?.length && (t.esmalteId === e.id || t.combinacao.includes(e.id))), [e.id], [])
   const proprios = testes.filter((t) => !t.combinacao?.length)
-  const flu = e.testesFluidez ?? []
   return (
     <>
       <section className="fx-grupo">
@@ -181,11 +192,15 @@ export function AbaExperimentos({ e, testes }: { e: Esmalte; testes: Teste[] }) 
               </div>
             </Link>
           ))}
-        </div> : <p className="fx-vazio-l">Nenhum teste deste esmalte ainda.</p>}
-        {flu.length > 0 && <p className="fx-origem">{flu.length} {flu.length === 1 ? 'teste de fluidez registrado' : 'testes de fluidez registrados'}: veja em Perfil › Fluidez na queima.</p>}
+        </div> : <p className="fx-vazio-l">Nenhum ainda.</p>}
       </section>
-      <Grupo titulo="Combinações e sobreposições" vazio={!combos.length}>
-        {combos.map((t) => {
+      <section className="fx-grupo fx-flu-testes">
+        <h3>Testes de fluidez</h3>
+        <FluidezQueima e={e} embutida soTestes />
+      </section>
+      <section className="fx-grupo">
+        <h3>Combinações e sobreposições</h3>
+        {combos.length ? combos.map((t) => {
           const base = t.esmalteId ? nomes.get(t.esmalteId) : undefined
           return (
             <Link key={t.id} to={`/testes/${t.id}`} className="fx-linha-t">
@@ -196,15 +211,31 @@ export function AbaExperimentos({ e, testes }: { e: Esmalte; testes: Teste[] }) 
               </div>
             </Link>
           )
-        })}
-      </Grupo>
+        }) : <p className="fx-vazio-l">Nenhuma ainda. Registre como um teste com combinação.</p>}
+      </section>
       <section className="fx-grupo fx-pessoal">
         <h3>Observações pessoais</h3>
-        {e.notasPessoais ? <Paragrafos texto={e.notasPessoais} /> : <p className="fx-vazio-l">Sem anotações. Escreva em ⋯ › Editar › Experimentos.</p>}
+        <NotasPessoais e={e} />
         <Relacoes tipo="esmalte" id={e.id} />
       </section>
-      <GaleriaPecas titulo="Obras relacionadas" fotos={e.pecas ?? []} onChange={(v) => db.esmaltes.update(e.id, { pecas: v, atualizadoEm: Date.now() })} />
+      <GaleriaPecas titulo="Obras relacionadas" compacto fotos={e.pecas ?? []} onChange={(v) => db.esmaltes.update(e.id, { pecas: v, atualizadoEm: Date.now() })} />
     </>
+  )
+}
+
+/** Observações pessoais editáveis aqui mesmo: grava ao sair do campo. */
+function NotasPessoais({ e }: { e: Esmalte }) {
+  const [editando, setEditando] = useState(false)
+  const [txt, setTxt] = useState(e.notasPessoais ?? '')
+  if (!editando) return e.notasPessoais
+    ? <><Paragrafos texto={e.notasPessoais} /><button className="fx-link" onClick={() => { setTxt(e.notasPessoais ?? ''); setEditando(true) }}><Pencil size={13} />Editar observações</button></>
+    : <button className="fx-link" onClick={() => { setTxt(''); setEditando(true) }}><Plus size={14} />Escrever uma observação</button>
+  const salvar = async () => { await db.esmaltes.update(e.id, { notasPessoais: txt.trim() || undefined, atualizadoEm: Date.now() }); setEditando(false) }
+  return (
+    <div className="fx-notas-ed">
+      <textarea className="input" autoFocus rows={4} value={txt} onChange={(x) => setTxt(x.target.value)} placeholder="O que você observou: aplicação, queima, resultado, ideias…" />
+      <div className="fx-notas-b"><button className="btn sm ghost" onClick={() => setEditando(false)}>Cancelar</button><button className="btn sm primary" onClick={salvar}>Salvar</button></div>
+    </div>
   )
 }
 
@@ -239,6 +270,7 @@ export function AbaDocumentacao({ e, familias, receita, estudo, aprovada }: { e:
         </Grupo>
       ) : null}
       <Grupo titulo={comercial ? 'Documentação do fabricante' : 'Observações'} vazio={!e.observacoes}><Estruturado texto={e.observacoes} /></Grupo>
+      {e.aplicacao && (!!e.tecnica?.metodos?.length || temTexto(e.tecnica?.aplicacao)) && <Grupo titulo="Texto original de aplicação"><Estruturado texto={e.aplicacao} /></Grupo>}
       <Grupo titulo="Fontes" vazio={!fontes.length}>
         <ul className="fx-fontes">{fontes.map((u) => <li key={u}><a href={u} target="_blank" rel="noreferrer">{u.replace(/^https?:\/\/(www\.)?/, '')}</a></li>)}</ul>
       </Grupo>
