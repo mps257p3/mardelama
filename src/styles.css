@@ -1232,6 +1232,7 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
 .fx-foto > button { all: unset; display: block; width: 100%; height: 100%; cursor: zoom-in; }
 .fx-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .fx-swatch { width: 100%; height: 100%; }
+.fx-foto > button.fx-foto-recorte { position: absolute; right: 10px; top: 10px; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; color: var(--marfim); background: rgba(30,28,25,.45); backdrop-filter: blur(6px); cursor: pointer; }
 .fx-foto-tipo { position: absolute; left: 12px; bottom: 12px; font: 500 10px/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--marfim); background: rgba(30,28,25,.55); padding: 5px 7px; border-radius: 2px; pointer-events: none; }
 .fx-thumbs { display: flex; gap: 4px; margin-top: 4px; overflow-x: auto; scrollbar-width: none; padding: 0 20px; }
 @media (min-width: 640px) { .fx-thumbs { padding: 0; } }
