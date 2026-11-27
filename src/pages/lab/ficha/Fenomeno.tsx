@@ -10,7 +10,7 @@ import {
 import { FENOMENOS } from '../../../lib/fenomenos'
 import { Sheet } from '../../../ui/Sheet'
 import { AmostraFenomeno } from '../../../ui/AmostraFenomeno'
-import { FotoRecortada, MenuFoto } from './FotoFenomeno'
+import { FotoRecortada } from './FotoFenomeno'
 
 const NOME = Object.fromEntries(PICTOGRAMAS)
 const ATRIB = Object.fromEntries(ATRIBUTOS_COMPORTAMENTO)
@@ -115,27 +115,26 @@ export function especificoDoFenomeno(e: Esmalte, tipo: string): Item[] {
 /** Seção de efeitos: grade de amostras da biblioteca; cada uma abre o painel do fenômeno. */
 export function AtlasEfeitos({ e }: { e: Esmalte }) {
   const [aberto, setAberto] = useState<{ tipo: string; status: StatusFenomeno }>()
-  const [menu, setMenu] = useState<string>()
   const lista = associacoesFenomenos(e)
   if (!lista.length) return null
   return (
     <>
       <ul className="fx-amostras-f">
         {lista.map((a) => (
-          <li key={a.tipo} className="fx-amostra-w">
-            <button className="fx-amostra-f" onClick={() => setAberto(a)} aria-label={`${NOME[a.tipo] ?? a.tipo}: ver explicação`}>
-              {e.fotosFenomenos?.[a.tipo] ? <FotoRecortada foto={e.fotosFenomenos[a.tipo]} alt={`${NOME[a.tipo] ?? a.tipo}: registro próprio`} /> : <AmostraFenomeno tipo={a.tipo} />}
+          <li key={a.tipo}>
+            <button className="fx-amostra-f" onClick={() => setAberto(a)} aria-label={`${NOME[a.tipo] ?? a.tipo}${e.fotosFenomenos?.[a.tipo] ? ' (registro próprio)' : ''}: ver explicação`}>
+              <span className="fx-amostra-img">
+                {e.fotosFenomenos?.[a.tipo] ? <FotoRecortada foto={e.fotosFenomenos[a.tipo]} alt="" /> : <AmostraFenomeno tipo={a.tipo} />}
+                {e.fotosFenomenos?.[a.tipo] && <span className="fx-foto-marca" aria-hidden="true"><Camera size={10} strokeWidth={2} /></span>}
+              </span>
               <span className="fx-amostra-nome">{NOME[a.tipo] ?? a.tipo}</span>
-              <span className="fx-img-origem">{e.fotosFenomenos?.[a.tipo] ? 'Registro próprio' : 'Infográfico técnico'}</span>
               {a.status !== 'documentado' && <span className={'fx-status ' + a.status}>{ROTULO_STATUS[a.status]}</span>}
             </button>
-            <button className="fx-cam" onClick={() => setMenu(a.tipo)} aria-label={`Foto própria de ${NOME[a.tipo] ?? a.tipo}`}><Camera size={14} strokeWidth={1.6} /></button>
           </li>
         ))}
       </ul>
-      <p className="fx-atlas-leg">Infográficos técnicos: representações esquemáticas dos fenômenos, não resultados de testes com este esmalte. Toque no ícone de câmera para usar uma foto sua nesta ficha.</p>
+      <p className="fx-atlas-leg">Infográficos esquemáticos e registros fotográficos próprios, quando disponíveis.</p>
       {aberto && <PainelFenomeno e={e} tipo={aberto.tipo} status={aberto.status} onClose={() => setAberto(undefined)} />}
-      {menu && <MenuFoto e={e} tipo={menu} onClose={() => setMenu(undefined)} />}
     </>
   )
 }

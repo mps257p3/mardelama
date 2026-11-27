@@ -27,7 +27,7 @@ const defs = `<defs>
 <marker id="aa" viewBox="0 0 8 8" refX="6.5" refY="4" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0.5,0.8L7,4L0.5,7.2" fill="none" stroke="${C.azul}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></marker>
 <marker id="al" viewBox="0 0 8 8" refX="6.5" refY="4" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0.5,0.8L7,4L0.5,7.2" fill="none" stroke="${C.luz}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></marker>
 </defs>`
-const svg = (corpo) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240"><rect width="240" height="240" fill="${C.fundo}"/>${defs}${corpo}</svg>\n`
+const svg = (corpo) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="16 14 208 208" width="208" height="208"><rect width="240" height="240" fill="${C.fundo}"/>${defs}${corpo}</svg>\n`
 const massa = (d) => `<path d="${d}" fill="url(#h)" stroke="${C.linha}" stroke-width="0.9" stroke-linejoin="round"/>`
 const camada = (d, cor = C.e1, op = 1) => `<path d="${d}" fill="${cor}" fill-opacity="${op}" stroke="${C.linha}" stroke-width="0.9" stroke-linejoin="round"/>`
 const seta = (d, m = 'a', cor = C.seta, w = 1.3, extra = '') => `<path d="${d}" fill="none" stroke="${cor}" stroke-width="${w}" stroke-linecap="round" marker-end="url(#${m})" ${extra}/>`
