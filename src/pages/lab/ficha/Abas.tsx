@@ -45,12 +45,26 @@ export function AbaPerfil({ e, irPara, foco }: { e: Esmalte; irPara: (aba: 'expe
     ['Por temperatura', v.corTemperatura], ['Por atmosfera', v.corAtmosfera], ['Nas áreas de acúmulo', v.corAcumulo],
     ['Influência da massa cerâmica', v.corMassa], ['Em sobreposições', v.corSobreposicao],
   ]
-  const outras = expressivoAlemDosEfeitos(p.expressivo, efeitos)
   const origemDe = (k: string) => { const o = p.comportamentoOrigem?.[k] ?? p.origens?.comportamento?.origem; return o ? ROTULO_ORIGEM[o] : undefined }
-  const props = ATRIBUTOS_COMPORTAMENTO.filter(([k]) => k !== 'fluidez' && (p.comportamento?.[k] || p.comportamentoNota?.[k] || p.comportamentoClasse?.[k]))
-  const superficie = GEOMETRIAS.filter(([k]) => p.superficie?.[k]?.length)
+  const tem = (k: string) => !!(p.comportamento?.[k] || p.comportamentoNota?.[k] || p.comportamentoClasse?.[k])
+  const nomeAttr = Object.fromEntries(ATRIBUTOS_COMPORTAMENTO)
+  const nomeGeo = Object.fromEntries(GEOMETRIAS)
+  const classeAttr = (k: string): ReactNode => p.comportamento?.[k] ? <span className="fx-nivel"><Barras nivel={p.comportamento[k]} />{NIVEIS[p.comportamento[k]]}</span> : p.comportamentoClasse?.[k]
+  const geo = (ks: string[]) => ks.filter((k) => p.superficie?.[k]?.length)
+  // atributos absorvidos por um campo do roteiro abaixo; os demais seguem como propriedades próprias
+  const campos: { nome: string; attr?: string; extras: string[]; geos: string[] }[] = [
+    { nome: 'Reatividade', attr: 'reatividade', extras: [], geos: [] },
+    { nome: 'Influência da espessura', attr: 'espessura', extras: [], geos: ['finas', 'espessas'] },
+    { nome: 'Influência da temperatura', attr: 'temperatura', extras: ['patamar', 'resfriamento'], geos: [] },
+    { nome: 'Superfícies verticais', extras: [], geos: ['verticais'] },
+    { nome: 'Superfícies horizontais', extras: [], geos: ['horizontais'] },
+    { nome: 'Relevos e cavidades', extras: ['acumulo', 'arestas', 'texturas'], geos: ['relevos', 'depressoes', 'arestas'] },
+  ]
+  const usados = new Set(campos.flatMap((c) => [c.attr, ...c.extras]))
+  const props = ATRIBUTOS_COMPORTAMENTO.filter(([k]) => k !== 'fluidez' && !usados.has(k) && tem(k))
+  const outras = expressivoAlemDosEfeitos(p.expressivo, efeitos)
   const temFluidez = e.origem === 'comercial' || !!e.fluidez || !!e.testesFluidez?.length || !!p.comportamento?.fluidez || !!p.comportamentoNota?.fluidez
-  const temEfeitos = efeitos.length || superficie.length || outras.length || p.expressivoTexto || p.sugestoesIA
+  const temEfeitos = efeitos.length || outras.length || p.expressivoTexto || p.sugestoesIA
   return (
     <>
       <Grupo titulo="Aparência" origem={p.origens?.visual} vazio={![...aparencia, ...variacoes].some(([, x]) => x)}>
@@ -62,21 +76,38 @@ export function AbaPerfil({ e, irPara, foco }: { e: Esmalte; irPara: (aba: 'expe
       <section className="fx-grupo">
         <h3>Comportamento</h3>
         {temFluidez && <Fluidez e={e} irPara={irPara} aberta={foco === 'fluidez'} />}
+        {campos.map((c) => {
+          const g = geo(c.geos), ex = c.extras.filter(tem), principal = c.attr && tem(c.attr)
+          if (!principal && !ex.length && !g.length) return null
+          // resumo: nível do atributo; sem ele, o que se observa na superfície (sem repetir termos)
+          const resumo = principal ? classeAttr(c.attr!) ?? 'Sem classificação' : g.length ? [...new Set(g.flatMap((k) => p.superficie![k]))].join(', ') : undefined
+          return (
+            <Propriedade key={c.nome} nome={c.nome} classe={resumo} fonte={principal ? origemDe(c.attr!) : p.origens?.superficie?.origem && ROTULO_ORIGEM[p.origens.superficie.origem]} condicoes={principal ? p.comportamentoCondicoes?.[c.attr!] : undefined}>
+              {principal && (p.comportamentoNota?.[c.attr!] ? <p className="fx-par">{p.comportamentoNota[c.attr!]}</p> : !p.comportamento?.[c.attr!] && !p.comportamentoClasse?.[c.attr!] ? <p className="fx-par">Não há dados suficientes para estabelecer uma classificação.</p> : null)}
+              {ex.map((k) => (
+                <div key={k} className="fx-prop-l"><span>{nomeAttr[k]}{origemDe(k) ? ` · ${origemDe(k)}` : ''}</span>
+                  {classeAttr(k)}{classeAttr(k) && p.comportamentoNota?.[k] ? '. ' : ''}{p.comportamentoNota?.[k]}
+                  {p.comportamentoCondicoes?.[k] && <> (condições: {p.comportamentoCondicoes[k]})</>}</div>
+              ))}
+              {g.length > 0 && <>
+                {(principal || ex.length > 0 || g.length > 1) && g.map((k) => <p key={k} className="fx-prop-l"><span>{nomeGeo[k]}</span>{p.superficie![k].join(', ')}</p>)}
+                {(principal || p.origens?.superficie?.fonte) && <Origem o={principal ? p.origens?.superficie : { fonte: p.origens?.superficie?.fonte, data: p.origens?.superficie?.data }} />}
+              </>}
+            </Propriedade>
+          )
+        })}
         {props.map(([k, l]) => (
-          <Propriedade key={k} nome={l}
-            classe={p.comportamento?.[k] ? <span className="fx-nivel"><Barras nivel={p.comportamento[k]} />{NIVEIS[p.comportamento[k]]}</span> : p.comportamentoClasse?.[k] ?? 'Sem classificação'}
-            fonte={origemDe(k)} condicoes={p.comportamentoCondicoes?.[k]}>
+          <Propriedade key={k} nome={l} classe={classeAttr(k) ?? 'Sem classificação'} fonte={origemDe(k)} condicoes={p.comportamentoCondicoes?.[k]}>
             {p.comportamentoNota?.[k] ? <p className="fx-par">{p.comportamentoNota[k]}</p> : !p.comportamento?.[k] ? <p className="fx-par">Não há dados suficientes para estabelecer uma classificação.</p> : null}
           </Propriedade>
         ))}
-        {!temFluidez && !props.length && <p className="fx-vazio-l">Nenhuma propriedade registrada. Em ⋯ › Editar › Perfil, registre o que o fabricante informa ou o que você observou.</p>}
+        {!temFluidez && !props.length && !campos.some((c) => (c.attr && tem(c.attr)) || c.extras.some(tem) || geo(c.geos).length) && <p className="fx-vazio-l">Nenhuma propriedade registrada. Em ⋯ › Editar › Perfil, registre o que o fabricante informa ou o que você observou.</p>}
       </section>
 
       <section className="fx-grupo">
         <div className="fx-h-acao"><h3>Efeitos e interações</h3><BotaoGerenciarImagens e={e} /></div>
         {!temEfeitos && <p className="fx-vazio-l">Nenhum efeito identificado nas informações disponíveis.</p>}
         <AtlasEfeitos e={e} />
-        {superficie.length > 0 && <><p className="fx-sub">Interação com a superfície</p><Tabela itens={superficie.map(([k, l]) => [l, p.superficie![k].join(', ')])} /><Origem o={p.origens?.superficie} /></>}
         {/* possibilidades que só repetem os efeitos ilustrados não aparecem de novo */}
         {(!!outras.length || p.expressivoTexto || p.sugestoesIA) && <>
           <p className="fx-sub">{efeitos.length ? 'Outras possibilidades' : 'Possibilidades expressivas'}</p>
