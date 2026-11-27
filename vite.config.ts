@@ -30,7 +30,7 @@ export default defineConfig({
       },
       workbox: {
         importScripts: ['compartilhar-sw.js'],
-        globPatterns: ['**/*.{js,css,html,png,jpg,svg,woff2}', 'fenomenos/*.webp'],
+        globPatterns: ['**/*.{js,css,html,png,jpg,svg,woff2}'],
         // o modelo de visão só carrega quando é usado; não entra na instalação do app
         globIgnores: ['**/transformers*.js', '**/ort-*', '**/pdf.worker*'],
         navigateFallback: '/index.html',
@@ -38,6 +38,12 @@ export default defineConfig({
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         runtimeCaching: [{
+          // biblioteca de fenômenos: cada imagem só baixa quando uma ficha a usa; depois vem do cache
+          // e é conferida em segundo plano, então uma imagem atualizada chega a todas as fichas
+          urlPattern: ({ url }) => url.pathname.startsWith('/fenomenos/'),
+          handler: 'StaleWhileRevalidate',
+          options: { cacheName: 'fenomenos', expiration: { maxEntries: 60 }, cacheableResponse: { statuses: [200] } },
+        }, {
           urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/,
           handler: 'CacheFirst',
           options: { cacheName: 'fontes', expiration: { maxEntries: 20, maxAgeSeconds: 31536000 } },

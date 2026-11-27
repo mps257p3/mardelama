@@ -73,40 +73,74 @@ export const SEGURANCA: [string, string, boolean][] = [
 ]
 
 /** Comportamentos com pictograma. Só aparecem quando identificados (registrados ou deduzidos de campos preenchidos). */
+/**
+ * Biblioteca de fenômenos: identificador → nome. Os 13 primeiros são os associados automaticamente quando documentados;
+ * os demais ficam disponíveis para marcação manual e para filtros. Acrescentar um fenômeno aqui (e sua imagem e
+ * descrição) não muda a estrutura das fichas: elas guardam só os identificadores.
+ */
 export const PICTOGRAMAS: [string, string][] = [
-  ['escorrimento', 'Escorrimento'], ['sobreposicao', 'Sobreposição'], ['reatividade', 'Reatividade entre esmaltes'], ['acumulo', 'Acúmulo em cavidades'],
-  ['quebraBordas', 'Quebra de cor nas bordas'], ['cristalizacao', 'Cristalização'], ['craquele', 'Craquelado'], ['crawling', 'Retração (crawling)'],
-  ['flutuacao', 'Flutuação de cor'], ['separacaoFases', 'Separação de fases'], ['variacaoEspessura', 'Variação por espessura'], ['textura', 'Textura'],
-  ['opacidade', 'Opacidade'], ['transparencia', 'Transparência'], ['metalico', 'Efeito metálico'], ['iridescencia', 'Iridescência'],
+  ['escorrimento', 'Escorrimento'], ['sobreposicao', 'Sobreposição'], ['reatividade', 'Reatividade entre esmaltes'], ['flutuacao', 'Flutuação de cor'],
+  ['cristalizacao', 'Cristalização'], ['craquele', 'Craquelamento'], ['crawling', 'Retração (crawling)'], ['acumulo', 'Acúmulo em cavidades'],
+  ['quebraBordas', 'Variação de cor nas bordas'], ['bolhas', 'Formação de bolhas'], ['separacaoFases', 'Separação de fases'], ['opalescencia', 'Opalescência'],
+  ['opacidade', 'Variação de opacidade'],
+  ['variacaoEspessura', 'Variação por espessura'], ['textura', 'Textura'], ['transparencia', 'Transparência'], ['metalico', 'Efeito metálico'], ['iridescencia', 'Iridescência'],
 ]
 /** Chaves antigas de efeitos, levadas para o fenômeno correspondente da biblioteca atual. */
 const EFEITO_ANTIGO: Record<string, string> = { afinaArestas: 'quebraBordas', revelaMassa: 'quebraBordas', realcaRelevo: 'acumulo', reticulacao: 'textura', cobreRelevo: 'opacidade' }
-/** Efeitos identificados: os marcados na ficha + os que decorrem do que já está preenchido. Nada é presumido. */
-export function efeitosDe(e: Esmalte): string[] {
-  const s = new Set((e.perfil?.efeitos ?? []).map((k) => EFEITO_ANTIGO[k] ?? k))
-  const sup = e.perfil?.superficie ?? {}
+
+/** Como a associação está sustentada: documentação (fabricante, revenda, publicação), seus testes, ou nada confirmado. */
+export type StatusFenomeno = 'documentado' | 'experimental' | 'nao-confirmado'
+export const ROTULO_STATUS: Record<StatusFenomeno, string> = { documentado: 'Documentado', experimental: 'Observado em teste', 'nao-confirmado': 'Não confirmado' }
+export const statusDaOrigem = (o?: OrigemDado): StatusFenomeno =>
+  o === 'experimento' || o === 'pessoal' ? 'experimental' : !o || o === 'ia' ? 'nao-confirmado' : 'documentado'
+const PESO: Record<StatusFenomeno, number> = { documentado: 3, experimental: 2, 'nao-confirmado': 1 }
+
+/**
+ * Fenômenos associados a um esmalte, cada um com o status da evidência. Só entra o que está registrado na ficha
+ * (efeitos marcados, superfície, textura, defeitos, comportamento, textos de cor e de queima); nada é presumido.
+ */
+export function associacoesFenomenos(e: Esmalte): { tipo: string; status: StatusFenomeno }[] {
+  const p = e.perfil ?? {}
+  const t = e.tecnica ?? {}
+  const proprio: OrigemDado | undefined = e.origem === 'comercial' ? undefined : 'pessoal'
+  const m = new Map<string, StatusFenomeno>()
+  const add = (k: string, o?: OrigemDado) => { const st = statusDaOrigem(o ?? proprio); if (!m.has(k) || PESO[st] > PESO[m.get(k)!]) m.set(k, st) }
+  for (const k of p.efeitos ?? []) add(EFEITO_ANTIGO[k] ?? k, p.origens?.efeitos?.origem)
+  const sup = p.superficie ?? {}, os = p.origens?.superficie?.origem
   const tem = (geo: string | null, c: string) => (geo ? sup[geo] : Object.values(sup).flat())?.includes(c)
-  if (tem(null, 'Escorre')) s.add('escorrimento')
-  if (tem(null, 'Acumula') || tem(null, 'Realça relevos')) s.add('acumulo')
-  if (tem('arestas', 'Afina') || tem(null, 'Revela a massa cerâmica')) s.add('quebraBordas')
-  if (e.transparencia === 'Transparente' || e.transparencia === 'Translúcido') s.add('transparencia')
-  if (e.transparencia === 'Opaco') s.add('opacidade')
+  if (tem(null, 'Escorre')) add('escorrimento', os)
+  if (tem(null, 'Acumula') || tem(null, 'Realça relevos')) add('acumulo', os)
+  if (tem('arestas', 'Afina') || tem(null, 'Revela a massa cerâmica')) add('quebraBordas', os)
+  const ov = p.origens?.visual?.origem
   const tx = texturasDe(e)
-  if (tx.includes('Craquelada')) s.add('craquele')
-  if (tx.includes('Cristalizada') || tx.includes('Microcristalina')) s.add('cristalizacao')
-  if (tx.includes('Metálica') || e.acabamento === 'Metálico') s.add('metalico')
-  if (tx.includes('Iridescente') || /iridesc/i.test(e.acabamento ?? '')) s.add('iridescencia')
-  if (tx.some((t) => ['Rugosa', 'Granulada', 'Enrugada', 'Espumada', 'Reticulada'].includes(t))) s.add('textura')
-  if (e.tecnica?.defeitos?.some((d) => d.intencional && /crawling|retra/i.test(d.tipo))) s.add('crawling')
-  const p = e.perfil
-  const documentado = (k: string) => !!(p?.comportamento?.[k] || p?.comportamentoNota?.[k] || p?.comportamentoClasse?.[k]) && p?.comportamentoOrigem?.[k] !== 'ia'
-  if ((p?.comportamento?.reatividade ?? 0) >= 3 || (documentado('reatividade') && !p?.comportamento?.reatividade)) s.add('reatividade')
-  if (p?.visual?.corFina || p?.visual?.corEspessa) s.add('variacaoEspessura')
-  // flutuação só quando a documentação fala dela (ex.: "white float", "flutuação branca")
-  const textos = [...Object.values(p?.visual ?? {}), ...(e.tecnica?.temperaturas ?? []).map((x) => x.descricao ?? '')]
-  if (textos.some((x) => /flutua|float/i.test(x))) s.add('flutuacao')
-  return PICTOGRAMAS.map(([k]) => k).filter((k) => s.has(k))
+  if (tx.includes('Craquelada')) add('craquele', ov)
+  if (tx.includes('Cristalizada') || tx.includes('Microcristalina')) add('cristalizacao', ov)
+  for (const d of t.defeitos ?? []) {
+    const o = d.hipotese ? 'ia' : t.origens?.defeitos?.origem
+    if (/crawling|retra/i.test(d.tipo)) add('crawling', o)
+    if (/craquel/i.test(d.tipo)) add('craquele', o)
+    if (/bolha|pinhole|cratera|fervura/i.test(d.tipo)) add('bolhas', o)
+    if (/escorr/i.test(d.tipo)) add('escorrimento', o)
+  }
+  const doc = (k: string) => !!(p.comportamento?.[k] || p.comportamentoNota?.[k] || p.comportamentoClasse?.[k])
+  if ((p.comportamento?.reatividade ?? 0) >= 3 || (doc('reatividade') && !p.comportamento?.reatividade)) add('reatividade', p.comportamentoOrigem?.reatividade ?? p.origens?.comportamento?.origem)
+  if ((p.comportamento?.cristais ?? 0) >= 3) add('cristalizacao', p.comportamentoOrigem?.cristais ?? p.origens?.comportamento?.origem)
+  // fenômenos citados nos textos de cor (origem: aparência) e nos resultados de queima (origem: tipo do resultado)
+  const textos: [string, OrigemDado | undefined][] = [
+    ...Object.values(p.visual ?? {}).map((x) => [x, ov] as [string, OrigemDado | undefined]),
+    [e.acabamento ?? '', ov], [e.textura ?? '', ov],
+    ...(t.temperaturas ?? []).map((x) => [x.descricao ?? '', x.tipo === 'teste' ? 'experimento' : x.tipo === 'hipotese' ? 'ia' : x.tipo === 'revendedor' ? 'revendedor' : 'fabricante'] as [string, OrigemDado | undefined]),
+  ]
+  for (const [x, o] of textos) {
+    if (/flutua|float/i.test(x)) add('flutuacao', o)
+    if (/opalesc/i.test(x)) add('opalescencia', o)
+    if (/separa[çc][ãa]o de fases|phase separation/i.test(x)) add('separacaoFases', o)
+    if (/(fica|torna-se|passa a)[^.]*(transparente|opac|transl)|transparent[^.]*(white|branc)|opaco[^.]*transparente|transparente[^.]*opaco/i.test(x)) add('opacidade', o)
+  }
+  return PICTOGRAMAS.map(([k]) => k).filter((k) => m.has(k)).map((k) => ({ tipo: k, status: m.get(k)! }))
 }
+/** Só os identificadores (para filtros e contagens). */
+export const efeitosDe = (e: Esmalte) => associacoesFenomenos(e).map((x) => x.tipo)
 
 /** Onde mora a amostra ilustrativa de cada fenômeno (mesma biblioteca para fichas, filtros e classificação). */
 export const imagemFenomeno = (k: string) => `/fenomenos/${k}.webp`

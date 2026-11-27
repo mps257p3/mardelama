@@ -74,7 +74,7 @@ export function AbaPerfil({ e, irPara, foco }: { e: Esmalte; irPara: (aba: 'expe
       <section className="fx-grupo">
         <h3>Efeitos e interações</h3>
         {!temEfeitos && <p className="fx-vazio-l">Nenhum efeito identificado nas informações disponíveis.</p>}
-        <AtlasEfeitos e={e} tipos={efeitos} />
+        <AtlasEfeitos e={e} />
         {superficie.length > 0 && <><p className="fx-sub">Interação com a superfície</p><Tabela itens={superficie.map(([k, l]) => [l, p.superficie![k].join(', ')])} /><Origem o={p.origens?.superficie} /></>}
         {/* possibilidades que só repetem os efeitos ilustrados não aparecem de novo */}
         {(!!outras.length || p.expressivoTexto || p.sugestoesIA) && <>

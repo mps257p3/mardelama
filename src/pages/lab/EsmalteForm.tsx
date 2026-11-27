@@ -133,9 +133,10 @@ export default function EsmalteForm() {
         </Campo>)}
         <OrigemCampo valor={perfil.origens?.comportamento} onChange={(o) => setPerfil({ origens: { ...perfil.origens, comportamento: o } })} />
 
-        <h3>Perfil · comportamentos identificados</h3>
-        <p className="faint wide-row" style={{ fontSize: 13 }}>Aparecem como pictogramas na ficha. Marque só o que foi informado ou observado; alguns já saem da superfície, da opacidade e da textura.</p>
-        <Campo label="Comportamentos" wide><Multi value={perfil.efeitos ?? []} onChange={(v) => setPerfil({ efeitos: v.length ? v : undefined })} opcoes={PICTOGRAMAS.map(([v, l]) => ({ v, l }))} /></Campo>
+        <h3>Perfil · efeitos e interações</h3>
+        <p className="faint wide-row" style={{ fontSize: 13 }}>Aparecem como imagens da biblioteca de fenômenos na ficha. Marque só o que o fabricante, a revenda ou os seus testes registram e indique a origem abaixo; sem origem, aparecem como não confirmados. Alguns já saem da superfície, da textura, dos defeitos e das queimas.</p>
+        <Campo label="Fenômenos" wide><Multi value={perfil.efeitos ?? []} onChange={(v) => setPerfil({ efeitos: v.length ? v : undefined })} opcoes={PICTOGRAMAS.map(([v, l]) => ({ v, l }))} /></Campo>
+        <OrigemCampo valor={perfil.origens?.efeitos} onChange={(o) => setPerfil({ origens: { ...perfil.origens, efeitos: o } })} />
 
         <h3>Perfil · comportamento sobre a superfície</h3>
         {GEOMETRIAS.map(([k, l]) => <Campo key={k} label={l} wide><Multi value={perfil.superficie?.[k] ?? []} onChange={(v) => { const x = { ...perfil.superficie, [k]: v }; if (!v.length) delete x[k]; setPerfil({ superficie: x }) }} opcoes={COMPORTAMENTOS_SUPERFICIE.map((v) => ({ v, l: v }))} /></Campo>)}
