@@ -42,7 +42,8 @@ export async function exportarEsmalte(e: Esmalte, aoAvancar?: (t: string) => voi
   const f = e.fluidezQueima
   if (comercial || e.testesFluidez?.length) {
     aoAvancar?.('Preparando fluidez…')
-    const fab = !f ? '<p><i>Ainda não consultado.</i></p>'
+    const fab = !f ? '<p><i>Fabricante ainda não consultado sobre a fluidez.</i></p>'
+      : f.situacao === 'indisponivel' ? '<p><i>Consulta indisponível ou não concluída.</i></p>'
       : f.situacao === 'nao-informada' ? '<p><i>Fluidez não informada pelo fabricante.</i></p>'
       : `${f.situacao === 'descritiva' ? '<p><small>O fabricante não tem classificação formal; abaixo, o que ele descreve.</small></p>' : ''}
         ${f.resultados.map((r) => `<div class="res">${r.classificacao ? `<p class="termo"><b>${esc(r.classificacao)}</b>${r.traducao ? ` · ${esc(r.traducao)}` : ''}</p>` : ''}
@@ -51,7 +52,7 @@ export async function exportarEsmalte(e: Esmalte, aoAvancar?: (t: string) => voi
           ${r.escorrimentoMm ? `<p><small>Escorrimento:</small> ${esc(/mm/i.test(r.escorrimentoMm) ? r.escorrimentoMm : r.escorrimentoMm + ' mm')}</p>` : ''}</div>`).join('')}
         <dl>${linhas([['Influência da espessura', f.espessura], ['Em sobreposição', f.sobreposicao], ['Influência da curva de queima', f.curva], ['Recomendações de aplicação', f.recomendacoes]])}</dl>
         ${f.imagens.length ? `<div class="grade">${await fotos(f.imagens, 'Teste de fluidez do fabricante')}</div>` : ''}`
-    const rotulo = !f || f.situacao === 'nao-informada' ? 'Fabricante' : f.situacao === 'descritiva' ? 'Descrição do fabricante' : 'Oficial do fabricante'
+    const rotulo = !f || f.situacao === 'nao-informada' || f.situacao === 'indisponivel' ? 'Fabricante' : f.situacao === 'descritiva' ? 'Descrição do fabricante' : 'Oficial do fabricante'
     const fontes = f && (f.fontes.length || f.consultadoEm) ? `<p><small>${f.fontes.map(link).join(' · ')}${f.consultadoEm ? `${f.fontes.length ? ' · ' : ''}Consultado em ${data(f.consultadoEm)}` : ''}</small></p>` : ''
     const seus: string[] = []
     for (const t of [...(e.testesFluidez ?? [])].sort((a, b) => b.data.localeCompare(a.data))) {

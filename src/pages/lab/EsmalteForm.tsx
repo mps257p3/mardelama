@@ -121,13 +121,15 @@ export default function EsmalteForm() {
           <Escolha value={perfil.comportamento?.[k] ? String(perfil.comportamento[k]) : undefined}
             onChange={(v) => { const c = { ...perfil.comportamento }; if (c[k] === Number(v)) delete c[k]; else c[k] = Number(v) as Nivel; setPerfil({ comportamento: c }) }}
             opcoes={([1, 2, 3, 4, 5] as Nivel[]).map((n) => ({ v: String(n), l: NIVEIS[n] }))} />
-          {(perfil.comportamento?.[k] || perfil.comportamentoNota?.[k] || perfil.comportamentoOrigem?.[k]) || abertos.includes(k) ? <div className="fx-form-ind">
+          {(perfil.comportamento?.[k] || perfil.comportamentoNota?.[k] || perfil.comportamentoOrigem?.[k] || perfil.comportamentoClasse?.[k]) || abertos.includes(k) ? <div className="fx-form-ind">
             <select className="input" value={perfil.comportamentoOrigem?.[k] ?? ''} aria-label="De quem é esta classificação"
               onChange={(x) => { const c = { ...perfil.comportamentoOrigem }; if (x.target.value) c[k] = x.target.value as OrigemDado; else delete c[k]; setPerfil({ comportamentoOrigem: c }) }}>
               <option value="">Classificação de: —</option>{(Object.keys(ORIGENS) as OrigemDado[]).map((o) => <option key={o} value={o}>{ORIGENS[o]}</option>)}
             </select>
-            <input className="input" placeholder="Descrição (ex.: frase do fabricante), sem nível se não houver escala" value={perfil.comportamentoNota?.[k] ?? ''} onChange={(x) => setPerfil({ comportamentoNota: limpo({ ...perfil.comportamentoNota, [k]: x.target.value }) })} />
-          </div> : <button type="button" className="fx-link" onClick={() => setAbertos([...abertos, k])}>Descrever sem nível</button>}
+            <input className="input" placeholder="Classificação curta sem nível (ex.: Variável)" value={perfil.comportamentoClasse?.[k] ?? ''} onChange={(x) => setPerfil({ comportamentoClasse: limpo({ ...perfil.comportamentoClasse, [k]: x.target.value }) })} />
+            <textarea className="input wide-row" rows={2} placeholder="Explicação técnica" value={perfil.comportamentoNota?.[k] ?? ''} onChange={(x) => setPerfil({ comportamentoNota: limpo({ ...perfil.comportamentoNota, [k]: x.target.value }) })} />
+            <input className="input wide-row" placeholder="Condições de validade (cone, aplicação, sobreposição…)" value={perfil.comportamentoCondicoes?.[k] ?? ''} onChange={(x) => setPerfil({ comportamentoCondicoes: limpo({ ...perfil.comportamentoCondicoes, [k]: x.target.value }) })} />
+          </div> : <button type="button" className="fx-link" onClick={() => setAbertos([...abertos, k])}>Descrever, citar fonte ou condições</button>}
         </Campo>)}
         <OrigemCampo valor={perfil.origens?.comportamento} onChange={(o) => setPerfil({ origens: { ...perfil.origens, comportamento: o } })} />
 

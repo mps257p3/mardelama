@@ -643,3 +643,58 @@ export async function fichaWhiteCascadeV2() {
   }
   await db.ajustes.put({ chave, valor: true })
 }
+
+/**
+ * 27/11 (3): White Cascade revisado. Cor principal no campo certo; fluidez registrada como consulta qualitativa
+ * à página oficial (sem escala do fabricante); textos traduzidos e em redação técnica; originais em inglês nas observações.
+ * Só troca textos que os ajustes anteriores escreveram; o que você mudou fica.
+ */
+export async function fichaWhiteCascadeV3() {
+  const chave = 'fix-ficha-white-cascade-v3'
+  if (await db.ajustes.get(chave)) return
+  const e = await db.esmaltes.get('esm-mayco-pc602')
+  if (e && !e.excluido) {
+    const URL = 'https://www.maycocolors.com/product/pc-602-white-cascade/'
+    const p = { ...e.perfil }
+    const t = { ...e.tecnica }
+    const troca = (atual: string | undefined, antigoComeco: string, novo: string) => (!atual || atual.startsWith(antigoComeco) ? novo : atual)
+    const vis = { ...p.visual }
+    if (vis.coresSecundarias?.startsWith('Branco puro em cone 06')) delete vis.coresSecundarias
+    vis.variacao ||= 'Em cone 06, mistura-se às cores dos esmaltes aplicados em conjunto.'
+    p.visual = vis
+    const nota = { ...p.comportamentoNota }
+    nota.fluidez = troca(nota.fluidez, 'A linha Pottery Cascade é descrita', 'As orientações disponíveis apresentam divergências quanto à intensidade do movimento. A linha é apresentada como de esmaltes de movimento, e o rótulo recomenda não aplicar na metade inferior da peça; já a dica da página do produto, para a aplicação sobre EL-118 Blue Grotto, indica movimento mínimo, com o esmalte permanecendo no padrão aplicado. A intensidade do escorrimento varia conforme a aplicação, a queima e o esmalte de base.')
+    nota.reatividade = troca(nota.reatividade, '"Intermingles', 'Em cone 06, mistura-se aos esmaltes aplicados em conjunto e introduz branco às cores. O movimento depende do esmalte aplicado por baixo.')
+    nota.espessura = troca(nota.espessura, 'A aplicação e a posição', 'A forma de aplicação e a posição da peça no forno alteram o escorrimento.')
+    nota.temperatura = troca(nota.temperatura, 'Temperatura, rampa e patamar realçam', 'Temperatura, rampa e patamar intensificam o escorrimento. Segundo a página do produto, a fórmula foi alterada para ampliar o movimento em baixa temperatura.')
+    p.comportamentoNota = nota
+    p.comportamentoClasse = { fluidez: 'Variável, sem escala do fabricante', reatividade: 'Interage com o esmalte de base', espessura: 'Altera o escorrimento', temperatura: 'Altera o escorrimento', ...p.comportamentoClasse }
+    p.comportamentoCondicoes = { fluidez: 'Cone 06, oxidação, aplicado sob ou sobre outros esmaltes.', reatividade: 'Cone 06, oxidação.', ...p.comportamentoCondicoes }
+    p.comportamentoOrigem = { ...p.comportamentoOrigem, espessura: p.comportamentoOrigem?.espessura === 'fabricante' ? 'rotulo' : (p.comportamentoOrigem?.espessura ?? 'rotulo') }
+    const fluidezQueima = e.fluidezQueima ?? {
+      situacao: 'descritiva' as const,
+      resultados: [{ cone: '06', comportamento: 'Esmalte de movimento, usado sob ou sobre outros esmaltes para criar reações e movimento; reformulado para ampliar o movimento em baixa temperatura. Sobre EL-118 Blue Grotto, a página indica movimento mínimo.' }],
+      imagens: [], fontes: [URL], consultadoEm: '2026-11-27',
+    }
+    const ap = { ...t.aplicacao }
+    if (ap.demaos === '1 a 2 (a Zeramics diz 2 a 3)') ap.demaos = '1 a 2 (rótulo); 2 a 3 (etiqueta da revenda Zeramics)'
+    t.aplicacao = ap
+    const q = { ...t.queima }
+    if (q.faixa?.startsWith('Cone 06/05, 999 a 1031 °C (etiqueta da Zeramics)')) q.faixa = 'Cone 06–05, 999 a 1031 °C (etiqueta da revenda Zeramics). Rótulo da Mayco: cone 06.'
+    if (q.alternativas?.startsWith('Cone 6, oxidação: "Transparent')) q.alternativas = 'Cone 6 (média temperatura), oxidação: transparente, incolor, com flutuação branca (Mayco; o rótulo indica cone 5/6). A página do produto inclui uma imagem em cone 10, redução, sem descrição. A etiqueta da revenda informa que a cor pode mudar em temperaturas mais altas.'
+    t.queima = q
+    const s = { ...t.seguranca }
+    delete s.combinacoes
+    t.seguranca = s
+    const cond = { ...t.segurancaCondicoes }
+    if (cond.combinacoes?.startsWith('A peça só é segura')) cond.combinacoes = 'Quando aplicado com outros esmaltes, a peça só é adequada a alimentos se o esmalte de base também for (rótulo).'
+    if (cond.foodSafe?.startsWith('Rótulo: "Food Safe"')) cond.foodSafe = 'Rótulo: Food Safe quando usado conforme as instruções do fabricante; a superfície pode não ser adequada a alimentos.'
+    t.segurancaCondicoes = cond
+    t.alertas = (t.alertas ?? []).filter((a) => a !== 'Segurança na louça depende do esmalte que vai por baixo.').map((a) => (a === 'Evite a metade de baixo da peça: o esmalte escorre.' ? 'Não aplicar na metade inferior da peça: o esmalte pode escorrer.' : a))
+    const descricao = troca(e.descricao, 'Fundente da linha Pottery Cascade. Vai por cima', 'Fundente da linha Pottery Cascade, aplicado sob ou sobre outros esmaltes para criar reações e movimento. O resultado depende do esmalte de base.')
+    const originais = 'Página oficial (maycocolors.com, consultada em 27/11/2026), textos originais: "Pottery Cascade™ are moving, flowing glazes, commonly used under or over other glazes to create reactions and movement." "May be applied randomly or uniformly, brushed or dabbed on with a sponge." Cone 06: "PC-602 White Cascade intermingles with the other glazes being used, introducing pure white to the colors you are using, blending with the color." Cone 6: "Transparent. Color clear with white float." Dica: "PC-602 White Cascade has a minimum movement and will stay in the pattern that you apply it in." (chip sobre EL-118 Blue Grotto). Reformulação: "our Pottery Cascade White has been reformulated to deliver improved movement at low fire temperatures." Selos na página: ACMI e Dinnerware Safe.'
+    const observacoes = e.observacoes?.includes('maycocolors.com, consultada em 27/11/2026') ? e.observacoes : [e.observacoes, originais].filter(Boolean).join('\n\n')
+    await db.esmaltes.update(e.id, { cor: e.cor || 'Branco', descricao, observacoes, perfil: p, tecnica: t, fluidezQueima, atualizadoEm: Date.now() })
+  }
+  await db.ajustes.put({ chave, valor: true })
+}

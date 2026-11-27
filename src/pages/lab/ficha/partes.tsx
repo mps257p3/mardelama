@@ -109,3 +109,36 @@ export function TextoCurto({ texto }: { texto: string }) {
 export const Paragrafos = ({ texto }: { texto?: string }) => texto ? <>{texto.split(/\n{2,}/).filter(Boolean).map((p, i) => <p key={i} className="fx-par">{p}</p>)}</> : null
 
 export const Vazio = ({ children }: { children: ReactNode }) => <p className="fx-vazio">{children}</p>
+
+/**
+ * Tabela em dois níveis: atributos curtos visíveis; textos longos (explicações, cuidados) num bloco "Detalhes" recolhido.
+ * Se só houver textos longos, eles aparecem direto (não faz sentido esconder tudo).
+ */
+export function TabelaNiveis({ itens, titulo = 'Detalhes' }: { itens: Linha[]; titulo?: string }) {
+  const xs = itens.filter(([, v]) => tem(v))
+  const curtos = xs.filter(([, v]) => !longo(v))
+  const longos = xs.filter(([, v]) => longo(v))
+  if (!curtos.length) return <Tabela itens={longos} />
+  return <>
+    <Tabela itens={curtos} />
+    {longos.length > 0 && <Recolhido titulo={titulo} resumo={longos.map(([k]) => k).join(', ').toLowerCase()}><Tabela itens={longos} /></Recolhido>}
+  </>
+}
+
+/** Propriedade expansível: nome e classificação objetiva; por baixo, explicação, fonte e condições de validade. */
+export function Propriedade({ nome, classe, fonte, condicoes, children }: { nome: string; classe?: ReactNode; fonte?: string; condicoes?: string; children?: ReactNode }) {
+  const [aberto, setAberto] = useState(false)
+  const temMais = !!(children || fonte || condicoes)
+  return (
+    <div className={'fx-prop' + (aberto ? ' on' : '')}>
+      <button className="fx-prop-b" aria-expanded={aberto} disabled={!temMais} onClick={() => setAberto(!aberto)}>
+        <span className="n">{nome}</span><span className="c">{classe}</span>{temMais && <i aria-hidden>{aberto ? '−' : '+'}</i>}
+      </button>
+      {aberto && <div className="fx-prop-c">
+        {children}
+        {condicoes && <p className="fx-prop-l"><span>Condições</span>{condicoes}</p>}
+        {fonte && <p className="fx-prop-l"><span>Fonte</span>{fonte}</p>}
+      </div>}
+    </div>
+  )
+}

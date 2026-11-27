@@ -1424,3 +1424,37 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
 .fx-form-ind .input, .fx-form-cond { font-size: 13px; min-height: 40px; }
 .fx-form-cond { margin-top: 8px; width: 100%; }
 @media (max-width: 520px) { .fx-form-ind { grid-template-columns: 1fr; } }
+
+/* Ficha do esmalte, refinamento 27/11 (3): propriedades expansíveis, ilustrações, louça */
+.fx-prop { border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+.fx-grupo h3 + .fx-prop, .fx-grupo h3 + * + .fx-prop { border-top: 0; }
+.fx-prop-b { all: unset; box-sizing: border-box; width: 100%; min-height: 44px; display: grid; grid-template-columns: minmax(100px, 2fr) 3fr 16px; align-items: center; gap: 12px; padding: 8px 0; cursor: pointer; }
+.fx-prop-b:disabled { cursor: default; }
+.fx-prop-b .n { font-size: 14.5px; color: var(--ink); }
+.fx-prop-b .c { font-size: 14px; color: var(--ink-2); line-height: 1.35; }
+.fx-prop-b i { font-style: normal; color: var(--ink-3); font-size: 17px; text-align: right; }
+.fx-prop-c { padding: 0 0 12px; }
+.fx-prop-c > .fx-par:first-child { margin-top: 0; }
+.fx-prop-l { margin: 6px 0 0; font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+.fx-prop-l span { display: block; font-size: 12px; color: var(--ink-3); }
+.fx-nivel { display: inline-flex; align-items: center; gap: 8px; }
+.fx-barras { display: inline-grid; grid-template-columns: repeat(5, 8px); gap: 2px; }
+.fx-barras b { height: 3px; background: var(--line); }
+.fx-barras b.on { background: var(--ink); }
+.fx-fontes-l { margin: 0; }
+.fx-fontes-l > div { padding: 6px 0; border-bottom: 1px dashed color-mix(in srgb, var(--line) 80%, transparent); }
+.fx-fontes-l > div:last-child { border-bottom: 0; }
+.fx-fontes-l dt { font-size: 12px; color: var(--ink-3); }
+.fx-fontes-l dd { margin: 2px 0 0; font-size: 14.5px; line-height: 1.5; }
+.fx-fontes-l .fx-link { min-height: 32px; margin-left: 8px; }
+.fx-estado { margin: 0; font-size: 14px; font-weight: 500; }
+.fx-pictos { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 12px 8px; margin-top: 2px; }
+.fx-pictos svg { overflow: visible; }
+.fx-citacao { font-family: var(--serif); font-style: italic; font-size: 16.5px; color: var(--ink-2); }
+.fx-estrelas { color: var(--terracota); letter-spacing: 1px; }
+.fx-estrelas span { color: var(--line-strong); }
+.fx-louca { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 0 8px; padding: 8px 12px; background: var(--surface-2); border-radius: 4px; font-size: 14.5px; }
+.fx-louca b { font-weight: 500; }
+.fx-louca span { font-size: 12.5px; color: var(--ink-2); }
+.fx-louca.nao { background: color-mix(in srgb, var(--terracota) 12%, transparent); }
+.fx-form-ind .wide-row { grid-column: 1 / -1; }
