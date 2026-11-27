@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronRight, Pencil, Plus, TestTube } from 'lucide-react'
-import { db, type Comercial, type Esmalte, type Nivel, type Receita, type Teste, type Verificacao } from '../../../db/schema'
+import { db, type Comercial, type Esmalte, type Nivel, type Receita, type ResultadoTemperatura, type Teste, type Verificacao } from '../../../db/schema'
+import type { ReactNode } from 'react'
 import { ROTULO_ESTADO, estadoFluidez } from '../../../lib/fluidez'
 import {
-  APLICACAO, ATRIBUTOS_COMPORTAMENTO, NIVEIS, COMPAT, DEFEITOS_FICHA, GEOMETRIAS, MASSAS, ORIGENS, PREPARACAO, SEGURANCA,
-  QUEIMA_ANTIGA, dadosComerciais, efeitosDe, temTexto, texturasDe,
+  APLICACAO, ATRIBUTOS_COMPORTAMENTO, NIVEIS, COMPAT, DEFEITOS_FICHA, FAIXAS, GEOMETRIAS, MASSAS, ORIGENS, PREPARACAO, SEGURANCA,
+  QUEIMA_ANTIGA, TIPOS_TEMPERATURA, dadosComerciais, efeitosDe, expressivoAlemDosEfeitos, faixaDoCone, hexDaCor, temTexto, texturasDe,
 } from '../../../lib/esmalteFicha'
 import { fmt } from '../../../lib/opcoes'
 import { Foto } from '../../../ui/form'
@@ -34,21 +35,22 @@ export function AbaPerfil({ e, irPara }: { e: Esmalte; irPara: (aba: 'experiment
   const efeitos = efeitosDe(e)
   const v = p.visual ?? {}
   const aparencia: Linha[] = [
-    ['Cor principal', e.cor && <>{e.corHex && <i className="fx-amostra" style={{ background: e.corHex }} />}{e.cor}</>],
-    ['Cores secundárias', v.coresSecundarias], ['Subtons', v.subtons],
+    ['Cor principal', e.cor && <Cores texto={e.cor} hex={e.corHex} />],
+    ['Cores secundárias', v.coresSecundarias && <Cores texto={v.coresSecundarias} />], ['Subtons', v.subtons && <Cores texto={v.subtons} />],
     ['Acabamento', e.acabamento], ['Opacidade', e.transparencia], ['Textura', texturasDe(e).join(', ')],
     ['Variação cromática', v.variacao], ['Em camada fina', v.corFina], ['Em camada espessa', v.corEspessa], ['Nas áreas de acúmulo', v.corAcumulo],
   ]
+  const outras = expressivoAlemDosEfeitos(p.expressivo, efeitos)
   const origemDe = (k: string) => { const o = p.comportamentoOrigem?.[k] ?? p.origens?.comportamento?.origem; return o ? ROTULO_ORIGEM[o] : undefined }
   const props = ATRIBUTOS_COMPORTAMENTO.filter(([k]) => k !== 'fluidez' && (p.comportamento?.[k] || p.comportamentoNota?.[k] || p.comportamentoClasse?.[k]))
   const superficie = GEOMETRIAS.filter(([k]) => p.superficie?.[k]?.length)
   const temFluidez = e.origem === 'comercial' || !!e.fluidez || !!e.testesFluidez?.length || !!p.comportamento?.fluidez || !!p.comportamentoNota?.fluidez
-  const temEfeitos = efeitos.length || superficie.length || p.expressivo?.length || p.expressivoTexto || p.sugestoesIA
+  const temEfeitos = efeitos.length || superficie.length || outras.length || p.expressivoTexto || p.sugestoesIA
   return (
     <>
       <Grupo titulo="Aparência" origem={p.origens?.visual} vazio={!aparencia.some(([, x]) => x)}>
         <TabelaNiveis itens={aparencia} titulo="Cor por espessura e variação" />
-        {e.corHex && <p className="fx-origem">Amostra de cor: referência aproximada.</p>}
+        {(e.corHex || [e.cor, v.coresSecundarias, v.subtons].some((x) => x && hexDaCor(x))) && <p className="fx-origem">Amostras de cor aproximadas, a partir das cores descritas.</p>}
       </Grupo>
 
       <section className="fx-grupo">
@@ -70,9 +72,10 @@ export function AbaPerfil({ e, irPara }: { e: Esmalte; irPara: (aba: 'experiment
         <Pictogramas tipos={efeitos} />
         {efeitos.length > 0 && <p className="fx-origem">Ilustrações esquemáticas dos efeitos identificados nas fontes; não são resultados de teste.</p>}
         {superficie.length > 0 && <><p className="fx-sub">Interação com a superfície</p><Tabela itens={superficie.map(([k, l]) => [l, p.superficie![k].join(', ')])} /><Origem o={p.origens?.superficie} /></>}
-        {(!!p.expressivo?.length || p.expressivoTexto || p.sugestoesIA) && <>
-          <p className="fx-sub">Possibilidades expressivas</p>
-          {!!p.expressivo?.length && <p className="fx-lista">{p.expressivo.join(' · ')}</p>}
+        {/* possibilidades que só repetem os efeitos ilustrados não aparecem de novo */}
+        {(!!outras.length || p.expressivoTexto || p.sugestoesIA) && <>
+          <p className="fx-sub">{efeitos.length ? 'Outras possibilidades' : 'Possibilidades expressivas'}</p>
+          {!!outras.length && <p className="fx-lista">{outras.join(' · ')}</p>}
           <Paragrafos texto={p.expressivoTexto} />
           <Origem o={p.origens?.expressivo} />
           {p.sugestoesIA && <div className="fx-ia"><p className="fx-ia-t">Sugestões da IA</p><Paragrafos texto={p.sugestoesIA} /><p className="fx-origem">Ideias criativas, não características comprovadas.</p></div>}
@@ -95,10 +98,8 @@ function Fluidez({ e, irPara }: { e: Esmalte; irPara: (aba: 'experimentos') => v
   const f = e.fluidezQueima
   const estado = estadoFluidez(e)
   const testes = [...(e.testesFluidez ?? [])].sort((a, b) => b.data.localeCompare(a.data))
-  const oficiais = f?.situacao === 'oficial' ? f.resultados.filter((r) => r.classificacao) : []
-  const classe = oficiais.length ? oficiais.map((r) => r.classificacao).join(' · ')
-    : p.comportamento?.fluidez ? NIVEIS[p.comportamento.fluidez]
-    : p.comportamentoClasse?.fluidez ?? (e.fluidez ? `${e.fluidez} (sua avaliação)` : estado ? ROTULO_ESTADO[estado] : undefined)
+  const classe = classeFluidez(e)
+  const semEscala = !(f?.situacao === 'oficial' && f.resultados.some((r) => r.escala)) && !p.comportamento?.fluidez
   const origem = p.comportamentoOrigem?.fluidez
   return (
     <Propriedade nome="Fluidez na queima" classe={classe}>
@@ -120,10 +121,39 @@ function Fluidez({ e, irPara }: { e: Esmalte; irPara: (aba: 'experimentos') => v
         <div><dt>Seus testes</dt><dd>{testes.length ? `${testes.length} registrado${testes.length > 1 ? 's' : ''}${testes[0].escorrimentoMm != null ? `; último: ${fmt(testes[0].escorrimentoMm, 0)} mm em ${data(testes[0].data)}` : ''}` : 'Nenhum registrado'}
           <button className="fx-link" onClick={() => irPara('experimentos')}>{testes.length ? 'Ver testes' : 'Registrar teste'} <ChevronRight size={14} /></button></dd></div>
       </dl>
+      {semEscala && (p.comportamentoNota?.fluidez || p.comportamentoClasse?.fluidez) && <p className="fx-nota">O fabricante descreve o movimento em termos qualitativos; não há classificação quantitativa publicada.</p>}
       {e.origem === 'comercial' && <Recolhido titulo="Consulta ao fabricante" resumo="fontes, imagens, atualizar"><FluidezQueima e={e} embutida soFabricante /></Recolhido>}
       <p className="fx-origem">Fluidez é o movimento do esmalte fundido na queima. A viscosidade do esmalte em suspensão, antes de aplicar, fica em Técnica.</p>
     </Propriedade>
   )
+}
+
+/** Classificação de fluidez para resumo: termo e escala do fabricante; sem escala, a descrição qualitativa registrada. */
+export function classeFluidez(e: Esmalte): string | undefined {
+  const p = e.perfil ?? {}
+  const f = e.fluidezQueima
+  const oficiais = f?.situacao === 'oficial' ? f.resultados.filter((r) => r.classificacao) : []
+  if (oficiais.length) return oficiais.map((r) => r.classificacao).join(' · ')
+  if (p.comportamento?.fluidez) return NIVEIS[p.comportamento.fluidez]
+  if (p.comportamentoClasse?.fluidez) return p.comportamentoClasse.fluidez
+  if (e.fluidez) return `${e.fluidez} (sua avaliação)`
+  const estado = estadoFluidez(e)
+  if (estado) return ROTULO_ESTADO[estado]
+  const n = e.testesFluidez?.length ?? 0
+  return n ? `Sem classificação; ${n} ${n === 1 ? 'teste seu' : 'testes seus'}` : undefined
+}
+
+/** Cores descritas, cada uma com amostra aproximada quando o nome é reconhecido. Frases longas ficam só em texto. */
+function Cores({ texto, hex }: { texto: string; hex?: string }) {
+  const partes = texto.split(/\s*(?:,|;|\s+e\s+)\s*/).filter(Boolean)
+  if (partes.length === 1) {
+    const h = hex ?? (texto.length <= 32 ? hexDaCor(texto) : undefined)
+    return <span className="fx-cores">{h && <i className="fx-amostra" style={{ background: h }} />}{texto}</span>
+  }
+  return <span className="fx-cores">{partes.map((c, i) => {
+    const h = c.length <= 32 ? hexDaCor(c) : undefined
+    return <span key={i}>{h && <i className="fx-amostra" style={{ background: h }} />}{c}{i < partes.length - 1 ? ', ' : ''}</span>
+  })}</span>
 }
 
 /** Resumo do que é seu: avaliação, situação, testes e observações. O conteúdo completo fica em Experimentos. */
@@ -153,12 +183,16 @@ export function AbaTecnica({ e }: { e: Esmalte }) {
   const q = t.queima ?? {}
   const padrao = e.origem === 'comercial' ? 'Fabricante' : undefined
   const preparo: Linha[] = [...linhas(PREPARACAO, t.preparacao).slice(0, 4), ['Viscosidade', e.viscosidade, 'do esmalte em suspensão, antes de aplicar'], ...linhas(PREPARACAO, t.preparacao).slice(4)]
-  const aplic: Linha[] = [['Métodos', t.metodos?.join(', ')], ...linhas(APLICACAO, t.aplicacao)]
-  const temAplic = aplic.some(([, v]) => v)
+  const ESSENCIAL_APLIC = ['demaos', 'biscoito', 'restricoes']
+  const aplicBase: Linha[] = [['Métodos', t.metodos?.join(', ')], ...linhas(APLICACAO.filter(([k]) => ESSENCIAL_APLIC.includes(k)), t.aplicacao)]
+  const aplicMais: Linha[] = linhas(APLICACAO.filter(([k]) => !ESSENCIAL_APLIC.includes(k)), t.aplicacao)
+  const temAplic = [...aplicBase, ...aplicMais].some(([, v]) => v)
   const essencial: Linha[] = [
     ['Temperatura de referência', e.temperatura ? fmt(e.temperatura, 0) + ' °C' : undefined], ['Cone', e.cone && rotuloCone(e.cone)],
-    ['Faixa informada', q.faixa], ['Atmosfera', e.atmosfera],
+    ['Atmosfera', e.atmosfera], ['Faixa do fabricante', q.faixa], ['Faixa do revendedor', q.faixaRevenda],
   ]
+  const faixas = faixasDeQueima(e)
+  const fontesTemp = [...new Set((t.temperaturas ?? []).map((x) => x.fonte).filter((x): x is string => !!x))]
   const queima: Linha[] = [
     ['Outros cones', q.conesAlternativos],
     ...linhas(QUEIMA_ANTIGA, q),
@@ -172,12 +206,26 @@ export function AbaTecnica({ e }: { e: Esmalte }) {
       <Grupo titulo="Preparação" origem={o.preparacao} padrao={padrao} vazio={!preparo.some(([, v]) => v)}><TabelaNiveis itens={preparo} /></Grupo>
       <Grupo titulo="Aplicação" origem={o.aplicacao} padrao={padrao} vazio={!temAplic && !e.aplicacao}>
         {/* o texto corrido só aparece aqui quando ainda não foi estruturado; o original fica em Documentação */}
-        {temAplic ? <TabelaNiveis itens={aplic} /> : <Estruturado texto={e.aplicacao} />}
+        {temAplic ? <>
+          <Tabela itens={aplicBase} />
+          {aplicMais.some(([, v]) => v) && <Recolhido titulo="Cuidados e recomendações"><Tabela itens={aplicMais} /></Recolhido>}
+        </> : <Estruturado texto={e.aplicacao} />}
       </Grupo>
-      <Grupo titulo="Queima" origem={o.queima} padrao={padrao} vazio={![...essencial, ...queima].some(([, v]) => v)}>
+      <Grupo titulo="Queima" origem={o.queima} padrao={padrao} vazio={![...essencial, ...queima].some(([, v]) => v) && !faixas.length}>
         <Tabela itens={essencial} />
-        {queima.some(([, v]) => v) && <Recolhido titulo="Outras temperaturas e condições" resumo={queima.filter(([, v]) => v).map(([k]) => k).join(', ').toLowerCase()}><Tabela itens={queima} /></Recolhido>}
-        <p className="fx-origem">O limite de uma faixa informada não é a temperatura máxima do esmalte. Cone 06 (baixa temperatura) e cone 6 (média temperatura) são referências diferentes.</p>
+        {faixas.length > 0 && <ul className="fx-faixas">{faixas.map(([f, xs]) => (
+          <li key={f}><p className="fx-faixa-t">{FAIXAS[f]}</p>
+            {xs.map((x, i) => <div key={i} className={'fx-faixa-l' + (x.tipo === 'teste' ? ' pessoal' : x.tipo === 'hipotese' ? ' hip' : '')}>
+              <p><b>{[x.cone && 'Cone ' + x.cone.replace(/^cone\s*/i, ''), x.temperatura, x.atmosfera].filter(Boolean).join(' · ')}</b>{x.descricao && <> · {x.descricao}</>}</p>
+              <span className="fx-nota">{TIPOS_TEMPERATURA[x.tipo]}</span>
+            </div>)}
+          </li>
+        ))}</ul>}
+        {(queima.some(([, v]) => v) || fontesTemp.length > 0) && <Recolhido titulo="Condições e fontes da queima">
+          <Tabela itens={queima} />
+          {fontesTemp.length > 0 && <><p className="fx-sub">Fontes</p><ul className="fx-fontes">{fontesTemp.map((u) => <li key={u}><Fonte u={u} /></li>)}</ul></>}
+        </Recolhido>}
+        <p className="fx-origem">Uma imagem do fabricante não é recomendação de uso, e o limite de uma faixa informada não é a temperatura máxima do esmalte. Cone 06 (baixa temperatura) e cone 6 (média temperatura) são referências diferentes.</p>
       </Grupo>
       <Grupo titulo="Compatibilidade" origem={o.compatibilidade} vazio={!compat.length && !t.compatNotas}>
         <Tabela itens={compat.map(([k, l]) => [l, COMPAT[t.compatibilidade![k]]])} />
@@ -197,11 +245,57 @@ export function AbaTecnica({ e }: { e: Esmalte }) {
   )
 }
 
+/** Condições de queima agrupadas em baixa, média e alta: as documentadas e os seus testes de fluidez, sem misturar os tipos. */
+function faixasDeQueima(e: Esmalte): ['baixa' | 'media' | 'alta', ResultadoTemperatura[]][] {
+  const porTemp = (t?: string) => { const n = Number((t ?? '').replace(/[^\d].*$/, '')); return !n ? undefined : n < 1100 ? 'baixa' : n <= 1250 ? 'media' : 'alta' }
+  const testes: ResultadoTemperatura[] = (e.testesFluidez ?? []).filter((x) => x.cone || x.temperatura).map((x) => ({
+    cone: x.cone, temperatura: x.temperatura ? fmt(x.temperatura, 0) + ' °C' : undefined, atmosfera: x.atmosfera, tipo: 'teste',
+    descricao: [x.escorrimentoMm != null && `${fmt(x.escorrimentoMm, 0)} mm de escorrimento`, data(x.data)].filter(Boolean).join(', '),
+  }))
+  const grupos = new Map<'baixa' | 'media' | 'alta', ResultadoTemperatura[]>()
+  for (const x of [...(e.tecnica?.temperaturas ?? []), ...testes]) {
+    const f = faixaDoCone(x.cone) ?? porTemp(x.temperatura)
+    if (f) grupos.set(f, [...(grupos.get(f) ?? []), x])
+  }
+  return (['baixa', 'media', 'alta'] as const).filter((f) => grupos.has(f)).map((f) => [f, grupos.get(f)!])
+}
+
+/** Link para a página específica, com o domínio à vista e o caminho abreviado. */
+const Fonte = ({ u, rotulo }: { u: string; rotulo?: ReactNode }) => {
+  const curto = u.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')
+  return <><a href={u} target="_blank" rel="noreferrer">{curto}</a>{rotulo && <span className="fx-nota">{rotulo}</span>}</>
+}
+
 /** "Cone 06" e "cone 6" são coisas diferentes: o zero à esquerda fica, e a faixa de temperatura vem junto. */
 function rotuloCone(c: string) {
   const s = c.trim().replace(/^cone\s*/i, '')
   const baixa = /^0\d/.test(s)
   return `${s}${baixa ? ' (baixa temperatura)' : /^\d/.test(s) && Number(s.split(/[-/]/)[0]) <= 7 ? ' (média temperatura)' : /^\d/.test(s) ? ' (alta temperatura)' : ''}`
+}
+
+/**
+ * Segurança alimentar em uma linha, com os termos do fabricante (Food Safe, Dinnerware Safe, contato com alimentos).
+ * Sem declaração, fica "Não informada": a falta de informação não vira seguro nem inseguro.
+ */
+export function resumoSeguranca(e: Esmalte): string | undefined {
+  const t = e.tecnica ?? {}
+  const s: Record<string, Verificacao | undefined> = { ...t.seguranca }
+  if (!s.foodSafe && s.alimentarDeclarada) s.foodSafe = s.alimentarDeclarada
+  const cond = t.segurancaCondicoes ?? {}
+  const quem = e.origem === 'comercial' ? 'fabricante' : 'seu registro'
+  const ensaio = s.ensaio === 'sim' ? '; ensaio próprio aprovado' : s.ensaio === 'nao' ? '; ensaio próprio reprovado' : ''
+  if (e.louca === 'nao' || s.decorativo === 'sim' || s.foodSafe === 'nao' || s.dinnerwareSafe === 'nao') {
+    const termo = s.decorativo === 'sim' ? 'Só decorativo' : s.foodSafe === 'nao' ? 'Não Food Safe' : s.dinnerwareSafe === 'nao' ? 'Não Dinnerware Safe' : 'Não usar em louça'
+    return `${termo} (${quem})${ensaio}`
+  }
+  const sim = ([['foodSafe', 'Food Safe'], ['dinnerwareSafe', 'Dinnerware Safe'], ['contatoAlimento', 'contato direto com alimentos']] as const).filter(([k]) => s[k] === 'sim')
+  if (sim.length) {
+    const comCond = sim.some(([k]) => cond[k]) || !!cond.loucaFuncional
+    const nomes = sim.map(([, l]) => l)
+    return `${nomes.length > 1 ? nomes.slice(0, -1).join(', ') + ' e ' + nomes.at(-1) : nomes[0]}${comCond ? ', com condições' : ''} (${quem})${ensaio}`
+  }
+  if (e.louca === 'sim') return `Pode ir à louça (${quem})${ensaio}`
+  return ensaio ? `Não informada pelo ${quem}${ensaio}` : e.origem === 'comercial' ? 'Não informada pelo fabricante' : undefined
 }
 
 const SEG_RESUMO = 'A classificação de segurança refere-se ao esmalte nas condições de uso e queima recomendadas. A segurança de combinações e sobreposições com outros esmaltes não é automaticamente assegurada.'
@@ -315,7 +409,13 @@ function NotasPessoais({ e }: { e: Esmalte }) {
 export function AbaDocumentacao({ e, familias, receita, estudo, aprovada }: { e: Esmalte; familias: string[]; receita?: Receita; estudo?: Comercial; aprovada?: Receita }) {
   const com = dadosComerciais(e)
   const comercial = e.origem === 'comercial'
-  const fontes = [...new Set([...(e.fluidezQueima?.fontes ?? []), ...(estudo?.fontes ?? []), ...Object.values({ ...e.perfil?.origens, ...e.tecnica?.origens }).map((o) => o?.fonte).filter((x): x is string => !!x)])]
+  // cada fonte com o tipo identificado (fabricante, revendedor, distribuidor…), sem repetir a mesma página
+  const fontes = new Map<string, string | undefined>()
+  const add = (u?: string, r?: string) => { if (u && /^https?:/.test(u) && !fontes.get(u)) fontes.set(u, r) }
+  for (const o of Object.values({ ...e.perfil?.origens, ...e.tecnica?.origens })) add(o?.fonte, o?.origem && ORIGENS[o.origem])
+  for (const x of e.tecnica?.temperaturas ?? []) add(x.fonte, x.tipo === 'revendedor' ? ORIGENS.revendedor : x.tipo === 'teste' || x.tipo === 'hipotese' ? undefined : ORIGENS.fabricante)
+  for (const u of e.fluidezQueima?.fontes ?? []) add(u)
+  for (const u of estudo?.fontes ?? []) add(u)
   const ia = [
     e.fluidezQueima?.estimativaIA && ['Fluidez (estimativa)', e.fluidezQueima.estimativaIA],
     e.perfil?.sugestoesIA && ['Possibilidades expressivas (sugestões)', e.perfil.sugestoesIA],
@@ -341,10 +441,10 @@ export function AbaDocumentacao({ e, familias, receita, estudo, aprovada }: { e:
           <Atalho to={`/receitas/${receita.id}`} titulo="Abrir a fórmula" />
         </Grupo>
       ) : null}
-      <Grupo titulo={comercial ? 'Documentação do fabricante' : 'Observações'} vazio={!e.observacoes}><Estruturado texto={e.observacoes} /></Grupo>
+      <Grupo titulo={comercial ? 'Documentação técnica' : 'Observações'} vazio={!e.observacoes}><Estruturado texto={e.observacoes} /></Grupo>
       {e.aplicacao && (!!e.tecnica?.metodos?.length || temTexto(e.tecnica?.aplicacao)) && <Grupo titulo="Texto original de aplicação"><Estruturado texto={e.aplicacao} /></Grupo>}
-      <Grupo titulo="Fontes" vazio={!fontes.length}>
-        <ul className="fx-fontes">{fontes.map((u) => <li key={u}><a href={u} target="_blank" rel="noreferrer">{u.replace(/^https?:\/\/(www\.)?/, '')}</a></li>)}</ul>
+      <Grupo titulo="Fontes" vazio={!fontes.size}>
+        <ul className="fx-fontes">{[...fontes].map(([u, r]) => <li key={u}><Fonte u={u} rotulo={r} /></li>)}</ul>
       </Grupo>
       <Grupo titulo="Análises da IA" vazio={!ia.length}>
         <div className="fx-ia">{ia.map(([k, v]) => <p key={k} className="fx-par"><span className="fx-rot">{k}</span> {v}</p>)}<p className="fx-origem">{ORIGENS.ia}: não é informação oficial nem resultado de teste.</p></div>

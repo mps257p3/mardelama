@@ -698,3 +698,34 @@ export async function fichaWhiteCascadeV3() {
   }
   await db.ajustes.put({ chave, valor: true })
 }
+
+/**
+ * White Cascade, v4: resultados por temperatura estruturados (baixa, média, alta) e faixa do fabricante separada da faixa
+ * da revenda. Só troca textos que vieram das versões anteriores; o que o Marcelo editou fica.
+ */
+export async function fichaWhiteCascadeV4() {
+  const chave = 'fix-ficha-white-cascade-v4'
+  if (await db.ajustes.get(chave)) return
+  const e = await db.esmaltes.get('esm-mayco-pc602')
+  if (e && !e.excluido) {
+    const URL = 'https://www.maycocolors.com/product/pc-602-white-cascade/'
+    const t = { ...e.tecnica }
+    const q = { ...t.queima }
+    if (q.faixa === 'Cone 06–05, 999 a 1031 °C (etiqueta da revenda Zeramics). Rótulo da Mayco: cone 06.') {
+      q.faixa = 'Cone 06 (rótulo da Mayco)'
+      q.faixaRevenda ||= 'Cone 06–05, 999 a 1031 °C (etiqueta da revenda Zeramics)'
+    }
+    const estruturou = !t.temperaturas?.length
+    if (estruturou) {
+      t.temperaturas = [
+        { cone: '06', atmosfera: 'Oxidação', tipo: 'recomendado', descricao: 'mistura-se aos esmaltes aplicados em conjunto e introduz branco às cores', fonte: URL },
+        { cone: '6', atmosfera: 'Oxidação', tipo: 'documentado', descricao: 'transparente, incolor, com flutuação branca (o rótulo indica cone 5/6)', fonte: URL },
+        { cone: '10', atmosfera: 'Redução', tipo: 'imagem', descricao: 'imagem na página do produto, sem descrição', fonte: URL },
+      ]
+      if (q.alternativas?.startsWith('Cone 6 (média temperatura), oxidação: transparente')) q.alternativas = 'A etiqueta da revenda informa que a cor pode mudar em temperaturas mais altas.'
+    }
+    t.queima = q
+    await db.esmaltes.update(e.id, { tecnica: t, atualizadoEm: Date.now() })
+  }
+  await db.ajustes.put({ chave, valor: true })
+}

@@ -2,13 +2,13 @@ import { Voltar } from '../../ui/Voltar'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { db, novo, type Compat, type DefeitoEsmalte, type Esmalte, type FonteGrupo, type Nivel, type OrigemDado, type PerfilEsmalte, type TecnicaEsmalte, type Verificacao } from '../../db/schema'
+import { db, novo, type Compat, type DefeitoEsmalte, type Esmalte, type FonteGrupo, type Nivel, type OrigemDado, type PerfilEsmalte, type ResultadoTemperatura, type TecnicaEsmalte, type Verificacao } from '../../db/schema'
 import { proximoCodigo } from '../../db/codigos'
 import { useFamilias, useReceitas } from '../../db/hooks'
 import { ATMOSFERAS, CONES, CORES, FLUIDEZ, STATUS, coneMaisProximo, tempDoCone } from '../../lib/opcoes'
 import {
   ACABAMENTOS_FICHA, APLICACAO, ATRIBUTOS_COMPORTAMENTO, COMPAT, COMPORTAMENTOS_SUPERFICIE, DEFEITOS_FICHA, EXPRESSIVO, GEOMETRIAS, MASSAS, METODOS, NIVEIS,
-  OPACIDADES, ORIGENS, PICTOGRAMAS, PREPARACAO, QUEIMA, QUEIMA_ANTIGA, SEGURANCA, TEXTURAS_FICHA, VERIFICACAO, VISUAL, texturasDe,
+  OPACIDADES, ORIGENS, PICTOGRAMAS, PREPARACAO, QUEIMA, QUEIMA_ANTIGA, SEGURANCA, TIPOS_TEMPERATURA, TEXTURAS_FICHA, VERIFICACAO, VISUAL, texturasDe,
 } from '../../lib/esmalteFicha'
 import { AreaTexto, Campo, Escolha, Estrelas, Fotos, Multi, Numero, Sugestao, Tags, Texto } from '../../ui/form'
 import { useToast } from '../../ui/toast'
@@ -33,7 +33,7 @@ function OrigemCampo({ valor, onChange }: { valor?: FonteGrupo; onChange: (o: Fo
 }
 
 const DICA_QUEIMA: Record<string, string> = {
-  faixa: 'Ex.: cone 06–05, 999 a 1031 °C', conesAlternativos: 'Ex.: 05, 04', curva: 'Ex.: rápida, média, lenta', aquecimento: 'Ex.: 150 °C/h',
+  faixa: 'Ex.: cone 06–05, 999 a 1031 °C', faixaRevenda: 'Ex.: cone 06–05 (etiqueta da revenda)', conesAlternativos: 'Ex.: 05, 04', curva: 'Ex.: rápida, média, lenta', aquecimento: 'Ex.: 150 °C/h',
   patamar: 'Ex.: 15 min', resfriamento: 'Ex.: 100 °C/h até 760 °C', resfriamentoControlado: 'Ex.: sim, 50 °C/h',
 }
 
@@ -172,6 +172,20 @@ export default function EsmalteForm() {
         {[...QUEIMA, ...QUEIMA_ANTIGA.filter(([k]) => tec.queima?.[k])].map(([k, l]) => <Campo key={k} label={l} wide={k === 'notas' || k === 'alternativas'}>{k === 'notas' || k === 'alternativas'
           ? <AreaTexto value={tec.queima?.[k]} onChange={(v) => setTec({ queima: limpo({ ...tec.queima, [k]: v }) })} rows={2} />
           : <Texto value={tec.queima?.[k]} onChange={(v) => setTec({ queima: limpo({ ...tec.queima, [k]: v }) })} placeholder={DICA_QUEIMA[k]} />}</Campo>)}
+        <p className="fx-sub wide-row">Resultados por temperatura</p>
+        {(tec.temperaturas ?? []).map((r, i) => {
+          const muda = (x: Partial<ResultadoTemperatura>) => setTec({ temperaturas: tec.temperaturas!.map((y, j) => (j === i ? { ...y, ...x } : y)) })
+          return <div key={i} className="fx-form-def wide-row">
+            <Campo label="Cone"><Texto value={r.cone} onChange={(v) => muda({ cone: v || undefined })} placeholder="Ex.: 06 (zero à esquerda é baixa)" /></Campo>
+            <Campo label="Temperatura"><Texto value={r.temperatura} onChange={(v) => muda({ temperatura: v || undefined })} placeholder="Ex.: 1000 °C" /></Campo>
+            <Campo label="Atmosfera" wide><Escolha value={r.atmosfera} onChange={(v) => muda({ atmosfera: v === r.atmosfera ? undefined : v })} opcoes={ATMOSFERAS.map((v) => ({ v, l: v }))} /></Campo>
+            <Campo label="De onde vem" wide><Escolha value={r.tipo} onChange={(v) => muda({ tipo: v as ResultadoTemperatura['tipo'] })} opcoes={(Object.keys(TIPOS_TEMPERATURA) as ResultadoTemperatura['tipo'][]).map((v) => ({ v, l: TIPOS_TEMPERATURA[v] }))} /></Campo>
+            <Campo label="Resultado ou descrição" wide><Texto value={r.descricao} onChange={(v) => muda({ descricao: v || undefined })} /></Campo>
+            <Campo label="Página da fonte" wide><Texto value={r.fonte} onChange={(v) => muda({ fonte: v || undefined })} placeholder="Link da página específica do produto" /></Campo>
+            <button type="button" className="btn sm ghost" onClick={() => setTec({ temperaturas: tec.temperaturas!.filter((_, j) => j !== i) })}>Remover</button>
+          </div>
+        })}
+        <div className="wide-row"><button type="button" className="btn sm" onClick={() => setTec({ temperaturas: [...(tec.temperaturas ?? []), { tipo: e.origem === 'comercial' ? 'documentado' : 'teste' }] })}>Adicionar resultado por temperatura</button></div>
         <OrigemCampo valor={tec.origens?.queima} onChange={(o) => setTec({ origens: { ...tec.origens, queima: o } })} />
 
         <h3>Técnica · compatibilidade</h3>

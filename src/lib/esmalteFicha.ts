@@ -19,9 +19,9 @@ export const VISUAL: [string, string][] = [
 export const NIVEIS: Record<Nivel, string> = { 1: 'Muito baixo', 2: 'Baixo', 3: 'Moderado', 4: 'Alto', 5: 'Muito alto' }
 /** Na ordem de relevância: os primeiros aparecem antes de "ver perfil completo". */
 export const ATRIBUTOS_COMPORTAMENTO: [string, string][] = [
-  ['fluidez', 'Fluidez'], ['reatividade', 'Reatividade'], ['espessura', 'Sensível à espessura'],
-  ['temperatura', 'Sensível à temperatura'], ['variacao', 'Variação cromática'], ['previsibilidade', 'Previsibilidade'],
-  ['patamar', 'Sensível ao patamar'], ['resfriamento', 'Sensível ao resfriamento'], ['cristais', 'Formação de cristais'],
+  ['fluidez', 'Fluidez'], ['reatividade', 'Reatividade'], ['espessura', 'Influência da espessura'],
+  ['temperatura', 'Influência da temperatura'], ['variacao', 'Variação cromática'], ['previsibilidade', 'Previsibilidade'],
+  ['patamar', 'Influência do patamar'], ['resfriamento', 'Influência do resfriamento'], ['cristais', 'Formação de cristais'],
   ['acumulo', 'Acúmulo em depressões'], ['arestas', 'Afinamento nas arestas'], ['texturas', 'Evidencia texturas'],
 ]
 
@@ -48,7 +48,7 @@ export const METODOS = ['Pincel', 'Imersão', 'Pulverização', 'Derramamento', 
  * Patamar, aquecimento e resfriamento guardam valores (ex.: 15 min, 150 °C/h); comentários vão em Observações.
  */
 export const QUEIMA: [string, string][] = [
-  ['faixa', 'Faixa do fabricante'], ['conesAlternativos', 'Cones'], ['curva', 'Curva'], ['aquecimento', 'Aquecimento'], ['patamar', 'Patamar'],
+  ['faixa', 'Faixa do fabricante'], ['faixaRevenda', 'Faixa do revendedor'], ['conesAlternativos', 'Cones'], ['curva', 'Curva'], ['aquecimento', 'Aquecimento'], ['patamar', 'Patamar'],
   ['resfriamento', 'Resfriamento'], ['resfriamentoControlado', 'Resfriamento controlado'], ['eletrico', 'Forno elétrico'], ['gas', 'Forno a gás'],
   ['alternativas', 'Outras temperaturas'], ['notas', 'Observações'],
 ]
@@ -76,6 +76,8 @@ export const PICTOGRAMAS: [string, string][] = [
   ['escorrimento', 'Escorrimento'], ['verticalEstavel', 'Estável na vertical'], ['acumulo', 'Acumula em depressões'], ['afinaArestas', 'Afina nas arestas'],
   ['realcaRelevo', 'Realça relevos'], ['cobreRelevo', 'Cobre relevos'], ['sobreposicao', 'Sobreposição'], ['transparencia', 'Transparência'],
   ['craquele', 'Craquelamento'], ['cristalizacao', 'Cristalização'], ['reticulacao', 'Reticulação'], ['revelaMassa', 'Revela a massa'],
+  ['crawling', 'Retração (crawling)'], ['reatividade', 'Reatividade'], ['variacaoEspessura', 'Variação por espessura'], ['separacaoFases', 'Separação de fases'],
+  ['manchas', 'Manchas e pontilhados'], ['metalico', 'Efeito metálico'], ['textura', 'Textura'],
 ]
 /** Efeitos identificados: os marcados na ficha + os que decorrem do que já está preenchido. */
 export function efeitosDe(e: Esmalte): string[] {
@@ -94,8 +96,43 @@ export function efeitosDe(e: Esmalte): string[] {
   if (tx.includes('Craquelada')) s.add('craquele')
   if (tx.includes('Cristalizada') || tx.includes('Microcristalina')) s.add('cristalizacao')
   if (tx.includes('Reticulada')) s.add('reticulacao')
+  if (tx.includes('Metálica') || e.acabamento === 'Metálico') s.add('metalico')
+  if (tx.includes('Pontilhada')) s.add('manchas')
+  if (tx.some((t) => ['Rugosa', 'Granulada', 'Enrugada', 'Espumada'].includes(t))) s.add('textura')
+  if (e.tecnica?.defeitos?.some((d) => d.intencional && /crawling|retra/i.test(d.tipo))) s.add('crawling')
+  const p = e.perfil
+  const documentado = (k: string) => !!(p?.comportamento?.[k] || p?.comportamentoNota?.[k] || p?.comportamentoClasse?.[k]) && p?.comportamentoOrigem?.[k] !== 'ia'
+  if ((p?.comportamento?.reatividade ?? 0) >= 3 || (documentado('reatividade') && !p?.comportamento?.reatividade)) s.add('reatividade')
+  if (p?.visual?.corFina || p?.visual?.corEspessa) s.add('variacaoEspessura')
   return PICTOGRAMAS.map(([k]) => k).filter((k) => s.has(k))
 }
+
+/** "Possibilidades expressivas" que só repetem um efeito já ilustrado não aparecem de novo. */
+const EXPRESSIVO_EFEITO: Record<string, string> = { Escorrimentos: 'escorrimento', 'Sobreposições': 'sobreposicao', 'Revelação da massa cerâmica': 'revelaMassa' }
+export const expressivoAlemDosEfeitos = (lista: string[] | undefined, efeitos: string[]) => (lista ?? []).filter((x) => !efeitos.includes(EXPRESSIVO_EFEITO[x]))
+
+/** Amostra aproximada para nomes de cor comuns. Só para cores nomeadas na documentação; nunca tirada de fotos. */
+const CORES_HEX: [RegExp, string][] = [
+  [/^branc/i, '#F4F1EA'], [/^pret/i, '#24211E'], [/^azul/i, '#3D5F7A'], [/^verde/i, '#5E7A5A'], [/^turquesa/i, '#3F8C8A'], [/^amarel/i, '#D8B54A'],
+  [/^laranj/i, '#D27A3E'], [/^vermelh/i, '#A63A2E'], [/^rosa/i, '#D49A9A'], [/^rox/i, '#6E4E7A'], [/^marrom/i, '#6B4A33'], [/^bege/i, '#D9C7A8'],
+  [/^cinz/i, '#8C8A85'], [/^creme/i, '#EFE4CC'], [/^ocre/i, '#B8873A'], [/^celadon|^celadon/i, '#A9BFA4'], [/^ferrugem/i, '#8E4A2A'],
+]
+export const hexDaCor = (nome: string) => CORES_HEX.find(([r]) => r.test(nome.trim()))?.[1]
+
+/** Faixa de temperatura de um cone: 06 é baixa, 6 é média. */
+export function faixaDoCone(cone?: string): 'baixa' | 'media' | 'alta' | undefined {
+  const c = (cone ?? '').trim().replace(/^cone\s*/i, '')
+  if (!c) return undefined
+  if (/^0\d/.test(c)) return 'baixa'
+  const n = Number(c.split(/[^\d]/)[0])
+  if (Number.isNaN(n)) return undefined
+  return n <= 7 ? 'media' : 'alta'
+}
+export const FAIXAS = { baixa: 'Baixa temperatura', media: 'Média temperatura', alta: 'Alta temperatura' } as const
+export const TIPOS_TEMPERATURA = {
+  recomendado: 'Recomendado pelo fabricante', documentado: 'Documentado pelo fabricante', imagem: 'Imagem do fabricante, sem descrição',
+  revendedor: 'Informado pelo revendedor', teste: 'Seu teste', hipotese: 'Hipótese não verificada',
+} as const
 export const VERIFICACAO = { sim: 'Sim', nao: 'Não', 'nao-verificado': 'Não verificado' } as const
 
 export const DEFEITOS_FICHA = ['Craquelamento', 'Descascamento', 'Crawling (retração)', 'Bolhas', 'Pinholes', 'Crateras', 'Escorrimento excessivo', 'Cobertura irregular', 'Desvitrificação indesejada', 'Alteração inesperada de cor'] as const
@@ -131,7 +168,7 @@ export function alertasDe(e: Esmalte): string[] {
   const nivel = (e.perfil?.comportamento?.fluidez ?? 0) >= 4
   const sua = e.fluidez === 'Fluido' || e.fluidez === 'Muito fluido'
   if ((fab || nivel || sua) && !a.some((x) => /escorr/i.test(x))) a.unshift('Risco de escorrimento: deixe folga no pé e use placa por baixo.')
-  if (e.louca === 'nao' && !a.some((x) => /alimento|louça/i.test(x))) a.push('Não usar em peças para alimentos.')
+  // "não usar em louça" já aparece na linha de segurança alimentar do resumo
   if (e.tecnica?.compatibilidade && Object.entries(e.tecnica.compatibilidade).some(([, v]) => v === 'incompativel')) {
     const nomes = Object.entries(e.tecnica.compatibilidade).filter(([, v]) => v === 'incompativel').map(([k]) => MASSAS.find(([m]) => m === k)?.[1] ?? k)
     a.push('Incompatível com: ' + nomes.join(', ') + '.')

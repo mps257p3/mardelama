@@ -107,11 +107,14 @@ export interface PerfilEsmalte {
 export type Compat = 'documentada' | 'experimental' | 'incompativel'
 export type Verificacao = 'sim' | 'nao' | 'nao-verificado'
 export interface DefeitoEsmalte { tipo: string; intencional?: boolean; causa?: string; solucao?: string; hipotese?: boolean }
+/** Resultado ou recomendação numa condição de queima. `tipo` separa recomendação, documentação, imagem, revenda, teste e hipótese. */
+export interface ResultadoTemperatura { cone?: string; temperatura?: string; atmosfera?: string; tipo: 'recomendado' | 'documentado' | 'imagem' | 'revendedor' | 'teste' | 'hipotese'; descricao?: string; fonte?: string }
 export interface TecnicaEsmalte {
   preparacao?: Record<string, string>
   aplicacao?: Record<string, string>
   metodos?: string[]
   queima?: Record<string, string>
+  temperaturas?: ResultadoTemperatura[]          // condições de queima documentadas, uma por cone/atmosfera
   compatibilidade?: Record<string, Compat>
   compatNotas?: string
   seguranca?: Record<string, Verificacao>
