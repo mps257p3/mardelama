@@ -8,7 +8,7 @@ import { useFamilias, useReceitas } from '../../db/hooks'
 import { ATMOSFERAS, CONES, CORES, FLUIDEZ, STATUS, coneMaisProximo, tempDoCone } from '../../lib/opcoes'
 import {
   ACABAMENTOS_FICHA, APLICACAO, ATRIBUTOS_COMPORTAMENTO, COMPAT, COMPORTAMENTOS_SUPERFICIE, DEFEITOS_FICHA, EXPRESSIVO, GEOMETRIAS, MASSAS, METODOS, NIVEIS,
-  OPACIDADES, ORIGENS, PREPARACAO, QUEIMA, SEGURANCA, TEXTURAS_FICHA, VERIFICACAO, VISUAL, texturasDe,
+  OPACIDADES, ORIGENS, PICTOGRAMAS, PREPARACAO, QUEIMA, QUEIMA_ANTIGA, SEGURANCA, TEXTURAS_FICHA, VERIFICACAO, VISUAL, texturasDe,
 } from '../../lib/esmalteFicha'
 import { AreaTexto, Campo, Escolha, Estrelas, Fotos, Multi, Numero, Sugestao, Tags, Texto } from '../../ui/form'
 import { useToast } from '../../ui/toast'
@@ -32,6 +32,11 @@ function OrigemCampo({ valor, onChange }: { valor?: FonteGrupo; onChange: (o: Fo
   )
 }
 
+const DICA_QUEIMA: Record<string, string> = {
+  faixa: 'Ex.: cone 06–05, 999 a 1031 °C', conesAlternativos: 'Ex.: 05, 04', curva: 'Ex.: rápida, média, lenta', aquecimento: 'Ex.: 150 °C/h',
+  patamar: 'Ex.: 15 min', resfriamento: 'Ex.: 100 °C/h até 760 °C', resfriamentoControlado: 'Ex.: sim, 50 °C/h',
+}
+
 const VAZIO: Omit<Esmalte, 'id' | 'criadoEm' | 'atualizadoEm'> = { nome: '', codigo: '', fotos: [], origem: 'propria', familias: [], tags: [] }
 
 export default function EsmalteForm() {
@@ -42,6 +47,7 @@ export default function EsmalteForm() {
   const receitas = useReceitas()
   const [e, setE] = useState<typeof VAZIO & { id?: string }>(VAZIO)
   const [pronto, setPronto] = useState(false)
+  const [abertos, setAbertos] = useState<string[]>([])
 
   useEffect(() => {
     (async () => {
@@ -115,8 +121,19 @@ export default function EsmalteForm() {
           <Escolha value={perfil.comportamento?.[k] ? String(perfil.comportamento[k]) : undefined}
             onChange={(v) => { const c = { ...perfil.comportamento }; if (c[k] === Number(v)) delete c[k]; else c[k] = Number(v) as Nivel; setPerfil({ comportamento: c }) }}
             opcoes={([1, 2, 3, 4, 5] as Nivel[]).map((n) => ({ v: String(n), l: NIVEIS[n] }))} />
+          {(perfil.comportamento?.[k] || perfil.comportamentoNota?.[k] || perfil.comportamentoOrigem?.[k]) || abertos.includes(k) ? <div className="fx-form-ind">
+            <select className="input" value={perfil.comportamentoOrigem?.[k] ?? ''} aria-label="De quem é esta classificação"
+              onChange={(x) => { const c = { ...perfil.comportamentoOrigem }; if (x.target.value) c[k] = x.target.value as OrigemDado; else delete c[k]; setPerfil({ comportamentoOrigem: c }) }}>
+              <option value="">Classificação de: —</option>{(Object.keys(ORIGENS) as OrigemDado[]).map((o) => <option key={o} value={o}>{ORIGENS[o]}</option>)}
+            </select>
+            <input className="input" placeholder="Descrição (ex.: frase do fabricante), sem nível se não houver escala" value={perfil.comportamentoNota?.[k] ?? ''} onChange={(x) => setPerfil({ comportamentoNota: limpo({ ...perfil.comportamentoNota, [k]: x.target.value }) })} />
+          </div> : <button type="button" className="fx-link" onClick={() => setAbertos([...abertos, k])}>Descrever sem nível</button>}
         </Campo>)}
         <OrigemCampo valor={perfil.origens?.comportamento} onChange={(o) => setPerfil({ origens: { ...perfil.origens, comportamento: o } })} />
+
+        <h3>Perfil · comportamentos identificados</h3>
+        <p className="faint wide-row" style={{ fontSize: 13 }}>Aparecem como pictogramas na ficha. Marque só o que foi informado ou observado; alguns já saem da superfície, da opacidade e da textura.</p>
+        <Campo label="Comportamentos" wide><Multi value={perfil.efeitos ?? []} onChange={(v) => setPerfil({ efeitos: v.length ? v : undefined })} opcoes={PICTOGRAMAS.map(([v, l]) => ({ v, l }))} /></Campo>
 
         <h3>Perfil · comportamento sobre a superfície</h3>
         {GEOMETRIAS.map(([k, l]) => <Campo key={k} label={l} wide><Multi value={perfil.superficie?.[k] ?? []} onChange={(v) => { const x = { ...perfil.superficie, [k]: v }; if (!v.length) delete x[k]; setPerfil({ superficie: x }) }} opcoes={COMPORTAMENTOS_SUPERFICIE.map((v) => ({ v, l: v }))} /></Campo>)}
@@ -150,7 +167,9 @@ export default function EsmalteForm() {
           </select>
         </Campo>
         <Campo label="Atmosfera" wide><Escolha value={e.atmosfera} onChange={(v) => set('atmosfera')(v === e.atmosfera ? undefined : v)} opcoes={ATMOSFERAS.map((v) => ({ v, l: v }))} /></Campo>
-        {QUEIMA.map(([k, l]) => <Campo key={k} label={l}><Texto value={tec.queima?.[k]} onChange={(v) => setTec({ queima: limpo({ ...tec.queima, [k]: v }) })} /></Campo>)}
+        {[...QUEIMA, ...QUEIMA_ANTIGA.filter(([k]) => tec.queima?.[k])].map(([k, l]) => <Campo key={k} label={l} wide={k === 'notas' || k === 'alternativas'}>{k === 'notas' || k === 'alternativas'
+          ? <AreaTexto value={tec.queima?.[k]} onChange={(v) => setTec({ queima: limpo({ ...tec.queima, [k]: v }) })} rows={2} />
+          : <Texto value={tec.queima?.[k]} onChange={(v) => setTec({ queima: limpo({ ...tec.queima, [k]: v }) })} placeholder={DICA_QUEIMA[k]} />}</Campo>)}
         <OrigemCampo valor={tec.origens?.queima} onChange={(o) => setTec({ origens: { ...tec.origens, queima: o } })} />
 
         <h3>Técnica · compatibilidade</h3>
@@ -159,7 +178,8 @@ export default function EsmalteForm() {
         <OrigemCampo valor={tec.origens?.compatibilidade} onChange={(o) => setTec({ origens: { ...tec.origens, compatibilidade: o } })} />
 
         <h3>Técnica · segurança e uso</h3>
-        {SEGURANCA.map(([k, l]) => <Campo key={k} label={l} wide><Escolha value={tec.seguranca?.[k]} onChange={(v) => { const c = { ...tec.seguranca }; if (c[k] === v) delete c[k]; else c[k] = v; setTec({ seguranca: c }) }} opcoes={(Object.keys(VERIFICACAO) as Verificacao[]).map((v) => ({ v, l: VERIFICACAO[v] }))} /></Campo>)}
+        {SEGURANCA.map(([k, l]) => <Campo key={k} label={l} wide><Escolha value={tec.seguranca?.[k]} onChange={(v) => { const c = { ...tec.seguranca }; if (c[k] === v) delete c[k]; else c[k] = v; setTec({ seguranca: c }) }} opcoes={(Object.keys(VERIFICACAO) as Verificacao[]).map((v) => ({ v, l: VERIFICACAO[v] }))} />
+          {tec.seguranca?.[k] && <input className="input fx-form-cond" placeholder="Condições do fabricante (como ele escreve)" value={tec.segurancaCondicoes?.[k] ?? ''} onChange={(x) => setTec({ segurancaCondicoes: limpo({ ...tec.segurancaCondicoes, [k]: x.target.value }) })} />}</Campo>)}
         <Campo label="Uso em louça (resumo usado nos filtros)" wide><Escolha value={e.louca} onChange={set('louca')} opcoes={[{ v: 'sim', l: 'Pode ir à louça' }, { v: 'nao', l: 'Só decorativo' }, { v: 'testar', l: 'Só após teste' }]} /></Campo>
         <Campo label="Restrições e notas de segurança" wide><AreaTexto value={tec.segurancaNotas} onChange={(v) => setTec({ segurancaNotas: v || undefined })} rows={2} /></Campo>
         <OrigemCampo valor={tec.origens?.seguranca} onChange={(o) => setTec({ origens: { ...tec.origens, seguranca: o } })} />

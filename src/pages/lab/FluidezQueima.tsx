@@ -14,7 +14,7 @@ const data = (d?: string) => (d ? new Date(d + 'T12:00').toLocaleDateString('pt-
  * Ficha do esmalte industrial › Fluidez durante a queima.
  * Três origens visualmente separadas: o que o fabricante publica (oficial ou descritivo), a estimativa da IA e os testes do usuário.
  */
-export function FluidezQueima({ e, embutida, soTestes }: { e: Esmalte; embutida?: boolean; soTestes?: boolean }) {
+export function FluidezQueima({ e, embutida, soTestes, soFabricante }: { e: Esmalte; embutida?: boolean; soTestes?: boolean; soFabricante?: boolean }) {
   const toast = useToast()
   const [consultando, setConsultando] = useState(false)
   const [teste, setTeste] = useState<TesteFluidez>()
@@ -72,7 +72,7 @@ export function FluidezQueima({ e, embutida, soTestes }: { e: Esmalte; embutida?
         <p className="faint" style={{ fontSize: 12.5, marginTop: 6 }}>Interpretação da IA a partir do que está publicado. Não é classificação do fabricante nem resultado de teste.</p>
       </div>}
 
-      <div className="fluidez-bloco seu">
+      {!soFabricante && <div className="fluidez-bloco seu">
         <p className="fluidez-origem"><span className="selo usuario">Seus testes</span></p>
         {!testes.length && <p className="muted">Nenhum teste de fluidez seu ainda.</p>}
         {testes.map((t) => (
@@ -89,7 +89,7 @@ export function FluidezQueima({ e, embutida, soTestes }: { e: Esmalte; embutida?
           </div>
         ))}
         <button className="btn sm primary" style={{ marginTop: 12 }} onClick={() => setTeste({ id: uid(), data: new Date().toLocaleDateString('sv-SE'), fotos: [], temperatura: e.temperatura, cone: e.cone, atmosfera: e.atmosfera })}><Plus size={14} />Registrar teste de fluidez</button>
-      </div>
+      </div>}
 
       {teste && <Sheet label="Teste de fluidez" alto onClose={() => setTeste(undefined)}>
         <FormTeste t={teste} onSalvar={async (t) => {

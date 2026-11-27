@@ -79,12 +79,16 @@ export function Grupo({ titulo, origem, padrao, children, vazio }: { titulo: str
   return <section className="fx-grupo"><h3>{titulo}</h3>{children}<Origem o={origem} padrao={padrao} /></section>
 }
 
-/** Indicador segmentado em cinco níveis: nome, classificação textual e cinco traços. */
-export function Indicador({ nome, nivel }: { nome: string; nivel: Nivel }) {
+/**
+ * Indicador em cinco níveis: nome, classificação e cinco traços. Sem nível justificável, mostra só a descrição (sem barra).
+ * `origem` diz de quem é a classificação (fabricante, você, IA).
+ */
+export function Indicador({ nome, nivel, nota, origem }: { nome: string; nivel?: Nivel; nota?: string; origem?: string }) {
   return (
     <div className="fx-ind">
-      <div className="fx-ind-t"><span>{nome}</span><b>{NIVEIS[nivel]}</b></div>
-      <div className="fx-ind-b" role="img" aria-label={`${nome}: ${NIVEIS[nivel]}`}>{[1, 2, 3, 4, 5].map((i) => <i key={i} className={i <= nivel ? 'on' : ''} />)}</div>
+      <div className="fx-ind-t"><span>{nome}</span>{nivel ? <b>{NIVEIS[nivel]}</b> : null}</div>
+      {nivel ? <div className="fx-ind-b" role="img" aria-label={`${nome}: ${NIVEIS[nivel]}`}>{[1, 2, 3, 4, 5].map((i) => <i key={i} className={i <= nivel ? 'on' : ''} />)}</div> : null}
+      {(nota || origem) && <p className="fx-ind-n">{nota}{origem && <span className="fx-ind-o">{origem}</span>}</p>}
     </div>
   )
 }

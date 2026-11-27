@@ -1388,3 +1388,39 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
 .ficha-esm .pecas-sec { padding-top: 18px; }
 .ficha-esm .pecas-sec h3 { font-size: 19px; }
 .fx-rec .fluidez.embutida .fluidez-bloco:first-child { border-top: 0; padding-top: 0; }
+
+/* Ficha do esmalte, refinamento 27/11 (2): rótulos curtos em caixa normal, pictogramas, galeria sem esmaecer */
+.fx-tabela dt, .fx-estr dt { font: 400 13px/1.35 var(--sans); letter-spacing: 0; text-transform: none; color: var(--ink-3); }
+.fx-tabela div { grid-template-columns: minmax(96px, 2fr) 3fr; }
+.fx-tabela dd { font-size: 14.5px; }
+.fx-thumbs button { opacity: 1; box-shadow: none; outline: 1px solid transparent; outline-offset: -1px; }
+.fx-thumbs button.on { opacity: 1; box-shadow: none; outline: 1.5px solid var(--ink); outline-offset: 1px; }
+.fx-thumbs { padding-top: 2px; padding-bottom: 2px; }
+.fx-cor { display: flex; align-items: center; gap: 12px; margin: 2px 0 10px; font-size: 15px; }
+.fx-cor > i { width: 36px; height: 36px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); flex: none; }
+.fx-cor .fx-nota { display: block; }
+.fx-pictos { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 10px 8px; }
+.fx-pictos li { display: grid; justify-items: center; gap: 4px; text-align: center; color: var(--marrom); }
+.fx-pictos svg { display: block; }
+.fx-pictos span { font-size: 11.5px; line-height: 1.25; color: var(--ink-2); }
+.fx-ind-n { margin: 4px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--ink-2); }
+.fx-ind-o { display: inline-block; margin-left: 6px; font-size: 11px; color: var(--ink-3); border-bottom: 1px dotted var(--line-strong); }
+.fx-ind + .fx-ind { padding-top: 12px; border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+.fx-sub { font-family: var(--serif); font-size: 17px; margin: 18px 0 2px; }
+.fx-flu { margin-top: 4px; }
+.fx-acoes-l { margin-top: 6px; }
+.fx-acoes-l .fx-atalho { width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; padding: 6px 0; font: inherit; text-align: left; cursor: pointer; color: inherit; }
+.fx-acoes-l .fx-rec + .fx-atalho { margin-top: 0; }
+.fx-notas-ed textarea { width: 100%; font: 15px/1.5 var(--sans); }
+.fx-notas-b { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+.fx-pessoal .fx-link { min-height: 40px; }
+.ficha-esm .pecas-sec.compacta { padding: 14px 0 4px; }
+.ficha-esm .pecas-sec.compacta h3 { margin: 0; }
+.fx-flu-testes .fluidez-bloco.seu { border: 0; padding: 0; margin: 0; background: none; }
+.fx-flu-testes .fluidez-origem { display: none; }
+.fx-flu-testes .muted { font-size: 14px; color: var(--ink-3); margin: 4px 0; }
+.fx-flu-testes .btn.primary { background: none; color: var(--accent); border: 0; padding: 0; min-height: 40px; box-shadow: none; font-weight: 500; }
+.fx-form-ind { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; margin-top: 8px; }
+.fx-form-ind .input, .fx-form-cond { font-size: 13px; min-height: 40px; }
+.fx-form-cond { margin-top: 8px; width: 100%; }
+@media (max-width: 520px) { .fx-form-ind { grid-template-columns: 1fr; } }

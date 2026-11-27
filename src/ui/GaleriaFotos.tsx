@@ -90,9 +90,16 @@ export function CapaFotos({ fotos, onChange, alt, vazio, rotuloAdd = 'Adicionar 
 }
 
 /** Galeria de peças feitas com o esmalte: grade de fotos grandes + adicionar. */
-export function GaleriaPecas({ fotos, onChange, titulo = 'Peças' }: { fotos: string[]; onChange: (v: string[]) => unknown; titulo?: string }) {
+export function GaleriaPecas({ fotos, onChange, titulo = 'Peças', compacto }: { fotos: string[]; onChange: (v: string[]) => unknown; titulo?: string; compacto?: boolean }) {
   const [visor, setVisor] = useState<number>()
   const esc = useEscolherFotos((ids) => onChange([...fotos, ...ids]))
+  // sem fotos, a versão compacta é só uma ação, sem área reservada
+  if (compacto && !fotos.length) return (
+    <section className="pecas-sec compacta">
+      <div className="fx-grupo-h"><h3>{titulo}</h3><button className="fx-link" onClick={esc.abrir} disabled={esc.salvando}><ImagePlus size={14} />{esc.salvando ? 'Salvando…' : 'Adicionar foto'}</button></div>
+      {esc.input}
+    </section>
+  )
   return (
     <section className="pecas-sec">
       <div className="section-head" style={{ marginBottom: 12 }}>
