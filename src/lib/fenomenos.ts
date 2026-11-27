@@ -2,6 +2,9 @@
  * Biblioteca de fenômenos cerâmicos: explicação geral, válida para qualquer esmalte.
  * O que é específico de um esmalte vem da ficha dele (ver `especificoDoFenomeno` em pages/lab/ficha/Fenomeno.tsx),
  * sempre separado desta explicação e com a origem identificada.
+ *
+ * Para incluir um fenômeno: uma entrada aqui, o par id/nome em PICTOGRAMAS (lib/esmalteFicha.ts) e a amostra em
+ * scripts/amostras/render.js. As fichas guardam só o id (perfil.efeitos), então nenhuma ficha precisa mudar.
  */
 export interface Fenomeno {
   nome: string
@@ -16,6 +19,8 @@ export interface Fenomeno {
   superficie?: string[]
   /** Tipos de defeito/efeito (expressão regular) ligados ao fenômeno. */
   defeitos?: RegExp
+  /** Termos (expressão regular) que ligam alertas, restrições e descrições de queima da ficha ao fenômeno. */
+  termos?: RegExp
 }
 
 export const FENOMENOS: Record<string, Fenomeno> = {
@@ -27,6 +32,7 @@ export const FENOMENOS: Record<string, Fenomeno> = {
     exploracao: 'Fluxos verticais, véus sobre relevos, encontros de cor em sobreposições e acúmulos vítreos em bases e reentrâncias.',
     cuidados: 'Deixar faixa sem esmalte acima do pé, usar placa ou bolacha de proteção e testar antes em provas verticais.',
     atributos: ['fluidez', 'patamar', 'temperatura'], superficie: ['Escorre'], defeitos: /escorr/i,
+    termos: /escorr|run|flu[ií]d/i,
   },
 
   acumulo: {
@@ -37,15 +43,17 @@ export const FENOMENOS: Record<string, Fenomeno> = {
     exploracao: 'Realçar texturas, carimbos, incisões e marcas do processo de construção.',
     cuidados: 'Acúmulos muito espessos podem craquelar, formar bolhas ou escorrer.',
     atributos: ['acumulo', 'texturas'], superficie: ['Acumula', 'Realça relevos'],
+    termos: /acúmul|acumul|pool|cavidad|relevo/i,
   },
   quebraBordas: {
-    nome: 'Quebra de cor nas bordas',
+    nome: 'Variação de cor nas bordas',
     definicao: 'Mudança de cor nas arestas, bordas e relevos, onde a camada de esmalte fica mais fina.',
     comoOcorre: 'Na fusão, o esmalte se afasta das partes altas e se acumula nas baixas. Nas arestas, a camada fina deixa aparecer a massa ou desenvolve outra cor, como o âmbar e o ferrugem dos esmaltes ricos em ferro.',
     condicoes: ['Raio das arestas e altura dos relevos', 'Espessura aplicada', 'Fluidez na queima', 'Cor da massa'],
     exploracao: 'Contornos que desenham a forma, realce de texturas, bordas e marcas de torno.',
     cuidados: 'Em bordas de uso, como lábios de canecas, a camada fina pode ficar áspera.',
     atributos: ['arestas'], superficie: ['Afina', 'Revela a massa cerâmica'],
+    termos: /borda|aresta|break|relevo/i,
   },
 
 
@@ -57,6 +65,7 @@ export const FENOMENOS: Record<string, Fenomeno> = {
     condicoes: ['Ordem das camadas', 'Espessura de cada camada', 'Compatibilidade de dilatação', 'Temperatura de queima'],
     exploracao: 'Ampliar a paleta, criar profundidade e transições entre cores.',
     cuidados: 'Sobreposições aumentam a espessura total e podem escorrer. A segurança alimentar da combinação não é garantida pela classificação de cada esmalte.',
+    termos: /sobrepos|layer|camada/i,
   },
   reatividade: {
     nome: 'Reatividade entre esmaltes',
@@ -66,6 +75,7 @@ export const FENOMENOS: Record<string, Fenomeno> = {
     exploracao: 'Superfícies imprevisíveis e únicas, com efeitos de borda e de encontro.',
     cuidados: 'Resultados variam muito; registrar cada combinação em prova antes de usar em peças.',
     atributos: ['reatividade'],
+    termos: /reativ|reage|intera/i,
   },
   cristalizacao: {
     nome: 'Cristalização',
@@ -75,15 +85,17 @@ export const FENOMENOS: Record<string, Fenomeno> = {
     exploracao: 'Rosetas, agulhas e campos cristalinos como elemento principal da superfície.',
     cuidados: 'Esmaltes cristalinos costumam ser muito fluidos; usar pedestal ou coletor sob a peça.',
     atributos: ['cristais', 'resfriamento'],
+    termos: /crist|crystal/i,
   },
   craquele: {
-    nome: 'Craquelado',
+    nome: 'Craquelamento',
     definicao: 'Rede de fissuras na camada de esmalte.',
     comoOcorre: 'Ocorre quando o esmalte se contrai mais que a massa no resfriamento e fica sob tensão de tração. As fissuras podem surgir no forno ou dias depois.',
     condicoes: ['Diferença de dilatação entre esmalte e massa', 'Espessura', 'Velocidade de resfriamento'],
     exploracao: 'Craquelê decorativo realçado com tinta, óxidos ou fumaça.',
     cuidados: 'Em louça de uso, fissuras acumulam resíduos e enfraquecem a peça. Quando não é intencional, indica incompatibilidade com a massa.',
     defeitos: /craquel/i,
+    termos: /craquel|crackl|craz/i,
   },
   crawling: {
     nome: 'Retração (crawling)',
@@ -93,6 +105,7 @@ export const FENOMENOS: Record<string, Fenomeno> = {
     exploracao: 'Esmaltes de retração intencional criam superfícies de escamas e líquen.',
     cuidados: 'Quando indesejada: limpar o biscoito, reduzir a espessura e evitar manipular a camada crua.',
     defeitos: /crawling|retra/i,
+    termos: /crawl|retra/i,
   },
 
 
@@ -112,8 +125,28 @@ export const FENOMENOS: Record<string, Fenomeno> = {
     condicoes: ['Composição (sílica, boro, fósforo, titânio)', 'Velocidade de resfriamento', 'Espessura'],
     exploracao: 'Azuis opalescentes, véus leitosos e variegações sutis.',
     cuidados: 'O efeito depende da curva de queima; pequenas mudanças alteram o resultado.',
+    termos: /separa[çc][ãa]o de fases|phase/i,
   },
 
+  bolhas: {
+    nome: 'Formação de bolhas',
+    definicao: 'Bolhas de gás presas no vidro ou abertas na superfície, como furinhos, crateras ou superfície fervida.',
+    comoOcorre: 'Gases liberados pela massa e pelo esmalte (queima de matéria orgânica, decomposição de carbonatos e sulfatos, água) atravessam a camada fundida. Se o vidro estiver viscoso demais ou a queima terminar antes de as bolhas se fecharem, elas ficam presas ou deixam crateras.',
+    condicoes: ['Biscoito mal queimado ou poroso', 'Espessura da camada', 'Velocidade de aquecimento e patamar final', 'Composição do esmalte e da massa', 'Excesso de temperatura (fervura)'],
+    exploracao: 'Microbolhas dão profundidade e aspecto leitoso a esmaltes transparentes; crateras intencionais criam superfícies lunares.',
+    cuidados: 'Furinhos e crateras abertas são difíceis de limpar e não são indicados para contato com alimentos. Patamar no pico e biscoito bem queimado costumam reduzir o problema.',
+    defeitos: /bolha|pinhole|cratera|ferv|blister/i,
+    termos: /bolh|pinhole|cratera|ferv|blister|bubbl/i,
+  },
+  opalescencia: {
+    nome: 'Opalescência',
+    definicao: 'Aspecto leitoso e azulado em luz refletida, que fica amarelado ou âmbar contra a luz, como na opala.',
+    comoOcorre: 'Gotículas microscópicas de vidro de outra composição, formadas por separação de fases, ou partículas muito finas espalham mais a luz azul que a vermelha. Em camadas espessas o efeito se intensifica.',
+    condicoes: ['Composição (boro, fósforo, cálcio, titânio)', 'Espessura', 'Velocidade de resfriamento', 'Temperatura máxima'],
+    exploracao: 'Azuis leitosos sobre massas escuras, véus que mudam com a espessura e com a luz.',
+    cuidados: 'O efeito depende muito da curva de queima e da espessura; registrar ambas a cada prova.',
+    termos: /opales|opal|leitos/i,
+  },
   metalico: {
     nome: 'Efeito metálico',
     definicao: 'Superfície com reflexo semelhante ao de metais.',
@@ -145,15 +178,17 @@ export const FENOMENOS: Record<string, Fenomeno> = {
     condicoes: ['Composição (rutilo, ferro, fósforo)', 'Espessura', 'Temperatura máxima', 'Velocidade de resfriamento'],
     exploracao: 'Superfícies com profundidade, véus azulados sobre fundos escuros, variegação suave.',
     cuidados: 'O efeito varia muito com a espessura e o resfriamento; registrar a curva usada.',
+    termos: /flutua|float/i,
   },
   opacidade: {
-    nome: 'Opacidade',
-    definicao: 'Capacidade do esmalte de esconder a massa e o que está sob ele.',
+    nome: 'Variação de opacidade',
+    definicao: 'Mudança no quanto o esmalte esconde a massa e o que está sob ele, de uma área para outra ou de uma queima para outra.',
     comoOcorre: 'Opacificantes (estanho, zircônio, titânio) ou microcristais e bolhas no vidro espalham a luz, que deixa de atravessar a camada.',
     condicoes: ['Teor de opacificante', 'Espessura', 'Temperatura (excesso pode clarear o vidro)'],
     exploracao: 'Superfícies de cor uniforme, cobertura de massas escuras, base para pintura sobre esmalte.',
     cuidados: 'Esmaltes opacos encobrem relevos e incisões finas; testar a espessura em peças texturizadas.',
     superficie: ['Encobre detalhes', 'Suaviza relevos'],
+    termos: /opac|transl[uú]cid|transparen|leitos/i,
   },
   iridescencia: {
     nome: 'Iridescência',

@@ -749,3 +749,18 @@ export async function fichaWhiteCascadeV5() {
   }
   await db.ajustes.put({ chave, valor: true })
 }
+
+/**
+ * 27/11 (6): os efeitos marcados na ficha do White Cascade (escorrimento e sobreposição) vêm da página da Mayco;
+ * a origem passa a ficar registrada, para a seção de efeitos mostrá-los como documentados.
+ */
+export async function fichaWhiteCascadeV6() {
+  const chave = 'fix-ficha-white-cascade-v6'
+  if (await db.ajustes.get(chave)) return
+  const e = await db.esmaltes.get('esm-mayco-pc602')
+  if (e && !e.excluido && e.perfil?.efeitos?.length && !e.perfil.origens?.efeitos) {
+    const fab = { origem: 'fabricante' as const, fonte: 'https://www.maycocolors.com/product/pc-602-white-cascade/', data: '2026-11-27' }
+    await db.esmaltes.update(e.id, { perfil: { ...e.perfil, origens: { ...e.perfil.origens, efeitos: fab } }, atualizadoEm: Date.now() })
+  }
+  await db.ajustes.put({ chave, valor: true })
+}

@@ -1519,11 +1519,21 @@ dl.fx-resumo-l dd { margin: 0; }
 .fx-louca.nao-seguro { background: color-mix(in srgb, var(--terracota) 14%, transparent); }
 .fx-louca.nao-informado { background: var(--surface-2); }
 
-/* efeitos: biblioteca de amostras ilustrativas, grade compacta de 3 colunas */
-.amostra-fen { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; border-radius: 3px; background: var(--surface-2); }
-.fx-amostras-f { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 10px; }
-.fx-amostra-f { all: unset; box-sizing: border-box; width: 100%; display: grid; gap: 6px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.fx-amostra-f span { font: 400 12px/1.3 var(--sans); color: var(--ink-2); text-align: center; }
-.fx-amostra-f:focus-visible { outline: 2px solid var(--terracota); outline-offset: 3px; border-radius: 3px; }
+/* efeitos: biblioteca de amostras ilustrativas, grade de 2 colunas */
+.amostra-fen { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; border-radius: 6px; background: var(--surface-2); }
+.fx-amostras-f { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 14px; max-width: 560px; }
+.fx-amostra-f { all: unset; box-sizing: border-box; width: 100%; display: grid; justify-items: center; align-content: start; gap: 4px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.fx-amostra-f .amostra-fen { margin-bottom: 4px; transition: opacity .15s var(--ease); }
+.fx-amostra-nome { font: 400 13px/1.3 var(--sans); color: var(--ink-2); text-align: center; }
+.fx-amostra-f:focus-visible { outline: 2px solid var(--terracota); outline-offset: 3px; border-radius: 6px; }
 .fx-amostra-f:active .amostra-fen { opacity: .88; }
-.fx-fen-fig .amostra-fen { max-width: 320px; margin: 0 auto; }
+.fx-atlas-leg { max-width: 560px; }
+.fx-status { font: 500 10.5px/1.3 var(--sans); letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); }
+.fx-status.experimental { color: #7A6A3A; }
+.fx-status.nao-confirmado { color: var(--terracota); }
+.fx-fen-fig .amostra-fen { max-width: 360px; margin: 0 auto; }
+.fx-fen-parte > .fx-rot { margin: 18px 0 6px; font: 500 12px/1.3 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); }
+.fx-fen-status { margin: 4px 0 6px; padding: 8px 10px; border-radius: 6px; font-size: 13.5px; line-height: 1.45; background: var(--surface-2); }
+.fx-fen-status.documentado { background: color-mix(in srgb, var(--verde, #8E9C8A) 14%, transparent); }
+.fx-fen-status.nao-confirmado { background: color-mix(in srgb, var(--terracota) 10%, transparent); }
+.fx-fen-g dt .fx-status { margin-left: 8px; }
