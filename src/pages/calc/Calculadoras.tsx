@@ -111,7 +111,7 @@ function Forno() {
 function Cones() {
   const [t, setT] = useState<number | undefined>(1240)
   const c = coneMaisProximo(t)
-  return <Card id="cones" titulo="Cones pirométricos" desc="Cones Orton grandes, aquecimento de 60 °C/h no final. Temperaturas de referência.">
+  return <Card id="cones" titulo="Cones pirométricos" desc="Cones autossustentáveis Orton, aquecimento de 150 °C/h nos últimos 100 °C. Temperaturas de referência: o equivalente real depende da curva de queima.">
     <div className="linha"><Campo label="Temperatura (°C)"><Numero value={t} onChange={setT} /></Campo><Res v={c ? `Cone ${c}` : '–'} sub="mais próximo" /></div>
     <div style={{ maxHeight: 240, overflow: 'auto' }}><table className="tabela"><tbody>
       {CONES.map((x) => <tr key={x.cone} style={x.cone === c ? { background: 'var(--areia)' } : undefined}><td>Cone {x.cone}</td><td className="n">{x.c} °C</td><td className="n faint">{Math.round(x.c * 9 / 5 + 32)} °F</td></tr>)}

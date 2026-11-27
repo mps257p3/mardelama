@@ -10,6 +10,7 @@ import {
   QUEIMA_ANTIGA, ROTULO_SEGURANCA, TIPOS_TEMPERATURA, classeSeguranca, dadosComerciais, efeitosDe, expressivoAlemDosEfeitos, faixaDoCone, hexDaCor, temTexto, texturasDe,
 } from '../../../lib/esmalteFicha'
 import { fmt } from '../../../lib/opcoes'
+import { TABELA_CONES, rotuloQueima, temperaturaDaFicha } from '../../../lib/cones'
 import { Foto } from '../../../ui/form'
 import { GaleriaPecas } from '../../../ui/GaleriaFotos'
 import { Relacoes } from '../../../ui/Relacoes'
@@ -223,8 +224,9 @@ export function AbaTecnica({ e }: { e: Esmalte }) {
   const aplicBase: Linha[] = [['Métodos', t.metodos?.join(', ')], ...linhas(APLICACAO.filter(([k]) => ESSENCIAL_APLIC.includes(k)), t.aplicacao)]
   const aplicMais: Linha[] = linhas(APLICACAO.filter(([k]) => !ESSENCIAL_APLIC.includes(k)), t.aplicacao)
   const temAplic = [...aplicBase, ...aplicMais].some(([, v]) => v)
+  const temp = temperaturaDaFicha(e)
   const essencial: Linha[] = [
-    ['Temperatura de referência', e.temperatura ? fmt(e.temperatura, 0) + ' °C' : undefined], ['Cone', e.cone && rotuloCone(e.cone)],
+    ['Temperatura', temp?.valor, temp?.referencia ? 'Referência · conversão do cone' : undefined], ['Cone', e.cone && rotuloCone(e.cone)],
     ['Atmosfera', e.atmosfera], ['Faixa do fabricante', q.faixa], ['Faixa do revendedor', q.faixaRevenda],
   ]
   const faixas = faixasDeQueima(e)
@@ -252,7 +254,7 @@ export function AbaTecnica({ e }: { e: Esmalte }) {
         {faixas.length > 0 && <ul className="fx-faixas">{faixas.map(([f, xs]) => (
           <li key={f}><p className="fx-faixa-t">{FAIXAS[f]}</p>
             {xs.map((x, i) => <div key={i} className={'fx-faixa-l' + (x.tipo === 'teste' ? ' pessoal' : x.tipo === 'hipotese' ? ' hip' : '')}>
-              <p><b>{[x.cone && 'Cone ' + x.cone.replace(/^cone\s*/i, ''), x.temperatura, x.atmosfera].filter(Boolean).join(' · ')}</b>{x.descricao && <> · {x.descricao}</>}</p>
+              <p><b>{[rotuloQueima(x), x.atmosfera].filter(Boolean).join(' · ')}</b>{x.descricao && <> · {x.descricao}</>}</p>
               <span className="fx-nota">{TIPOS_TEMPERATURA[x.tipo]}</span>
             </div>)}
           </li>
@@ -261,7 +263,7 @@ export function AbaTecnica({ e }: { e: Esmalte }) {
           <Tabela itens={queima} />
           {fontesTemp.length > 0 && <><p className="fx-sub">Fontes</p><ul className="fx-fontes">{fontesTemp.map((u) => <li key={u}><Fonte u={u} /></li>)}</ul></>}
         </Recolhido>}
-        <p className="fx-origem">Uma imagem do fabricante não é recomendação de uso, e o limite de uma faixa informada não é a temperatura máxima do esmalte. Cone 06 (baixa temperatura) e cone 6 (média temperatura) são referências diferentes.</p>
+        <p className="fx-origem">Uma imagem do fabricante não é recomendação de uso, e o limite de uma faixa informada não é a temperatura máxima do esmalte. Cone 06 (baixa temperatura) e cone 6 (média temperatura) são referências diferentes. Temperaturas marcadas como Referência são conversões do cone pela {TABELA_CONES.tipo.replace('cones', 'tabela de cones')} ({TABELA_CONES.taxa}), não dados do fabricante.</p>
       </Grupo>
       <Grupo titulo="Compatibilidade" origem={o.compatibilidade} vazio={!compat.length && !t.compatNotas}>
         <Tabela itens={compat.map(([k, l]) => [l, COMPAT[t.compatibilidade![k]]])} />

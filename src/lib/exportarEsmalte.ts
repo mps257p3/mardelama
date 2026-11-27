@@ -1,3 +1,4 @@
+import { temperaturaDaFicha } from './cones'
 import { db, type Esmalte, type Teste } from '../db/schema'
 import { baixar } from '../db/backup'
 import { esc, imagemEmbutida } from './exportarArtista'
@@ -31,7 +32,7 @@ export async function exportarEsmalte(e: Esmalte, aoAvancar?: (t: string) => voi
   const ficha = linhas([
     ['Código', e.codigo], ['Origem', comercial ? 'Comercial' : 'Formulação própria'], [comercial ? 'Fabricante' : 'Autoria', e.autoria],
     ['Famílias', familias.join(', ')], ['Cor', e.cor], ['Acabamento', e.acabamento], ['Textura', e.textura], ['Transparência', e.transparencia],
-    ['Temperatura', e.temperatura ? fmt(e.temperatura, 0) + ' °C' : undefined], ['Cone', e.cone], ['Atmosfera', e.atmosfera],
+    ['Temperatura', (() => { const t = temperaturaDaFicha(e); return t && (t.referencia ? `${t.valor} (Referência: cone convertido pela tabela Orton de cones autossustentáveis, 150 °C/h)` : t.valor) })()], ['Cone', e.cone], ['Atmosfera', e.atmosfera],
     [comercial ? 'Fluidez (sua avaliação)' : 'Fluidez na queima', e.fluidez], ['Consistência do líquido', e.viscosidade], ['Aplicação', e.aplicacao],
     ['Uso em louça', e.louca ? LOUCA[e.louca] : undefined], ['Status', e.status], ['Avaliação', e.avaliacao ? '★'.repeat(e.avaliacao) + '☆'.repeat(5 - e.avaliacao) : undefined],
     ['Fonte da receita', e.fonteReceita],

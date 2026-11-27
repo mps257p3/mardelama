@@ -1,3 +1,4 @@
+import { rotuloQueima } from './cones'
 import type { Esmalte, Nivel, OrigemDado } from '../db/schema'
 
 /**
@@ -209,7 +210,7 @@ export function outrasQueimas(e: Esmalte): string[] {
   const norm = (c: string) => c.trim().replace(/^cone\s*/i, '')
   const ref = new Set((e.cone ?? '').split(/[-/–]/).map(norm).filter(Boolean))
   const xs = (e.tecnica?.temperaturas ?? []).filter((x) => x.tipo !== 'teste' && x.tipo !== 'hipotese')
-  const rot = xs.map((x) => x.cone ? (ref.has(norm(x.cone)) ? undefined : 'Cone ' + norm(x.cone)) : x.temperatura).filter((x): x is string => !!x)
+  const rot = xs.map((x) => x.cone ? (ref.has(norm(x.cone)) ? undefined : rotuloQueima(x)) : x.temperatura).filter((x): x is string => !!x)
   return [...new Set(rot)]
 }
 

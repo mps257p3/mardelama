@@ -163,9 +163,11 @@ export default function EsmalteForm() {
         <Campo label={e.origem === 'comercial' ? 'Fluidez na queima · sua avaliação (a do fabricante fica na ficha)' : 'Fluidez na queima · sua avaliação'} wide><Escolha value={e.fluidez} onChange={(v) => set('fluidez')(v === e.fluidez ? undefined : v)} opcoes={FLUIDEZ.map((v) => ({ v, l: v }))} /></Campo>
 
         <h3>Técnica · queima</h3>
-        <Campo label="Temperatura de referência (°C)"><Numero value={e.temperatura} onChange={(t) => setE((x) => ({ ...x, temperatura: t, cone: x.cone || coneMaisProximo(t) }))} /></Campo>
-        <Campo label="Cone pirométrico recomendado">
-          <select className="input" value={e.cone ?? ''} onChange={(x) => setE((y) => ({ ...y, cone: x.target.value || undefined, temperatura: y.temperatura ?? tempDoCone(x.target.value) }))}>
+        {/* esmalte comercial: nada é preenchido por conversão; a ficha mostra a equivalência do cone como Referência */}
+        {e.origem === 'comercial' && <Campo label="Temperatura informada pelo fabricante" wide><input className="input" placeholder="ex.: 1180 a 1220 °C (deixe vazio se o fabricante só informa o cone)" value={e.temperaturaFabricante ?? ''} onChange={(x) => setE((y) => ({ ...y, temperaturaFabricante: x.target.value || undefined }))} /></Campo>}
+        <Campo label="Temperatura de referência (°C)"><Numero value={e.temperatura} onChange={(t) => setE((x) => ({ ...x, temperatura: t, cone: x.cone || (x.origem === 'comercial' ? undefined : coneMaisProximo(t)) }))} /></Campo>
+        <Campo label={e.origem === 'comercial' ? 'Cone informado pelo fabricante' : 'Cone pirométrico recomendado'}>
+          <select className="input" value={e.cone ?? ''} onChange={(x) => setE((y) => ({ ...y, cone: x.target.value || undefined, temperatura: y.temperatura ?? (y.origem === 'comercial' ? undefined : tempDoCone(x.target.value)) }))}>
             <option value="">—</option>{[...(e.cone && !CONES.some((c) => c.cone === e.cone) ? [{ cone: e.cone, c: '' }] : []), ...CONES].map((c) => <option key={c.cone} value={c.cone}>Cone {c.cone}{c.c ? ` · ${c.c} °C` : ''}</option>)}
           </select>
         </Campo>

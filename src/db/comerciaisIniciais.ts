@@ -764,3 +764,20 @@ export async function fichaWhiteCascadeV6() {
   }
   await db.ajustes.put({ chave, valor: true })
 }
+
+/**
+ * 27/11: esmaltes comerciais importados pela pesquisa guardavam a temperatura do fabricante só como número.
+ * O texto original ("Queima: …", gravado na importação) passa a ser a temperatura informada; os dois potes dos rótulos
+ * ficam de fora, porque lá a temperatura em °C é da revenda, não do fabricante.
+ */
+export async function temperaturaDoFabricante() {
+  const chave = 'fix-temperatura-fabricante-v1'
+  if (await db.ajustes.get(chave)) return
+  const rotulos = new Set(ROTULOS.map((r) => r.id))
+  const xs = await db.esmaltes.filter((e) => e.origem === 'comercial' && !e.excluido && !e.temperaturaFabricante && !rotulos.has(e.id)).toArray()
+  for (const e of xs) {
+    const q = e.observacoes?.match(/^Queima:\s*(.+)$/m)?.[1]?.trim()
+    if (q && /\d{3,4}\s*°?\s*[CF]\b/.test(q)) await db.esmaltes.update(e.id, { temperaturaFabricante: q, atualizadoEm: Date.now() })
+  }
+  await db.ajustes.put({ chave, valor: true })
+}
