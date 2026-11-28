@@ -13,7 +13,7 @@ export type FotoEsm = { chave: string; nome: string; aspecto: number; padrao?: s
 
 const commons = (arquivo: string) => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(arquivo)}?width=900`
 
-export const CAPA_ESMALTARIA: FotoEsm = { chave: 'esmaltaria.capa', nome: 'Capa da Esmaltaria', aspecto: 2.3 }
+export const CAPA_ESMALTARIA: FotoEsm = { chave: 'esmaltaria.capa', nome: 'Capa da Esmaltaria', aspecto: 2.7 }
 
 export const SECOES_ESM: (FotoEsm & { slug: string; to: string; unid: [string, string] })[] = [
   { slug: 'esmaltes', to: '/esmaltes', chave: 'esmaltaria.foto.esmaltes', nome: 'Esmaltes', aspecto: 3 / 2, unid: ['esmalte', 'esmaltes'],
