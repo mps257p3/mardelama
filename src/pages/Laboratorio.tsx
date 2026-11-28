@@ -8,6 +8,7 @@ import { useIdeias } from './lab/Ideias'
 import { buscarTodos, type Resumo } from '../lib/entidades'
 import { CAPA_ESMALTARIA, SECOES_ESM } from '../lib/esmaltaria'
 import { CapaArea, ImgFoto, LinhaFoto } from '../ui/FotoEditavel'
+import { CabecalhoPagina } from '../ui/Pagina'
 import { ResultadosBusca } from '../ui/ResultadosBusca'
 import { Sheet } from '../ui/Sheet'
 
@@ -49,10 +50,9 @@ export default function Laboratorio() {
 
   return (
     <div className="page esm">
-      <div className="esm-head">
-        <h1 className="sup-titulo">Esmaltaria</h1>
+      <CabecalhoPagina titulo="Esmaltaria">
         <button className="iconbtn" aria-label="Buscar na Esmaltaria" onClick={() => setBusca(true)}><Search size={20} strokeWidth={1.5} /></button>
-      </div>
+      </CabecalhoPagina>
 
       <CapaArea slug="esmaltes" nome="Esmaltaria" onEditar={() => setFotos(true)} />
 

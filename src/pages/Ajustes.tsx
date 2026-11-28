@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
-import { Download, Upload, Cloud, RefreshCw, LogOut } from 'lucide-react'
+import { Download, Upload, Cloud, RefreshCw, LogOut, LayoutTemplate } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useEffect } from 'react'
 import { configPadrao, progressoSync, entrar, entrarComCodigo, entrarComGoogle, obterConfig, sair, salvarConfig, sincronizar, usuario, type ResultadoSync } from '../db/sync'
 import { baixar, exportarTudo, importarTudo } from '../db/backup'
@@ -37,6 +38,12 @@ export default function Ajustes() {
       <h1 style={{ marginTop: 8 }}>Mar de Lama</h1>
 
       <Nuvem />
+
+      <section style={{ marginTop: 32 }}>
+        <h3>Layout das páginas</h3>
+        <p className="muted" style={{ marginTop: 6 }}>Tamanho do título, altura da capa e espaçamentos. Mudar ali muda Esmaltaria, Referências, Biblioteca e Caderno juntas.</p>
+        <Link className="btn" to="/ajustes/layout" style={{ marginTop: 14 }}><LayoutTemplate size={16} strokeWidth={1.5} />Abrir layout</Link>
+      </section>
 
       <AjustesGastoIA />
 

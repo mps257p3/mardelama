@@ -20,6 +20,7 @@ function carregar<T extends ComponentType<any>>(f: () => Promise<{ default: T }>
 }
 
 const Ajustes = carregar(() => import('./pages/Ajustes'))
+const AjustesLayout = carregar(() => import('./pages/AjustesLayout'))
 const Laboratorio = carregar(() => import('./pages/Laboratorio'))
 const Seguranca = carregar(() => import('./pages/lab/Seguranca'))
 const EmBreve = carregar(() => import('./pages/EmBreve'))
@@ -95,6 +96,7 @@ export default function App() {
           <Route path="laboratorio" element={<Laboratorio />} />
           <Route path="esmaltaria/seguranca" element={<Seguranca />} />
           <Route path="ajustes" element={<Ajustes />} />
+          <Route path="ajustes/layout" element={<AjustesLayout />} />
           <Route path="esmaltes" element={<Superficies aba="esmaltes" />} />
           <Route path="superficies" element={<Navigate to="/laboratorio" replace />} />
           <Route path="esmaltes/novo" element={<EsmalteForm key="novo" />} />

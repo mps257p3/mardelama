@@ -11,6 +11,7 @@ import { definirContexto, emFluxoDeCadastro } from '../lib/contexto'
 import { progressoSync } from '../db/sync'
 import { trocouDeTela } from '../lib/atualizacao'
 import { ErroTela } from './ErroTela'
+import { AplicarLayout } from './Pagina'
 import { buscarVersaoNova } from '../lib/versaoNova'
 
 const AREA_DA_ROTA: [RegExp, string][] = [
@@ -49,6 +50,7 @@ export function Layout() {
         <ErroTela chave={pathname}><Suspense fallback={<div className="carregando-tela" aria-busy="true" />}><Outlet /></Suspense></ErroTela>
         <ProgressoSync />
         <RodapeVersao />
+        <AplicarLayout />
       </main>
 
       <nav className="bottom" aria-label="Navegação principal">

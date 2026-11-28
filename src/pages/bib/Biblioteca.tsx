@@ -12,6 +12,7 @@ import { Menu } from '../../ui/Menu'
 import { Sheet } from '../../ui/Sheet'
 import { ResultadosBusca } from '../../ui/ResultadosBusca'
 import { CapaArea } from '../../ui/FotoEditavel'
+import { CabecalhoPagina } from '../../ui/Pagina'
 import { EditorRecorte, estiloRecorte, salvarRecorteAjuste, useRecorteAjuste } from '../../ui/Recorte'
 
 /** Capa de uma seção: a foto escolhida pelo Marcelo; senão, a capa padrão (com reserva local se a externa falhar). */
@@ -35,7 +36,7 @@ function CardSecao({ s, n, grande }: { s: SecaoBib; n: number; grande: boolean }
       <CapaImg s={s} />
       <span className="bib-veu" />
       <span className="bib-txt">
-        <span className="bib-n">{n ? `${n} ${UNID[s.slug]?.[n === 1 ? 0 : 1] ?? (n === 1 ? 'item' : 'itens')}` : ' '}</span>
+        <span className="bib-n">{`${n} ${UNID[s.slug]?.[n === 1 ? 0 : 1] ?? (n === 1 ? 'item' : 'itens')}`}</span>
         <span className="bib-nome">{s.nome}</span>
         <span className="bib-desc">{s.desc}</span>
       </span>
@@ -49,6 +50,7 @@ const GRANDES = new Set(['artistas', 'materiais', 'leituras'])
 
 export default function Biblioteca() {
   const [q, setQ] = useState('')
+  const [buscaAberta, setBuscaAberta] = useState(false)
   const [res, setRes] = useState<Resumo[]>()
   const [capas, setCapas] = useState(false)
   const conteudos = useLiveQuery(async () => (await db.conteudos.toArray()).filter((x) => !x.excluido), [], [])
@@ -72,18 +74,18 @@ export default function Biblioteca() {
 
   return (
     <div className="page bib">
-      <div className="head">
-        <div><p className="eyebrow">Pesquisa e estudo</p><h1 className="titulo-pagina" style={{ marginTop: 8 }}>Biblioteca</h1></div>
-        <div className="acts" style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-          <Link className="btn sm" to="/biblioteca/novo"><Plus size={15} />Novo</Link>
-          <Menu itens={[{ l: 'Trocar capas', icon: <ImagePlus size={16} />, onClick: () => setCapas(true) }]} />
+      <CabecalhoPagina titulo="Biblioteca">
+        <button className="iconbtn" aria-label="Buscar na Biblioteca" onClick={() => setBuscaAberta((v) => !v || !!q)}><Search size={20} strokeWidth={1.5} /></button>
+        <Link className="iconbtn" to="/biblioteca/novo" aria-label="Novo conteúdo"><Plus size={20} strokeWidth={1.5} /></Link>
+        <Menu itens={[{ l: 'Trocar capas', icon: <ImagePlus size={16} />, onClick: () => setCapas(true) }]} />
+      </CabecalhoPagina>
+      <CapaArea slug="biblioteca" nome="Biblioteca" />
+      {(buscaAberta || q) && (
+        <div className="search bib-busca pag-busca">
+          <Search size={17} />
+          <input className="input" autoFocus placeholder="Buscar artistas, técnicas, esmaltes, leituras…" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
-      </div>
-      <CapaArea slug="biblioteca" nome="Biblioteca" className="capa-area" />
-      <div className="search bib-busca">
-        <Search size={17} />
-        <input className="input" placeholder="Buscar artistas, técnicas, esmaltes, leituras…" value={q} onChange={(e) => setQ(e.target.value)} />
-      </div>
+      )}
 
       {res ? <ResultadosBusca itens={res} q={q} /> : (
         <div className="bib-feed">

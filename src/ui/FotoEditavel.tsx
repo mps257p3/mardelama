@@ -4,6 +4,7 @@ import { useFotoEsm, trocarFotoEsm, restaurarFotoEsm, fotoDaArea, type FotoEsm }
 import { EditorRecorte, salvarRecorteAjuste } from './Recorte'
 import { Sheet } from './Sheet'
 import { useToast } from './toast'
+import { useLayout } from '../lib/layout'
 
 /** Imagem com enquadramento e reserva local quando a externa não carrega. */
 export function ImgFoto({ f }: { f: FotoEsm }) {
@@ -44,7 +45,7 @@ export function LinhaFoto({ f }: { f: FotoEsm }) {
  * Trocar aqui troca lá também.
  */
 export function CapaArea({ slug, nome, onEditar, className }: { slug: string; nome: string; onEditar?: () => void; className?: string }) {
-  const f = fotoDaArea(slug, nome)
+  const f = { ...fotoDaArea(slug, nome), aspecto: useLayout().capa }
   const [aberto, setAberto] = useState(false)
   return (
     <>
