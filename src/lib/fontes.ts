@@ -22,6 +22,7 @@ export interface ItemDescoberta {
   consulta?: string
   motivo?: string           // por que a obra apareceu (mostrado no visor)
   artista?: string          // busca por um artista (Seus artistas, Na mesma linha): o nome pedido
+  cat?: string              // Referências 2: categoria de fonte que trouxe a obra (para medir a relevância)
 }
 
 export type FonteId = 'aic' | 'met' | 'wm' | 'cma' | 'vam' | 'smk' | 'rijks' | 'eu' | 'mia' | 'si' | 'ov' | 'loc' | 'rev' | 'nga' | 'arena'

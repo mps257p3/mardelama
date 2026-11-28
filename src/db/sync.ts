@@ -15,8 +15,8 @@ export interface ConfigNuvem { url: string; chave: string }
 const TABELAS = ['familias', 'esmaltes', 'receitas', 'versoes', 'testes', 'materiais', 'referencias', 'grupos', 'paineis', 'conteudos', 'notas', 'curvas', 'queimas', 'comerciais', 'lotes', 'fornecedores', 'compras', 'projetos', 'entrada', 'paletas', 'artistas', 'obras', 'colecoes', 'exposicoes', 'ideias'] as const
 /** Tabela ainda não criada no Supabase (migração pendente): pula sem interromper o resto. */
 const faltaTabela = (e: { code?: string; message?: string }) => e.code === '42P01' || e.code === 'PGRST205' || /does not exist|Could not find the table/i.test(e.message ?? '')
-/** Ajustes que viajam entre aparelhos: o perfil de gosto do Descobrir. */
-const AJUSTES_SINC = ['descobrir.perfil']
+/** Ajustes que viajam entre aparelhos: o perfil de gosto do Descobrir e o perfil e a configuração de Referências 2. */
+const AJUSTES_SINC = ['descobrir.perfil', 'ref2.perfil', 'ref2.config']
 const BUCKET = 'arquivos'
 const PAGINA = 1000
 const NOMES: Record<string, string> = { referencias: 'referências', grupos: 'grupos', esmaltes: 'esmaltes', receitas: 'receitas', testes: 'testes', conteudos: 'biblioteca' }

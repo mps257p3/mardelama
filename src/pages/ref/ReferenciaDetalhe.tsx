@@ -15,7 +15,10 @@ import { Sheet } from '../../ui/Sheet'
 import { useToast } from '../../ui/toast'
 import { CapaAmpliavel } from '../../ui/GaleriaFotos'
 
-export default function ReferenciaDetalhe() {
+const paineisDe = (base: string) => (base === '/referencias' ? '/paineis' : base + '/paineis')
+
+/** `base`: '/referencias' (original) ou '/referencias-2' (versão experimental), para os links ficarem na mesma versão. */
+export default function ReferenciaDetalhe({ base = '/referencias' }: { base?: string }) {
   const { id } = useParams()
   const nav = useNavigate()
   const toast = useToast()
@@ -31,7 +34,7 @@ export default function ReferenciaDetalhe() {
 
   return (
     <div className="page">
-      <Voltar to="/referencias/acervo">Referências</Voltar>
+      <Voltar to={`${base}/acervo`}>Referências</Voltar>
       <div className="detalhe">
         <div>
           <div className="capa" style={{ aspectRatio: 'auto', minHeight: 240 }}>{r.imagens[foto] ? <CapaAmpliavel fotos={r.imagens} inicio={foto} legenda={r.titulo}><Foto id={r.imagens[foto]} alt={r.titulo} style={{ height: 'auto', maxHeight: '78vh', objectFit: 'contain' }} /></CapaAmpliavel> : r.imagemExterna ? <ImgRef r={r} style={{ height: 'auto', maxHeight: '78vh', objectFit: 'contain' }} /> : <Images size={44} strokeWidth={1} />}</div>
@@ -42,14 +45,14 @@ export default function ReferenciaDetalhe() {
           <h1 style={{ marginTop: 8 }}>{r.titulo}</h1>
           {r.autor && <p className="serif" style={{ fontSize: 22, marginTop: 6, fontStyle: 'italic' }}>{r.autor}</p>}
           <div style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
-            <Link className="btn sm primary" to={`/referencias/${r.id}/editar`}><Pencil size={14} />Editar</Link>
+            <Link className="btn sm primary" to={`${base}/${r.id}/editar`}><Pencil size={14} />Editar</Link>
             <button className="btn sm" onClick={() => alternarFavorito('referencias', r.id, r.favorito)}><Heart size={14} fill={r.favorito ? 'currentColor' : 'none'} />{r.favorito ? 'Favorita' : 'Favoritar'}</button>
             {(r.imagens.length > 0 || r.imagemExterna) && <button className="btn sm" onClick={() => setCatalogar(true)}><Sparkles size={14} />Sugerir catalogação</button>}
             <button className="btn sm" onClick={() => setAoPainel(true)}><LayoutDashboard size={14} />Levar a um painel</button>
-            <Link className="btn sm" to={`/referencias/descobrir?ref=${r.id}`}><ScanSearch size={14} />Ver semelhantes</Link>
+            <Link className="btn sm" to={`${base}/descobrir?ref=${r.id}`}><ScanSearch size={14} />Ver semelhantes</Link>
             <button className="btn sm" onClick={async () => nav(`/ideias/${await ideiaDeReferencia(r)}`)}><FlaskConical size={14} />Ideia de esmalte</button>
             {r.url && <a className="btn sm" href={r.url} target="_blank" rel="noreferrer"><ExternalLink size={14} />Abrir link</a>}
-            <button className="btn sm ghost" onClick={async () => { if (confirm('Excluir esta referência?')) { await excluir('referencias', r.id); nav('/referencias/acervo') } }}><Trash2 size={14} />Excluir</button>
+            <button className="btn sm ghost" onClick={async () => { if (confirm('Excluir esta referência?')) { await excluir('referencias', r.id); nav(`${base}/acervo`) } }}><Trash2 size={14} />Excluir</button>
           </div>
           {gs.length > 0 && <div className="chips" style={{ flexWrap: 'wrap', marginTop: 22 }}>{gs.map((g) => <span key={g.id} className="chip">{g.nome}</span>)}</div>}
           {r.paleta?.length ? <div className="paleta" style={{ marginTop: 22, height: 40 }}>{r.paleta.map((c) => <span key={c} style={{ background: c }} title={c} />)}</div> : null}
@@ -57,7 +60,7 @@ export default function ReferenciaDetalhe() {
           {r.comentarios && <><p className="eyebrow" style={{ marginTop: 22 }}>Comentários pessoais</p><p className="muted" style={{ whiteSpace: 'pre-wrap', marginTop: 6 }}>{r.comentarios}</p></>}
           {r.fonte && <p className="faint" style={{ marginTop: 16, fontSize: 13 }}>Fonte: {r.fonte}{r.licenca ? ' · ' + r.licenca : ''}</p>}
           {r.tags.length > 0 && <div className="pills" style={{ marginTop: 14 }}>{r.tags.map((t) => <span key={t} className="chip">#{t}</span>)}</div>}
-          <ParecidasNoAcervo key={r.id} r={r} />
+          <ParecidasNoAcervo key={r.id} r={r} base={base} />
           <div style={{ marginTop: 32 }}><Relacoes tipo="referencia" id={r.id} /></div>
         </div>
       </div>
@@ -72,7 +75,7 @@ export default function ReferenciaDetalhe() {
               setAoPainel(false); toast(`Adicionada a "${p.nome}"`)
             }}><span className="t" style={{ fontSize: 18 }}>{p.nome}</span><span className="faint">{p.itens.length} itens</span></button>
           ))}
-          {!paineis?.length && <p className="faint">Nenhum painel ainda. <Link to="/paineis" style={{ textDecoration: 'underline' }}>Criar um painel</Link>.</p>}
+          {!paineis?.length && <p className="faint">Nenhum painel ainda. <Link to={paineisDe(base)} style={{ textDecoration: 'underline' }}>Criar um painel</Link>.</p>}
         </div>
       </Sheet>}
     </div>

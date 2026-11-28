@@ -3,7 +3,7 @@ import { ArrowDown, ArrowUp, Crop, Eye, EyeOff, ImagePlus, RotateCcw } from 'luc
 import { db } from '../db/schema'
 import { salvarArquivo } from '../db/files'
 import { definirAjuste, useAjuste } from '../db/settings'
-import { AREAS } from '../ui/nav'
+import { AREAS, REF2 } from '../ui/nav'
 import { useToast } from '../ui/toast'
 import { Destaque, useEstiloFotoArea, useFotoArea } from './Home'
 import { useArquivoUrl } from '../db/files'
@@ -30,7 +30,7 @@ async function restaurarImagem(chave: string, atual?: string) {
   await db.ajustes.delete(chave + '.recorte')
 }
 
-function FotoArea({ a }: { a: (typeof AREAS)[number] }) {
+function FotoArea({ a }: { a: (typeof AREAS)[number] | typeof REF2 }) {
   const toast = useToast()
   const chave = `area.foto.${a.slug}`
   const atual = useAjuste<string | undefined>(chave, undefined)
@@ -97,7 +97,7 @@ export function AjustesInicio() {
         onSalvar={async (r) => { await muda({ x: Math.round(r.x * 1000) / 10, y: Math.round(r.y * 1000) / 10, zoom: r.zoom }); toast('Fotografia de destaque atualizada') }} onClose={() => setEnquadrar(false)} />}
 
       <p className="rotulo-ajuste">Fotografias das áreas</p>
-      <div className="ajuste-areas">{AREAS.map((a) => <FotoArea key={a.slug} a={a} />)}</div>
+      <div className="ajuste-areas">{AREAS.map((a) => <FotoArea key={a.slug} a={a} />)}<FotoArea a={REF2} /></div>
 
       <p className="rotulo-ajuste">Seções</p>
       <div className="linhas">

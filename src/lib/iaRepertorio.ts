@@ -244,8 +244,8 @@ export async function explicarObra(x: ItemDescoberta): Promise<Explicacao> {
  * Para economizar, só roda com pelo menos 3 curtidas/salvas novas desde a última leitura e no máximo a cada 12 horas
  * (ou quando você pede em Ajustar curadoria).
  */
-export async function atualizarGostoIA(forcar = false): Promise<GostoIA | undefined> {
-  const perfil = await lerPerfil()
+export async function atualizarGostoIA(forcar = false, chave?: string): Promise<GostoIA | undefined> {
+  const perfil = await lerPerfil(chave)
   const g = perfil.gostoIA
   const base = perfil.historico.length
   const novos = perfil.historico.filter((h) => h.quando > (g?.quando ?? 0)).length
@@ -265,8 +265,8 @@ export async function atualizarGostoIA(forcar = false): Promise<GostoIA | undefi
     referencias: refs.map((x) => ({ t: x.titulo.slice(0, 60), tags: x.tags.slice(0, 5) })),
   }, 60000)
   const novo: GostoIA = { ...r, consultas: r.consultas.filter((c) => c.q && UNIVERSOS[c.universo]).slice(0, 16), quando: Date.now(), base }
-  const atual = await lerPerfil()
-  await salvarPerfil({ ...atual, gostoIA: novo })
+  const atual = await lerPerfil(chave)
+  await salvarPerfil({ ...atual, gostoIA: novo }, chave)
   return novo
 }
 

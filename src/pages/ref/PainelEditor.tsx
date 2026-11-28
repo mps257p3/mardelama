@@ -18,7 +18,7 @@ function RefImg({ refId }: { refId?: string }) {
   return temImagem(r) ? <ImgRef r={r} /> : <div className="txt" style={{ background: 'var(--surface-2)' }}>{r.titulo}</div>
 }
 
-export default function PainelEditor() {
+export default function PainelEditor({ voltar = '/paineis', refs: baseRefs = '/referencias' }: { voltar?: string; refs?: string }) {
   const { id } = useParams()
   const nav = useNavigate()
   const original = useLiveQuery(() => db.paineis.get(id!), [id])
@@ -74,7 +74,7 @@ export default function PainelEditor() {
 
   return (
     <div className="page" style={{ maxWidth: 1400 }}>
-      <Voltar to="/paineis">Painéis</Voltar>
+      <Voltar to={voltar}>Painéis</Voltar>
       <input className="serif" value={p.nome} onChange={(e) => mudar(p.itens, { nome: e.target.value })}
         style={{ fontSize: 'clamp(32px,4vw,44px)', border: 0, background: 'none', width: '100%', padding: 0, outline: 'none', color: 'var(--ink)' }} />
       <div className="toolbar">
@@ -90,7 +90,7 @@ export default function PainelEditor() {
           <button className="btn sm" onClick={() => atualizar(selecionado.id, { z: topo() })}><ArrowUpToLine size={14} />Para frente</button>
           <button className="btn sm" onClick={() => { mudar(p.itens.filter((i) => i.id !== selecionado.id)); setSel(undefined) }}><Trash2 size={14} />Remover</button>
         </>}
-        {!selecionado && <button className="btn sm ghost" onClick={async () => { if (confirm('Excluir este painel?')) { await excluir('paineis', p.id); nav('/paineis') } }}><Trash2 size={14} />Excluir painel</button>}
+        {!selecionado && <button className="btn sm ghost" onClick={async () => { if (confirm('Excluir este painel?')) { await excluir('paineis', p.id); nav(voltar) } }}><Trash2 size={14} />Excluir painel</button>}
       </div>
 
       <div ref={wrap} className="lousa-wrap" style={{ height: ALT * escala }} onPointerDown={() => setSel(undefined)}>
@@ -98,7 +98,7 @@ export default function PainelEditor() {
           {[...p.itens].sort((a, b) => a.z - b.z).map((i) => (
             <div key={i.id} className={'item' + (sel === i.id ? ' sel' : '')} style={{ left: i.x, top: i.y, width: i.w, height: i.h, zIndex: i.z, background: i.tipo === 'cor' ? i.cor : undefined }}
               onPointerDown={(e) => arrastar(e, i, 'mover')}
-              onDoubleClick={() => { if (i.tipo === 'texto') { setTexto(i.texto ?? ''); setSel(i.id); setSheet('texto') } else if (i.tipo === 'referencia') nav(`/referencias/${i.refId}`) }}>
+              onDoubleClick={() => { if (i.tipo === 'texto') { setTexto(i.texto ?? ''); setSel(i.id); setSheet('texto') } else if (i.tipo === 'referencia') nav(`${baseRefs}/${i.refId}`) }}>
               {i.tipo === 'referencia' && <RefImg refId={i.refId} />}
               {i.tipo === 'imagem' && <Foto id={i.arquivoId} />}
               {i.tipo === 'texto' && <div className="txt">{i.texto}</div>}

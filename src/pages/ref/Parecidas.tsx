@@ -6,7 +6,7 @@ import { estadoVisao, imagemDaRef, semelhanca, vetorDe } from '../../lib/visao'
 import { ImgRef } from './ImgRef'
 
 /** "Mais como esta": as referências do seu acervo que mais se parecem com esta, pela imagem (como o "relacionados" do Pinterest). */
-export function ParecidasNoAcervo({ r }: { r: Referencia }) {
+export function ParecidasNoAcervo({ r, base: baseRota = '/referencias' }: { r: Referencia; base?: string }) {
   const [estado, setEstado] = useState<{ lidas: number; total: number }>()
   const [achadas, setAchadas] = useState<Referencia[]>()
   const [erro, setErro] = useState<string>()
@@ -36,7 +36,7 @@ export function ParecidasNoAcervo({ r }: { r: Referencia }) {
       {estado && <p className="faint" style={{ fontSize: 13, marginTop: 8 }}>{estado.total ? `Comparando pela imagem: ${estado.lidas} de ${estado.total}…` : 'Preparando o olhar do app (só na primeira vez)…'} A primeira vez demora; depois fica guardado.</p>}
       {erro && <p className="faint" style={{ fontSize: 13, marginTop: 8 }}>{erro}</p>}
       {achadas && (achadas.length
-        ? <div className="parecidas-grade">{achadas.map((x) => <Link key={x.id} to={`/referencias/${x.id}`} title={x.titulo}><ImgRef r={x} /></Link>)}</div>
+        ? <div className="parecidas-grade">{achadas.map((x) => <Link key={x.id} to={`${baseRota}/${x.id}`} title={x.titulo}><ImgRef r={x} /></Link>)}</div>
         : <p className="faint" style={{ fontSize: 13, marginTop: 8 }}>Ainda não há outras imagens no acervo para comparar.</p>)}
     </div>
   )

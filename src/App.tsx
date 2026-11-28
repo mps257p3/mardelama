@@ -47,6 +47,13 @@ const ImportarPinterest = carregar(() => import('./pages/ref/ImportarPinterest')
 const RetornoPinterest = carregar(() => import('./pages/ref/RetornoPinterest'))
 const Privacidade = carregar(() => import('./pages/Privacidade'))
 const Paineis = carregar(() => import('./pages/ref/Paineis'))
+const Descobrir2 = carregar(() => import('./pages/ref2/Descobrir2'))
+const Acervo2 = carregar(() => import('./pages/ref2/Acervo2'))
+const Redescobrir = carregar(() => import('./pages/ref2/Redescobrir'))
+const Colecoes2 = carregar(() => import('./pages/ref2/Colecoes2'))
+const GerenciarColecoes = carregar(() => import('./pages/ref2/Colecoes2').then((m) => ({ default: m.GerenciarColecoes })))
+const Paineis2 = carregar(() => import('./pages/ref2/Paineis2'))
+const Curadoria2 = carregar(() => import('./pages/ref2/Curadoria2'))
 const PainelEditor = carregar(() => import('./pages/ref/PainelEditor'))
 const Compartilhar = carregar(() => import('./pages/ref/Compartilhar'))
 const Biblioteca = carregar(() => import('./pages/bib/Biblioteca'))
@@ -136,6 +143,18 @@ export default function App() {
           <Route path="privacidade" element={<Privacidade />} />
           <Route path="referencias/:id" element={<ReferenciaDetalhe />} />
           <Route path="referencias/:id/editar" element={<ReferenciaForm />} />
+          <Route path="referencias-2" element={<Navigate to="/referencias-2/descobrir" replace />} />
+          <Route path="referencias-2/descobrir" element={<Descobrir2 />} />
+          <Route path="referencias-2/acervo" element={<Acervo2 />} />
+          <Route path="referencias-2/acervo/redescobrir" element={<Redescobrir />} />
+          <Route path="referencias-2/colecoes" element={<Colecoes2 />} />
+          <Route path="referencias-2/colecoes/gerenciar" element={<GerenciarColecoes />} />
+          <Route path="referencias-2/paineis" element={<Paineis2 />} />
+          <Route path="referencias-2/paineis/:id" element={<PainelEditor voltar="/referencias-2/paineis" refs="/referencias-2" />} />
+          <Route path="referencias-2/curadoria" element={<Curadoria2 />} />
+          <Route path="referencias-2/nova" element={<ReferenciaForm key="nova2" base="/referencias-2" />} />
+          <Route path="referencias-2/:id" element={<ReferenciaDetalhe base="/referencias-2" />} />
+          <Route path="referencias-2/:id/editar" element={<ReferenciaForm base="/referencias-2" />} />
           <Route path="paineis" element={<Paineis />} />
           <Route path="paineis/:id" element={<PainelEditor />} />
           <Route path="biblioteca" element={<Biblioteca />} />
