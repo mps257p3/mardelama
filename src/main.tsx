@@ -17,6 +17,7 @@ import { iniciarRssAutomatico } from './lib/pinterestRss'
 import { registerSW } from 'virtual:pwa-register'
 import { db } from './db/schema'
 import { pedirAtualizacao } from './lib/atualizacao'
+import { ErroTela } from './ui/ErroTela'
 
 // Se o banco do aparelho não abrir, mostra o motivo em vez de deixar as telas vazias.
 function aviso(texto: string) {
@@ -51,8 +52,11 @@ iniciarRssAutomatico()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    {/* rede de segurança: se algo falhar fora das telas, mostra o aviso com o erro em vez de deixar tudo em branco */}
+    <ErroTela chave="app">
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </ErroTela>
   </StrictMode>,
 )

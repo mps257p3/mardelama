@@ -41,7 +41,8 @@ export async function buscarVersaoNova(): Promise<'nova' | 'atual' | 'offline'> 
   if (!navigator.onLine) return 'offline'
   const reg = await navigator.serviceWorker?.getRegistration()
   if (!reg) return 'atual'
-  try { await reg.update() } catch { return 'offline' }
+  // sem resposta em 10 s: segue com o que já houver (não deixa o botão parado em "Buscando…")
+  try { await Promise.race([reg.update(), espera(10000)]) } catch { return 'offline' }
   const sw = reg.installing ?? reg.waiting
   if (!sw) return 'atual'
   // espera a versão nova terminar de instalar (até 20 s) e recarrega com ela
