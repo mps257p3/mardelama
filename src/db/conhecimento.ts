@@ -282,6 +282,8 @@ const BIB: (Omit<Conteudo, keyof Base | 'arquivos' | 'formato'> & { id: string }
   { id: 'bib-mascaramento', titulo: 'Mascaramento e reserva de esmaltação', categoria: 'Técnicas de aplicação', tags: ['mascaramento', 'reserva', 'látex', 'cera', 'fita', 'aplicação'], corpo:
     '<p>O mascaramento é uma técnica utilizada para proteger determinadas áreas da superfície cerâmica durante a aplicação de esmaltes. Permite preservar a argila aparente, delimitar cores, criar grafismos, estabelecer contrastes entre superfícies esmaltadas e não esmaltadas e realizar aplicações sucessivas de diferentes esmaltes.</p>' +
     '<p>Os principais materiais utilizados são o látex líquido, a cera de reserva e a fita adesiva. Cada um apresenta características específicas de aplicação, resistência e acabamento.</p>' +
+    '<h3>Possibilidades expressivas</h3>' +
+    ul(['Preservação da cor e da textura natural da argila.', 'Contraste entre superfícies brilhantes, foscas e não esmaltadas.', 'Criação de grafismos geométricos ou orgânicos.', 'Delimitação de diferentes cores e acabamentos.', 'Aplicação sequencial de esmaltes.', 'Criação de espaços negativos.', 'Valorização de relevos e detalhes escultóricos.', 'Construção de padrões visuais sobre superfícies tridimensionais.']) +
     tabela(['', 'Látex líquido', 'Cera de reserva', 'Fita adesiva'], [
       ['Melhor para', 'Superfícies irregulares, relevos, desenhos orgânicos', 'Bases de peças, argila aparente, pinceladas livres', 'Linhas precisas, faixas e padrões geométricos'],
       ['Antes da queima', 'Retirar por completo', 'Fica na peça e queima no forno', 'Retirar com cuidado'],
@@ -298,12 +300,16 @@ const BIB: (Omit<Conteudo, keyof Base | 'arquivos' | 'formato'> & { id: string }
     '<p>Diferentemente do látex, a cera permanece na peça até a queima, quando é eliminada pela ação do calor. O forno deve possuir ventilação adequada.</p>' +
     '<p>Sua principal limitação é a dificuldade de remoção antes da queima, tornando menos prática a correção de erros ou a aplicação posterior de esmaltes sobre a área protegida.</p>' +
     '<p>Eventuais gotas de esmalte acumuladas sobre a cera devem ser removidas antes da queima.</p>' +
+    '<p><b>Modo de aplicação</b></p>' +
+    '<ol><li>Limpar a superfície cerâmica, eliminando poeira e resíduos.</li><li>Aplicar a cera com pincel sobre as áreas que deseja proteger, como a base da peça, bordas ou desenhos.</li><li>Deixar secar até que a cera forme uma camada firme.</li><li>Aplicar o esmalte pelo método desejado.</li><li>Remover com esponja úmida as gotas de esmalte acumuladas sobre a cera.</li><li>Levar ao forno com ventilação adequada; a cera é eliminada pela ação do calor.</li></ol>' +
     '<h3>Fita adesiva (Tape Resist)</h3>' +
     '<p>A fita adesiva permite criar linhas precisas, padrões geométricos, faixas e divisões entre diferentes cores de esmalte.</p>' +
     '<p>É particularmente eficiente em superfícies lisas e regulares, mas pode apresentar dificuldades de aderência em áreas muito texturizadas, curvas complexas ou superfícies com esmalte cru.</p>' +
     '<p>Deve ser <b>retirada antes da queima</b>, cuidadosamente, para evitar o desprendimento do esmalte nas bordas.</p>' +
-    '<h3>Possibilidades expressivas</h3>' +
-    ul(['Preservação da cor e da textura natural da argila.', 'Contraste entre superfícies brilhantes, foscas e não esmaltadas.', 'Criação de grafismos geométricos ou orgânicos.', 'Delimitação de diferentes cores e acabamentos.', 'Aplicação sequencial de esmaltes.', 'Criação de espaços negativos.', 'Valorização de relevos e detalhes escultóricos.', 'Construção de padrões visuais sobre superfícies tridimensionais.']) +
+    '<p><b>Modo de aplicação</b></p>' +
+    '<ol><li>Limpar a superfície cerâmica, eliminando poeira e resíduos.</li><li>Posicionar a fita e pressionar bem as bordas, para que o esmalte não infiltre por baixo.</li><li>Aplicar o esmalte pelo método desejado.</li><li>Aguardar a secagem suficiente do esmalte.</li><li>Retirar a fita devagar, puxando rente à superfície, para não levantar o esmalte das bordas.</li><li>Retocar com pincel pequenas falhas nas bordas, se necessário, e conferir que não restou fita antes da queima.</li></ol>' +
+    '<h3>Como registrar no teste</h3>' +
+    ul(['Material de reserva: látex, cera ou fita.', 'Onde foi aplicado: sobre o biscoito, sobre esmalte cru ou entre camadas.', 'Esmaltes usados e ordem de aplicação.', 'Espessura ou número de demãos.', 'Quando a reserva foi retirada.', 'Resultado das bordas depois da queima: nítidas, suavizadas ou invadidas pelo esmalte.', 'Fotos antes e depois da queima.']) +
     '<h3>Cuidados técnicos</h3>' +
     '<p>O mascaramento controla a aplicação do esmalte, mas não necessariamente seu comportamento durante a queima. Esmaltes muito fluidos podem ultrapassar os limites estabelecidos pela reserva, invadindo áreas originalmente protegidas.</p>' +
     '<p>A espessura da aplicação, a temperatura, o trabalho térmico, a posição da peça e a interação entre esmaltes influenciam a definição final dos contornos.</p>' +
@@ -364,7 +370,16 @@ async function unificarAntigos() {
 /** Textos da Biblioteca incluídos depois da primeira semente: entram em todo aparelho que ainda não os tem (pelo id fixo). */
 const TEXTOS_POSTERIORES = ['bib-mascaramento']
 
+/** Textos revisados depois de entrar nos aparelhos: atualiza uma vez por aparelho (marca no ajuste). */
+const TEXTOS_REVISADOS: [string, string][] = [['bib-mascaramento', 'bib-mascaramento-v2']]
+
 export async function semearConhecimento() {
+  for (const [id, marca] of TEXTOS_REVISADOS) {
+    if (await db.ajustes.get(marca)) continue
+    const atual = await db.conteudos.get(id), novo = BIB.find((b) => b.id === id)
+    if (atual && !atual.excluido && novo) await db.conteudos.update(id, { corpo: novo.corpo, tags: novo.tags, atualizadoEm: Date.now() })
+    await db.ajustes.put({ chave: marca, valor: true })
+  }
   await adicionarFaltantes('conteudos', BIB.filter((b) => TEXTOS_POSTERIORES.includes(b.id)).map(({ id, ...c }) => ({ ...base(id), ...c, formato: 'texto' as const, arquivos: [] })))
   if (await db.ajustes.get('seed-lab-v1')) return
   await unificarAntigos()
