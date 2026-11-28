@@ -353,7 +353,8 @@ textarea.input { min-height: 110px; resize: vertical; }
 .prosa blockquote { margin: 1em 0; padding-left: 18px; border-left: 2px solid var(--terracota); font-family: var(--serif); font-size: 22px; font-style: italic; color: var(--marrom); }
 .prosa a { text-decoration: underline; color: var(--azul); }
 .prosa ul, .prosa ol { padding-left: 1.3em; }
-.prosa table { border-collapse: collapse; } .prosa td, .prosa th { padding: 6px 12px; border-bottom: 1px solid var(--line); text-align: left; }
+.prosa table { border-collapse: collapse; width: 100%; table-layout: fixed; } .prosa td, .prosa th { padding: 6px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; overflow-wrap: anywhere; hyphens: auto; }
+@media (max-width: 600px) { .prosa table { font-size: 13px; line-height: 1.4; } .prosa td, .prosa th { padding: 6px 5px; } .prosa td:first-child, .prosa th:first-child { padding-left: 0; } }
 .leitura { max-width: 680px; }
 
 /* ---------- caderno ---------- */
