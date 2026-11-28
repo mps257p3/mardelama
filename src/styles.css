@@ -1157,8 +1157,8 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: var
 .esm-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 6px 0 16px; }
 .esm-head .sup-titulo { margin: 0; }
 .esm-head .iconbtn { color: var(--ink-2); }
-.destaque.esm-capa { height: auto; aspect-ratio: 2.3 / 1; }
-.esm-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 12px; margin-top: 18px; }
+.destaque.esm-capa { height: auto; aspect-ratio: 2.7 / 1; }
+.esm-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 12px; margin-top: 18px; }
 .esm-cards .card-area .desc { padding-left: 0; }
 @media (min-width: 900px) { .esm-cards { grid-template-columns: repeat(4, 1fr); } }
 .esm-bloco { margin-top: 30px; }

@@ -75,7 +75,7 @@ export default function Laboratorio() {
             <Link key={s.slug} to={s.to} className="card-area">
               <span className="foto"><ImgEsm f={s} /></span>
               <span className="nome">{s.nome}<ArrowUpRight size={14} strokeWidth={1.4} className="seta" aria-hidden /></span>
-              <span className="desc">{q == null ? ' ' : q ? `${q} ${s.unid[q === 1 ? 0 : 1]}` : 'Nenhum ainda'}</span>
+              <span className="desc">{q == null ? ' ' : `${q} ${s.unid[q === 1 ? 0 : 1]}`}</span>
             </Link>
           )
         })}
