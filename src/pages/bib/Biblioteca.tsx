@@ -11,7 +11,9 @@ import { buscarTodos, type Resumo } from '../../lib/entidades'
 import { Menu } from '../../ui/Menu'
 import { Sheet } from '../../ui/Sheet'
 import { ResultadosBusca } from '../../ui/ResultadosBusca'
-import { CapaArea } from '../../ui/FotoEditavel'
+import { CapaArea, LinhaFoto } from '../../ui/FotoEditavel'
+import { fotoDaArea } from '../../lib/esmaltaria'
+import { useLayout } from '../../lib/layout'
 import { CabecalhoPagina } from '../../ui/Pagina'
 import { EditorRecorte, estiloRecorte, salvarRecorteAjuste, useRecorteAjuste } from '../../ui/Recorte'
 
@@ -79,7 +81,7 @@ export default function Biblioteca() {
         <Link className="iconbtn" to="/biblioteca/novo" aria-label="Novo conteúdo"><Plus size={20} strokeWidth={1.5} /></Link>
         <Menu itens={[{ l: 'Trocar capas', icon: <ImagePlus size={16} />, onClick: () => setCapas(true) }]} />
       </CabecalhoPagina>
-      <CapaArea slug="biblioteca" nome="Biblioteca" />
+      <CapaArea slug="biblioteca" nome="Biblioteca" onEditar={() => setCapas(true)} />
       {(buscaAberta || q) && (
         <div className="search bib-busca pag-busca">
           <Search size={17} />
@@ -119,10 +121,12 @@ function LinhaCapa({ s }: { s: SecaoBib }) {
 }
 
 function TrocarCapas({ onClose }: { onClose: () => void }) {
+  const capa = { ...fotoDaArea('biblioteca', 'Biblioteca'), nome: 'Capa da Biblioteca', aspecto: useLayout().capa }
   return (
     <Sheet onClose={onClose} label="Capas da Biblioteca" alto>
       <h3>Capas da Biblioteca</h3>
-      <p className="faint" style={{ fontSize: 13.5, margin: '6px 0 14px' }}>Use fotos suas: testes de esmalte, materiais, peças e mãos no trabalho.</p>
+      <p className="faint" style={{ fontSize: 13.5, margin: '6px 0 14px' }}>Use fotos suas: testes de esmalte, materiais, peças e mãos no trabalho. A capa é a mesma foto do card na tela inicial.</p>
+      <LinhaFoto f={capa} />
       {SECOES.map((s) => <LinhaCapa key={s.slug} s={s} />)}
     </Sheet>
   )
