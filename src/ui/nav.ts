@@ -10,6 +10,9 @@ export const AREAS = [
   { slug: 'calculadoras', to: '/calculadoras', nome: 'Calculadoras', desc: 'Ferramentas para o ateliê', icon: Calculator, cor: '#594334', fase: 4 },
 ] as const
 
+/** Versão experimental de Referências: tem card próprio na tela inicial, mas não entra na navegação inferior. */
+export const REF2 = { slug: 'referencias2', to: '/referencias-2/descobrir', nome: 'Referências 2', desc: 'Pesquisa visual e curadoria artística', icon: Images, cor: '#858D70', fase: 3 } as const
+
 export type AreaSlug = (typeof AREAS)[number]['slug']
 export const COR_AREA: Record<AreaSlug, string> = Object.fromEntries(AREAS.map((a) => [a.slug, a.cor])) as Record<AreaSlug, string>
 

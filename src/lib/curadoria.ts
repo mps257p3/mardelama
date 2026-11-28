@@ -8,7 +8,7 @@ import { anoDe, FONTE, FONTES, type FonteId, type ItemDescoberta, type Periodo }
 
 export type Interacao = 'curtir' | 'salvar' | 'painel' | 'semelhantes' | 'pesquisar' | 'recusar'
 /** Modos antigos (ainda usados por dentro do planejamento). */
-type ModoBase = 'para-voce' | 'fora-da-curva' | 'novos-artistas' | 'cores-texturas' | 'formas-volumes'
+export type ModoBase = 'para-voce' | 'fora-da-curva' | 'novos-artistas' | 'cores-texturas' | 'formas-volumes'
 /** Grupos do Descobrir por origem (teste pedido pelo Marcelo em 23/11/2026). */
 export type Modo = 'para-voce' | 'museus' | 'revistas' | 'seus-artistas' | 'mesma-linha'
 export const MODOS: [Modo, string][] = [['para-voce', 'Para você'], ['museus', 'Museus'], ['revistas', 'Revistas'], ['seus-artistas', 'Seus artistas'], ['mesma-linha', 'Na mesma linha']]
@@ -40,13 +40,14 @@ export const PERFIL_VAZIO: Perfil = {
 }
 const CHAVE = 'descobrir.perfil'
 
-export async function lerPerfil(): Promise<Perfil> {
-  const a = await db.ajustes.get(CHAVE)
+/** `chave`: onde o perfil fica. O Descobrir original usa 'descobrir.perfil'; Referências 2 usa o seu próprio perfil. */
+export async function lerPerfil(chave = CHAVE): Promise<Perfil> {
+  const a = await db.ajustes.get(chave)
   const p = { ...PERFIL_VAZIO, ...(a?.valor as Partial<Perfil> ?? {}) }
   p.pesos = { ...PESOS_PADRAO, ...p.pesos }; p.fontes = { ...PERFIL_VAZIO.fontes, ...p.fontes }
   return p
 }
-export const salvarPerfil = (p: Perfil) => db.ajustes.put({ chave: CHAVE, valor: { ...p, atualizadoEm: Date.now() } })
+export const salvarPerfil = (p: Perfil, chave = CHAVE) => db.ajustes.put({ chave, valor: { ...p, atualizadoEm: Date.now() } })
 
 /** Universos criativos: a curadoria é transversal, não só cerâmica. Consultas em inglês (as fontes indexam em inglês). */
 export const UNIVERSOS: Record<string, { nome: string; consultas: string[]; vizinhos: string[] }> = {
@@ -207,7 +208,7 @@ export async function sementesDoAcervo() {
   return [...c].sort((a, b) => b[1] - a[1]).slice(0, 12)
 }
 
-export interface Pedido { q: string; universo?: string; fonte?: FonteId; soMuseus?: boolean; tema?: string; /** só fica o resultado que cita este nome (busca por artista) */ nome?: string; tipo: 'proximo' | 'adjacente' | 'experimental' | 'busca' | 'semelhantes'; motivo?: string }
+export interface Pedido { q: string; universo?: string; fonte?: FonteId; /** ordem de fontes preferida (Referências 2): tenta nesta ordem */ fontes?: FonteId[]; /** categoria de fonte (Referências 2) */ cat?: string; soMuseus?: boolean; tema?: string; /** só fica o resultado que cita este nome (busca por artista) */ nome?: string; tipo: 'proximo' | 'adjacente' | 'experimental' | 'busca' | 'semelhantes'; motivo?: string }
 
 /** Termos com peso: o aprendido + um reforço para o que foi curtido/salvo recentemente (meia-vida de 14 dias). */
 export function pesosDoGosto(perfil: Perfil) {
@@ -224,7 +225,7 @@ export function pesosDoGosto(perfil: Perfil) {
 const nomeU = (u?: string) => (u ? UNIVERSOS[u]?.nome ?? u : '')
 
 /** Monta as consultas de um lote conforme o modo e a mistura 60/25/15 (ajustável). Cada pedido leva o motivo, mostrado no visor. */
-async function planejarBase(perfil: Perfil, modo: ModoBase, n = 8, epoca: Epoca = 'todas'): Promise<Pedido[]> {
+export async function planejarBase(perfil: Perfil, modo: ModoBase, n = 8, epoca: Epoca = 'todas'): Promise<Pedido[]> {
   let { proximo, adjacente, experimental } = perfil.mistura
   if (modo === 'fora-da-curva') { proximo = 0; adjacente = 30; experimental = 70 }
   const tot = proximo + adjacente + experimental || 1
@@ -419,7 +420,9 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
     // consulta num idioma específico vai só para o acervo daquele idioma
     const exige = p.tema ? TEMAS.find((t) => t.id === p.tema)?.exige : undefined
     const daqui = p.soMuseus ? ligadas.filter((f) => f.id !== 'rev' && f.id !== 'arena') : ligadas
-    const ordem = p.fonte ? ligadas.filter((f) => f.id === p.fonte) : daqui.map((_, k) => daqui[(inicio + k) % daqui.length])
+    const ordem = p.fonte ? ligadas.filter((f) => f.id === p.fonte)
+      : p.fontes?.length ? p.fontes.map((id) => daqui.find((f) => f.id === id)).filter((f): f is (typeof ligadas)[number] => !!f)
+      : daqui.map((_, k) => daqui[(inicio + k) % daqui.length])
     for (const f of ordem) {
       if (falhou.has(f.id)) continue
       try {
@@ -435,7 +438,7 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
         // acervo pequeno para essa consulta: a página sorteada veio vazia, volta para uma das primeiras
         if (!xs.length && pagina > 1 && !periodo) xs = await f.buscar(p.q, porConsulta, 1 + Math.floor(Math.random() * Math.min(2, pagina - 1)))
         estados.set(f.id, { id: f.id, ok: true, quando: Date.now() })
-        const prontos = xs.map((x) => ({ ...x, universo: p.universo, consulta: p.q, motivo: p.motivo, artista: p.nome }))
+        const prontos = xs.map((x) => ({ ...x, universo: p.universo, consulta: p.q, motivo: p.motivo, artista: p.nome, ...(p.cat ? { cat: p.cat } : {}) }))
         avisar(prontos)
         return prontos
       } catch (e) {
@@ -466,8 +469,8 @@ export async function buscarLote(perfil: Perfil, pedidos: Pedido[], conhecidos: 
 }
 
 /** Registra uma interação e atualiza o perfil (permanente ou temporário). */
-export async function registrar(item: ItemDescoberta | null, tipo: Interacao, termosExtras: string[] = []) {
-  const p = await lerPerfil()
+export async function registrar(item: ItemDescoberta | null, tipo: Interacao, termosExtras: string[] = [], chave = CHAVE) {
+  const p = await lerPerfil(chave)
   const w = p.pesos[tipo]
   const termos = [...(item?.termos ?? []).slice(0, 6), ...termosExtras]
   const temporario = tipo === 'pesquisar' || tipo === 'semelhantes'
@@ -485,16 +488,16 @@ export async function registrar(item: ItemDescoberta | null, tipo: Interacao, te
   if (!temporario && termos.length && w > 0) p.historico = [...p.historico.slice(-500), { quando: Date.now(), termos: termos.slice(0, 4) }]
   // limpa temporários vencidos
   for (const [k, v] of Object.entries(p.temporario)) if (v.ate < Date.now()) delete p.temporario[k]
-  await salvarPerfil(p)
+  await salvarPerfil(p, chave)
   return p
 }
 
-export async function descurtir(item: ItemDescoberta) {
-  const p = await lerPerfil()
+export async function descurtir(item: ItemDescoberta, chave = CHAVE) {
+  const p = await lerPerfil(chave)
   p.curtidos = p.curtidos.filter((x) => x !== item.id)
   p.curtidasItens = (p.curtidasItens ?? []).filter((x) => x.id !== item.id)
   for (const t of item.termos.slice(0, 6)) p.termos[t] = (p.termos[t] ?? 0) - p.pesos.curtir
-  await salvarPerfil(p)
+  await salvarPerfil(p, chave)
 }
 
 const TIPO_POR_TERMO: [RegExp, string][] = [

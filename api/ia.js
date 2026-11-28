@@ -180,6 +180,41 @@ ESQUEMAS.acervo = {
     },
   },
 }
+// Referências 2: leitura estética das pastas do Pinterest (características visuais + consultas para outras fontes)
+ESQUEMAS.estetica = {
+  type: 'object', additionalProperties: false, required: ['resumo', 'caracteristicas', 'consultas'],
+  properties: {
+    resumo: { type: 'string', description: 'Duas frases em segunda pessoa sobre o repertório visual que as pastas mostram.' },
+    caracteristicas: {
+      type: 'object', additionalProperties: false,
+      required: ['linguagens', 'materialidade', 'formas', 'paletas', 'texturas', 'grafismos', 'composicao', 'abstracao', 'escultorico', 'temas'],
+      properties: {
+        linguagens: lista('Linguagens artísticas que aparecem (cerâmica, escultura, ilustração...), em português, da mais forte para a mais fraca.'),
+        materialidade: lista('Materiais e acabamentos visíveis (grés, terracota, esmalte brilhante, madeira...).'),
+        formas: lista('Formas recorrentes (vasos bojudos, cabeças de animais, formas orgânicas...).'),
+        paletas: lista('Paletas recorrentes descritas em palavras (azul-cobalto e branco, terrosos...).'),
+        texturas: lista('Texturas e superfícies recorrentes.'),
+        grafismos: lista('Grafismos, padrões e desenhos de superfície recorrentes.'),
+        composicao: lista('Traços de composição (simetria, empilhamento, figura isolada...).'),
+        abstracao: { type: 'string', description: 'Uma frase: onde o repertório fica entre figurativo e abstrato.' },
+        escultorico: lista('Traços de estilo escultórico (estilização geométrica, volumes inflados...). Vazio se não houver escultura.'),
+        temas: lista('Temas recorrentes (bichos, máscaras, natureza...).'),
+      },
+    },
+    consultas: {
+      type: 'array', description: 'De 12 a 18 consultas para museus, revistas de arte e coleções abertas que tragam obras reais com essas características. Metade bem perto das pastas, metade um passo além.',
+      items: {
+        type: 'object', additionalProperties: false, required: ['q', 'universo', 'traco', 'porque'],
+        properties: {
+          q: { type: 'string', description: 'Consulta curta em inglês (2 a 4 palavras), específica e visual (artista, técnica, forma, movimento), nunca genérica.' },
+          universo: { type: 'string', description: 'Um dos universos criativos informados.' },
+          traco: { type: 'string', description: 'Qual característica acima a consulta segue (ex.: "formas: cabeças de animais").' },
+          porque: { type: 'string', description: 'Motivo em português, curto (até 8 palavras).' },
+        },
+      },
+    },
+  },
+}
 // busca por foto: mesma resposta da busca por texto
 ESQUEMAS.foto = ESQUEMAS.buscar
 // curtidas agrupadas em temas
@@ -277,6 +312,20 @@ ${imgs.length ? 'As imagens acima são amostras das pastas (uma por pasta, na or
 ${JSON.stringify(d.pastas ?? []).slice(0, 24000)}
 Consultas que já foram feitas recentemente (evite repetir): ${(d.recentes ?? []).slice(0, 40).join(', ') || 'nenhuma'}.
 A partir disso, proponha consultas para um feed de descoberta que traga coisas novas e interessantes, ligadas a essas pastas. Prefira nomes de artistas, movimentos, técnicas e formas específicas a termos genéricos.` },
+      ],
+    }
+  }
+  if (acao === 'estetica') {
+    const imgs = (d.imagens ?? []).filter((u) => /^https:\/\//.test(u)).slice(0, 16)
+    return {
+      esforco: 'low', max: 6000,
+      conteudo: [
+        ...imgs.map((url) => ({ type: 'image', source: { type: 'url', url } })),
+        { type: 'text', text: `Universos disponíveis: ${(d.universos ?? []).join(', ')}.
+${imgs.length ? 'As imagens acima são pins das pastas do Pinterest da pessoa, escolhidos conforme o peso de cada pasta.\n' : ''}Pastas do Pinterest (e outras coleções) de um ceramista, com o peso que ele deu a cada uma (0 a 3) e exemplos do que há nelas:
+${JSON.stringify(d.pastas ?? []).slice(0, 24000)}
+Descreva as características visuais recorrentes (só o que se vê de fato nas imagens e nos textos; nada de autoria inventada). Pastas com peso maior contam mais.
+Depois proponha consultas para encontrar obras reais com essas características em museus, revistas de arte e coleções abertas.` },
       ],
     }
   }

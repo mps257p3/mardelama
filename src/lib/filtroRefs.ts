@@ -15,30 +15,40 @@ export interface FiltroRefs {
   periodo: '' | '7' | '30' | '365'
   inspira: boolean
   semente: number
+  /** origem da referência (só em Referências 2): pinterest, instagram, descobrir, pasta, manual */
+  origens?: string[]
 }
 
 export const FILTRO_VAZIO: FiltroRefs = { q: '', grupos: [], op: 'E', tipos: [], fav: false, artistas: [], tags: [], ordem: 'recentes', periodo: '', inspira: false, semente: 1 }
-const CHAVE = 'refs.filtro'
 
-let estado: FiltroRefs = (() => {
-  try { const s = sessionStorage.getItem(CHAVE); if (s) return { ...FILTRO_VAZIO, ...JSON.parse(s) } } catch { /* sem sessão */ }
-  try { const op = localStorage.getItem('refs.op'); if (op === 'OU') return { ...FILTRO_VAZIO, op: 'OU' } } catch { /* idem */ }
-  return FILTRO_VAZIO
-})()
-const ouvintes = new Set<() => void>()
+/**
+ * Cria um conjunto de filtros independente, guardado na sessão com a chave dada.
+ * O Acervo original usa 'refs.filtro'; Referências 2 tem o seu próprio, para as duas versões não se misturarem.
+ */
+export function criarFiltroRefs(chave: string, chaveOp: string) {
+  let estado: FiltroRefs = (() => {
+    try { const s = sessionStorage.getItem(chave); if (s) return { ...FILTRO_VAZIO, ...JSON.parse(s) } } catch { /* sem sessão */ }
+    try { const op = localStorage.getItem(chaveOp); if (op === 'OU') return { ...FILTRO_VAZIO, op: 'OU' } } catch { /* idem */ }
+    return FILTRO_VAZIO
+  })()
+  const ouvintes = new Set<() => void>()
+  const mudar = (p: Partial<FiltroRefs>) => {
+    estado = { ...estado, ...p }
+    try { sessionStorage.setItem(chave, JSON.stringify(estado)); localStorage.setItem(chaveOp, estado.op) } catch { /* ignora */ }
+    ouvintes.forEach((f) => f())
+  }
+  const assinar = (f: () => void) => { ouvintes.add(f); return () => { ouvintes.delete(f) } }
+  const ler = () => estado
+  return { mudar, assinar, ler }
+}
 
-export function mudarFiltro(p: Partial<FiltroRefs>) {
-  estado = { ...estado, ...p }
-  try { sessionStorage.setItem(CHAVE, JSON.stringify(estado)); localStorage.setItem('refs.op', estado.op) } catch { /* ignora */ }
-  ouvintes.forEach((f) => f())
-}
-export function useFiltroRefs() {
-  return useSyncExternalStore((f) => { ouvintes.add(f); return () => ouvintes.delete(f) }, () => estado)
-}
+const original = criarFiltroRefs('refs.filtro', 'refs.op')
+export const mudarFiltro = original.mudar
+export function useFiltroRefs() { return useSyncExternalStore(original.assinar, original.ler) }
 
 /** Quantos filtros (além da busca) estão ativos. */
 export function filtrosAtivos(f: FiltroRefs) {
-  return f.grupos.length + f.tipos.length + f.artistas.length + f.tags.length + (f.fav ? 1 : 0) + (f.periodo ? 1 : 0) + (f.ordem !== 'recentes' ? 1 : 0)
+  return (f.origens?.length ?? 0) + f.grupos.length + f.tipos.length + f.artistas.length + f.tags.length + (f.fav ? 1 : 0) + (f.periodo ? 1 : 0) + (f.ordem !== 'recentes' ? 1 : 0)
 }
 
 /** Embaralhamento estável para uma semente (o modo inspiração não muda a cada render). */
@@ -55,6 +65,7 @@ export function aplicarFiltro(refs: Referencia[], f: FiltroRefs, nomeGrupo: Map<
   let r = refs.filter((x) => {
     if (f.grupos.length && !(f.op === 'E' ? f.grupos.every((g) => x.grupos.includes(g)) : f.grupos.some((g) => x.grupos.includes(g)))) return false
     if (f.tipos.length && !f.tipos.includes(x.tipo)) return false
+    if (f.origens?.length && !f.origens.includes(origemDaRef(x))) return false
     if (f.fav && !x.favorito) return false
     if (f.artistas.length && !(x.autor && f.artistas.includes(x.autor.trim()))) return false
     if (f.tags.length && !f.tags.some((t) => x.tags.includes(t))) return false
@@ -76,4 +87,18 @@ export const ORDENS: { v: FiltroRefs['ordem']; l: string }[] = [
 ]
 export const PERIODOS: { v: FiltroRefs['periodo']; l: string }[] = [
   { v: '', l: 'Qualquer data' }, { v: '7', l: 'Última semana' }, { v: '30', l: 'Último mês' }, { v: '365', l: 'Último ano' },
+]
+
+/** De onde veio a referência, pelo campo `origem`. */
+export type OrigemRef = 'pinterest' | 'instagram' | 'descobrir' | 'pasta' | 'manual'
+export function origemDaRef(r: Pick<Referencia, 'origem'>): OrigemRef {
+  const o = r.origem ?? ''
+  if (o.startsWith('pinterest:')) return 'pinterest'
+  if (o.startsWith('instagram:')) return 'instagram'
+  if (o.startsWith('descobrir:')) return 'descobrir'
+  if (o.startsWith('sha1:') || o.includes('|')) return 'pasta'
+  return 'manual'
+}
+export const ORIGENS_REF: { v: OrigemRef; l: string }[] = [
+  { v: 'pinterest', l: 'Pinterest' }, { v: 'instagram', l: 'Instagram' }, { v: 'pasta', l: 'Pastas do computador' }, { v: 'descobrir', l: 'Descobrir' }, { v: 'manual', l: 'Adicionadas à mão e compartilhadas' },
 ]

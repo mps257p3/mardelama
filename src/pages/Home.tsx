@@ -8,7 +8,7 @@ import { ImgObra } from './bib/art/ImgObra'
 import { fimEfetivo, periodo } from './bib/Agenda'
 import { useArquivoUrl } from '../db/files'
 import { useAjuste } from '../db/settings'
-import { AREAS } from '../ui/nav'
+import { AREAS, REF2 } from '../ui/nav'
 import { Monograma } from '../ui/Monograma'
 import { estiloRecorte, useRecorteAjuste } from '../ui/Recorte'
 import { useDestaqueCfg, useSecoesInicio, type SecaoId } from '../lib/inicio'
@@ -31,7 +31,7 @@ const DESC_AREA: Record<string, string> = {
   esmaltes: 'Materiais e superfícies', referencias: 'Repertório visual', biblioteca: 'Conhecimento e pesquisa', caderno: 'Ideias e processos',
 }
 
-function CardArea({ a }: { a: (typeof AREAS)[number] }) {
+function CardArea({ a, selo }: { a: (typeof AREAS)[number] | typeof REF2; selo?: string }) {
   const src = useFotoArea(a.slug)
   const estilo = useEstiloFotoArea(a.slug)
   const I = a.icon
@@ -39,7 +39,8 @@ function CardArea({ a }: { a: (typeof AREAS)[number] }) {
     <Link to={a.to} className="card-area">
       <span className="foto"><img src={src} alt="" loading="lazy" style={estilo} /></span>
       <span className="nome"><I size={15} strokeWidth={1.5} style={{ color: a.cor }} />{a.nome}<ArrowUpRight size={14} strokeWidth={1.4} className="seta" aria-hidden /></span>
-      {DESC_AREA[a.slug] && <span className="desc">{DESC_AREA[a.slug]}</span>}
+      {(DESC_AREA[a.slug] ?? (selo ? a.desc : undefined)) && <span className="desc">{DESC_AREA[a.slug] ?? a.desc}</span>}
+      {selo && <span className="desc"><span className="selo-exp">{selo}</span></span>}
     </Link>
   )
 }
@@ -138,7 +139,7 @@ export default function Home() {
       )}
 
       <nav className="areas-fotos" aria-label="Áreas">
-        {AREAS.filter((a) => a.slug !== 'materiais' && a.slug !== 'calculadoras').map((a) => <CardArea key={a.slug} a={a} />)}
+        {AREAS.filter((a) => a.slug !== 'materiais' && a.slug !== 'calculadoras').flatMap((a) => a.slug === 'referencias' ? [<CardArea key={a.slug} a={a} />, <CardArea key={REF2.slug} a={REF2} selo="Experimental" />] : [<CardArea key={a.slug} a={a} />])}
       </nav>
 
       {secoes.filter((s) => s.on).map((s) => { const C = SECOES[s.id]; return <C key={s.id} /> })}

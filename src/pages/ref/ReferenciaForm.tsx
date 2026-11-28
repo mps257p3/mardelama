@@ -11,7 +11,7 @@ import { useToast } from '../../ui/toast'
 
 type R = Omit<Referencia, 'id' | 'criadoEm' | 'atualizadoEm'> & { id?: string }
 
-export default function ReferenciaForm() {
+export default function ReferenciaForm({ base = '/referencias' }: { base?: string }) {
   const { id } = useParams()
   const [sp] = useSearchParams()
   const nav = useNavigate()
@@ -47,14 +47,14 @@ export default function ReferenciaForm() {
   async function salvar() {
     if (!r) return
     const titulo = r.titulo.trim() || (r.url ? new URL(r.url).hostname : 'Sem título')
-    if (r.id) { await db.referencias.put({ ...(r as Referencia), titulo, atualizadoEm: Date.now() }); nav(`/referencias/${r.id}`, { replace: true }) }
-    else { const x = novo({ ...r, titulo }); await db.referencias.add(x); nav(`/referencias/${x.id}`, { replace: true }) }
+    if (r.id) { await db.referencias.put({ ...(r as Referencia), titulo, atualizadoEm: Date.now() }); nav(`${base}/${r.id}`, { replace: true }) }
+    else { const x = novo({ ...r, titulo }); await db.referencias.add(x); nav(`${base}/${x.id}`, { replace: true }) }
     toast('Referência salva')
   }
 
   return (
     <div className="page" style={{ maxWidth: 900 }}>
-      <Voltar to={r.id ? `/referencias/${r.id}` : '/referencias/acervo'}>Voltar</Voltar>
+      <Voltar to={r.id ? `${base}/${r.id}` : `${base}/acervo`}>Voltar</Voltar>
       <p className="eyebrow">{r.id ? 'Editar referência' : 'Nova referência'}</p>
       <h1 style={{ marginTop: 8, marginBottom: 28 }}>{r.titulo || 'Sem título'}</h1>
       <div className="form">

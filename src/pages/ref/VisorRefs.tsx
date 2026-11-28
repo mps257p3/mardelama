@@ -11,7 +11,7 @@ import { EscolherGrupos, EscolherObra, EscolherPainel } from './acoesRefs'
 import { ehSalvoInstagram } from '../../lib/instagram'
 
 /** Tela cheia do Acervo: imagem protagonista, metadados sob demanda, deslizar para navegar. */
-export function VisorRefs({ lista, inicio, onClose }: { lista: Referencia[]; inicio: number; onClose: () => void }) {
+export function VisorRefs({ lista, inicio, onClose, base = '/referencias' }: { lista: Referencia[]; inicio: number; onClose: () => void; base?: string }) {
   useFecharComVoltar(onClose)
   const [i, setI] = useState(inicio)
   const [info, setInfo] = useState(false)
@@ -59,7 +59,7 @@ export function VisorRefs({ lista, inicio, onClose }: { lista: Referencia[]; ini
         <button className="visor-btn" aria-label="Grupos" onClick={() => setAcao('grupos')}><FolderPlus size={19} /></button>
         <button className="visor-btn" aria-label="Levar a um painel" onClick={() => setAcao('painel')}><LayoutDashboard size={19} /></button>
         <button className="visor-btn" aria-label="Levar a uma obra ou ideia" title="Levar a uma obra ou ideia" onClick={() => setAcao('obra')}><Shapes size={19} /></button>
-        <Link className="visor-btn" aria-label="Ver semelhantes no Descobrir" title="Ver semelhantes" to={`/referencias/descobrir?ref=${r.id}`}><ScanSearch size={19} /></Link>
+        <Link className="visor-btn" aria-label="Ver semelhantes no Descobrir" title="Ver semelhantes" to={`${base}/descobrir?ref=${r.id}`}><ScanSearch size={19} /></Link>
         {r.url && <a className="visor-btn" aria-label="Fonte original" href={r.url} target="_blank" rel="noreferrer"><ExternalLink size={18} /></a>}
         <button className={'visor-btn' + (info ? ' on' : '')} aria-label="Informações" onClick={() => setInfo(!info)}><Info size={19} /></button>
       </div>
@@ -72,7 +72,7 @@ export function VisorRefs({ lista, inicio, onClose }: { lista: Referencia[]; ini
         {r.tags.length > 0 && <p className="meta">{r.tags.map((t) => '#' + t).join('  ')}</p>}
         {r.paleta?.length ? <div className="paleta" style={{ height: 22, marginTop: 10 }}>{r.paleta.map((c) => <span key={c} style={{ background: c }} />)}</div> : null}
         {r.fonte && <p className="meta">Fonte: {r.fonte}{r.licenca ? ' · ' + r.licenca : ''}</p>}
-        <Link to={`/referencias/${r.id}`} className="visor-ficha"><FileText size={15} />Ficha completa e edição</Link>
+        <Link to={`${base}/${r.id}`} className="visor-ficha"><FileText size={15} />Ficha completa e edição</Link>
       </div>}
       {n > 1 && <>
         <button className="visor-btn visor-ant" aria-label="Anterior" onClick={() => ir(-1)}><ChevronLeft size={24} /></button>
