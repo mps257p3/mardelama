@@ -279,6 +279,36 @@ const BIB: (Omit<Conteudo, keyof Base | 'arquivos' | 'formato'> & { id: string }
     ul(['Pincel', 'Imersão', 'Derramamento', 'Pulverização', 'Sobreposição', 'Aplicação localizada', 'Aplicação espessa', 'Aplicação em camadas', 'Combinação com engobes']) +
     '<p>Registrar em cada teste: número de demãos, peso aplicado, espessura e intervalo de secagem.</p>' +
     '<h3>Combinações</h3><p>Para sobreposições, registrar: esmalte inferior, esmalte superior, ordem de aplicação, número de camadas de cada esmalte, área de sobreposição, resultado visual e grau de escorrimento.</p>' },
+  { id: 'bib-mascaramento', titulo: 'Mascaramento e reserva de esmaltação', categoria: 'Técnicas de aplicação', tags: ['mascaramento', 'reserva', 'látex', 'cera', 'fita', 'aplicação'], corpo:
+    '<p>O mascaramento é uma técnica utilizada para proteger determinadas áreas da superfície cerâmica durante a aplicação de esmaltes. Permite preservar a argila aparente, delimitar cores, criar grafismos, estabelecer contrastes entre superfícies esmaltadas e não esmaltadas e realizar aplicações sucessivas de diferentes esmaltes.</p>' +
+    '<p>Os principais materiais utilizados são o látex líquido, a cera de reserva e a fita adesiva. Cada um apresenta características específicas de aplicação, resistência e acabamento.</p>' +
+    tabela(['', 'Látex líquido', 'Cera de reserva', 'Fita adesiva'], [
+      ['Melhor para', 'Superfícies irregulares, relevos, desenhos orgânicos', 'Bases de peças, argila aparente, pinceladas livres', 'Linhas precisas, faixas e padrões geométricos'],
+      ['Antes da queima', 'Retirar por completo', 'Fica na peça e queima no forno', 'Retirar com cuidado'],
+      ['Permite nova cor na área', 'Sim, depois de retirado', 'Pouco prático', 'Sim, depois de retirada'],
+    ]) +
+    '<h3>Látex líquido (Latex Resist)</h3>' +
+    '<p>O látex líquido forma uma película flexível e impermeável que impede a deposição do esmalte diretamente sobre a área protegida. Sua principal vantagem é a possibilidade de remoção antes da queima, permitindo que a superfície seja novamente trabalhada ou receba outro esmalte.</p>' +
+    '<p>É especialmente indicado para superfícies irregulares, esculturas, relevos, desenhos orgânicos e grafismos.</p>' +
+    '<p><b>Modo de aplicação</b></p>' +
+    '<ol><li>Limpar a superfície cerâmica, eliminando poeira e resíduos.</li><li>Aplicar o látex com pincel sobre as áreas que deseja proteger.</li><li>Deixar secar completamente, formando uma película contínua e elástica.</li><li>Aplicar o esmalte pelo método desejado.</li><li>Aguardar a secagem suficiente do esmalte.</li><li>Remover cuidadosamente a película de látex, evitando danificar as bordas esmaltadas.</li><li>Manter a área sem esmalte ou aplicar uma nova cor.</li></ol>' +
+    '<p>O látex deve ser <b>completamente removido antes da queima</b>. Quando aplicado sobre esmaltes crus, existe o risco de desprendimento da camada inferior durante a remoção, sendo recomendável realizar testes prévios.</p>' +
+    '<h3>Cera de reserva (Wax Resist)</h3>' +
+    '<p>A cera de reserva cria uma barreira hidrofóbica que repele esmaltes à base de água. É indicada para proteger bases de peças, preservar áreas de argila aparente e criar desenhos com pinceladas livres.</p>' +
+    '<p>Diferentemente do látex, a cera permanece na peça até a queima, quando é eliminada pela ação do calor. O forno deve possuir ventilação adequada.</p>' +
+    '<p>Sua principal limitação é a dificuldade de remoção antes da queima, tornando menos prática a correção de erros ou a aplicação posterior de esmaltes sobre a área protegida.</p>' +
+    '<p>Eventuais gotas de esmalte acumuladas sobre a cera devem ser removidas antes da queima.</p>' +
+    '<h3>Fita adesiva (Tape Resist)</h3>' +
+    '<p>A fita adesiva permite criar linhas precisas, padrões geométricos, faixas e divisões entre diferentes cores de esmalte.</p>' +
+    '<p>É particularmente eficiente em superfícies lisas e regulares, mas pode apresentar dificuldades de aderência em áreas muito texturizadas, curvas complexas ou superfícies com esmalte cru.</p>' +
+    '<p>Deve ser <b>retirada antes da queima</b>, cuidadosamente, para evitar o desprendimento do esmalte nas bordas.</p>' +
+    '<h3>Possibilidades expressivas</h3>' +
+    ul(['Preservação da cor e da textura natural da argila.', 'Contraste entre superfícies brilhantes, foscas e não esmaltadas.', 'Criação de grafismos geométricos ou orgânicos.', 'Delimitação de diferentes cores e acabamentos.', 'Aplicação sequencial de esmaltes.', 'Criação de espaços negativos.', 'Valorização de relevos e detalhes escultóricos.', 'Construção de padrões visuais sobre superfícies tridimensionais.']) +
+    '<h3>Cuidados técnicos</h3>' +
+    '<p>O mascaramento controla a aplicação do esmalte, mas não necessariamente seu comportamento durante a queima. Esmaltes muito fluidos podem ultrapassar os limites estabelecidos pela reserva, invadindo áreas originalmente protegidas.</p>' +
+    '<p>A espessura da aplicação, a temperatura, o trabalho térmico, a posição da peça e a interação entre esmaltes influenciam a definição final dos contornos.</p>' +
+    '<p>Recomenda-se realizar testes considerando a massa cerâmica, o esmalte, o material de mascaramento e a curva de queima utilizada.</p>' +
+    '<blockquote>O mascaramento não deve ser considerado uma barreira de contenção para esmaltes fluidos durante a queima.</blockquote>' },
   { id: 'bib-seguranca', titulo: 'Segurança do laboratório', categoria: 'Segurança no ateliê', tags: ['segurança'], corpo:
     ul(['<b>Sílica cristalina:</b> o pó inalado é nocivo aos pulmões. Pesar e misturar pós com máscara PFF2 ou PFF3.', '<b>Óxidos metálicos:</b> evitar inalação e contato prolongado com a pele.', '<b>Conservantes industriais:</b> podem causar sensibilização; usar luvas e seguir a ficha de segurança.', 'Usar proteção respiratória adequada, luvas e óculos.', 'Garantir ventilação e exaustão, inclusive do forno.', 'Fazer limpeza úmida. <b>Não varrer pós a seco.</b>', 'Usar equipamentos exclusivos para cerâmica (balanças, mixer, colheres).', 'Armazenar fora do alcance de crianças e animais.', 'Proteger as placas do forno contra escorrimentos.', 'Descartar corretamente os resíduos de esmaltes: <b>não descartar na rede de esgoto</b>. Decantar a água de lavagem e destinar o sedimento seco conforme orientação local.', 'Consultar as fichas de segurança (FISPQ) de cada material.']) +
     '<blockquote>Um esmalte não é seguro para contato com alimentos apenas por ser isento de chumbo ou por ter sido queimado em alta temperatura. A segurança depende da queima, da aplicação e de testes laboratoriais de lixiviação.</blockquote>' },
@@ -331,7 +361,11 @@ async function unificarAntigos() {
   }
 }
 
+/** Textos da Biblioteca incluídos depois da primeira semente: entram em todo aparelho que ainda não os tem (pelo id fixo). */
+const TEXTOS_POSTERIORES = ['bib-mascaramento']
+
 export async function semearConhecimento() {
+  await adicionarFaltantes('conteudos', BIB.filter((b) => TEXTOS_POSTERIORES.includes(b.id)).map(({ id, ...c }) => ({ ...base(id), ...c, formato: 'texto' as const, arquivos: [] })))
   if (await db.ajustes.get('seed-lab-v1')) return
   await unificarAntigos()
 
