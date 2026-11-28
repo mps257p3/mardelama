@@ -325,7 +325,8 @@ A partir disso, proponha consultas para um feed de descoberta que traga coisas n
 ${imgs.length ? 'As imagens acima são pins das pastas do Pinterest da pessoa, escolhidos conforme o peso de cada pasta.\n' : ''}Pastas do Pinterest (e outras coleções) de um ceramista, com o peso que ele deu a cada uma (0 a 3) e exemplos do que há nelas:
 ${JSON.stringify(d.pastas ?? []).slice(0, 24000)}
 Descreva as características visuais recorrentes (só o que se vê de fato nas imagens e nos textos; nada de autoria inventada). Pastas com peso maior contam mais.
-Depois proponha consultas para encontrar obras reais com essas características em museus, revistas de arte e coleções abertas.` },
+Depois proponha consultas para encontrar obras reais com essas características em museus, revistas de arte e coleções abertas.${d.tema ? `
+Esta leitura é só do tema “${String(d.tema).slice(0, 80)}”. Toda consulta precisa manter o assunto do tema escrito nela (em inglês), para a busca não trazer obras só parecidas na cor ou na forma: por exemplo, num tema de luminárias, todas as consultas falam de luminárias.` : ''}` },
       ],
     }
   }
