@@ -255,7 +255,7 @@ export default function Descobrir() {
   const falhas = estados.filter((e) => !e.ok && !e.pausada)
   return (
     <div className="page acervo">
-      <TopoRef aba="descobrir" icones={<>
+      <TopoRef aba="descobrir" capa icones={<>
         <button className={'iconbtn' + (carregando ? ' girando' : '')} aria-label="Novas recomendações" title="Novas recomendações" onClick={() => { setItens([]); carregar(true) }}><RefreshCw size={18} className={carregando ? 'gira' : ''} /></button>
         <Menu itens={[
           { l: 'Novas recomendações', icon: <RefreshCw size={16} />, onClick: () => { setItens([]); carregar(true) } },
