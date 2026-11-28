@@ -7,6 +7,7 @@ import { db } from '../../db/schema'
 import { normaliza, textoBusca } from '../../lib/filtros'
 import { Foto } from '../../ui/form'
 import { CapaArea } from '../../ui/FotoEditavel'
+import { CabecalhoPagina } from '../../ui/Pagina'
 import { useAjuste, definirAjuste } from '../../db/settings'
 import { novaNota, notaVazia } from './NotaEditor'
 
@@ -16,6 +17,7 @@ export default function Caderno() {
   const notas = useLiveQuery(async () => (await db.notas.orderBy('criadoEm').reverse().toArray()).filter((n) => !n.excluido))
   const modo = useAjuste<'tempo' | 'temas'>('caderno.modo', 'tempo')
   const [q, setQ] = useState('')
+  const [buscaAberta, setBuscaAberta] = useState(false)
   const nav = useNavigate()
   useEffect(() => { db.notas.toArray().then((ns) => ns.filter((x) => !x.excluido && notaVazia(x)).forEach((x) => db.notas.update(x.id, { excluido: 1, atualizadoEm: Date.now() }))) }, [])
   const lista = useMemo(() => (notas ?? []).filter((n) => !q || textoBusca(n.titulo, semHtml(n.corpo), n.tags, n.tema).includes(normaliza(q))), [notas, q])
@@ -30,13 +32,13 @@ export default function Caderno() {
 
   return (
     <div className="page" style={{ maxWidth: 900 }}>
-      <div className="head">
-        <div><p className="eyebrow">Diário criativo</p><h1 style={{ marginTop: 8 }}>Caderno</h1></div>
-        <button className="btn primary" onClick={async () => nav(`/caderno/${await novaNota()}`)}><Plus size={16} />Nova anotação</button>
-      </div>
-      <CapaArea slug="caderno" nome="Caderno" className="capa-area" />
+      <CabecalhoPagina titulo="Caderno">
+        <button className="iconbtn" aria-label="Buscar nas anotações" onClick={() => setBuscaAberta((v) => !v || !!q)}><Search size={20} strokeWidth={1.5} /></button>
+        <button className="iconbtn" aria-label="Nova anotação" onClick={async () => nav(`/caderno/${await novaNota()}`)}><Plus size={20} strokeWidth={1.5} /></button>
+      </CabecalhoPagina>
+      <CapaArea slug="caderno" nome="Caderno" />
       <div className="toolbar">
-        <div className="search"><Search size={16} /><input className="input" placeholder="Buscar nas anotações…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+        {(buscaAberta || q) && <div className="search"><Search size={16} /><input className="input" autoFocus placeholder="Buscar nas anotações…" value={q} onChange={(e) => setQ(e.target.value)} /></div>}
         <div className="seg">
           <button className={modo === 'tempo' ? 'on' : ''} onClick={() => definirAjuste('caderno.modo', 'tempo')}>Cronológico</button>
           <button className={modo === 'temas' ? 'on' : ''} onClick={() => definirAjuste('caderno.modo', 'temas')}>Por temas</button>
@@ -45,7 +47,7 @@ export default function Caderno() {
       {notas && notas.length === 0 && <div className="empty"><span className="serif">Uma página em branco.</span><span>Registre ideias, pensamentos, pesquisas e descobertas, com texto, imagens, desenhos, cores e áudio.</span></div>}
       {grupos.map(([g, ns]) => (
         <section key={g} style={{ marginTop: 28 }}>
-          <p className="eyebrow" style={{ textTransform: 'uppercase' }}>{g}</p>
+          <p className="esm-grupo">{g}</p>
           <div className="diario">
             {ns.map((n) => { const d = new Date(n.criadoEm); const txt = semHtml(n.corpo); return (
               <LinkSegurar key={n.id} to={`/caderno/${n.id}`} className="entrada" opcoes={{ tabela: 'notas', id: n.id, titulo: n.titulo || txt.slice(0, 40), nome: 'anotação' }}>
