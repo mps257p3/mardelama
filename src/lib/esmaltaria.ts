@@ -8,12 +8,16 @@ import { estiloRecorte, useRecorteAjuste, salvarRecorteAjuste } from '../ui/Reco
  * Não dependem dos registros: ficam visíveis mesmo com a seção vazia.
  * A foto escolhida pelo Marcelo fica no aparelho (reduzida ao salvar) e vai na sincronização;
  * sem ela, vale a padrão (arquivo local do app, ou externa com reserva local se falhar).
+ * A capa usa a mesma foto do card da Esmaltaria na tela inicial.
  */
 export type FotoEsm = { chave: string; nome: string; aspecto: number; padrao?: string; reserva?: string; credito?: string }
 
 const commons = (arquivo: string) => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(arquivo)}?width=900`
 
-export const CAPA_ESMALTARIA: FotoEsm = { chave: 'esmaltaria.capa', nome: 'Capa da Esmaltaria', aspecto: 2.7 }
+/** Capa de uma área: a mesma foto do card da área na tela inicial (ajuste `area.foto.<slug>`). */
+export const fotoDaArea = (slug: string, nome: string): FotoEsm => ({ chave: `area.foto.${slug}`, nome: `Capa de ${nome} (também na tela inicial)`, aspecto: 2.7, padrao: `/areas/${slug}.jpg` })
+
+export const CAPA_ESMALTARIA: FotoEsm = fotoDaArea('esmaltes', 'Esmaltaria')
 
 export const SECOES_ESM: (FotoEsm & { slug: string; to: string; unid: [string, string] })[] = [
   { slug: 'esmaltes', to: '/esmaltes', chave: 'esmaltaria.foto.esmaltes', nome: 'Esmaltes', aspecto: 3 / 2, unid: ['esmalte', 'esmaltes'],
@@ -23,16 +27,12 @@ export const SECOES_ESM: (FotoEsm & { slug: string; to: string; unid: [string, s
   { slug: 'ideias', to: '/ideias', chave: 'esmaltaria.foto.ideias', nome: 'Ideias', aspecto: 3 / 2, unid: ['ideia', 'ideias'], padrao: '/areas/caderno.jpg' },
 ]
 
-/** Foto a mostrar: a do Marcelo (com enquadramento) ou a padrão. A capa, sem foto própria, usa a foto da Esmaltaria da tela inicial. */
+/** Foto a mostrar: a do Marcelo (com enquadramento) ou a padrão. */
 export function useFotoEsm(f: FotoEsm) {
   const id = useAjuste<string | undefined>(f.chave, undefined)
   const url = useArquivoUrl(id)
   const recorte = useRecorteAjuste(f.chave)
-  // a capa, sem foto própria, repete a foto da Esmaltaria escolhida para a tela inicial
-  const idHome = useAjuste<string | undefined>('area.foto.esmaltes', undefined)
-  const urlHome = useArquivoUrl(f.padrao ? undefined : idHome)
-  const padrao = f.padrao ?? urlHome ?? '/areas/esmaltes.jpg'
-  return { src: url ?? padrao, reserva: f.reserva, propria: !!id, id, recorte: id ? recorte : undefined, estilo: id ? estiloRecorte(recorte) : undefined }
+  return { src: url ?? f.padrao ?? '/areas/esmaltes.jpg', reserva: f.reserva, propria: !!id, id, recorte: id ? recorte : undefined, estilo: id ? estiloRecorte(recorte) : undefined }
 }
 
 export async function trocarFotoEsm(f: FotoEsm, file: File, atual?: string) {

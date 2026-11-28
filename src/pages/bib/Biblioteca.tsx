@@ -11,6 +11,7 @@ import { buscarTodos, type Resumo } from '../../lib/entidades'
 import { Menu } from '../../ui/Menu'
 import { Sheet } from '../../ui/Sheet'
 import { ResultadosBusca } from '../../ui/ResultadosBusca'
+import { CapaArea } from '../../ui/FotoEditavel'
 import { EditorRecorte, estiloRecorte, salvarRecorteAjuste, useRecorteAjuste } from '../../ui/Recorte'
 
 /** Capa de uma seção: a foto escolhida pelo Marcelo; senão, a capa padrão (com reserva local se a externa falhar). */
@@ -78,6 +79,7 @@ export default function Biblioteca() {
           <Menu itens={[{ l: 'Trocar capas', icon: <ImagePlus size={16} />, onClick: () => setCapas(true) }]} />
         </div>
       </div>
+      <CapaArea slug="biblioteca" nome="Biblioteca" className="capa-area" />
       <div className="search bib-busca">
         <Search size={17} />
         <input className="input" placeholder="Buscar artistas, técnicas, esmaltes, leituras…" value={q} onChange={(e) => setQ(e.target.value)} />

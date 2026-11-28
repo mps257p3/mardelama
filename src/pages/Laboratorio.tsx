@@ -1,16 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowUpRight, Calculator, ChevronRight, Crop, Flame, ImagePlus, Layers, RotateCcw, Search, SearchCode, Shapes, ShieldCheck, ShoppingBag } from 'lucide-react'
+import { ArrowUpRight, Calculator, ChevronRight, Flame, Layers, Search, SearchCode, Shapes, ShieldCheck, ShoppingBag } from 'lucide-react'
 import { db, type Tipo } from '../db/schema'
 import { useEsmaltes, useReceitas, useTestes } from '../db/hooks'
 import { useIdeias } from './lab/Ideias'
 import { buscarTodos, type Resumo } from '../lib/entidades'
-import { CAPA_ESMALTARIA, SECOES_ESM, useFotoEsm, trocarFotoEsm, restaurarFotoEsm, type FotoEsm } from '../lib/esmaltaria'
-import { EditorRecorte, salvarRecorteAjuste } from '../ui/Recorte'
+import { CAPA_ESMALTARIA, SECOES_ESM } from '../lib/esmaltaria'
+import { CapaArea, ImgFoto, LinhaFoto } from '../ui/FotoEditavel'
 import { ResultadosBusca } from '../ui/ResultadosBusca'
 import { Sheet } from '../ui/Sheet'
-import { useToast } from '../ui/toast'
 
 const vivos = async (t: string) => (await db.table(t).toArray()).filter((x: { excluido?: 0 | 1 }) => !x.excluido).length
 
@@ -37,14 +36,6 @@ const ROTULOS_BUSCA: Partial<Record<Tipo, string>> = {
   familia: 'Famílias', comercial: 'Engenharia reversa', curva: 'Curvas de queima',
 }
 
-/** Imagem com a reserva local quando a externa não carrega. */
-function ImgEsm({ f }: { f: FotoEsm }) {
-  const { src, reserva, estilo } = useFotoEsm(f)
-  const [falhou, setFalhou] = useState(false)
-  useEffect(() => setFalhou(false), [src])
-  return <img src={falhou && reserva ? reserva : src} alt="" loading="lazy" referrerPolicy="no-referrer" style={estilo} onError={() => setFalhou(true)} />
-}
-
 /** Esmaltaria: capa, as quatro seções principais, a lista das áreas de bancada e a segurança. */
 export default function Laboratorio() {
   const [busca, setBusca] = useState(false)
@@ -63,17 +54,14 @@ export default function Laboratorio() {
         <button className="iconbtn" aria-label="Buscar na Esmaltaria" onClick={() => setBusca(true)}><Search size={20} strokeWidth={1.5} /></button>
       </div>
 
-      <figure className="destaque esm-capa">
-        <ImgEsm f={CAPA_ESMALTARIA} />
-        <button className="editar" aria-label="Personalizar fotografias da Esmaltaria" onClick={() => setFotos(true)}><ImagePlus size={13} strokeWidth={1.5} /></button>
-      </figure>
+      <CapaArea slug="esmaltes" nome="Esmaltaria" onEditar={() => setFotos(true)} />
 
       <div className="esm-cards">
         {SECOES_ESM.map((s) => {
           const q = nSecao[s.slug]
           return (
             <Link key={s.slug} to={s.to} className="card-area">
-              <span className="foto"><ImgEsm f={s} /></span>
+              <span className="foto"><ImgFoto f={s} /></span>
               <span className="nome">{s.nome}<ArrowUpRight size={14} strokeWidth={1.4} className="seta" aria-hidden /></span>
               <span className="desc">{q == null ? ' ' : `${q} ${s.unid[q === 1 ? 0 : 1]}`}</span>
             </Link>
@@ -130,31 +118,6 @@ function BuscaEsmaltaria({ onClose }: { onClose: () => void }) {
       {res ? <div onClick={(e) => { if ((e.target as HTMLElement).closest('a')) onClose() }}><ResultadosBusca itens={res} q={q} rotulos={ROTULOS_BUSCA} ordem={TIPOS_BUSCA} /></div>
         : <p className="faint" style={{ fontSize: 13.5, marginTop: 14 }}>Procura em esmaltes comerciais, fórmulas, testes, ideias, materiais, famílias, engenharia reversa e curvas de queima.</p>}
     </Sheet>
-  )
-}
-
-function LinhaFoto({ f }: { f: FotoEsm }) {
-  const foto = useFotoEsm(f)
-  const ref = useRef<HTMLInputElement>(null)
-  const [editar, setEditar] = useState(false)
-  const toast = useToast()
-  return (
-    <div className="bib-capa-linha">
-      <span className="ph"><ImgEsm f={f} /></span>
-      <span className="t">{f.nome}<span className="s">{foto.propria ? 'Foto sua' : f.credito ? `Padrão · ${f.credito}` : 'Padrão'}</span></span>
-      <span style={{ display: 'flex', gap: 4 }}>
-        {foto.propria && <button className="iconbtn" aria-label="Reenquadrar foto" onClick={() => setEditar(true)}><Crop size={16} /></button>}
-        {foto.propria && <button className="iconbtn" aria-label="Voltar à foto padrão" onClick={() => restaurarFotoEsm(f, foto.id)}><RotateCcw size={16} /></button>}
-        <button className="btn sm" onClick={() => ref.current?.click()}><ImagePlus size={14} />Trocar</button>
-      </span>
-      <input ref={ref} type="file" accept="image/*" hidden onChange={async (e) => {
-        const arq = e.target.files?.[0]; e.target.value = ''
-        if (!arq) return
-        try { await trocarFotoEsm(f, arq, foto.id); setEditar(true) } catch { toast('Não consegui salvar essa foto.') }
-      }} />
-      {editar && <EditorRecorte src={foto.src} aspecto={f.aspecto} valor={foto.recorte} titulo={`Reenquadrar · ${f.nome}`}
-        onSalvar={(r) => salvarRecorteAjuste(f.chave, r)} onClose={() => setEditar(false)} />}
-    </div>
   )
 }
 

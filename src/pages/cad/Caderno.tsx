@@ -6,6 +6,7 @@ import { Plus, Search } from 'lucide-react'
 import { db } from '../../db/schema'
 import { normaliza, textoBusca } from '../../lib/filtros'
 import { Foto } from '../../ui/form'
+import { CapaArea } from '../../ui/FotoEditavel'
 import { useAjuste, definirAjuste } from '../../db/settings'
 import { novaNota, notaVazia } from './NotaEditor'
 
@@ -33,6 +34,7 @@ export default function Caderno() {
         <div><p className="eyebrow">Diário criativo</p><h1 style={{ marginTop: 8 }}>Caderno</h1></div>
         <button className="btn primary" onClick={async () => nav(`/caderno/${await novaNota()}`)}><Plus size={16} />Nova anotação</button>
       </div>
+      <CapaArea slug="caderno" nome="Caderno" className="capa-area" />
       <div className="toolbar">
         <div className="search"><Search size={16} /><input className="input" placeholder="Buscar nas anotações…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
         <div className="seg">
