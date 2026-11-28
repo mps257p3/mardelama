@@ -54,6 +54,7 @@ const Colecoes2 = carregar(() => import('./pages/ref2/Colecoes2'))
 const GerenciarColecoes = carregar(() => import('./pages/ref2/Colecoes2').then((m) => ({ default: m.GerenciarColecoes })))
 const Paineis2 = carregar(() => import('./pages/ref2/Paineis2'))
 const Curadoria2 = carregar(() => import('./pages/ref2/Curadoria2'))
+const Tema2 = carregar(() => import('./pages/ref2/Tema2'))
 const PainelEditor = carregar(() => import('./pages/ref/PainelEditor'))
 const Compartilhar = carregar(() => import('./pages/ref/Compartilhar'))
 const Biblioteca = carregar(() => import('./pages/bib/Biblioteca'))
@@ -152,6 +153,7 @@ export default function App() {
           <Route path="referencias-2/paineis" element={<Paineis2 />} />
           <Route path="referencias-2/paineis/:id" element={<PainelEditor voltar="/referencias-2/paineis" refs="/referencias-2" />} />
           <Route path="referencias-2/curadoria" element={<Curadoria2 />} />
+          <Route path="referencias-2/temas/:id" element={<Tema2 />} />
           <Route path="referencias-2/nova" element={<ReferenciaForm key="nova2" base="/referencias-2" />} />
           <Route path="referencias-2/:id" element={<ReferenciaDetalhe base="/referencias-2" />} />
           <Route path="referencias-2/:id/editar" element={<ReferenciaForm base="/referencias-2" />} />

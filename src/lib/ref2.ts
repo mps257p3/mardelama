@@ -366,8 +366,8 @@ export async function termosDoPinterest(cfg: Config2, n = 16): Promise<[string, 
 }
 
 /* ---------------- planejamento dos lotes ---------------- */
-export type Modo2 = 'para-voce' | 'pinterest' | 'artistas' | 'explorar'
-export const MODOS2: [Modo2, string][] = [['para-voce', 'Para você'], ['pinterest', 'Pinterest'], ['artistas', 'Artistas'], ['explorar', 'Explorar']]
+export type Modo2 = 'para-voce' | 'temas' | 'pinterest' | 'artistas' | 'explorar'
+export const MODOS2: [Modo2, string][] = [['para-voce', 'Para você'], ['temas', 'Temas'], ['pinterest', 'Pinterest'], ['artistas', 'Artistas'], ['explorar', 'Explorar']]
 export interface Filtros2 { fontes: Categoria[]; epoca: Epoca2; linguagens: string[]; temas: string[]; interacao: 'todas' | 'curtidas' | 'nao-vistas' | 'salvas' | 'ocultadas' }
 export const FILTROS2_VAZIO: Filtros2 = { fontes: [], epoca: 'todas', linguagens: [], temas: [], interacao: 'todas' }
 export const nFiltros2 = (f: Filtros2) => f.fontes.length + (f.epoca !== 'todas' ? 1 : 0) + f.linguagens.length + f.temas.length + (f.interacao !== 'todas' ? 1 : 0)
